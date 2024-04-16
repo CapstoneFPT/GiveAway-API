@@ -27,9 +27,7 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
+    - name: Build with dotnet
+      run: dotnet build --configuration Release
     - name: Test
       run: dotnet test --no-build --verbosity normal
