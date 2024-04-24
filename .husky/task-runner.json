@@ -3,7 +3,7 @@
       {
          "name": "Run csharpier",
          "command": "dotnet",
-         "args": [ "csharpier", "${staged}" ],
+         "args": [ "csharpier", "." ],
          "include": [ "**/*.cs" ]
          }
    ]
