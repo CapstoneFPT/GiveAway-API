@@ -12,25 +12,24 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddServices();
 builder.Services.AddRepositories();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(
-    options =>
-    {
-        options.SwaggerDoc("v1", new OpenApiInfo()
-        {
-            Title = "Give Away API",
-            Version = "v1"
-        });
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo() { Title = "Give Away API", Version = "v1" });
 
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    options.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme()
         {
             Name = "Authorization",
             Type = SecuritySchemeType.Http,
             Scheme = "Bearer",
             BearerFormat = "JWT",
             In = ParameterLocation.Header
-        });
-        
-        options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+        }
+    );
+
+    options.AddSecurityRequirement(
+        new OpenApiSecurityRequirement()
         {
             {
                 new OpenApiSecurityScheme()
@@ -43,21 +42,27 @@ builder.Services.AddSwaggerGen(
                 },
                 new List<string>()
             }
-        });
-    });
+        }
+    );
+});
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: "AllowAll",
-        policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); });
+    options.AddPolicy(
+        name: "AllowAll",
+        policy =>
+        {
+            policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
+        }
+    );
 });
 
 string? jwtIssuer = builder.Configuration[Services.Utils.JwtConstants.JwtIssuer];
 string? jwtKey = builder.Configuration[Services.Utils.JwtConstants.JwtKey];
 string? jwtAudience = builder.Configuration[Services.Utils.JwtConstants.JwtAudience];
 
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters()
@@ -70,10 +75,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
-builder.Services.AddControllers().AddJsonOptions(x =>
-{
-    x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
+builder
+    .Services.AddControllers()
+    .AddJsonOptions(x =>
+    {
+        x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 var app = builder.Build();
 

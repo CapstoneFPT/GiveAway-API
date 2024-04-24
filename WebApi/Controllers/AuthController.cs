@@ -9,20 +9,19 @@ namespace WebApi.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-   private readonly IAuthService _authService;
+    private readonly IAuthService _authService;
 
-   public AuthController(IAuthService authService)
-   {
-      _authService = authService;
-   }
+    public AuthController(IAuthService authService)
+    {
+        _authService = authService;
+    }
 
-
-   [HttpPost("login")]
-   public async Task<ActionResult<Result<LoginResponse>>> Login([FromBody] LoginRequest loginRequest)
-   {
-       var result = await _authService.Login(loginRequest.Email, loginRequest.Password);
-       return Ok(result);
-   }
-   
-   
+    [HttpPost("login")]
+    public async Task<ActionResult<Result<LoginResponse>>> Login(
+        [FromBody] LoginRequest loginRequest
+    )
+    {
+        var result = await _authService.Login(loginRequest.Email, loginRequest.Password);
+        return Ok(result);
+    }
 }

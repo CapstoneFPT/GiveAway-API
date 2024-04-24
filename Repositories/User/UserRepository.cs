@@ -29,12 +29,15 @@ public class UserRepository : IUserRepository
         }
     };
 
-    public Task<List<BusinessObjects.User>> FindMany(Func<BusinessObjects.User, bool> predicate, int page, int pageSize)
+    public Task<List<BusinessObjects.User>> FindMany(
+        Func<BusinessObjects.User, bool> predicate,
+        int page,
+        int pageSize
+    )
     {
         try
         {
-            var users = Users.Where(predicate).Skip((page * pageSize) - 1
-            ).Take(pageSize).ToList();
+            var users = Users.Where(predicate).Skip((page * pageSize) - 1).Take(pageSize).ToList();
 
             return Task.FromResult(users);
         }

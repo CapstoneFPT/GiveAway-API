@@ -10,18 +10,19 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
 
-    public AuthService(IUserRepository userRepository,ITokenService tokenService)
+    public AuthService(IUserRepository userRepository, ITokenService tokenService)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
     }
 
-
     public async Task<Result<LoginResponse>> Login(string email, string password)
     {
         try
         {
-            var user = await _userRepository.FindOne(x => x.Email.Equals(email) && x.Password.Equals(password));
+            var user = await _userRepository.FindOne(x =>
+                x.Email.Equals(email) && x.Password.Equals(password)
+            );
 
             if (user is null)
             {
@@ -41,10 +42,7 @@ public class AuthService : IAuthService
 
             var accessToken = _tokenService.GenerateAccessToken(claims);
 
-            var data = new LoginResponse()
-            {
-                AccessToken = accessToken
-            };
+            var data = new LoginResponse() { AccessToken = accessToken };
 
             return new Result<LoginResponse>()
             {
