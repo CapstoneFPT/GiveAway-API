@@ -25,6 +25,7 @@ public class TestController : ControllerBase
     }
 
     [Authorize(AuthenticationSchemes = GoogleDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,Roles = "User")]
     [HttpGet("user")]
     public string TestUser()
     {
