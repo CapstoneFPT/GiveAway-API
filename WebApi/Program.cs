@@ -1,5 +1,8 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -50,10 +53,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(
         name: "AllowAll",
-        policy =>
-        {
-            policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
-        }
+        policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); }
     );
 });
 
@@ -62,7 +62,14 @@ string? jwtKey = builder.Configuration[Services.Utils.JwtConstants.JwtKey];
 string? jwtAudience = builder.Configuration[Services.Utils.JwtConstants.JwtAudience];
 
 builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .Services.AddAuthentication(
+    ).AddCookie().AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration[Services.Utils.GoogleConstants.ClientId]!;
+        options.ClientSecret = builder.Configuration[Services.Utils.GoogleConstants.ClientSecret]!;
+        options.Scope.Add("https://www.googleapis.com/auth/userinfo.profile");
+        options.Scope.Add("https://www.googleapis.com/auth/userinfo.email");
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters()
@@ -75,12 +82,16 @@ builder
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
+builder.Services.AddAuthentication(
+    options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    });
 builder
     .Services.AddControllers()
-    .AddJsonOptions(x =>
-    {
-        x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+    .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
 var app = builder.Build();
 
