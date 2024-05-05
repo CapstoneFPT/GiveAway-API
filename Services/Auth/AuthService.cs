@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using BusinessObjects;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using Repositories.User;
@@ -14,6 +15,28 @@ public class AuthService : IAuthService
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
+    }
+
+    public async Task<User> ChangeToNewPassword(ResetPasswordRequest request)
+    {
+        var user = await _userRepository.FindUserByPasswordResetToken(request.Token);
+        if (user == null || user.ResetTokenExpires < DateTime.Now)
+        {
+            return null;
+        }
+        else
+        {
+            user.Password = request.Password;
+            user.ResetTokenExpires = null;
+            user.PasswordResetToken = null;
+            return user;
+        }
+    }
+
+    public async Task<User> FindUserByEmail(string email)
+    {
+        var result = await _userRepository.FindUserByEmail(email);
+        return result;
     }
 
     public async Task<Result<LoginResponse>> Login(string email, string password)
@@ -59,5 +82,10 @@ public class AuthService : IAuthService
                 ResultStatus = ResultStatus.Error
             };
         }
+    }
+
+    public Task<User> ResetPasswordToken(User user)
+    {
+        return _userRepository.ResetPasswordToken(user);
     }
 }

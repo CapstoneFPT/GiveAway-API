@@ -1,5 +1,6 @@
 ﻿using Repositories.User;
 using Services.Auth;
+using Services.Emails;
 
 namespace WebApi;
 
@@ -9,7 +10,7 @@ public static class DependencyInjectionExtensions
     {
         serviceCollection.AddScoped<ITokenService, TokenService>();
         serviceCollection.AddScoped<IAuthService, AuthService>();
-
+        serviceCollection.AddScoped<IEmailService, EmailService>();
         return serviceCollection;
     }
 

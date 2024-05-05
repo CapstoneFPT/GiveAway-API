@@ -1,4 +1,5 @@
 ﻿using BusinessObjects;
+using System.Security.Cryptography;
 
 namespace Repositories.User;
 
@@ -58,5 +59,48 @@ public class UserRepository : IUserRepository
         {
             throw new Exception(e.Message);
         }
+    }
+
+    public Task<BusinessObjects.User> FindUserByEmail(string email)
+    {
+        var user = Users.FirstOrDefault( c => c.Email == email);
+        return Task.FromResult((user == null) ? null : user);
+    }
+
+    public Task<BusinessObjects.User> FindUserByPasswordResetToken(string token)
+    {
+        var user = Users.FirstOrDefault(c => c.PasswordResetToken == token);
+        return Task.FromResult((user == null) ? null : user);
+    }
+
+    public Task ResetPassword(Guid uid, string password)
+    {
+        try
+        {
+            var user = Users.FirstOrDefault(c => c.Id == uid);
+            if (user == null)
+            {
+                throw new Exception();
+            }
+            else
+            {
+                user.Password = password;
+                return Task.FromResult(user);
+            }
+        }catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+    }
+
+    public Task<BusinessObjects.User> ResetPasswordToken(BusinessObjects.User user)
+    {
+        user.PasswordResetToken = CreateRandomToken();
+        user.ResetTokenExpires = DateTime.Now.AddDays(1);
+        return Task.FromResult(user);
+    }
+    private string CreateRandomToken()
+    {
+        return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
     }
 }

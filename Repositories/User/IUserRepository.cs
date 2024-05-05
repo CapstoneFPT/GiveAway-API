@@ -8,4 +8,8 @@ public interface IUserRepository
         int pageSize
     );
     Task<BusinessObjects.User?> FindOne(Func<BusinessObjects.User, bool> predicate);
+    Task ResetPassword(Guid uid, string password);
+    Task<BusinessObjects.User> FindUserByEmail(string email);
+    Task<BusinessObjects.User> ResetPasswordToken(BusinessObjects.User user);
+    Task<BusinessObjects.User> FindUserByPasswordResetToken(string token);
 }
