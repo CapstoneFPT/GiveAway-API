@@ -24,7 +24,7 @@ public class UserRepository : IUserRepository
         new BusinessObjects.User()
         {
             Id = new Guid(),
-            Email = "user@gmail.com",
+            Email = "thosanquy666@gmail.com",
             Password = "password123",
             Role = Role.User
         }
@@ -93,14 +93,18 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public Task<BusinessObjects.User> ResetPasswordToken(BusinessObjects.User user)
+    public async Task<BusinessObjects.User> ResetPasswordToken(BusinessObjects.User user)
     {
         user.PasswordResetToken = CreateRandomToken();
         user.ResetTokenExpires = DateTime.Now.AddDays(1);
-        return Task.FromResult(user);
+        return await Task.FromResult(user);
     }
     private string CreateRandomToken()
     {
-        return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
+        Random random = new Random();
+
+        // Tạo một số ngẫu nhiên gồm 6 chữ số
+        int randomNumber = random.Next(100000, 999999);
+        return randomNumber.ToString();
     }
 }

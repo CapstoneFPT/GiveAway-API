@@ -28,34 +28,30 @@ public class AuthController : ControllerBase
         var result = await _authService.Login(loginRequest.Email, loginRequest.Password);
         return Ok(result);
     }
-    [HttpPost("forgot-password")]
-    public async Task<IActionResult> ForgotPassword(string email)
+    [HttpGet("forgot-password")]
+    public async Task<Result<string>> ForgotPassword(string email, string newpass)
     {
-        var user = await _authService.FindUserByEmail(email);
-        if (user == null)
-        {
-            return BadRequest("User not found");
-        }
-        else
-        {
-            await _authService.ResetPasswordToken(user);
-            /*var mail = new SendEmailRequest();
-            mail.To = "alejandrin.hane@ethereal.email";
-            mail.Subject = "Reset Password";
-            mail.Body = user.PasswordResetToken.ToString();
-            _emailService.SendEmail(mail);*/
-        }
-        
-        return Ok(user);
+        var user = await _authService.CheckPassword(email, newpass);
+        return user;
     }
-    [HttpPost("reset-password")]
-    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+    [HttpPut("reset-password")]
+    public async Task<IActionResult> ResetPassword(string confirmtoken)
     {
-        var user = await _authService.ChangeToNewPassword(request);
+        var user = await _authService.ChangeToNewPassword(confirmtoken);
         if (user == null)
         {
             return BadRequest("Invalid token");
         }else
         return Ok(user);
     }
+    [HttpPost("register")]
+    public async Task<Result<string>> Register(RegisterRequest registerRequest)
+    {
+        return await _authService.Register(registerRequest);
+    }
+   /* [HttpGet("verify-email")]
+    public async Task<Result<string>> VerifyEmail(string email)
+    {
+
+    }*/
 }

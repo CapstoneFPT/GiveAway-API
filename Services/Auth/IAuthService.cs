@@ -8,6 +8,9 @@ public interface IAuthService
 {
     Task<Result<LoginResponse>> Login(string email, string password);
     Task<User> FindUserByEmail(string email);
-    Task<User> ResetPasswordToken(User user);
-    Task<User> ChangeToNewPassword(ResetPasswordRequest request);
+    Task<Result<string>> SendMail(string email);
+    Task<Result<string>> CheckPassword(string email, string newpass);
+    Task<User> ChangeToNewPassword(string confirmtoken);
+    Task<Result<string>> Register(RegisterRequest request);
+    Task<Result<string>> VerifyEmail(string email);
 }
