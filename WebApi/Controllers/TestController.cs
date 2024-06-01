@@ -1,4 +1,6 @@
 ﻿using BusinessObjects;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,21 +10,22 @@ namespace WebApi.Controllers;
 [Route("api/testing")]
 public class TestController : ControllerBase
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,Roles = "Admin")]
     [HttpGet("admin")]
     public string TestAdmin()
     {
         return "Admin Okay";
     }
 
-    [Authorize(Roles = "Staff")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,Roles = "Staff")]
     [HttpGet("staff")]
     public string TestStaff()
     {
         return "Staff Okay";
     }
 
-    [Authorize(Roles = "User")]
+    [Authorize(AuthenticationSchemes = GoogleDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,Roles = "User")]
     [HttpGet("user")]
     public string TestUser()
     {
