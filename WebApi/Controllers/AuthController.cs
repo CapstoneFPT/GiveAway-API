@@ -61,7 +61,7 @@ public class AuthController : ControllerBase
             name, givenName, email
         });
     }
-}
+
     [HttpGet("forgot-password")]
     public async Task<Result<string>> ForgotPassword(string email, string newpass)
     {
