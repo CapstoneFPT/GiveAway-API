@@ -53,7 +53,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(
         name: "AllowAll",
-        policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); }
+        policy =>
+        {
+            policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
+        }
     );
 });
 
@@ -62,8 +65,9 @@ string? jwtKey = builder.Configuration[Services.Utils.JwtConstants.JwtKey];
 string? jwtAudience = builder.Configuration[Services.Utils.JwtConstants.JwtAudience];
 
 builder
-    .Services.AddAuthentication(
-    ).AddCookie().AddGoogle(options =>
+    .Services.AddAuthentication()
+    .AddCookie()
+    .AddGoogle(options =>
     {
         options.ClientId = builder.Configuration[Services.Utils.GoogleConstants.ClientId]!;
         options.ClientSecret = builder.Configuration[Services.Utils.GoogleConstants.ClientSecret]!;
@@ -82,16 +86,18 @@ builder
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
-builder.Services.AddAuthentication(
-    options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+});
 builder
     .Services.AddControllers()
-    .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+    .AddJsonOptions(x =>
+    {
+        x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 var app = builder.Build();
 
