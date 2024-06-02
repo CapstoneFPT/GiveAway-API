@@ -7,7 +7,10 @@ on:
 
 jobs:
   docker-compose:
-    runs-on: self-hosted
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+          os: [self-hosted-vps, self-hosted-radriar]
     environment: docker
     steps:
     - name: Checkout code
