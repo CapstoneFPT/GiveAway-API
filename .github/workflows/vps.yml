@@ -10,8 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-          os: [self-hosted-vps, self-hosted-radriar]
-    environment: docker
+          os: [self-hosted-vps]
     steps:
     - name: Checkout code
       uses: actions/checkout@v2 
