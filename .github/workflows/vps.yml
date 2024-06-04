@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
           os: [self-hosted-vps, self-hosted-radriar]
-    environment: docker
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v2 
