@@ -1,9 +1,11 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using BusinessObjects;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi;
@@ -15,6 +17,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddServices();
 builder.Services.AddRepositories();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddDbContext<GiveAwayDbContext>(optionsAction: optionsBuilder =>
+{
+    optionsBuilder.UseNpgsql(builder.Configuration.GetConnectionString("DefaultDB"));
+});
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo() { Title = "Give Away API", Version = "v1" });
