@@ -36,17 +36,16 @@ public class AuthController : ControllerBase
     [HttpGet("login-google")]
     public IActionResult GoogleLogin()
     {
-        var props = new AuthenticationProperties()
-        {
-            RedirectUri = "api/auth/signin-google"
-        };
+        var props = new AuthenticationProperties() { RedirectUri = "api/auth/signin-google" };
         return Challenge(props, GoogleDefaults.AuthenticationScheme);
     }
 
     [HttpGet("signin-google")]
     public async Task<IActionResult> GoogleSignin()
     {
-        var response = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        var response = await HttpContext.AuthenticateAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
         if (response.Principal is null)
         {
             return BadRequest();
@@ -56,10 +55,14 @@ public class AuthController : ControllerBase
         var givenName = response.Principal.FindFirstValue(ClaimTypes.GivenName);
         var email = response.Principal.FindFirstValue(ClaimTypes.Email);
 
-        return Ok(new
-        {
-            name, givenName, email
-        });
+        return Ok(
+            new
+            {
+                name,
+                givenName,
+                email
+            }
+        );
     }
 
     [HttpGet("forgot-password")]
