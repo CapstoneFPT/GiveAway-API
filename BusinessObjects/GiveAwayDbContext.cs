@@ -27,9 +27,14 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Bid> Bids { get; set; }
     public DbSet<AuctionDeposit> AuctionDeposits { get; set; }
 
+    public GiveAwayDbContext()
+    {
+    }
     public GiveAwayDbContext(DbContextOptions<GiveAwayDbContext> options) : base(options)
     {
     }
+
+    
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -39,6 +44,7 @@ public class GiveAwayDbContext : DbContext
     private string? GetConnectionString()
     {
         var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
             .AddJsonFile("appsettings.Development.json")
             .Build();
