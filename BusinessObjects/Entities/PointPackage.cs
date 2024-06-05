@@ -1,8 +1,8 @@
 ﻿namespace BusinessObjects.Entities;
 
-public class Package
+public class PointPackage
 {
-    public Guid PackageId { get; set; }
+    public Guid PointPackageId { get; set; }
     public int Points { get; set; }
     public decimal Price { get; set; }
     public string Status { get; set; }

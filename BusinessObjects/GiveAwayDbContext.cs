@@ -42,9 +42,9 @@ public class GiveAwayDbContext : DbContext
             .AddJsonFile("appsettings.json")
             .AddJsonFile("appsettings.Development.json")
             .Build();
-        
+
         return configuration.GetConnectionString("DefaultDB");
-    } 
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -164,7 +164,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
 
         modelBuilder.Entity<Order>().HasOne(x => x.Transaction).WithOne(x => x.Order)
-            .HasForeignKey<Transaction>(x=>x.OrderId);
+            .HasForeignKey<Transaction>(x => x.OrderId);
 
         #endregion
 
@@ -186,7 +186,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Request>().Property(e => e.EndDate).HasColumnType("timestamptz").IsRequired(false);
 
         #endregion
-        
+
         #region Schedule
 
         modelBuilder.Entity<Schedule>().ToTable("Schedule").HasKey(e => e.ScheduleId);
@@ -195,7 +195,7 @@ public class GiveAwayDbContext : DbContext
 
         #region Timeslot
 
-        modelBuilder.Entity<Timeslot>().ToTable("Timeslot").HasKey(e => e.TimeslotId); 
+        modelBuilder.Entity<Timeslot>().ToTable("Timeslot").HasKey(e => e.TimeslotId);
 
         #endregion
 
@@ -203,10 +203,9 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<Transaction>().ToTable("Transaction").HasKey(e => e.TransactionId);
         modelBuilder.Entity<Transaction>().Property(e => e.Amount).HasColumnType("numeric").HasPrecision(10, 2);
-        modelBuilder.Entity<Transaction>().Property(e => e.CreatedDate).HasColumnType("timestamptz").ValueGeneratedOnAdd();
+        modelBuilder.Entity<Transaction>().Property(e => e.CreatedDate).HasColumnType("timestamptz")
+            .ValueGeneratedOnAdd();
         modelBuilder.Entity<Transaction>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(20);
-        
-       
 
         #endregion
 
@@ -214,9 +213,13 @@ public class GiveAwayDbContext : DbContext
         #region Wallet
 
         modelBuilder.Entity<Wallet>().ToTable("Wallet").HasKey(e => e.WalletId);
-        
 
         #endregion
 
+        #region PointPackage
+
+        modelBuilder.Entity<PointPackage>().ToTable("PointPackage").HasKey(e => e.PointPackageId);
+
+        #endregion
     }
 }
