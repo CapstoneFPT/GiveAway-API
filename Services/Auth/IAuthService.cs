@@ -15,4 +15,5 @@ public interface IAuthService
     Task<Account> ChangeToNewPassword(string confirmtoken);
     Task<Result<AccountResponse>> Register(RegisterRequest request);
     Task<Result<string>> VerifyEmail(string email);
+    Task<Result<AccountResponse>> CreateStaffAccount(CreateStaffAccountRequest request);
 }

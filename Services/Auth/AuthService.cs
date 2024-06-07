@@ -9,6 +9,7 @@ using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using Repositories.Accounts;
+using Repositories.Shops;
 using Repositories.User;
 using Services.Emails;
 
@@ -21,15 +22,17 @@ public class AuthService : IAuthService
 	private readonly IEmailService _emailService;
 	private readonly IMemoryCache _cache;
 	private readonly IMapper _mapper;
+	private readonly IShopRepository _shopRepository;
 	private readonly string newpassword = "newpasscachekey";
 	private readonly User newuser = new User();
-    public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService, IMemoryCache memoryCache, IMapper mapper)
+    public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService, IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository)
     {
         _accountRepository = accountRepository;
         _tokenService = tokenService;
 		_emailService = emailService;
 		_cache = memoryCache;
 		_mapper = mapper;
+		_shopRepository = shopRepository;
     }
 
     public async Task<Account> ChangeToNewPassword(string confirmtoken)
@@ -73,6 +76,49 @@ public class AuthService : IAuthService
 			response = await SendMail(email);
 			return response;
 		}
+    }
+
+    public async Task<Result<AccountResponse>> CreateStaffAccount(CreateStaffAccountRequest request)
+    {
+        var isused = await FindUserByEmail(request.Email);
+        var response = new Result<AccountResponse>();
+        if (isused != null)
+        {
+            response.Messages = new[] { "This mail is already used" };
+            response.ResultStatus = ResultStatus.Duplicated;
+            return response;
+        }
+        else
+        {
+            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            Account account = new Account();
+            account.Email = request.Email;
+            account.AccountId = new Guid();
+            account.PasswordHash = Convert.ToBase64String(passwordHash);
+            account.PasswordSalt = Convert.ToBase64String(passwordSalt);
+            account.Fullname = request.Fullname;
+            account.Phone = request.Phone;
+            account.Role = Roles.Staff.ToString();
+            account.Status = AccountStatus.Active.ToString();
+
+            var user = await _accountRepository.Register(account);
+
+			Shop shop = new Shop();
+			shop.ShopId = new Guid();
+			shop.Address = request.Address;
+			shop.StaffId = account.AccountId;
+			await _shopRepository.CreateShop(shop);
+
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["Create staff successfully"];
+            response.Data = _mapper.Map<AccountResponse>(user);
+            return response;
+            /*var cacheEntryOption = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromSeconds(60))
+                .SetPriority(CacheItemPriority.Normal);
+            _cache.Set(newuser, account, cacheEntryOption);
+            return await SendMailRegister(request.Email);*/
+        }
     }
 
     public async Task<Account> FindUserByEmail(string email)

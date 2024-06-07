@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using Repositories.Accounts;
 using System;

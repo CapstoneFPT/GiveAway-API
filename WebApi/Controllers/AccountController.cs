@@ -1,4 +1,5 @@
 ﻿using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,5 +27,6 @@ namespace WebApi.Controllers
         {
             return await _accountService.GetAccountById(id);
         }
+        
     }
 }

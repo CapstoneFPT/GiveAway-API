@@ -87,9 +87,14 @@ public class AuthController : ControllerBase
     {
         return await _authService.Register(registerRequest);
     }
-   /* [HttpGet("verify-email")]
-    public async Task<Result<string>> VerifyEmail(string email)
+    [HttpPost("createstaffaccount")]
+    public async Task<ActionResult<Result<AccountResponse>>> CreateStaffAccount(CreateStaffAccountRequest registerRequest)
     {
+        return await _authService.CreateStaffAccount(registerRequest);
+    }
+    /* [HttpGet("verify-email")]
+     public async Task<Result<string>> VerifyEmail(string email)
+     {
 
-    }*/
+     }*/
 }
