@@ -19,5 +19,8 @@ namespace Repositories.Accounts
         Task<Account> FindUserByEmail(string email);
         Task<Account> ResetPasswordToken(Account user);
         Task<Account> FindUserByPasswordResetToken(string token);
+        Task<List<Account>> GetAllAccounts();
+        Task<Account> GetAccountById(Guid id);
+        Task<Account> Register(Account account);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using BusinessObjects;
 using BusinessObjects.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,6 +59,24 @@ namespace Repositories.Accounts
         {
             var user = _dbContext.Accounts.FirstOrDefault(c => c.PasswordResetToken == token);
             return Task.FromResult((user == null) ? null : user);
+        }
+
+        public async Task<Account> GetAccountById(Guid id)
+        {
+                var user = await _dbContext.Accounts.FirstOrDefaultAsync(c => c.AccountId == id);
+                return user;
+        }
+        public async Task<List<Account>> GetAllAccounts()
+        {
+            var list = await _dbContext.Accounts.ToListAsync();
+            return list;
+        }
+
+        public Task<Account> Register(Account account)
+        {
+            _dbContext.Accounts.Add(account);
+            _dbContext.SaveChanges();
+            return Task.FromResult<Account>(account);
         }
 
         public Task ResetPassword(Guid uid, string password)

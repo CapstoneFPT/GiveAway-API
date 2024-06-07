@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Email;
 using Microsoft.AspNetCore.Mvc;
 using Services.Auth;
 using Services.Emails;
+using BusinessObjects.Dtos.Account.Response;
 
 namespace WebApi.Controllers;
 
@@ -82,7 +83,7 @@ public class AuthController : ControllerBase
         return Ok(user);
     }
     [HttpPost("register")]
-    public async Task<Result<string>> Register(RegisterRequest registerRequest)
+    public async Task<Result<AccountResponse>> Register(RegisterRequest registerRequest)
     {
         return await _authService.Register(registerRequest);
     }

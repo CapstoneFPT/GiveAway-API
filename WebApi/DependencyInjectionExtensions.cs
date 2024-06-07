@@ -19,6 +19,7 @@ using Repositories.Timeslots;
 using Repositories.Transactions;
 using Repositories.User;
 using Repositories.Wallets;
+using Services;
 using Services.Accounts;
 using Services.AuctionDeposits;
 using Services.AuctionItems;
@@ -71,6 +72,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<ITimeslotService, TimeslotService>();
         serviceCollection.AddScoped<ITransactionService, TransactionService>();
         serviceCollection.AddScoped<IWalletService, WalletService>();
+        serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }
 

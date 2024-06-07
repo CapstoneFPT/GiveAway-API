@@ -1,9 +1,14 @@
 ﻿using System.Security.Claims;
+using System.Security.Cryptography;
+using AutoMapper;
 using BusinessObjects;
+using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Email;
+using BusinessObjects.Entities;
 using Microsoft.Extensions.Caching.Memory;
+using Repositories.Accounts;
 using Repositories.User;
 using Services.Emails;
 
@@ -11,32 +16,34 @@ namespace Services.Auth;
 
 public class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IAccountRepository _accountRepository;
     private readonly ITokenService _tokenService;
 	private readonly IEmailService _emailService;
 	private readonly IMemoryCache _cache;
+	private readonly IMapper _mapper;
 	private readonly string newpassword = "newpasscachekey";
 	private readonly User newuser = new User();
-    public AuthService(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService, IMemoryCache memoryCache)
+    public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService, IMemoryCache memoryCache, IMapper mapper)
     {
-        _userRepository = userRepository;
+        _accountRepository = accountRepository;
         _tokenService = tokenService;
 		_emailService = emailService;
 		_cache = memoryCache;
+		_mapper = mapper;
     }
 
-    public async Task<User> ChangeToNewPassword(string confirmtoken)
+    public async Task<Account> ChangeToNewPassword(string confirmtoken)
     {
-        var user = await _userRepository.FindUserByPasswordResetToken(confirmtoken);
+        var user = await _accountRepository.FindUserByPasswordResetToken(confirmtoken);
         if (user == null || user.ResetTokenExpires < DateTime.Now)
         {
             return null;
         }
         else
         {
-            user.Password = _cache.Get<string>(newpassword);
+            /*user.Password = _cache.Get<string>(newpassword);
             user.ResetTokenExpires = null;
-            user.PasswordResetToken = null;
+            user.PasswordResetToken = null;*/
             return user;
         }
     }
@@ -44,14 +51,14 @@ public class AuthService : IAuthService
     public async Task<Result<string>> CheckPassword(string email, string newpass)
     {
         var response = new Result<string>();
-        var account = await _userRepository.FindUserByEmail(email);
+        var account = await _accountRepository.FindUserByEmail(email);
         if (account is null)
         {
             response.ResultStatus = ResultStatus.NotFound;
             response.Messages = new[] { "User not found" };
             return response;
         }
-		else if (account.Password == newpass)
+		else if (VerifyPasswordHash(newpass, Convert.FromBase64String(account.PasswordHash), Convert.FromBase64String(account.PasswordSalt)))
 		{
 			response.ResultStatus = ResultStatus.Duplicated;
 			response.Messages = new[] { "This password is duplicated with the old password" };
@@ -68,9 +75,9 @@ public class AuthService : IAuthService
 		}
     }
 
-    public async Task<User> FindUserByEmail(string email)
+    public async Task<Account> FindUserByEmail(string email)
     {
-        var result = await _userRepository.FindUserByEmail(email);
+        var result = await _accountRepository.FindUserByEmail(email);
         return result;
     }
 
@@ -78,8 +85,8 @@ public class AuthService : IAuthService
     {
         try
         {
-            var user = await _userRepository.FindOne(x =>
-                x.Email.Equals(email) && x.Password.Equals(password)
+            var user = await _accountRepository.FindOne(x =>
+                x.Email.Equals(email)
             );
 
             if (user is null)
@@ -90,10 +97,25 @@ public class AuthService : IAuthService
                     Messages = ["Member Not Found"]
                 };
             }
-
+			if(user.VerifiedAt == null)
+			{
+                return new Result<LoginResponse>()
+                {
+                    ResultStatus = ResultStatus.Error,
+                    Messages = ["Not Verified"]
+                };
+            }
+			if(!VerifyPasswordHash(password, Convert.FromBase64String(user.PasswordHash) , Convert.FromBase64String(user.PasswordSalt)))
+			{
+                return new Result<LoginResponse>()
+                {
+                    ResultStatus = ResultStatus.Error,
+                    Messages = ["Password is not correct"]
+                };
+            }
             var claims = new List<Claim>()
             {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.NameIdentifier, user.AccountId.ToString()),
                 new(ClaimTypes.Name, user.Email),
                 new(ClaimTypes.Role, user.Role.ToString())
             };
@@ -119,10 +141,10 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<Result<string>> Register(RegisterRequest request)
+    public async Task<Result<AccountResponse>> Register(RegisterRequest request)
     {
         var isused = await FindUserByEmail(request.Email);
-		var response = new Result<string>();
+		var response = new Result<AccountResponse>();
 		if (isused != null)
 		{
 			response.Messages = new[] { "This mail is already used" };
@@ -131,22 +153,35 @@ public class AuthService : IAuthService
 		}
 		else
 		{
-			User user = new User();
-			user.Email = request.Email;
-			user.Password = request.Password;
-            var cacheEntryOption = new MemoryCacheEntryOptions()
+            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+			Account account = new Account();
+			account.Email = request.Email;
+			account.AccountId = new Guid();
+			account.PasswordHash = Convert.ToBase64String(passwordHash);
+			account.PasswordSalt = Convert.ToBase64String(passwordSalt);
+			account.Fullname = request.Fullname;
+			account.Phone = request.Phone;
+			account.Role = Roles.Member.ToString();
+			account.Status = AccountStatus.Active.ToString();
+
+			var user = await _accountRepository.Register(account);
+			response.ResultStatus = ResultStatus.Success;
+			response.Messages = ["Register successfully"];
+			response.Data = _mapper.Map<AccountResponse>(user);
+			return response;
+            /*var cacheEntryOption = new MemoryCacheEntryOptions()
                 .SetSlidingExpiration(TimeSpan.FromSeconds(60))
                 .SetPriority(CacheItemPriority.Normal);
-            _cache.Set(newuser, user, cacheEntryOption);
-            return await SendMailRegister(request.Email);
+            _cache.Set(newuser, account, cacheEntryOption);
+            return await SendMailRegister(request.Email);*/
 		}
     }
 
     public async Task<Result<string>> SendMail(string email)
     {
         var response = new Result<string>();
-        var account = await _userRepository.FindUserByEmail(email);
-        var user = await _userRepository.ResetPasswordToken(account);
+        var account = await _accountRepository.FindUserByEmail(email);
+        var user = await _accountRepository.ResetPasswordToken(account);
         response.Data = user.PasswordResetToken;
         SendEmailRequest content = new SendEmailRequest
         {
@@ -492,5 +527,21 @@ public class AuthService : IAuthService
     public Task<Result<string>> VerifyEmail(string email)
     {
         throw new NotImplementedException();
+    }
+	private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+	{
+		using(var hmac = new HMACSHA512())
+		{
+			passwordSalt = hmac.Key;
+			passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+		}
+	}
+    private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+    {
+        using (var hmac = new HMACSHA512(passwordSalt))
+        {
+            var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+			return computedHash.SequenceEqual(passwordHash);
+        }
     }
 }

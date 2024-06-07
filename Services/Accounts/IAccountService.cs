@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Dtos.Commons;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,7 @@ namespace Services.Accounts
 {
     public interface IAccountService
     {
+        Task<List<AccountResponse>> GetAllAccounts();
+        Task<Result<AccountResponse>> GetAccountById(Guid id);
     }
 }

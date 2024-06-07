@@ -14,3 +14,14 @@ public enum ResultStatus
     Duplicated,
     Error
 }
+
+public enum Roles
+{
+    Staff,
+    Member
+}
+public enum AccountStatus
+{
+    Active,
+    Inactive
+}
