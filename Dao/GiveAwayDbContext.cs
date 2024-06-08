@@ -1,10 +1,8 @@
-﻿using System.Data.Common;
-using System.Net.Mime;
-using BusinessObjects.Entities;
+﻿using BusinessObjects.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace BusinessObjects;
+namespace Dao;
 
 public class GiveAwayDbContext : DbContext
 {
