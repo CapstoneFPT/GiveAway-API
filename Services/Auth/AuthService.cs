@@ -93,7 +93,7 @@ public class AuthService : IAuthService
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
             Account account = new Account();
             account.Email = request.Email;
-            account.AccountId = new Guid();
+            /*account.AccountId = new Guid();*/
             account.PasswordHash = Convert.ToBase64String(passwordHash);
             account.PasswordSalt = Convert.ToBase64String(passwordSalt);
             account.Fullname = request.Fullname;
@@ -202,7 +202,7 @@ public class AuthService : IAuthService
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 			Account account = new Account();
 			account.Email = request.Email;
-			account.AccountId = new Guid();
+			/*account.AccountId = new Guid();*/
 			account.PasswordHash = Convert.ToBase64String(passwordHash);
 			account.PasswordSalt = Convert.ToBase64String(passwordSalt);
 			account.Fullname = request.Fullname;
@@ -211,6 +211,9 @@ public class AuthService : IAuthService
 			account.Status = AccountStatus.Active.ToString();
 
 			var user = await _accountRepository.Register(account);
+
+			Wallet wallet = new Wallet();
+
 			response.ResultStatus = ResultStatus.Success;
 			response.Messages = ["Register successfully"];
 			response.Data = _mapper.Map<AccountResponse>(user);
