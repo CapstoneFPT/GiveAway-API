@@ -808,3 +808,4 @@ fabric.properties
 # End of https://www.toptal.com/developers/gitignore/api/rider,visualstudio,visualstudiocode,csharp,aspnetcore,dotnetcore
 WebApi/appsettings.Development.json
 .vscode
+script.sql

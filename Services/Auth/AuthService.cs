@@ -11,6 +11,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Repositories.Accounts;
 using Repositories.Shops;
 using Repositories.User;
+using Repositories.Wallets;
 using Services.Emails;
 
 namespace Services.Auth;
@@ -23,9 +24,10 @@ public class AuthService : IAuthService
 	private readonly IMemoryCache _cache;
 	private readonly IMapper _mapper;
 	private readonly IShopRepository _shopRepository;
+	private readonly IWalletRepository _walletRepository;
 	private readonly string newpassword = "newpasscachekey";
 	private readonly User newuser = new User();
-    public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService, IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository)
+    public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService, IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository, IWalletRepository walletRepository)
     {
         _accountRepository = accountRepository;
         _tokenService = tokenService;
@@ -33,6 +35,7 @@ public class AuthService : IAuthService
 		_cache = memoryCache;
 		_mapper = mapper;
 		_shopRepository = shopRepository;
+		_walletRepository = walletRepository;
     }
 
     public async Task<Account> ChangeToNewPassword(string confirmtoken)
@@ -61,7 +64,7 @@ public class AuthService : IAuthService
             response.Messages = new[] { "User not found" };
             return response;
         }
-		else if (VerifyPasswordHash(newpass, Convert.FromBase64String(account.PasswordHash), Convert.FromBase64String(account.PasswordSalt)))
+		else if (VerifyPasswordHash(newpass, account.PasswordHash, account.PasswordSalt))
 		{
 			response.ResultStatus = ResultStatus.Duplicated;
 			response.Messages = new[] { "This password is duplicated with the old password" };
@@ -94,8 +97,8 @@ public class AuthService : IAuthService
             Account account = new Account();
             account.Email = request.Email;
             /*account.AccountId = new Guid();*/
-            account.PasswordHash = Convert.ToBase64String(passwordHash);
-            account.PasswordSalt = Convert.ToBase64String(passwordSalt);
+            account.PasswordHash = passwordHash;
+            account.PasswordSalt = passwordSalt;
             account.Fullname = request.Fullname;
             account.Phone = request.Phone;
             account.Role = Roles.Staff.ToString();
@@ -151,7 +154,7 @@ public class AuthService : IAuthService
                     Messages = ["Not Verified"]
                 };
             }
-			if(!VerifyPasswordHash(password, Convert.FromBase64String(user.PasswordHash) , Convert.FromBase64String(user.PasswordSalt)))
+			if(!VerifyPasswordHash(password, user.PasswordHash , user.PasswordSalt))
 			{
                 return new Result<LoginResponse>()
                 {
@@ -203,8 +206,8 @@ public class AuthService : IAuthService
 			Account account = new Account();
 			account.Email = request.Email;
 			/*account.AccountId = new Guid();*/
-			account.PasswordHash = Convert.ToBase64String(passwordHash);
-			account.PasswordSalt = Convert.ToBase64String(passwordSalt);
+			account.PasswordHash = passwordHash;
+			account.PasswordSalt = passwordSalt;
 			account.Fullname = request.Fullname;
 			account.Phone = request.Phone;
 			account.Role = Roles.Member.ToString();
@@ -213,7 +216,10 @@ public class AuthService : IAuthService
 			var user = await _accountRepository.Register(account);
 
 			Wallet wallet = new Wallet();
-
+			wallet.Balance = 0;
+			wallet.MemberId = account.AccountId;
+			await _walletRepository.CreateWallet(wallet);
+			
 			response.ResultStatus = ResultStatus.Success;
 			response.Messages = ["Register successfully"];
 			response.Data = _mapper.Map<AccountResponse>(user);

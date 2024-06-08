@@ -90,7 +90,7 @@ namespace Repositories.Accounts
                 }
                 else
                 {
-                    user.PasswordSalt = password;
+                    //user.PasswordSalt = password;
                     return Task.FromResult(user);
                 }
             }

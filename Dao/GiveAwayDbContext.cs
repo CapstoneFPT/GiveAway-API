@@ -223,7 +223,8 @@ public class GiveAwayDbContext : DbContext
         #region Wallet
 
         modelBuilder.Entity<Wallet>().ToTable("Wallet").HasKey(e => e.WalletId);
-
+        modelBuilder.Entity<Wallet>().Property(e => e.BankAccountNumber).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Wallet>().Property(e => e.BankName).HasColumnType("varchar").HasMaxLength(100);
         #endregion
 
         #region PointPackage
