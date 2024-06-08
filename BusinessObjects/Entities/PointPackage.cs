@@ -6,4 +6,6 @@ public class PointPackage
     public int Points { get; set; }
     public decimal Price { get; set; }
     public string Status { get; set; }
+
+    public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 }

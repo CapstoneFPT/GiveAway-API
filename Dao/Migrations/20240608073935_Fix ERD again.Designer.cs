@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240608073935_Fix ERD again")]
+    partial class FixERDagain
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -601,6 +604,9 @@ namespace Dao.Migrations
                     b.Property<Guid?>("OrderId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("PackageId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -613,6 +619,8 @@ namespace Dao.Migrations
 
                     b.HasIndex("OrderId")
                         .IsUnique();
+
+                    b.HasIndex("PackageId");
 
                     b.HasIndex("WalletId");
 
@@ -916,6 +924,10 @@ namespace Dao.Migrations
                         .WithOne("Transaction")
                         .HasForeignKey("BusinessObjects.Entities.Transaction", "OrderId");
 
+                    b.HasOne("BusinessObjects.Entities.PointPackage", "Package")
+                        .WithMany()
+                        .HasForeignKey("PackageId");
+
                     b.HasOne("BusinessObjects.Entities.Wallet", "Wallet")
                         .WithMany()
                         .HasForeignKey("WalletId")
@@ -923,6 +935,8 @@ namespace Dao.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
+
+                    b.Navigation("Package");
 
                     b.Navigation("Wallet");
                 });
