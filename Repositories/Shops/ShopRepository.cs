@@ -1,5 +1,6 @@
 ﻿using BusinessObjects;
 using BusinessObjects.Entities;
+using Dao;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,17 +11,17 @@ namespace Repositories.Shops
 {
     public class ShopRepository : IShopRepository
     {
-        private readonly GiveAwayDbContext _dbContext;
+        private readonly GenericDao<Shop> _shop;
 
         public ShopRepository()
         {
-            _dbContext = new GiveAwayDbContext();
+            _shop = new GenericDao<Shop>();
         }
 
         public async Task<Shop> CreateShop(Shop shop)
         {
-            _dbContext.Add(shop);
-            await _dbContext.SaveChangesAsync();
+            _shop.AddAsync(shop);
+            await _shop.SaveChangesAsync();
             return shop;
         }
     }

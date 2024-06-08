@@ -6,9 +6,9 @@ public class GenericDao<T> where T : class
 {
    private readonly GiveAwayDbContext _context;
 
-   public GenericDao(GiveAwayDbContext context)
+   public GenericDao()
    {
-      _context = context;
+      _context = new GiveAwayDbContext();
    }
 
    public IQueryable<T> GetQueryable()

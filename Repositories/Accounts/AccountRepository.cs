@@ -1,5 +1,6 @@
 ﻿using BusinessObjects;
 using BusinessObjects.Entities;
+using Dao;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,11 +12,10 @@ namespace Repositories.Accounts
 {
     public class AccountRepository : IAccountRepository
     {
-        private readonly GiveAwayDbContext _dbContext;
-
+        private readonly GenericDao<Account> _dao;
         public AccountRepository()
         {
-            _dbContext = new GiveAwayDbContext();
+            _dao = new GenericDao<Account>();
         }
 
         public Task<List<Account>> FindMany(
@@ -26,7 +26,7 @@ namespace Repositories.Accounts
         {
             try
             {
-                var users = _dbContext.Accounts.Where(predicate).Skip((page * pageSize) - 1).Take(pageSize).ToList();
+                var users = _dao.GetQueryable().Where(predicate).Skip((page * pageSize) - 1).Take(pageSize).ToList();
 
                 return Task.FromResult(users);
             }
@@ -40,7 +40,7 @@ namespace Repositories.Accounts
         {
             try
             {
-                var result = _dbContext.Accounts.FirstOrDefault(predicate);
+                var result = _dao.GetQueryable().FirstOrDefault(predicate);
                 return Task.FromResult<Account?>(result);
             }
             catch (Exception e)
@@ -51,31 +51,31 @@ namespace Repositories.Accounts
 
         public Task<Account> FindUserByEmail(string email)
         {
-            var user = _dbContext.Accounts.FirstOrDefault(c => c.Email == email);
+            var user = _dao.GetQueryable().FirstOrDefault(c => c.Email == email);
             return Task.FromResult((user == null) ? null : user);
         }
 
         public Task<Account> FindUserByPasswordResetToken(string token)
         {
-            var user = _dbContext.Accounts.FirstOrDefault(c => c.PasswordResetToken == token);
+            var user = _dao.GetQueryable().FirstOrDefault(c => c.PasswordResetToken == token);
             return Task.FromResult((user == null) ? null : user);
         }
 
         public async Task<Account> GetAccountById(Guid id)
         {
-                var user = await _dbContext.Accounts.FirstOrDefaultAsync(c => c.AccountId == id);
+                var user = await _dao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
                 return user;
         }
         public async Task<List<Account>> GetAllAccounts()
         {
-            var list = await _dbContext.Accounts.ToListAsync();
+            var list = await _dao.GetQueryable().ToListAsync();
             return list;
         }
 
         public Task<Account> Register(Account account)
         {
-            _dbContext.Accounts.Add(account);
-            _dbContext.SaveChanges();
+            _dao.AddAsync(account);
+            _dao.SaveChangesAsync();
             return Task.FromResult<Account>(account);
         }
 
@@ -83,7 +83,7 @@ namespace Repositories.Accounts
         {
             try
             {
-                var user = _dbContext.Accounts.FirstOrDefault(c => c.AccountId == uid);
+                var user = _dao.GetQueryable().FirstOrDefault(c => c.AccountId == uid);
                 if (user == null)
                 {
                     throw new Exception();
