@@ -1,10 +1,8 @@
-﻿using System.Data.Common;
-using System.Net.Mime;
-using BusinessObjects.Entities;
+﻿using BusinessObjects.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace BusinessObjects;
+namespace Dao;
 
 public class GiveAwayDbContext : DbContext
 {
@@ -12,13 +10,13 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Inquiry> Inquiries { get; set; }
     public DbSet<Request> Requests { get; set; }
     public DbSet<Shop> Shops { get; set; }
-    public DbSet<Item> Items { get; set; }
+    public DbSet<FashionItem> FashionItems { get; set; }
     public DbSet<Image> Images { get; set; }
     public DbSet<Auction> Auctions { get; set; }
     public DbSet<Schedule> Schedules { get; set; }
     public DbSet<Delivery> Deliveries { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
-    public DbSet<AuctionItem> AuctionItems { get; set; }
+    public DbSet<AuctionFashionItem> AuctionFashionItems { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Timeslot> TimeSlots { get; set; }
@@ -101,7 +99,7 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
-        #region AuctionItem
+        #region FashionAuctionItem
 
         #endregion
 
@@ -145,19 +143,19 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
-        #region Item
+        #region FashionItem
 
-        modelBuilder.Entity<Item>().ToTable("Item").HasKey(e => e.ItemId);
-        modelBuilder.Entity<Item>().HasDiscriminator(e => e.Type)
-            .HasValue<Item>("ItemBase")
-            .HasValue<ConsignedForSaleItem>("ConsignedForSale")
-            .HasValue<AuctionItem>("ConsignedForAuction");
-        modelBuilder.Entity<Item>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
-        modelBuilder.Entity<Item>().Property(e => e.Price).HasColumnType("numeric")
+        modelBuilder.Entity<FashionItem>().ToTable("FashionItem").HasKey(e => e.ItemId);
+        modelBuilder.Entity<FashionItem>().HasDiscriminator(e => e.Type)
+            .HasValue<FashionItem>("ItemBase")
+            .HasValue<ConsignedForSaleFashionItem>("ConsignedForSale")
+            .HasValue<AuctionFashionItem>("ConsignedForAuction");
+        modelBuilder.Entity<FashionItem>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
+        modelBuilder.Entity<FashionItem>().Property(e => e.SellingPrice).HasColumnType("numeric")
             .HasPrecision(10, 2);
-        modelBuilder.Entity<Item>().Property(e => e.Note).HasColumnType("varchar").HasMaxLength(100);
-        modelBuilder.Entity<Item>().Property(e => e.Value).HasColumnType("numeric");
-        modelBuilder.Entity<Item>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<FashionItem>().Property(e => e.Note).HasColumnType("varchar").HasMaxLength(100);
+        modelBuilder.Entity<FashionItem>().Property(e => e.Value).HasColumnType("numeric");
+        modelBuilder.Entity<FashionItem>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
 
         #endregion
 
@@ -179,6 +177,8 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<OrderDetail>().ToTable("OrderDetail").HasKey(e => e.OrderDetailId);
         modelBuilder.Entity<OrderDetail>().Property(e => e.UnitPrice).HasColumnType("numberic").HasPrecision(10, 2);
 
+       
+
         #endregion
 
         #region Request
@@ -190,6 +190,8 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Request>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(50);
         modelBuilder.Entity<Request>().Property(e => e.StartDate).HasColumnType("timestamptz").IsRequired(false);
         modelBuilder.Entity<Request>().Property(e => e.EndDate).HasColumnType("timestamptz").IsRequired(false);
+
+        modelBuilder.Entity<Request>().HasOne(x => x.OrderDetail).WithOne(x => x.Request).HasForeignKey<OrderDetail>(x=>x.RequestId);
 
         #endregion
 
@@ -208,10 +210,12 @@ public class GiveAwayDbContext : DbContext
         #region Transaction
 
         modelBuilder.Entity<Transaction>().ToTable("Transaction").HasKey(e => e.TransactionId);
-        modelBuilder.Entity<Transaction>().Property(e => e.Amount).HasColumnType("numeric").HasPrecision(10, 2);
+        modelBuilder.Entity<Transaction>().Property(e => e.Amount).HasColumnType("numeric").HasPrecision(10, 2);    
         modelBuilder.Entity<Transaction>().Property(e => e.CreatedDate).HasColumnType("timestamptz")
             .ValueGeneratedOnAdd();
         modelBuilder.Entity<Transaction>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Transaction>().HasOne(x => x.AuctionDeposit).WithOne(x => x.Transaction)
+            .HasForeignKey<AuctionDeposit>(x => x.TransactionId);
 
         #endregion
 

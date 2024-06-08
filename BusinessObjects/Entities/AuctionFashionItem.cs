@@ -1,6 +1,6 @@
 ﻿namespace BusinessObjects.Entities;
 
-public class AuctionItem : Item
+public class AuctionFashionItem : FashionItem
 {
     public int Duration { get; set; }
     public decimal InitialPrice { get; set; }

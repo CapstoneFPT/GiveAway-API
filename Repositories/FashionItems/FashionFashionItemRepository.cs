@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Repositories.Items
+namespace Repositories.FashionItems
 {
-    public class ItemRepository : IItemRepository
+    public class FashionFashionItemRepository : IFashionItemRepository
     {
     }
 }

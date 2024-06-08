@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using BusinessObjects;
+using Dao;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;

@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿#nullable disable
 
-#nullable disable
+using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace BusinessObjects.Migrations
+namespace Dao.Migrations
 {
     /// <inheritdoc />
     public partial class FixRelations : Migration

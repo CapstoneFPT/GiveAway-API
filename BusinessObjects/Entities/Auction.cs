@@ -12,7 +12,7 @@ public class Auction
     public int DepositFee { get; set; }
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
-    public AuctionItem AuctionItem { get; set; }
+    public AuctionFashionItem AuctionFashionItem { get; set; }
     public Guid AuctionItemId { get; set; }
     public string Status { get; set; }
 

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Services.Items
+namespace Repositories.FashionItems
 {
-    public class ItemService : IItemService
+    public interface IFashionItemRepository
     {
     }
 }

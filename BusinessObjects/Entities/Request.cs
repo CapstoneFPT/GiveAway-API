@@ -17,4 +17,5 @@ public class Request
    public Account Member { get; set; }
    public Guid MemberId { get; set; }
    public string Status { get; set; }
+   public OrderDetail? OrderDetail { get; set; }
 }
