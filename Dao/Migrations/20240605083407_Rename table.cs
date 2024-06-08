@@ -1,9 +1,8 @@
-﻿using System;
+﻿#nullable disable
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
-#nullable disable
-
-namespace BusinessObjects.Migrations
+namespace Dao.Migrations
 {
     /// <inheritdoc />
     public partial class Renametable : Migration

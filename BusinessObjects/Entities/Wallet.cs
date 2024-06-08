@@ -9,6 +9,8 @@ public class Wallet
     public int Balance { get; set; }
     public Account Member { get; set; }
     public Guid MemberId { get; set; }
+    public string BankAccountNumber { get; set; }
+    public string BankName { get; set; }
 
     public ICollection<Transaction> Transactions = new List<Transaction>();
 }
