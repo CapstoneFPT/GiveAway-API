@@ -32,9 +32,7 @@ public class GiveAwayDbContext : DbContext
     {
     }
     
-    public GiveAwayDbContext()
-    {
-    }
+ 
 
     
 

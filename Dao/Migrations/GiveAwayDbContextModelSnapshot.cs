@@ -561,7 +561,7 @@ namespace Dao.Migrations
                     b.HasIndex("StaffId")
                         .IsUnique();
 
-                    b.ToTable("Shops");
+                    b.ToTable("Shops", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Timeslot", b =>

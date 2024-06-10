@@ -9,6 +9,6 @@ namespace Repositories.Wallets
 {
     public interface IWalletRepository
     {
-        Task CreateWallet(Wallet wallet);
+        Task<Wallet> CreateWallet(Wallet wallet);
     }
 }

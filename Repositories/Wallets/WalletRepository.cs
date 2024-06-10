@@ -10,18 +10,17 @@ namespace Repositories.Wallets
 {
     public class WalletRepository : IWalletRepository
     {
-        private readonly GenericDao<Wallet> _wallet;
+        private readonly GenericDao<Wallet> _walletDao;
 
         public WalletRepository()
         {
-            _wallet = new GenericDao<Wallet>();
+            _walletDao = new GenericDao<Wallet>();
         }
 
-        public Task CreateWallet(Wallet wallet)
+        public async Task<Wallet> CreateWallet(Wallet wallet)
         {
-            _wallet.AddAsync(wallet);
-            _wallet.SaveChangesAsync();
-            return Task.FromResult(wallet);
+            var result = await _walletDao.AddAsync(wallet);
+            return result;
         }
     }
 }
