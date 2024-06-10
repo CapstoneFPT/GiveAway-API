@@ -2,7 +2,7 @@
 
 namespace BusinessObjects.Dtos.Auctions;
 
-public class CreateAuctionRequest : ValidationAttribute
+public class CreateAuctionRequest 
 {
     public string Title { get; set; }
     
@@ -12,9 +12,6 @@ public class CreateAuctionRequest : ValidationAttribute
     public Guid AuctionItemId { get; set; }
     public DateOnly ScheduleDate { get; set; }
     public Guid TimeslotId { get; set; }
+    public int DepositFee { get; set; }
 
-    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
-    {
-        return base.IsValid(value, validationContext);
-    }
 }
