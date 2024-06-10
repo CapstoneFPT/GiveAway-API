@@ -31,6 +31,10 @@ public class GiveAwayDbContext : DbContext
     public GiveAwayDbContext(DbContextOptions<GiveAwayDbContext> options) : base(options)
     {
     }
+    
+    public GiveAwayDbContext()
+    {
+    }
 
     
 
