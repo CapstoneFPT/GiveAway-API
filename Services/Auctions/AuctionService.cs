@@ -28,5 +28,10 @@ namespace Services.Auctions
                 throw new Exception(e.Message);
             }
         }
+
+        public Task<List<AuctionListResponse>> GetAuctions()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

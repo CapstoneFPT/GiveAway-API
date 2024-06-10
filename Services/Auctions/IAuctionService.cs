@@ -10,5 +10,6 @@ namespace Services.Auctions
     public interface IAuctionService
     {
         Task CreateAuction(CreateAuctionRequest request);
+        Task<List<AuctionListResponse>> GetAuctions();
     }
 }

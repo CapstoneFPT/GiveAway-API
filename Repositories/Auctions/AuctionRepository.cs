@@ -1,42 +1,26 @@
 ﻿using BusinessObjects;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Entities;
+using Dao;
 
 namespace Repositories.Auctions
 {
     public class AuctionRepository : IAuctionRepository
     {
-        private readonly GiveAwayDbContext _context;
+        private readonly GenericDao<Auction> _auctionDao;
+        private readonly GenericDao<Schedule> _scheduleDao;
 
         public AuctionRepository()
         {
-            _context = new GiveAwayDbContext();
+            _auctionDao = new GenericDao<Auction>();
+            _scheduleDao = new GenericDao<Schedule>();
         }
 
         public async Task CreateAuction(CreateAuctionRequest request)
         {
             try
             {
-                var newAuction = new Auction()
-                {
-                    Title = request.Title,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
-                    ShopId = request.ShopId,
-                    AuctionItemId = request.AuctionItemId,
-                    Status = "Pending",
-                };
 
-                var newSchedule = new Schedule()
-                {
-                    TimeslotId = request.TimeslotId,
-                    Date = request.ScheduleDate
-                };
-                
-                await _context.Schedules.AddAsync(newSchedule); 
-                await _context.Auctions.AddAsync(newAuction);
-
-                await _context.SaveChangesAsync();
             }
             catch (Exception e)
             {
