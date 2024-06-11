@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Account.Response;
+﻿using BusinessObjects.Dtos.Account.Request;
+using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using Microsoft.AspNetCore.Http;
@@ -7,7 +8,7 @@ using Services.Accounts;
 
 namespace WebApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/accounts")]
     [ApiController]
     public class AccountController : ControllerBase
     {
@@ -17,16 +18,25 @@ namespace WebApi.Controllers
         {
             _accountService = accountService;
         }
-        [HttpGet("getallaccount")]
+        [HttpGet]
         public async Task<ActionResult<List<AccountResponse>>> GetAllAccounts()
         {
             return await _accountService.GetAllAccounts();
         }
-        [HttpGet("getaccountbyid")]
+        [HttpGet("id")]
         public async Task<ActionResult<Result<AccountResponse>>> GetAccountById(Guid id)
         {
             return await _accountService.GetAccountById(id);
         }
-        
+        [HttpPut("ban-account")]
+        public async Task<ActionResult<Result<AccountResponse>>> BanAccount(Guid id)
+        {
+            return await _accountService.BanAccountById(id);
+        }
+        [HttpPut("update-account")]
+        public async Task<ActionResult<Result<AccountResponse>>> UpdateAccount(Guid id, [FromBody]UpdateAccountRequest request)
+        {
+            return await _accountService.UpdateAccount(id, request);
+        }
     }
 }

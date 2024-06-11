@@ -146,7 +146,15 @@ public class AuthService : IAuthService
                     Messages = ["Member Not Found"]
                 };
             }
-			if(user.VerifiedAt == null)
+            if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            {
+                return new Result<LoginResponse>()
+                {
+                    ResultStatus = ResultStatus.Error,
+                    Messages = ["Password is not correct"]
+                };
+            }
+            if (user.VerifiedAt == null)
 			{
                 return new Result<LoginResponse>()
                 {
@@ -154,14 +162,7 @@ public class AuthService : IAuthService
                     Messages = ["Not Verified"]
                 };
             }
-			if(!VerifyPasswordHash(password, user.PasswordHash , user.PasswordSalt))
-			{
-                return new Result<LoginResponse>()
-                {
-                    ResultStatus = ResultStatus.Error,
-                    Messages = ["Password is not correct"]
-                };
-            }
+			
             var claims = new List<Claim>()
             {
                 new(ClaimTypes.NameIdentifier, user.AccountId.ToString()),

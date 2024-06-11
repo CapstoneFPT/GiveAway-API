@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Entities;
 using System;
@@ -15,6 +16,7 @@ namespace Services
         {
             CreateMap<Account, AccountResponse>()
                 .ReverseMap();
+            CreateMap<UpdateAccountRequest, Account>() .ReverseMap();
         }
     }
 }

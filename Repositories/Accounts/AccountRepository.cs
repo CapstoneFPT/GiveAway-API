@@ -106,6 +106,14 @@ namespace Repositories.Accounts
             user.ResetTokenExpires = DateTime.Now.AddDays(1);
             return await Task.FromResult(user);
         }
+
+        public async Task<Account> UpdateAccount(Account account)
+        {
+            _dao.UpdateAsync(account);
+            await _dao.SaveChangesAsync();
+            return await Task.FromResult<Account>(account);
+        }
+
         private string CreateRandomToken()
         {
             Random random = new Random();

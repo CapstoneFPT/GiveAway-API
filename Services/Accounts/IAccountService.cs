@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Account.Response;
+﻿using BusinessObjects.Dtos.Account.Request;
+using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Commons;
 using System;
 using System.Collections.Generic;
@@ -12,5 +13,7 @@ namespace Services.Accounts
     {
         Task<List<AccountResponse>> GetAllAccounts();
         Task<Result<AccountResponse>> GetAccountById(Guid id);
+        Task<Result<AccountResponse>> BanAccountById(Guid id);
+        Task<Result<AccountResponse>> UpdateAccount(Guid id, UpdateAccountRequest request);
     }
 }

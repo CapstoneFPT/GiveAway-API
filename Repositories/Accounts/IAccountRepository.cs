@@ -22,5 +22,6 @@ namespace Repositories.Accounts
         Task<List<Account>> GetAllAccounts();
         Task<Account> GetAccountById(Guid id);
         Task<Account> Register(Account account);
+        Task<Account> UpdateAccount(Account account);
     }
 }
