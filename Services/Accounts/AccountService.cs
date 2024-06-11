@@ -82,7 +82,7 @@ namespace Services.Accounts
             var user = await _account.GetAccountById(id);
             if (user == null)
             {
-                response.Messages = ["User not found!"];
+                response.Messages = ["User is not found!"];
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }else if(request.Phone.Equals(user.Phone) && request.Fullname.Equals(user.Fullname))
