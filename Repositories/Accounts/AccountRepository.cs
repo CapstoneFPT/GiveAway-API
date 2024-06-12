@@ -114,7 +114,7 @@ namespace Repositories.Accounts
             return await Task.FromResult<Account>(account);
         }
 
-        private string CreateRandomToken()
+        public string CreateRandomToken()
         {
             Random random = new Random();
 

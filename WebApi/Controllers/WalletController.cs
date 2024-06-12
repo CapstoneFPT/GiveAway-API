@@ -16,12 +16,12 @@ namespace WebApi.Controllers
         {
             _wallet = wallet;
         }
-        [HttpGet("account-id")]
+        [HttpGet("{accountId}")]
         public async Task<ActionResult<Result<WalletResponse>>> GetWalletByAccountId(Guid accountId)
         {
             return await _wallet.GetWalletByAccountId(accountId);
         }
-        [HttpPut("update")]
+        [HttpPut("{accountId}")]
         public async Task<ActionResult<Result<WalletResponse>>> UpdateWallet(Guid accountId, [FromBody]UpdateWalletRequest request)
         {
             return await _wallet.UpdateWallet(accountId, request);

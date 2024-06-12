@@ -7,7 +7,9 @@ using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Repositories.Accounts;
 using Repositories.Shops;
 using Repositories.User;
@@ -25,9 +27,12 @@ public class AuthService : IAuthService
 	private readonly IMapper _mapper;
 	private readonly IShopRepository _shopRepository;
 	private readonly IWalletRepository _walletRepository;
-	private readonly string newpassword = "newpasscachekey";
+    private readonly IConfiguration _configuration;
+    private readonly string tempdata = "tempdatakey";
 	private readonly User newuser = new User();
-    public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService, IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository, IWalletRepository walletRepository)
+    public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService,
+		IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository, 
+		IWalletRepository walletRepository, IConfiguration configuration)
     {
         _accountRepository = accountRepository;
         _tokenService = tokenService;
@@ -36,6 +41,7 @@ public class AuthService : IAuthService
 		_mapper = mapper;
 		_shopRepository = shopRepository;
 		_walletRepository = walletRepository;
+        _configuration = configuration;
     }
 
     public async Task<Account> ChangeToNewPassword(string confirmtoken)
@@ -75,7 +81,7 @@ public class AuthService : IAuthService
 			var cacheEntryOption = new MemoryCacheEntryOptions()
 				.SetSlidingExpiration(TimeSpan.FromSeconds(60))
 				.SetPriority(CacheItemPriority.Normal);
-			_cache.Set(newpassword,newpass,cacheEntryOption);
+			_cache.Set(tempdata,newpass,cacheEntryOption);
 			response = await SendMail(email);
 			return response;
 		}
@@ -212,7 +218,7 @@ public class AuthService : IAuthService
 			account.Fullname = request.Fullname;
 			account.Phone = request.Phone;
 			account.Role = Roles.Member.ToString();
-			account.Status = AccountStatus.Active.ToString();
+			account.Status = AccountStatus.NotVerify.ToString();
 
 			var user = await _accountRepository.Register(account);
 
@@ -220,9 +226,16 @@ public class AuthService : IAuthService
 			wallet.Balance = 0;
 			wallet.MemberId = account.AccountId;
 			await _walletRepository.CreateWallet(wallet);
-			
+
+			var token = _accountRepository.CreateRandomToken();
+            var cacheEntryOption = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromSeconds(190))
+                .SetPriority(CacheItemPriority.Normal);
+            _cache.Set(tempdata, token, cacheEntryOption);
+            var mail = SendMailRegister(account.Email, token);
+
 			response.ResultStatus = ResultStatus.Success;
-			response.Messages = ["Register successfully"];
+			response.Messages = mail.Result.Messages;
 			response.Data = _mapper.Map<AccountResponse>(user);
 			return response;
             /*var cacheEntryOption = new MemoryCacheEntryOptions()
@@ -231,6 +244,33 @@ public class AuthService : IAuthService
             _cache.Set(newuser, account, cacheEntryOption);
             return await SendMailRegister(request.Email);*/
 		}
+    }
+
+    public async Task<Result<string>> ResendVerifyEmail(string email)
+    {
+        var response = new Result<string>();
+        var user = await FindUserByEmail(email);
+        string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
+        string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
+
+		_cache.Remove(tempdata);
+        var token = _accountRepository.CreateRandomToken();
+        var cacheEntryOption = new MemoryCacheEntryOptions()
+            .SetSlidingExpiration(TimeSpan.FromSeconds(190))
+            .SetPriority(CacheItemPriority.Normal);
+        _cache.Set(tempdata, token, cacheEntryOption);
+        string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
+
+        SendEmailRequest content = new SendEmailRequest
+        {
+            To = email,
+            Subject = "[GIVEAWAY] Verify Account",
+            Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
+        };
+        await _emailService.SendEmail(content);
+        response.Messages = ["Resend verification email successfully! Please check your email for verification in 3 minutes"];
+        response.ResultStatus = ResultStatus.Success;
+        return response;
     }
 
     public async Task<Result<string>> SendMail(string email)
@@ -565,24 +605,48 @@ public class AuthService : IAuthService
         return response;
             
     }
-	public async Task<Result<string>> SendMailRegister(string email)
+	public async Task<Result<string>> SendMailRegister(string email, string token)
 	{
 		var response = new Result<string>();
+		var user = await FindUserByEmail(email);
+		string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
+		string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
+		string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
+    
 		SendEmailRequest content = new SendEmailRequest
 		{
 			To = email,
 			Subject = "[GIVEAWAY] Verify Account",
-			Body = $@"<a href="""">Verify</a>",
+			Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
 		};
 		await _emailService.SendEmail(content);
-		response.Messages = ["Please check your email for verification"];
+		response.Messages = ["Register successfully! Please check your email for verification in 3 minutes"];
 		response.ResultStatus = ResultStatus.Success;
 		return response;
 	}
 
-    public Task<Result<string>> VerifyEmail(string email)
+    public async Task<Result<string>> VerifyEmail(Guid id, string token)
     {
-        throw new NotImplementedException();
+		var response = new Result<string>();
+		if(string.IsNullOrEmpty(token))
+		{
+			response.Messages = ["Token is null"];
+			response.ResultStatus = ResultStatus.Error;
+			return response;
+		}
+		if (token.Equals(_cache.Get<string>(tempdata)))
+		{
+			var user = await _accountRepository.FindOne(c => c.AccountId == id);
+			user.VerifiedAt = DateTime.UtcNow;
+			user.Status = AccountStatus.Active.ToString();
+			await _accountRepository.UpdateAccount(user);
+            response.Messages = ["Verify successfully at" + DateTime.UtcNow.ToString()];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
+        response.Messages = ["Token is not correct or expired"];
+        response.ResultStatus = ResultStatus.Error;
+        return response;
     }
 	private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
 	{

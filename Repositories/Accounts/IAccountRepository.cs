@@ -23,5 +23,6 @@ namespace Repositories.Accounts
         Task<Account> GetAccountById(Guid id);
         Task<Account> Register(Account account);
         Task<Account> UpdateAccount(Account account);
+        string CreateRandomToken();
     }
 }

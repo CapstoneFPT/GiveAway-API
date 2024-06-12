@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Services.Auth;
 using Services.Emails;
 using BusinessObjects.Dtos.Account.Response;
+using Microsoft.AspNetCore.Identity;
 
 namespace WebApi.Controllers;
 
@@ -92,9 +93,14 @@ public class AuthController : ControllerBase
     {
         return await _authService.CreateStaffAccount(registerRequest);
     }
-    /* [HttpGet("verify-email")]
-     public async Task<Result<string>> VerifyEmail(string email)
-     {
-
-     }*/
+    [HttpGet("confirm-email")]
+    public async Task<Result<string>> VerifyEmail(Guid id, string token)
+    {
+        return await _authService.VerifyEmail(id, token);
+    }
+    [HttpGet("resend-verify-email")]
+    public async Task<Result<string>> ResendVerifyEmail(string email)
+    {
+        return await _authService.ResendVerifyEmail(email);
+    }
 }

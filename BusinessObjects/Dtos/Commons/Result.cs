@@ -23,5 +23,6 @@ public enum Roles
 public enum AccountStatus
 {
     Active,
-    Inactive
+    Inactive,
+    NotVerify
 }
