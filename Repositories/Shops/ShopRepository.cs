@@ -11,18 +11,17 @@ namespace Repositories.Shops
 {
     public class ShopRepository : IShopRepository
     {
-        private readonly GenericDao<Shop> _shop;
+        private readonly GenericDao<Shop> _shopDao;
 
         public ShopRepository()
         {
-            _shop = new GenericDao<Shop>();
+            _shopDao = new GenericDao<Shop>();
         }
 
         public async Task<Shop> CreateShop(Shop shop)
         {
-            _shop.AddAsync(shop);
-            await _shop.SaveChangesAsync();
-            return shop;
+            var result = await _shopDao.AddAsync(shop);
+            return result;
         }
     }
 }

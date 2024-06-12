@@ -12,31 +12,29 @@ namespace Repositories.Wallets
 {
     public class WalletRepository : IWalletRepository
     {
-        private readonly GenericDao<Wallet> _wallet;
+        private readonly GenericDao<Wallet> _walletDao;
 
         public WalletRepository()
         {
-            _wallet = new GenericDao<Wallet>();
+            _walletDao = new GenericDao<Wallet>();
         }
 
-        public Task CreateWallet(Wallet wallet)
+        public async Task<Wallet> CreateWallet(Wallet wallet)
         {
-            _wallet.AddAsync(wallet);
-            _wallet.SaveChangesAsync();
-            return Task.FromResult(wallet);
+            var result = await _walletDao.AddAsync(wallet);
+            return result;
         }
 
         public async Task<Wallet> GetWalletByAccountId(Guid id)
         {
-            var wallet = await _wallet.GetQueryable().Include(c => c.Member).Where(c => c.MemberId.Equals(id))
+            var wallet = await _walletDao.GetQueryable().Include(c => c.Member).Where(c => c.MemberId.Equals(id))
                 .AsNoTracking().FirstOrDefaultAsync();
             return wallet;
         }
 
         public async Task<Wallet> UpdateWallet(Wallet wallet)
         {
-            _wallet.UpdateAsync(wallet);
-            await _wallet.SaveChangesAsync();
+            await _walletDao.UpdateAsync(wallet);
             return wallet;
         }
     }

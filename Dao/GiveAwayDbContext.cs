@@ -31,6 +31,8 @@ public class GiveAwayDbContext : DbContext
     public GiveAwayDbContext(DbContextOptions<GiveAwayDbContext> options) : base(options)
     {
     }
+    
+ 
 
     
 
@@ -123,7 +125,7 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<Delivery>().ToTable("Delivery").HasKey(e => e.DeliveryId);
         modelBuilder.Entity<Delivery>().Property(e => e.RecipientName).HasColumnType("varchar").HasMaxLength(50);
-        modelBuilder.Entity<Delivery>().Property(e => e.PhoneNumeber).HasColumnType("varchar").HasMaxLength(10);
+        modelBuilder.Entity<Delivery>().Property(e => e.Phone).HasColumnType("varchar").HasMaxLength(10);
         modelBuilder.Entity<Delivery>().Property(e => e.Address).HasColumnType("varchar").HasMaxLength(100);
 
         #endregion
