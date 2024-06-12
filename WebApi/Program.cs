@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using BusinessObjects;
 using Dao;
+using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -17,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddServices();
 builder.Services.AddRepositories();
+ProblemDetailsExtensions.AddProblemDetails(builder.Services);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<GiveAwayDbContext>(optionsAction: optionsBuilder =>
 {
@@ -112,6 +114,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseProblemDetails();
 app.UseCors("AllowAll");
 app.MapControllers();
 app.UseHttpsRedirection();

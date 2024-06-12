@@ -76,7 +76,7 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<Auction>()
             .ToTable("Auction")
-            .HasKey(x => x.ActionId);
+            .HasKey(x => x.AuctionId);
 
         modelBuilder.Entity<Auction>()
             .Property(e => e.StartDate).HasColumnType("timestamptz");

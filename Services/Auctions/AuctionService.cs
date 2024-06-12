@@ -21,7 +21,7 @@ namespace Services.Auctions
         {
             try
             {
-                await _auctionRepository.CreateAuction(request);
+                var result = await _auctionRepository.CreateAuction(request);
             }
             catch (Exception e)
             {

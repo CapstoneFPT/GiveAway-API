@@ -5,7 +5,7 @@ namespace BusinessObjects.Entities;
 public class Auction
 {
     [Key]
-    public Guid ActionId { get; set; }
+    public Guid AuctionId { get; set; }
     public string Title { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
