@@ -17,12 +17,12 @@ namespace WebApi.Controllers
             _wallet = wallet;
         }
         [HttpGet("{accountId}")]
-        public async Task<ActionResult<Result<WalletResponse>>> GetWalletByAccountId(Guid accountId)
+        public async Task<ActionResult<Result<WalletResponse>>> GetWalletByAccountId([FromRoute]Guid accountId)
         {
             return await _wallet.GetWalletByAccountId(accountId);
         }
         [HttpPut("{accountId}")]
-        public async Task<ActionResult<Result<WalletResponse>>> UpdateWallet(Guid accountId, [FromBody]UpdateWalletRequest request)
+        public async Task<ActionResult<Result<WalletResponse>>> UpdateWallet([FromRoute]Guid accountId, [FromBody]UpdateWalletRequest request)
         {
             return await _wallet.UpdateWallet(accountId, request);
         }
