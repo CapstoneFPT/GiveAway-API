@@ -1,6 +1,7 @@
 ﻿using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Services.Auctions;
@@ -27,7 +28,7 @@ public class AuctionController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<List<AuctionListResponse>> GetAuctions()
+    public async Task<PaginationResponse<AuctionListResponse>> GetAuctions()
     {
         throw new NotImplementedException();
     }
@@ -55,7 +56,7 @@ public class AuctionController : ControllerBase
     #region Bids
 
     [HttpGet("{id}/bids")]
-    public async Task<ActionResult<List<BidListResponse>>> GetBids(Guid id)
+    public async Task<ActionResult<PaginationResponse<BidListResponse>>> GetBids(Guid id)
     {
         throw new NotImplementedException();
     }
@@ -89,7 +90,7 @@ public class AuctionController : ControllerBase
     #region AuctionDeposits
 
     [HttpGet("{id}/deposits")]
-    public async Task<ActionResult<List<AuctionDepositListResponse>>> GetDeposits(Guid id)
+    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits(Guid id)
     {
         throw new NotImplementedException();
     }
