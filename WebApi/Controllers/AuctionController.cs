@@ -73,7 +73,8 @@ public class AuctionController : ControllerBase
     }
 
     [HttpPost("{id}/bids")]
-    public async Task<ActionResult<BidDetailResponse>> CreateBid([FromRoute]Guid id, [FromBody]CreateBidRequest request)
+    public async Task<ActionResult<BidDetailResponse>> CreateBid([FromRoute] Guid id,
+        [FromBody] CreateBidRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -84,13 +85,14 @@ public class AuctionController : ControllerBase
     }
 
     [HttpDelete("{id}/bids/{bidId}")]
-    public async Task<ActionResult> DeleteBid([FromRoute]Guid id, [FromRoute]Guid bidId)
+    public async Task<ActionResult> DeleteBid([FromRoute] Guid id, [FromRoute] Guid bidId)
     {
         throw new NotImplementedException();
     }
 
     [HttpPut("{id}/bids/{bidId}")]
-    public async Task<ActionResult<BidDetailResponse>> UpdateBid([FromRoute]Guid id, [FromRoute]Guid bidId, [FromBody]UpdateBidRequest request)
+    public async Task<ActionResult<BidDetailResponse>> UpdateBid([FromRoute] Guid id, [FromRoute] Guid bidId,
+        [FromBody] UpdateBidRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -101,7 +103,7 @@ public class AuctionController : ControllerBase
     }
 
     [HttpGet("{id}/bids/{bidId}")]
-    public async Task<ActionResult<BidDetailResponse>> GetBid([FromRoute]Guid id, [FromRoute]Guid bidId)
+    public async Task<ActionResult<BidDetailResponse>> GetBid([FromRoute] Guid id, [FromRoute] Guid bidId)
     {
         throw new NotImplementedException();
     }
@@ -111,41 +113,45 @@ public class AuctionController : ControllerBase
     #region AuctionDeposits
 
     [HttpGet("{id}/deposits")]
-    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits([FromRoute]Guid id)
+    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits([FromRoute] Guid id)
     {
         throw new NotImplementedException();
     }
 
     [HttpPost("{id}/deposits")]
-    public async Task<ActionResult<AuctionDepositDetailResponse>> CreateDeposit([FromRoute]Guid id,
-        [FromBody]CreateAuctionDepositRequest request)
+    public async Task<ActionResult<AuctionDepositDetailResponse>> CreateDeposit([FromRoute] Guid id,
+        [FromBody] CreateAuctionDepositRequest request)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
+
         throw new NotImplementedException();
     }
 
     [HttpDelete("{id}/deposits/{depositId}")]
-    public async Task<ActionResult> DeleteDeposit([FromRoute]Guid id, [FromRoute]Guid depositId)
+    public async Task<ActionResult> DeleteDeposit([FromRoute] Guid id, [FromRoute] Guid depositId)
     {
         throw new NotImplementedException();
     }
 
     [HttpPut("{id}/deposits/{depositId}")]
-    public async Task<ActionResult<AuctionDepositDetailResponse>> UpdateDeposit([FromRoute]Guid id, [FromRoute] Guid depositId,
-        [FromBody]UpdateAuctionDepositRequest request)
+    public async Task<ActionResult<AuctionDepositDetailResponse>> UpdateDeposit([FromRoute] Guid id,
+        [FromRoute] Guid depositId,
+        [FromBody] UpdateAuctionDepositRequest request)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
+
         throw new NotImplementedException();
     }
 
     [HttpGet("{id}/deposits/{depositId}")]
-    public async Task<ActionResult<AuctionDepositDetailResponse>> GetDeposit([FromRoute]Guid id, [FromRoute]Guid depositId)
+    public async Task<ActionResult<AuctionDepositDetailResponse>> GetDeposit([FromRoute] Guid id,
+        [FromRoute] Guid depositId)
     {
         throw new NotImplementedException();
     }
