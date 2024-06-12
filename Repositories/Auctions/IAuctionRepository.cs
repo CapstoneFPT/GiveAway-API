@@ -9,6 +9,6 @@ namespace Repositories.Auctions
 {
     public interface IAuctionRepository
     {
-        Task CreateAuction(CreateAuctionRequest request);
+        Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request);
     }
 }

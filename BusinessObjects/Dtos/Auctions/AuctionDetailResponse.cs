@@ -15,5 +15,5 @@ public class AuctionDetailResponse
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
     public ShopDetailResponse Shop { get; set; }
-    public AuctionItemDetailResponse AuctionItem { get; set; }
+    public AuctionFashionItemDetailResponse AuctionFashionItem { get; set; }
 }
