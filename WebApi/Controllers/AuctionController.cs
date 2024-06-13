@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Services.Auctions;
@@ -29,7 +30,9 @@ public class AuctionController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        throw new NotImplementedException();
+        var result = await _auctionService.CreateAuction(request);
+        
+        return CreatedAtAction(nameof(GetAuction), new { id = result.AuctionItemId }, result);
     }
 
     [HttpGet]
@@ -41,7 +44,10 @@ public class AuctionController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<AuctionDetailResponse>> GetAuction([FromRoute] Guid id)
     {
-        throw new NotImplementedException();
+        return Ok(new AuctionDetailResponse()
+        {
+
+        });
     }
 
     [HttpDelete("{id}")]

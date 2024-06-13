@@ -103,6 +103,8 @@ public class GiveAwayDbContext : DbContext
 
         #region FashionAuctionItem
 
+        modelBuilder.Entity<AuctionFashionItem>().HasMany(x=>x.Auctions).WithOne(x=>x.AuctionFashionItem)
+            .HasForeignKey(x=>x.AuctionFashionItemId);
         #endregion
 
         #region Bid

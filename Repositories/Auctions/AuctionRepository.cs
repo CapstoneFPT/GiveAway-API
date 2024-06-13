@@ -33,12 +33,23 @@ namespace Repositories.Auctions
                 //insert schedule
                 var auctionItem = await _auctionFashionItemDao.GetQueryable()
                     .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
+                
+                if (auctionItem == null)
+                {
+                    throw new Exception("Auction item not found");
+                }
+                
                 var shop = await _shopDao.GetQueryable()
                     .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
+                
+                if (shop == null)
+                {
+                    throw new Exception("Shop not found");
+                }
 
                 var newAuction = new Auction
                 {
-                    AuctionItemId = request.AuctionItemId,
+                    AuctionFashionItemId = request.AuctionItemId,
                     Title = request.Title,
                     ShopId = request.ShopId,
                     DepositFee = request.DepositFee,
@@ -76,7 +87,7 @@ namespace Repositories.Auctions
                     },
                     DepositFee = auctionDetail.DepositFee,
                     ShopId = auctionDetail.ShopId,
-                    AuctionItemId = auctionDetail.AuctionItemId,
+                    AuctionItemId = auctionDetail.AuctionFashionItemId,
                 };
             }
             catch (Exception e)

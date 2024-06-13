@@ -13,7 +13,7 @@ public class Auction
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
     public AuctionFashionItem AuctionFashionItem { get; set; }
-    public Guid AuctionItemId { get; set; }
+    public Guid AuctionFashionItemId { get; set; }
     public string Status { get; set; }
 
     public ICollection<AuctionDeposit> AuctionDeposits = new List<AuctionDeposit>();

@@ -17,11 +17,12 @@ namespace Services.Auctions
             _auctionRepository = auctionRepository;
         }
         
-        public async Task CreateAuction(CreateAuctionRequest request)
+        public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
             try
             {
                 var result = await _auctionRepository.CreateAuction(request);
+                return result;
             }
             catch (Exception e)
             {
