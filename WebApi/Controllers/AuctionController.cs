@@ -23,6 +23,7 @@ public class AuctionController : ControllerBase
     #region Auctions
 
     [HttpPost]
+    [ProducesResponseType(statusCode: StatusCodes.Status201Created, type: typeof(AuctionDetailResponse))]
     public async Task<ActionResult<AuctionDetailResponse>> CreateAuction([FromBody] CreateAuctionRequest request)
     {
         if (!ModelState.IsValid)

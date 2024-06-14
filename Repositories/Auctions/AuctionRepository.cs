@@ -1,6 +1,7 @@
 ﻿using BusinessObjects;
 using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using Dao;
@@ -14,14 +15,18 @@ namespace Repositories.Auctions
         private readonly GenericDao<Schedule> _scheduleDao;
         private readonly GenericDao<AuctionFashionItem> _auctionFashionItemDao;
         private readonly GenericDao<Shop> _shopDao;
-        
+        private readonly GenericDao<Timeslot> _timeslotDao;
 
-        public AuctionRepository()
+
+        public AuctionRepository(GenericDao<Auction> auctionDao, GenericDao<Schedule> scheduleDao,
+            GenericDao<AuctionFashionItem> auctionFashionItemDao, GenericDao<Shop> shopDao,
+            GenericDao<Timeslot> timeslotDao)
         {
-            _auctionDao = new GenericDao<Auction>();
-            _scheduleDao = new GenericDao<Schedule>();
-            _auctionFashionItemDao = new GenericDao<AuctionFashionItem>();
-            _shopDao = new GenericDao<Shop>();
+            _auctionDao = auctionDao;
+            _scheduleDao = scheduleDao;
+            _auctionFashionItemDao = auctionFashionItemDao;
+            _shopDao = shopDao;
+            _timeslotDao = timeslotDao;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -33,18 +38,26 @@ namespace Repositories.Auctions
                 //insert schedule
                 var auctionItem = await _auctionFashionItemDao.GetQueryable()
                     .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
-                
+
                 if (auctionItem == null)
                 {
                     throw new Exception("Auction item not found");
                 }
-                
+
                 var shop = await _shopDao.GetQueryable()
                     .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
-                
+
                 if (shop == null)
                 {
                     throw new Exception("Shop not found");
+                }
+
+                var timeslot = await _timeslotDao.GetQueryable()
+                    .FirstOrDefaultAsync(x => x.TimeslotId == request.TimeslotId);
+
+                if (timeslot == null)
+                {
+                    throw new Exception("Timeslot not found");
                 }
 
                 var newAuction = new Auction
@@ -53,8 +66,8 @@ namespace Repositories.Auctions
                     Title = request.Title,
                     ShopId = request.ShopId,
                     DepositFee = request.DepositFee,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
+                    StartDate = request.ScheduleDate.ToDateTime(timeslot.StartTime),
+                    EndDate = request.ScheduleDate.ToDateTime(timeslot.EndTime),
                     Status = "Pending"
                 };
                 var auctionDetail = await _auctionDao.AddAsync(newAuction);
@@ -62,7 +75,7 @@ namespace Repositories.Auctions
                 var newSchedule = new Schedule()
                 {
                     AuctionId = auctionDetail.AuctionId,
-                    Date = DateOnly.FromDateTime(request.StartDate),
+                    Date = request.ScheduleDate,
                     TimeslotId = request.TimeslotId
                 };
                 var scheduleDetail = await _scheduleDao.AddAsync(newSchedule);
@@ -75,15 +88,27 @@ namespace Repositories.Auctions
                     EndDate = auctionDetail.EndDate,
                     Shop = new ShopDetailResponse()
                     {
-                       ShopId = shop.ShopId,
-                       Address = shop.Address,
-                       StaffId = shop.StaffId
+                        ShopId = shop.ShopId,
+                        Address = shop.Address,
+                        StaffId = shop.StaffId,
                     },
                     Status = auctionDetail.Status,
                     Title = auctionDetail.Title,
                     AuctionFashionItem = new AuctionFashionItemDetailResponse()
                     {
-                        
+                        ItemId = auctionItem.ItemId,
+                        Name = auctionItem.Name,
+                        Type = auctionItem.Type,
+                        Condition = auctionItem.Condition,
+                        Quantity = auctionItem.Quantity,
+                        Duration = auctionItem.Duration,
+                        InitialPrice = auctionItem.InitialPrice,
+                        SellingPrice = auctionItem.SellingPrice,
+                        AuctionItemStatus = auctionItem.AuctionItemStatus,
+                        Note = auctionItem.Note,
+                        Value = auctionItem.Value,
+                        ShopId = auctionItem.ShopId,
+                        CategoryId = auctionItem.CategoryId
                     },
                     DepositFee = auctionDetail.DepositFee,
                     ShopId = auctionDetail.ShopId,

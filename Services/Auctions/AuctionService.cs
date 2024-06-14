@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.Commons;
 using Repositories.Auctions;
 
 namespace Services.Auctions
@@ -16,7 +17,7 @@ namespace Services.Auctions
         {
             _auctionRepository = auctionRepository;
         }
-        
+
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
             try

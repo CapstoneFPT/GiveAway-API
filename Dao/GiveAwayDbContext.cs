@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 
 namespace Dao;
@@ -28,13 +29,11 @@ public class GiveAwayDbContext : DbContext
     public GiveAwayDbContext()
     {
     }
+
     public GiveAwayDbContext(DbContextOptions<GiveAwayDbContext> options) : base(options)
     {
     }
-    
- 
 
-    
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -54,6 +53,20 @@ public class GiveAwayDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        #region TimeConfig
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var dateTimeProperties = entityType.GetProperties().Where(p => p.ClrType == typeof(DateTime));
+            foreach (var property in dateTimeProperties)
+            {
+                property.SetValueConverter(new DateTimeToUtcConverter());
+            }
+        }
+
+        #endregion
+
+
         #region Account
 
         modelBuilder.Entity<Account>()
@@ -103,8 +116,9 @@ public class GiveAwayDbContext : DbContext
 
         #region FashionAuctionItem
 
-        modelBuilder.Entity<AuctionFashionItem>().HasMany(x=>x.Auctions).WithOne(x=>x.AuctionFashionItem)
-            .HasForeignKey(x=>x.AuctionFashionItemId);
+        modelBuilder.Entity<AuctionFashionItem>().HasMany(x => x.Auctions).WithOne(x => x.AuctionFashionItem)
+            .HasForeignKey(x => x.AuctionFashionItemId);
+
         #endregion
 
         #region Bid
@@ -181,8 +195,6 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<OrderDetail>().ToTable("OrderDetail").HasKey(e => e.OrderDetailId);
         modelBuilder.Entity<OrderDetail>().Property(e => e.UnitPrice).HasColumnType("numberic").HasPrecision(10, 2);
 
-       
-
         #endregion
 
         #region Request
@@ -195,7 +207,8 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Request>().Property(e => e.StartDate).HasColumnType("timestamptz").IsRequired(false);
         modelBuilder.Entity<Request>().Property(e => e.EndDate).HasColumnType("timestamptz").IsRequired(false);
 
-        modelBuilder.Entity<Request>().HasOne(x => x.OrderDetail).WithOne(x => x.Request).HasForeignKey<OrderDetail>(x=>x.RequestId);
+        modelBuilder.Entity<Request>().HasOne(x => x.OrderDetail).WithOne(x => x.Request)
+            .HasForeignKey<OrderDetail>(x => x.RequestId);
 
         #endregion
 
@@ -214,7 +227,7 @@ public class GiveAwayDbContext : DbContext
         #region Transaction
 
         modelBuilder.Entity<Transaction>().ToTable("Transaction").HasKey(e => e.TransactionId);
-        modelBuilder.Entity<Transaction>().Property(e => e.Amount).HasColumnType("numeric").HasPrecision(10, 2);    
+        modelBuilder.Entity<Transaction>().Property(e => e.Amount).HasColumnType("numeric").HasPrecision(10, 2);
         modelBuilder.Entity<Transaction>().Property(e => e.CreatedDate).HasColumnType("timestamptz")
             .ValueGeneratedOnAdd();
         modelBuilder.Entity<Transaction>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(20);
@@ -229,6 +242,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Wallet>().ToTable("Wallet").HasKey(e => e.WalletId);
         modelBuilder.Entity<Wallet>().Property(e => e.BankAccountNumber).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Wallet>().Property(e => e.BankName).HasColumnType("varchar").HasMaxLength(100);
+
         #endregion
 
         #region PointPackage
@@ -236,5 +250,14 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<PointPackage>().ToTable("PointPackage").HasKey(e => e.PointPackageId);
 
         #endregion
+    }
+}
+
+public class DateTimeToUtcConverter : ValueConverter<DateTime, DateTime>
+{
+    public DateTimeToUtcConverter() : base(
+        d => d.ToUniversalTime(),
+        d => DateTime.SpecifyKind(d, DateTimeKind.Utc))
+    {
     }
 }

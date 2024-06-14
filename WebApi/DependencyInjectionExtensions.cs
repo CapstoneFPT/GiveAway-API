@@ -1,4 +1,6 @@
-﻿using Repositories.Accounts;
+﻿using BusinessObjects.Entities;
+using Dao;
+using Repositories.Accounts;
 using Repositories.AuctionDeposits;
 using Repositories.AuctionItems;
 using Repositories.Auctions;
@@ -99,6 +101,30 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<ITimeslotRepository, TimeslotRepository>();
         serviceCollection.AddScoped<ITransactionRepository, TransactionRepository>();
         serviceCollection.AddScoped<IWalletRepository, WalletRepository>();
+        return serviceCollection;
+    }
+    
+    public static IServiceCollection AddDao(this IServiceCollection serviceCollection)
+    {
+        serviceCollection.AddScoped<GenericDao<Account>>();
+        serviceCollection.AddScoped<GenericDao<FashionItem>>();
+        serviceCollection.AddScoped<GenericDao<AuctionFashionItem>>();
+        serviceCollection.AddScoped<GenericDao<Auction>>();
+        serviceCollection.AddScoped<GenericDao<AuctionDeposit>>();
+        serviceCollection.AddScoped<GenericDao<Bid>>();
+        serviceCollection.AddScoped<GenericDao<Category>>();
+        serviceCollection.AddScoped<GenericDao<Delivery>>();
+        serviceCollection.AddScoped<GenericDao<Image>>();
+        serviceCollection.AddScoped<GenericDao<Inquiry>>();
+        serviceCollection.AddScoped<GenericDao<OrderDetail>>();
+        serviceCollection.AddScoped<GenericDao<Order>>();
+        serviceCollection.AddScoped<GenericDao<PointPackage>>();
+        serviceCollection.AddScoped<GenericDao<Request>>();
+        serviceCollection.AddScoped<GenericDao<Schedule>>();
+        serviceCollection.AddScoped<GenericDao<Shop>>();
+        serviceCollection.AddScoped<GenericDao<Timeslot>>();
+        serviceCollection.AddScoped<GenericDao<Transaction>>();
+        serviceCollection.AddScoped<GenericDao<Wallet>>();
         return serviceCollection;
     }
 }
