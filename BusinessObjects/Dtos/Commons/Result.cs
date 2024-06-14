@@ -12,7 +12,8 @@ public enum ResultStatus
     Success,
     NotFound,
     Duplicated,
-    Error
+    Error,
+    Empty
 }
 
 public enum Roles

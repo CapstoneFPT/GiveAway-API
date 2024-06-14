@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.Wallet;
 using BusinessObjects.Entities;
 using System;
@@ -22,6 +23,10 @@ namespace Services
                 .ForMember(a => a.AccountName, opt => opt.MapFrom(a => a.Member.Fullname))
                 .ReverseMap();
             CreateMap<UpdateWalletRequest, Wallet>() .ReverseMap();
+            CreateMap<Delivery, DeliveryResponse>() 
+                .ForMember(a => a.Buyername, opt => opt.MapFrom(a => a.Member.Fullname))
+                .ReverseMap();
+            CreateMap<DeliveryRequest, Delivery>() .ReverseMap();
         }
     }
 }
