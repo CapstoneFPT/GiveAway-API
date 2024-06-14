@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
 
 namespace BusinessObjects.Utils;
 
@@ -17,9 +17,4 @@ public class DbCustomException : Exception
         AdditionalInfo = "Maybe you can try again in a bit?";
         Instance = instance;
     }
-}
-
-public class DbCustomDetails : ProblemDetails
-{
-   public string AdditionalInfo { get; set; } 
 }

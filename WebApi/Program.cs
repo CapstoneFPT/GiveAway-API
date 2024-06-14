@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi;
+using WebApi.Utils.CustomProblemDetails;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,7 @@ builder.Services.AddDao();
 builder.Services.AddProblemDetails(options =>
 {
     options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment() || builder.Environment.IsProduction();
-    options.Map<DbCustomException>(e => new DbCustomDetails()
+    options.Map<DbCustomException>(e => new DbCustomProblemDetail()
     {
         Title = e.Title,
         Status = StatusCodes.Status500InternalServerError,
