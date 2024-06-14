@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Services.Auctions;
@@ -22,6 +23,7 @@ public class AuctionController : ControllerBase
     #region Auctions
 
     [HttpPost]
+    [ProducesResponseType(statusCode: StatusCodes.Status201Created, type: typeof(AuctionDetailResponse))]
     public async Task<ActionResult<AuctionDetailResponse>> CreateAuction([FromBody] CreateAuctionRequest request)
     {
         if (!ModelState.IsValid)
@@ -29,19 +31,31 @@ public class AuctionController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        throw new NotImplementedException();
+        var result = await _auctionService.CreateAuction(request);
+        
+        return CreatedAtAction(nameof(GetAuction), new { id = result.AuctionItemId }, result);
     }
 
     [HttpGet]
-    public async Task<PaginationResponse<AuctionListResponse>> GetAuctions()
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(PaginationResponse<AuctionListResponse>))]
+    public async Task<ActionResult<PaginationResponse<AuctionListResponse>>> GetAuctions([FromQuery] GetAuctionsRequest request)
     {
-        throw new NotImplementedException();
+        var result = await _auctionService.GetAuctions(request);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
+    [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AuctionDetailResponse>> GetAuction([FromRoute] Guid id)
     {
-        throw new NotImplementedException();
+        var result = await _auctionService.GetAuction(id);
+        if (result == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
     }
 
     [HttpDelete("{id}")]

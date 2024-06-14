@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.Commons;
 using Repositories.Auctions;
 
 namespace Services.Auctions
@@ -16,12 +17,13 @@ namespace Services.Auctions
         {
             _auctionRepository = auctionRepository;
         }
-        
-        public async Task CreateAuction(CreateAuctionRequest request)
+
+        public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
             try
             {
                 var result = await _auctionRepository.CreateAuction(request);
+                return result;
             }
             catch (Exception e)
             {
@@ -29,9 +31,30 @@ namespace Services.Auctions
             }
         }
 
-        public Task<List<AuctionListResponse>> GetAuctions()
+        public Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var result = _auctionRepository.GetAuctions(request);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task<AuctionDetailResponse?> GetAuction(Guid id)
+        {
+            try
+            {
+                var result = _auctionRepository.GetAuction(id);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
     }
 }
