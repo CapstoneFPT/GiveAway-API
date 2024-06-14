@@ -4,7 +4,7 @@ public class PointPackage
 {
     public Guid PointPackageId { get; set; }
     public int Points { get; set; }
-    public decimal Price { get; set; }
+    public int Price { get; set; }
     public string Status { get; set; }
 
     public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();

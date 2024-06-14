@@ -6,7 +6,7 @@ public class Transaction
 {
    [Key]
    public Guid TransactionId { get; set; } 
-   public decimal Amount { get; set; }
+   public int Amount { get; set; }
    public DateTime CreatedDate { get; set; }
    public string Type { get; set; }
    public Order? Order { get; set; }

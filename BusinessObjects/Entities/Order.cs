@@ -6,7 +6,7 @@ public class Order
 {
     [Key]
     public Guid OrderId { get; set; }
-    public decimal TotalPrice { get; set; }
+    public int TotalPrice { get; set; }
     public DateTime CreatedDate { get; set; }
     public string PaymentMethod { get; set; }
     public DateTime PaymentDate { get; set; }

@@ -169,8 +169,6 @@ public class GiveAwayDbContext : DbContext
             .HasValue<ConsignedForSaleFashionItem>("ConsignedForSale")
             .HasValue<AuctionFashionItem>("ConsignedForAuction");
         modelBuilder.Entity<FashionItem>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
-        modelBuilder.Entity<FashionItem>().Property(e => e.SellingPrice).HasColumnType("numeric")
-            .HasPrecision(10, 2);
         modelBuilder.Entity<FashionItem>().Property(e => e.Note).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<FashionItem>().Property(e => e.Value).HasColumnType("numeric");
         modelBuilder.Entity<FashionItem>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
@@ -186,14 +184,13 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
 
         modelBuilder.Entity<Order>().HasOne(x => x.Transaction).WithOne(x => x.Order)
-            .HasForeignKey<Transaction>(x => x.OrderId);
+            .HasForeignKey<Transaction>(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
 
         #endregion
 
         #region OrderDetail
 
         modelBuilder.Entity<OrderDetail>().ToTable("OrderDetail").HasKey(e => e.OrderDetailId);
-        modelBuilder.Entity<OrderDetail>().Property(e => e.UnitPrice).HasColumnType("numberic").HasPrecision(10, 2);
 
         #endregion
 
@@ -208,7 +205,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Request>().Property(e => e.EndDate).HasColumnType("timestamptz").IsRequired(false);
 
         modelBuilder.Entity<Request>().HasOne(x => x.OrderDetail).WithOne(x => x.Request)
-            .HasForeignKey<OrderDetail>(x => x.RequestId);
+            .HasForeignKey<OrderDetail>(x => x.RequestId).OnDelete(DeleteBehavior.Cascade);
 
         #endregion
 
@@ -227,12 +224,11 @@ public class GiveAwayDbContext : DbContext
         #region Transaction
 
         modelBuilder.Entity<Transaction>().ToTable("Transaction").HasKey(e => e.TransactionId);
-        modelBuilder.Entity<Transaction>().Property(e => e.Amount).HasColumnType("numeric").HasPrecision(10, 2);
         modelBuilder.Entity<Transaction>().Property(e => e.CreatedDate).HasColumnType("timestamptz")
             .ValueGeneratedOnAdd();
         modelBuilder.Entity<Transaction>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Transaction>().HasOne(x => x.AuctionDeposit).WithOne(x => x.Transaction)
-            .HasForeignKey<AuctionDeposit>(x => x.TransactionId);
+            .HasForeignKey<AuctionDeposit>(x => x.TransactionId).OnDelete(DeleteBehavior.Cascade);
 
         #endregion
 
