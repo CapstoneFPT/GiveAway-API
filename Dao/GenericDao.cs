@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+﻿using BusinessObjects.Utils;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Dao;
 
@@ -30,7 +31,7 @@ public class GenericDao<T> where T : class
         }
         catch (Exception e)
         {
-            throw new Exception(e.Message);
+            throw new DbCustomException(e.Message);
         }
 
         return entity;
@@ -46,7 +47,7 @@ public class GenericDao<T> where T : class
         }
         catch (Exception e)
         {
-            throw new Exception(e.Message);
+            throw new DbCustomException(instance: e.Message);
         }
     }
 
@@ -60,7 +61,7 @@ public class GenericDao<T> where T : class
         }
         catch (Exception e)
         {
-            throw new Exception(e.Message);
+            throw new DbCustomException(instance: e.Message);
         }
     }
 
