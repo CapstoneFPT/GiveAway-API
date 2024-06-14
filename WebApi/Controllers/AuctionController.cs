@@ -59,12 +59,18 @@ public class AuctionController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteAuction([FromRoute] Guid id)
+    [ProducesResponseType(statusCode: StatusCodes.Status204NoContent)]
+    [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<AuctionDetailResponse>> DeleteAuction([FromRoute] Guid id)
     {
-        throw new NotImplementedException();
+       var result = await _auctionService.DeleteAuction(id);
+       return NoContent();
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
+    [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AuctionDetailResponse>> UpdateAuction([FromRoute] Guid id,
         [FromBody] UpdateAuctionRequest request)
     {
@@ -73,7 +79,8 @@ public class AuctionController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        throw new NotImplementedException();
+        var result = _auctionService.UpdateAuction(id, request);
+        return Ok(result);
     }
 
     #endregion

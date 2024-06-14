@@ -56,5 +56,31 @@ namespace Services.Auctions
                 throw new Exception(e.Message);
             }
         }
+
+        public Task<AuctionDetailResponse?> DeleteAuction(Guid id)
+        {
+            try
+            {
+                var result = _auctionRepository.DeleteAuction(id);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request)
+        {
+            try
+            {
+var result = _auctionRepository.UpdateAuction(id, request);
+return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
     }
 }

@@ -174,8 +174,8 @@ namespace Repositories.Auctions
             {
                 var result = _auctionDao
                     .GetQueryable()
-                    .Include(x=>x.Shop)
-                    .Include(x=>x.AuctionFashionItem)
+                    .Include(x => x.Shop)
+                    .Include(x => x.AuctionFashionItem)
                     .Where(x => x.AuctionId == id)
                     .Select(x => new AuctionDetailResponse
                     {
@@ -207,8 +207,91 @@ namespace Repositories.Auctions
                             CategoryId = x.AuctionFashionItem.CategoryId
                         }
                     }).AsNoTracking().FirstOrDefaultAsync();
-                
+
                 return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<AuctionDetailResponse?> DeleteAuction(Guid id)
+        {
+            try
+            {
+                var toBeDeleted = await _auctionDao.GetQueryable()
+                    .FirstOrDefaultAsync(x => x.AuctionId == id);
+
+                if (toBeDeleted is null)
+                {
+                    throw new Exception("Auction not found");
+                }
+
+                await _auctionDao.DeleteAsync(toBeDeleted);
+                return new AuctionDetailResponse
+                {
+                    AuctionId = toBeDeleted.AuctionId
+                };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request)
+        {
+            try
+            {
+                var toBeUpdated = await _auctionDao.GetQueryable()
+                    .Include(x => x.AuctionFashionItem)
+                    .Include(x => x.Shop)
+                    .FirstOrDefaultAsync(x => x.AuctionId == id);
+
+
+                if (toBeUpdated is null)
+                {
+                    throw new Exception("Auction Not Found");
+                }
+
+                toBeUpdated.Title = request.Title ?? toBeUpdated.Title;
+                toBeUpdated.StartDate = request.StartDate ?? toBeUpdated.StartDate;
+                toBeUpdated.EndDate = request.EndDate ?? toBeUpdated.EndDate;
+                toBeUpdated.DepositFee = request.DepositFee ?? toBeUpdated.DepositFee;
+                toBeUpdated.Status = request.Status ?? toBeUpdated.Status;
+
+                if (request.ShopId.HasValue)
+                {
+                    var shop = await _shopDao.GetQueryable()
+                        .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
+                    
+                    if (shop is null)
+                    {
+                        throw new Exception("Shop Not Found");
+                    }
+                    
+                    toBeUpdated.ShopId = request.ShopId.Value;
+                }
+                
+                if (request.AuctionItemId.HasValue)
+                {
+                    var auctionFashionItem = await _auctionFashionItemDao.GetQueryable()
+                        .FirstOrDefaultAsync(x =>x.ItemId  == request.AuctionItemId.Value);
+                    
+                    if (auctionFashionItem is null)
+                    {
+                        throw new Exception("Auction Fashion Item Not Found");
+                    }
+                    
+                    toBeUpdated.AuctionFashionItemId = request.AuctionItemId.Value;
+                }
+                
+                await _auctionDao.UpdateAsync(toBeUpdated);
+                return new AuctionDetailResponse
+                {
+                    AuctionId = toBeUpdated.AuctionId
+                };
             }
             catch (Exception e)
             {
