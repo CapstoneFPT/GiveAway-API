@@ -17,5 +17,5 @@ public class AuctionFashionItemDetailResponse
     public string AuctionItemStatus { get; set; }
     public Guid ShopId { get; set; }
     public Guid CategoryId { get; set; }
-    public ShopDetailResponse Shop { get; set; }
+    public ShopDetailResponse? Shop { get; set; }
 }

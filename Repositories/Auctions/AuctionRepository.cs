@@ -6,6 +6,7 @@ using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Repositories.Auctions
 {
@@ -114,6 +115,100 @@ namespace Repositories.Auctions
                     ShopId = auctionDetail.ShopId,
                     AuctionItemId = auctionDetail.AuctionFashionItemId,
                 };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
+        {
+            try
+            {
+                var query = _auctionDao.GetQueryable();
+
+
+                if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+                    query = query.Where(x => EF.Functions.ILike(x.Title, $"%{request.SearchTerm}%"));
+
+                var count = await query.CountAsync();
+                query = query.OrderByDescending(
+                    x => x.StartDate);
+
+                query = query.Skip((request.PageNumber - 1) * request.PageSize)
+                    .Take(request.PageSize);
+
+
+                var items = await query
+                    .Select(x => new AuctionListResponse
+                    {
+                        AuctionId = x.AuctionId,
+                        Title = x.Title,
+                        StartDate = x.StartDate,
+                        EndDate = x.EndDate,
+                        Status = x.Status,
+                        ShopId = x.ShopId,
+                        AuctionItemId = x.AuctionFashionItemId
+                    }).AsNoTracking().ToListAsync();
+
+                var result = new PaginationResponse<AuctionListResponse>
+                {
+                    Items = items,
+                    PageSize = request.PageSize,
+                    TotalCount = count,
+                    SearchTerm = request.SearchTerm,
+                    PageNumber = request.PageNumber,
+                };
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task<AuctionDetailResponse?> GetAuction(Guid id)
+        {
+            try
+            {
+                var result = _auctionDao
+                    .GetQueryable()
+                    .Include(x=>x.Shop)
+                    .Include(x=>x.AuctionFashionItem)
+                    .Where(x => x.AuctionId == id)
+                    .Select(x => new AuctionDetailResponse
+                    {
+                        AuctionId = x.AuctionId,
+                        StartDate = x.StartDate,
+                        EndDate = x.EndDate,
+                        Shop = new ShopDetailResponse
+                        {
+                            ShopId = x.Shop.ShopId,
+                            Address = x.Shop.Address,
+                            StaffId = x.Shop.StaffId
+                        },
+                        Status = x.Status,
+                        Title = x.Title,
+                        AuctionFashionItem = new AuctionFashionItemDetailResponse
+                        {
+                            ItemId = x.AuctionFashionItem.ItemId,
+                            Name = x.AuctionFashionItem.Name,
+                            Type = x.AuctionFashionItem.Type,
+                            Condition = x.AuctionFashionItem.Condition,
+                            Quantity = x.AuctionFashionItem.Quantity,
+                            Duration = x.AuctionFashionItem.Duration,
+                            InitialPrice = x.AuctionFashionItem.InitialPrice,
+                            SellingPrice = x.AuctionFashionItem.SellingPrice,
+                            AuctionItemStatus = x.AuctionFashionItem.AuctionItemStatus,
+                            Note = x.AuctionFashionItem.Note,
+                            Value = x.AuctionFashionItem.Value,
+                            ShopId = x.AuctionFashionItem.ShopId,
+                            CategoryId = x.AuctionFashionItem.CategoryId
+                        }
+                    }).AsNoTracking().FirstOrDefaultAsync();
+                
+                return result;
             }
             catch (Exception e)
             {

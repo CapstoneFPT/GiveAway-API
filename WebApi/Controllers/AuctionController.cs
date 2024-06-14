@@ -37,18 +37,25 @@ public class AuctionController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<PaginationResponse<AuctionListResponse>> GetAuctions()
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(PaginationResponse<AuctionListResponse>))]
+    public async Task<ActionResult<PaginationResponse<AuctionListResponse>>> GetAuctions([FromQuery] GetAuctionsRequest request)
     {
-        throw new NotImplementedException();
+        var result = await _auctionService.GetAuctions(request);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
+    [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AuctionDetailResponse>> GetAuction([FromRoute] Guid id)
     {
-        return Ok(new AuctionDetailResponse()
+        var result = await _auctionService.GetAuction(id);
+        if (result == null)
         {
+            return NotFound();
+        }
 
-        });
+        return Ok(result);
     }
 
     [HttpDelete("{id}")]

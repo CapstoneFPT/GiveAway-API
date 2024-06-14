@@ -31,9 +31,30 @@ namespace Services.Auctions
             }
         }
 
-        public Task<List<AuctionListResponse>> GetAuctions()
+        public Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var result = _auctionRepository.GetAuctions(request);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task<AuctionDetailResponse?> GetAuction(Guid id)
+        {
+            try
+            {
+                var result = _auctionRepository.GetAuction(id);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
     }
 }
