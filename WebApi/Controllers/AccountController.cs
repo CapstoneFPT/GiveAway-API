@@ -3,11 +3,13 @@ using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Deliveries;
+using BusinessObjects.Dtos.Wallet;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.Deliveries;
+using Services.Wallets;
 
 namespace WebApi.Controllers
 {
@@ -17,11 +19,13 @@ namespace WebApi.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly IDeliveryService _deliveryService;
+        private readonly IWalletService _walletService;
 
-        public AccountController(IAccountService accountService, IDeliveryService deliveryService)
+        public AccountController(IAccountService accountService, IDeliveryService deliveryService, IWalletService walletService)
         {
             _accountService = accountService;
             _deliveryService = deliveryService;
+            _walletService = walletService;
         }
         [HttpGet]
         public async Task<ActionResult<List<AccountResponse>>> GetAllAccounts()
@@ -62,6 +66,16 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<string>>> DeleteDelivery([FromRoute] Guid deliveryId)
         {
             return await _deliveryService.DeleteDelivery(deliveryId);
+        }
+        [HttpGet("{accountId}/wallets")]
+        public async Task<ActionResult<Result<WalletResponse>>> GetWalletByAccountId([FromRoute] Guid accountId)
+        {
+            return await _walletService.GetWalletByAccountId(accountId);
+        }
+        [HttpPut("{accountId}/wallets")]
+        public async Task<ActionResult<Result<WalletResponse>>> UpdateWallet([FromRoute] Guid accountId, [FromBody] UpdateWalletRequest request)
+        {
+            return await _walletService.UpdateWallet(accountId, request);
         }
     }
 }
