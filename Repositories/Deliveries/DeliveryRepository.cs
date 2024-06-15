@@ -13,9 +13,9 @@ namespace Repositories.Deliveries
     {
         private readonly GenericDao<Delivery> _deliveryDao;
 
-        public DeliveryRepository()
+        public DeliveryRepository(GenericDao<Delivery> genericDao)
         {
-            _deliveryDao = new GenericDao<Delivery>();
+            _deliveryDao = genericDao;
         }
 
         public async Task<Delivery> CreateDelivery(Delivery delivery)

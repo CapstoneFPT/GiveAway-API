@@ -27,3 +27,35 @@ public enum AccountStatus
     Inactive,
     NotVerify
 }
+public enum FashionItemStatus
+{
+    Available,
+    Sold,
+    Pending,
+    AwaitingAuction,
+    Bidding,
+    Won,
+    Rejected,
+    Returned
+}
+public enum FashionItemType
+{
+    ConsignForSale,
+    ConsignForAuction
+}
+public enum RequestStatus
+{
+    Pending, 
+    AwaitDelivery,
+    Received,
+    Completed,
+    Rejected,
+    Cancelled
+}
+public enum OrderStatus
+{
+    AwaitingPayment,
+    OnDelivery,
+    Completed,
+    Cancelled
+}

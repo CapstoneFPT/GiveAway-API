@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.Wallet;
 using BusinessObjects.Entities;

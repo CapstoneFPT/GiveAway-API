@@ -13,9 +13,9 @@ namespace Repositories.Accounts
     public class AccountRepository : IAccountRepository
     {
         private readonly GenericDao<Account> _accountDao;
-        public AccountRepository()
+        public AccountRepository(GenericDao<Account> genericDao)
         {
-            _accountDao = new GenericDao<Account>();
+            _accountDao = genericDao;
         }
 
         public Task<List<Account>> FindMany(

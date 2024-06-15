@@ -14,9 +14,9 @@ namespace Repositories.Wallets
     {
         private readonly GenericDao<Wallet> _walletDao;
 
-        public WalletRepository()
+        public WalletRepository(GenericDao<Wallet> genericDao)
         {
-            _walletDao = new GenericDao<Wallet>();
+            _walletDao = genericDao;
         }
 
         public async Task<Wallet> CreateWallet(Wallet wallet)
