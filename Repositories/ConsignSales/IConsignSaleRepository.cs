@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Services.Requests
+namespace Repositories.Requests
 {
-    public class RequestService : IRequestService
+    public interface IConsignSaleRepository
     {
     }
 }
