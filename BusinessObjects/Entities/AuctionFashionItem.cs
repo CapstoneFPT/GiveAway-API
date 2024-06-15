@@ -4,7 +4,6 @@ public class AuctionFashionItem : FashionItem
 {
     public int Duration { get; set; }
     public int InitialPrice { get; set; }
-    public string AuctionItemStatus { get; set; }
 
     public ICollection<Auction> Auctions = new List<Auction>();
 }

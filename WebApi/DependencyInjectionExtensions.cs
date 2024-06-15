@@ -119,7 +119,8 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<OrderDetail>>();
         serviceCollection.AddScoped<GenericDao<Order>>();
         serviceCollection.AddScoped<GenericDao<PointPackage>>();
-        serviceCollection.AddScoped<GenericDao<Request>>();
+        serviceCollection.AddScoped<GenericDao<ConsignSale>>();
+        serviceCollection.AddScoped<GenericDao<ConsignSaleDetail>>();
         serviceCollection.AddScoped<GenericDao<Schedule>>();
         serviceCollection.AddScoped<GenericDao<Shop>>();
         serviceCollection.AddScoped<GenericDao<Timeslot>>();

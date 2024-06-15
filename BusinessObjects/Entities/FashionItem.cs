@@ -14,8 +14,7 @@ public  class FashionItem
     public int? Value { get; set; }
     
     public string Condition { get; set; }
-    public Request Request { get; set; }
-    public Guid RequestId { get; set; }
+    public ConsignSaleDetail ConsignSaleDetail { get; set; }
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
     public Category Category { get; set; }

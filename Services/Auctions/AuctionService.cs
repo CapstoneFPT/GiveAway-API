@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using Repositories.Auctions;
@@ -81,6 +82,16 @@ return result;
             {
                 throw new Exception(e.Message);
             }
+        }
+
+        public Task<AuctionDepositDetailResponse> CreateDeposit(Guid id, CreateAuctionDepositRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

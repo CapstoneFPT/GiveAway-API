@@ -14,6 +14,7 @@ public class Order
     public Guid MemberId { get; set; }
     public Delivery Delivery { get; set; }
     public Guid DeliveryId { get; set; }
+    public string Status { get; set; }
 
     public Transaction Transaction { get; set; }
     public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();

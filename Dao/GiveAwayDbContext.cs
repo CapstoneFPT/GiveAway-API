@@ -9,7 +9,8 @@ public class GiveAwayDbContext : DbContext
 {
     public DbSet<Account> Accounts { get; set; }
     public DbSet<Inquiry> Inquiries { get; set; }
-    public DbSet<Request> Requests { get; set; }
+    public DbSet<ConsignSale> ConsignSales { get; set; }
+    public DbSet<ConsignSaleDetail> ConsignSaleDetails { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<FashionItem> FashionItems { get; set; }
     public DbSet<Image> Images { get; set; }
@@ -173,6 +174,8 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<FashionItem>().Property(e => e.Value).HasColumnType("numeric");
         modelBuilder.Entity<FashionItem>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
 
+        modelBuilder.Entity<FashionItem>().HasOne(x => x.ConsignSaleDetail).WithOne(x => x.FashionItem)
+            .HasForeignKey<ConsignSaleDetail>(x => x.FashionItemId).OnDelete(DeleteBehavior.Cascade);
         #endregion
 
         #region Order
@@ -194,18 +197,26 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
-        #region Request
+        #region ConsignSale
 
-        modelBuilder.Entity<Request>().ToTable("Request").HasKey(e => e.RequestId);
+        modelBuilder.Entity<ConsignSale>().ToTable("ConsignSale").HasKey(e => e.ConsignSaleId);
 
-        modelBuilder.Entity<Request>().Property(e => e.CreatedDate).HasColumnType("timestamptz").ValueGeneratedOnAdd();
-        modelBuilder.Entity<Request>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
-        modelBuilder.Entity<Request>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(50);
-        modelBuilder.Entity<Request>().Property(e => e.StartDate).HasColumnType("timestamptz").IsRequired(false);
-        modelBuilder.Entity<Request>().Property(e => e.EndDate).HasColumnType("timestamptz").IsRequired(false);
+        modelBuilder.Entity<ConsignSale>().Property(e => e.CreatedDate).HasColumnType("timestamptz")
+            .ValueGeneratedOnAdd();
+        modelBuilder.Entity<ConsignSale>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<ConsignSale>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(50);
+        modelBuilder.Entity<ConsignSale>().Property(e => e.StartDate).HasColumnType("timestamptz").IsRequired(false);
+        modelBuilder.Entity<ConsignSale>().Property(e => e.EndDate).HasColumnType("timestamptz").IsRequired(false);
 
-        modelBuilder.Entity<Request>().HasOne(x => x.OrderDetail).WithOne(x => x.Request)
-            .HasForeignKey<OrderDetail>(x => x.RequestId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ConsignSale>().HasMany(x => x.ConsignSaleDetails).WithOne(x => x.ConsignSale)
+            .HasForeignKey(x => x.ConsignSaleId);
+
+        #endregion
+
+        #region ConsignedSaleDetail
+
+        modelBuilder.Entity<ConsignSaleDetail>().ToTable("ConsignSaleDetail").HasKey(x => x.ConsignSaleDetailId); 
+        
 
         #endregion
 

@@ -15,7 +15,7 @@ public class OrderDetail
     public Guid? ItemId { get; set; }
     public PointPackage? PointPackage { get; set; }
     public Guid? PointPackageId { get; set; }
-    public Request? Request { get; set; }
+    public ConsignSale? Request { get; set; }
     public Guid? RequestId { get; set; }
     
 }
