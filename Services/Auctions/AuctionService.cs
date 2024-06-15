@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using Repositories.Auctions;
@@ -55,6 +56,42 @@ namespace Services.Auctions
             {
                 throw new Exception(e.Message);
             }
+        }
+
+        public Task<AuctionDetailResponse?> DeleteAuction(Guid id)
+        {
+            try
+            {
+                var result = _auctionRepository.DeleteAuction(id);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request)
+        {
+            try
+            {
+var result = _auctionRepository.UpdateAuction(id, request);
+return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task<AuctionDepositDetailResponse> CreateDeposit(Guid id, CreateAuctionDepositRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

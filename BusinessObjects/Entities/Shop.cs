@@ -9,6 +9,7 @@ public class Shop
    public string Address { get; set; }
    public Account Staff { get; set; }
    public Guid StaffId { get; set; }
+   public string Phone { get; set; }
 
    public ICollection<Inquiry> Inquiries = new List<Inquiry>();
 }

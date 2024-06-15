@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using BusinessObjects;
+using BusinessObjects.Utils;
 using Dao;
 using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Authentication;
@@ -11,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi;
+using WebApi.Utils.CustomProblemDetails;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +23,17 @@ builder.Services.AddRepositories();
 builder.Services.AddDao();
 builder.Services.AddProblemDetails(options =>
 {
-    options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment();
+    options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment() || builder.Environment.IsProduction();
+    options.Map<DbCustomException>(e => new DbCustomProblemDetail()
+    {
+        Title = e.Title,
+        Status = StatusCodes.Status500InternalServerError,
+        Detail = e.Detail,
+        Type = e.Type,
+        Instance = e.Instance, AdditionalInfo = e.AdditionalInfo
+    });
 });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<GiveAwayDbContext>(optionsAction: optionsBuilder =>
 {
@@ -67,10 +78,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(
         name: "AllowAll",
-        policy =>
-        {
-            policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
-        }
+        policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); }
     );
 });
 
@@ -108,10 +116,7 @@ builder.Services.AddAuthentication(options =>
 });
 builder
     .Services.AddControllers()
-    .AddJsonOptions(x =>
-    {
-        x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+    .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
 var app = builder.Build();
 

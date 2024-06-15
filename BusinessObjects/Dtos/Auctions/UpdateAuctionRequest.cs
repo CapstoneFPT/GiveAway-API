@@ -16,6 +16,8 @@ public class UpdateAuctionRequest :IValidatableObject
     [Range(0, int.MaxValue, ErrorMessage = "Error: Minimum deposit must be greater than 0")]
     public int? DepositFee { get; set; }
 
+    public string? Status { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (DateOnly.FromDateTime(StartDate.Value) < DateOnly.FromDateTime(DateTime.Now))

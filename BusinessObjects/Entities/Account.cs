@@ -18,7 +18,7 @@ public class Account
     public string Role { get; set; }
     public string Status { get; set; }
 
-    public ICollection<Request> Requests = new List<Request>();
+    public ICollection<ConsignSale> Requests = new List<ConsignSale>();
     public ICollection<Delivery> Deliveries = new List<Delivery>();
     public ICollection<Order> Orders = new List<Order>();
     public ICollection<Bid> Bids = new List<Bid>();
