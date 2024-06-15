@@ -40,10 +40,10 @@ public enum FashionItemStatus
 }
 public enum FashionItemType
 {
-    ConsignForSale,
-    ConsignForAuction
+    ConsignedForSale,
+    ConsignedForAuction
 }
-public enum RequestStatus
+public enum ConsignSaleStatus
 {
     Pending, 
     AwaitDelivery,

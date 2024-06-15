@@ -29,7 +29,7 @@ namespace Repositories.FashionItems
                 if (!string.IsNullOrWhiteSpace(request.SearchTerm))
                     query = query.Where(x => EF.Functions.ILike(x.Name, $"%{request.SearchTerm}%"));
 
-                query = query.Where(x => x.Status.Equals(FashionItemStatus.Available.ToString()) && x.Type.Equals(FashionItemType.ConsignForSale.ToString()));
+                query = query.Where(x => x.Status.Equals(FashionItemStatus.Available.ToString()) && x.Type.Equals(FashionItemType.ConsignedForSale.ToString()));
 
                 var count = await query.CountAsync();
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)
@@ -38,7 +38,7 @@ namespace Repositories.FashionItems
                 var items = await query
                     .Include(c => c.Shop)
                     .Include(a => a.Category)
-                    .Include(b => b.Request).ThenInclude(c => c.Member)
+                    .Include(b => b.ConsignSaleDetail).ThenInclude(c => c.ConsignSale).ThenInclude(c => c.Member)
                     .Select(x => new FashionItemDetailResponse
                     {
                         ItemId = x.ItemId,
@@ -49,11 +49,11 @@ namespace Repositories.FashionItems
                         Quantity = x.Quantity,
                         Value = x.Value,
                         Condition = x.Condition,
-                        Duration = x.Request.ConsignDuration,
-                        StartDate = x.Request.StartDate,
-                        EndDate = x.Request.EndDate,
+                        Duration = x.ConsignSaleDetail.ConsignSale.ConsignDuration,
+                        StartDate = x.ConsignSaleDetail.ConsignSale.StartDate,
+                        EndDate = x.ConsignSaleDetail.ConsignSale.EndDate,
                         ShopAddress = x.Shop.Address,
-                        Consigner = x.Request.Member.Fullname,
+                        Consigner = x.ConsignSaleDetail.ConsignSale.Member.Fullname,
                         CategoryName = x.Category.Name,
                         Status = x.Status,
                     })
