@@ -31,7 +31,7 @@ public class GenericDao<T> where T : class
         }
         catch (Exception e)
         {
-            throw new DbCustomException(e.Message);
+            throw new DbCustomException(e.Message,e.InnerException?.Message);
         }
 
         return entity;
@@ -47,7 +47,7 @@ public class GenericDao<T> where T : class
         }
         catch (Exception e)
         {
-            throw new DbCustomException(instance: e.Message);
+            throw new DbCustomException(instance: e.Message, e.InnerException?.Message);
         }
     }
 
@@ -61,7 +61,7 @@ public class GenericDao<T> where T : class
         }
         catch (Exception e)
         {
-            throw new DbCustomException(instance: e.Message);
+            throw new DbCustomException(instance: e.Message,e.InnerException?.Message);
         }
     }
 

@@ -9,10 +9,10 @@ public class DbCustomException : Exception
     public string Detail { get; set; }
     public string Title { get; set; }
     public string Instance { get; set; }
-    public DbCustomException(string instance)
+    public DbCustomException(string instance, string? innerExceptionMessage)
     {
         Type = "db-custom-exception";
-        Detail = "Something went wrong while interacting with the database";
+        Detail = innerExceptionMessage ?? "Something went wrong with the database operations";
         Title = "Custom Database Exception";
         AdditionalInfo = "Maybe you can try again in a bit?";
         Instance = instance;
