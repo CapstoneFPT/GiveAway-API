@@ -38,8 +38,15 @@ public class AuthController : ControllerBase
     [HttpGet("login-google")]
     public IActionResult GoogleLogin()
     {
-        var props = new AuthenticationProperties() { RedirectUri = Url.Action(nameof(GoogleSignin)) };
-        return Challenge(props, GoogleDefaults.AuthenticationScheme);
+        try
+        {
+            var props = new AuthenticationProperties() { RedirectUri = Url.Action(nameof(GoogleSignin)) };
+            return Challenge(props, GoogleDefaults.AuthenticationScheme);
+        }
+        catch (Exception e)
+        {
+            throw new Exception("Something went wrong with google sign in",e.InnerException);
+        }
     }
 
     [HttpGet("signin-google")]
