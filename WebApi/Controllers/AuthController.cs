@@ -77,7 +77,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception e)
         {
-            throw new Exception(e.Message, e.InnerException);
+            throw new Exception("Something went wrong with google sign in", e.InnerException);
         }
     }
 
