@@ -15,5 +15,7 @@ namespace Repositories.Auctions
         Task<AuctionDetailResponse?> GetAuction(Guid id);
         Task<AuctionDetailResponse?> DeleteAuction(Guid id);
         Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request);
+        Task<AuctionDetailResponse?> ApproveAuction(Guid id);
+        Task<AuctionDetailResponse?> RejectAuction(Guid id);
     }
 }

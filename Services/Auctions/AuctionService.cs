@@ -75,8 +75,8 @@ namespace Services.Auctions
         {
             try
             {
-var result = _auctionRepository.UpdateAuction(id, request);
-return result;
+                var result = _auctionRepository.UpdateAuction(id, request);
+                return result;
             }
             catch (Exception e)
             {
@@ -92,6 +92,32 @@ return result;
         public Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
         {
             throw new NotImplementedException();
+        }
+
+        public Task<AuctionDetailResponse?> ApproveAuction(Guid id)
+        {
+            try
+            {
+                var result = _auctionRepository.ApproveAuction(id);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task<AuctionDetailResponse?> RejectAuction(Guid id)
+        {
+            try
+            {
+                var result = _auctionRepository.RejectAuction(id);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
     }
 }

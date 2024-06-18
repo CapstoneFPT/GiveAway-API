@@ -73,6 +73,9 @@ namespace Repositories.Auctions
                 };
                 var auctionDetail = await _auctionDao.AddAsync(newAuction);
 
+                auctionItem.Status = FashionItemStatus.AwaitingAuction.ToString();
+                await _auctionFashionItemDao.UpdateAsync(auctionItem);
+
                 var newSchedule = new Schedule()
                 {
                     AuctionId = auctionDetail.AuctionId,
@@ -80,6 +83,8 @@ namespace Repositories.Auctions
                     TimeslotId = request.TimeslotId
                 };
                 var scheduleDetail = await _scheduleDao.AddAsync(newSchedule);
+
+                auctionItem.Status = FashionItemStatus.AwaitingAuction.ToString();
 
 
                 return new AuctionDetailResponse
@@ -265,32 +270,110 @@ namespace Repositories.Auctions
                 {
                     var shop = await _shopDao.GetQueryable()
                         .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
-                    
+
                     if (shop is null)
                     {
                         throw new Exception("Shop Not Found");
                     }
-                    
+
                     toBeUpdated.ShopId = request.ShopId.Value;
                 }
-                
+
                 if (request.AuctionItemId.HasValue)
                 {
                     var auctionFashionItem = await _auctionFashionItemDao.GetQueryable()
-                        .FirstOrDefaultAsync(x =>x.ItemId  == request.AuctionItemId.Value);
-                    
+                        .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId.Value);
+
                     if (auctionFashionItem is null)
                     {
                         throw new Exception("Auction Fashion Item Not Found");
                     }
-                    
+
                     toBeUpdated.AuctionFashionItemId = request.AuctionItemId.Value;
                 }
-                
+
                 await _auctionDao.UpdateAsync(toBeUpdated);
                 return new AuctionDetailResponse
                 {
                     AuctionId = toBeUpdated.AuctionId
+                };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<AuctionDetailResponse?> ApproveAuction(Guid id)
+        {
+            try
+            {
+                
+                var toBeApproved = await _auctionDao.GetQueryable()
+                    .FirstOrDefaultAsync(x => x.AuctionId == id);
+
+                if (toBeApproved == null)
+                {
+                    throw new Exception("Not Found");
+                }
+
+                if (toBeApproved.Status == AuctionStatus.Rejected.ToString())
+                {
+                    throw new Exception("Auction already rejected");
+                }
+
+                toBeApproved.Status = AuctionStatus.Approved.ToString();
+                await _auctionDao.UpdateAsync(toBeApproved);
+
+               return new AuctionDetailResponse()
+                {
+                    AuctionId = toBeApproved.AuctionId,
+                    Status = toBeApproved.Status,
+                };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<AuctionDetailResponse?> RejectAuction(Guid id)
+        {
+            try
+            {
+                var toBeRejected = _auctionDao.GetQueryable()
+                    .FirstOrDefault(x => x.AuctionId == id);
+
+
+                if (toBeRejected == null)
+                {
+                    throw new Exception("Auction Not Found");
+                }
+                
+                if (toBeRejected.Status == AuctionStatus.Approved.ToString())
+                {
+                    throw new Exception("Auction already approved");
+                }
+
+                toBeRejected.Status = AuctionStatus.Rejected.ToString();
+                var auctionItem = _auctionFashionItemDao.GetQueryable()
+                    .FirstOrDefault(x => x.ItemId == toBeRejected!.AuctionFashionItemId);
+
+                if (auctionItem == null)
+                {
+                    throw new Exception(" Auction Fashion Item Not Found");
+                }
+                auctionItem.Status = FashionItemStatus.Available.ToString();
+
+                var result = await _auctionDao.UpdateAsync(toBeRejected);
+                return new AuctionDetailResponse()
+                {
+                    AuctionId = result.AuctionId,
+                    Status = result.Status,
+                    AuctionFashionItem = new AuctionFashionItemDetailResponse()
+                    {
+                       AuctionItemStatus = result.AuctionFashionItem.Status
+                    }
                 };
             }
             catch (Exception e)

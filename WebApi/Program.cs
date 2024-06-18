@@ -120,17 +120,18 @@ builder
     .Services.AddControllers()
     .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
-// var config = builder.Configuration.GetSection("Kestrel");
+var config = builder.Configuration.GetSection("Kestrel");
 // if (!builder.Environment.IsDevelopment())
 // {
 //     var builderConfig = builder.Configuration;
 //     try
 //     {
-//         var httpsCertificatePath = builderConfig[KestrelConstants.HttpsCertificatePath];
-//         var httpsCertificatePassword = builderConfig[KestrelConstants.HttpsCertificatePassword];
+//         var httpsCertificatePath = builderConfig.GetSection(key: KestrelConstants.HttpsCertificatePath).Value;
+//         var httpsCertificatePassword = builderConfig.GetSection(key: KestrelConstants.HttpsCertificatePassword).Value;
+//             
 //         
 //         
-//         if (httpsCertificatePath == null || httpsCertificatePassword == null)
+//         if (httpsCertificatePath.IsNullOrEmpty() || httpsCertificatePassword.IsNullOrEmpty())
 //         {
 //             throw new FileNotFoundException("https certificate not found", "fullchain.pem or privkey.pem");
 //         }

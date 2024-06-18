@@ -59,3 +59,12 @@ public enum OrderStatus
     Completed,
     Cancelled
 }
+
+public enum AuctionStatus
+{
+    Pending,
+    Rejected,
+    Approved,
+    OnGoing,
+    Finished
+}

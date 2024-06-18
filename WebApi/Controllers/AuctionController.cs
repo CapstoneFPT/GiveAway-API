@@ -35,6 +35,20 @@ public class AuctionController : ControllerBase
 
         return CreatedAtAction(nameof(GetAuction), new { id = result.AuctionItemId }, result);
     }
+    
+    [HttpPut("{id}/approve")]
+    public async Task<ActionResult<AuctionDetailResponse>> ApproveAuction([FromRoute] Guid id)
+    {
+        var result = await _auctionService.ApproveAuction(id);
+        return Ok(result);
+    }
+    
+    [HttpPut("{id}/reject")]
+    public async Task<ActionResult<AuctionDetailResponse>> RejectAuction([FromRoute] Guid id)
+    {
+        var result = await _auctionService.RejectAuction(id);
+        return Ok(result);
+    }
 
     [HttpGet]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(PaginationResponse<AuctionListResponse>))]
