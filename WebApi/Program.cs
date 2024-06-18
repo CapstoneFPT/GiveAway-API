@@ -120,33 +120,33 @@ builder
     .Services.AddControllers()
     .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
-var builderConfig = builder.Configuration;
-try
-{
-    var httpsCertificatePath = builderConfig[KestrelConstants.HttpsCertificatePath];
-    var httpsCertificatePassword = builderConfig[KestrelConstants.HttpsCertificatePassword];
-
-    if (httpsCertificatePath is null || httpsCertificatePassword is null)
-    {
-        throw new FileNotFoundException("https certificate not found", "fullchain.pem or privkey.pem");
-    }
-    
-    builder.WebHost.ConfigureKestrel(options: options =>
-    {
-        options.ListenAnyIP(80);
-        options.ListenAnyIP(81, listenOptions =>
-        {
-            listenOptions.UseHttps(
-                builderConfig[httpsCertificatePath],
-                builderConfig[httpsCertificatePassword]
-            );
-        });
-    });
-}
-catch (Exception e)
-{
-    throw new Exception("Error in configuring Kestrel", e);
-}
+// var builderConfig = builder.Configuration;
+// try
+// {
+//     var httpsCertificatePath = builderConfig[KestrelConstants.HttpsCertificatePath];
+//     var httpsCertificatePassword = builderConfig[KestrelConstants.HttpsCertificatePassword];
+//
+//     if (httpsCertificatePath is null || httpsCertificatePassword is null)
+//     {
+//         throw new FileNotFoundException("https certificate not found", "fullchain.pem or privkey.pem");
+//     }
+//     
+//     builder.WebHost.ConfigureKestrel(options: options =>
+//     {
+//         options.ListenAnyIP(80);
+//         options.ListenAnyIP(81, listenOptions =>
+//         {
+//             listenOptions.UseHttps(
+//                 builderConfig[httpsCertificatePath],
+//                 builderConfig[httpsCertificatePassword]
+//             );
+//         });
+//     });
+// }
+// catch (Exception e)
+// {
+//     throw new Exception("Error in configuring Kestrel", e);
+// }
 
 
 var app = builder.Build();
