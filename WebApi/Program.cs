@@ -120,32 +120,37 @@ builder
     .Services.AddControllers()
     .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
-// var builderConfig = builder.Configuration;
-// try
+// var config = builder.Configuration.GetSection("Kestrel");
+// if (!builder.Environment.IsDevelopment())
 // {
-//     var httpsCertificatePath = builderConfig[KestrelConstants.HttpsCertificatePath];
-//     var httpsCertificatePassword = builderConfig[KestrelConstants.HttpsCertificatePassword];
-//
-//     if (httpsCertificatePath is null || httpsCertificatePassword is null)
+//     var builderConfig = builder.Configuration;
+//     try
 //     {
-//         throw new FileNotFoundException("https certificate not found", "fullchain.pem or privkey.pem");
-//     }
-//     
-//     builder.WebHost.ConfigureKestrel(options: options =>
-//     {
-//         options.ListenAnyIP(80);
-//         options.ListenAnyIP(81, listenOptions =>
+//         var httpsCertificatePath = builderConfig[KestrelConstants.HttpsCertificatePath];
+//         var httpsCertificatePassword = builderConfig[KestrelConstants.HttpsCertificatePassword];
+//         
+//         
+//         if (httpsCertificatePath == null || httpsCertificatePassword == null)
 //         {
-//             listenOptions.UseHttps(
-//                 builderConfig[httpsCertificatePath],
-//                 builderConfig[httpsCertificatePassword]
-//             );
+//             throw new FileNotFoundException("https certificate not found", "fullchain.pem or privkey.pem");
+//         }
+//         
+//         builder.WebHost.ConfigureKestrel(options: options =>
+//         {
+//             options.ListenAnyIP(80);
+//             options.ListenAnyIP(81, listenOptions =>
+//             {
+//                 listenOptions.UseHttps(
+//                     builderConfig[httpsCertificatePath],
+//                     builderConfig[httpsCertificatePassword]
+//                 );
+//             });
 //         });
-//     });
-// }
-// catch (Exception e)
-// {
-//     throw new Exception("Error in configuring Kestrel", e);
+//     }
+//     catch (Exception e)
+//     {
+//         throw new Exception("Error in configuring Kestrel", e);
+//     }
 // }
 
 
