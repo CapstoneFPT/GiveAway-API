@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi;
 using WebApi.Utils.CustomProblemDetails;
+using WebApi.Utils.WebServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,8 @@ builder.Services.AddRepositories();
 builder.Services.AddDao();
 builder.Services.AddProblemDetails(options =>
 {
-    options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment() || builder.Environment.IsProduction();
+    options.IncludeExceptionDetails =
+        (ctx, ex) => builder.Environment.IsDevelopment() || builder.Environment.IsProduction();
     options.Map<DbCustomException>(e => new DbCustomProblemDetail()
     {
         Title = e.Title,
@@ -117,6 +119,20 @@ builder.Services.AddAuthentication(options =>
 builder
     .Services.AddControllers()
     .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+
+var builderConfig = builder.Configuration;
+
+builder.WebHost.ConfigureKestrel(options: options =>
+{
+    options.ListenAnyIP(80);
+    options.ListenAnyIP(81, listenOptions =>
+    {
+        listenOptions.UseHttps(
+            builderConfig[KestrelConstants.HttpsCertificatePath],
+            builderConfig[KestrelConstants.HttpsCertificatePassword]
+        );
+    });
+});
 
 var app = builder.Build();
 
