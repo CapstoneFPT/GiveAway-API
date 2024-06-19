@@ -5,18 +5,23 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Entities;
 using Repositories.Auctions;
+using Repositories.Bids;
 
 namespace Services.Auctions
 {
     public class AuctionService : IAuctionService
     {
-        private IAuctionRepository _auctionRepository;
+        private readonly IAuctionRepository _auctionRepository;
+        private readonly IBidRepository _bidRepository;
 
-        public AuctionService(IAuctionRepository auctionRepository)
+        public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository)
         {
             _auctionRepository = auctionRepository;
+            _bidRepository = bidRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -117,6 +122,34 @@ namespace Services.Auctions
             catch (Exception e)
             {
                 throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<BidDetailResponse?> PlaceBid(Guid id, CreateBidRequest request)
+        {
+            try
+            {
+              var result = await _bidRepository.CreateBid(id, request);
+              return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
+        {
+            try
+            {
+
+                var result = _bidRepository.GetBids(id,request);
+                return result;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
         }
     }

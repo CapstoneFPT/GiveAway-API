@@ -6,6 +6,5 @@ public class CreateBidRequest
 {
     public Guid MemberId { get; set; }
     [Range(0,int.MaxValue,ErrorMessage = "Amount must be greater than 0")]
-    public decimal Amount { get; set; }
-    public bool IsWinning { get; set; } = true;
+    public int Amount { get; set; }
 }

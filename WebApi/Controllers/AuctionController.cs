@@ -103,13 +103,14 @@ public class AuctionController : ControllerBase
     #region Bids
 
     [HttpGet("{id}/bids")]
-    public async Task<ActionResult<PaginationResponse<BidListResponse>>> GetBids([FromRoute] Guid id)
+    public async Task<ActionResult<PaginationResponse<BidListResponse>>> GetBids([FromRoute] Guid id,[FromQuery] GetBidsRequest request)
     {
-        throw new NotImplementedException();
+        var result = await _auctionService.GetBids(id,request);
+        return Ok(result);
     }
 
-    [HttpPost("{id}/bids")]
-    public async Task<ActionResult<BidDetailResponse>> CreateBid([FromRoute] Guid id,
+    [HttpPost("{id}/bids/place_bid")]
+    public async Task<ActionResult<BidDetailResponse>> PlaceBid([FromRoute] Guid id,
         [FromBody] CreateBidRequest request)
     {
         if (!ModelState.IsValid)
@@ -117,7 +118,8 @@ public class AuctionController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        throw new NotImplementedException();
+        var result = await _auctionService.PlaceBid(id, request);
+        return Ok(result);
     }
 
     [HttpDelete("{id}/bids/{bidId}")]

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 
 namespace Repositories.Auctions
