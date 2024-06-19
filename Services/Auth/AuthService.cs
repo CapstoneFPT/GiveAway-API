@@ -90,7 +90,7 @@ public class AuthService : IAuthService
 
     public async Task<Result<AccountResponse>> CreateStaffAccount(CreateStaffAccountRequest request)
     {
-        var isused = await FindUserByEmail(request.Email);
+        var isused = await _accountRepository.FindUserByEmail(request.Email);
         var response = new Result<AccountResponse>();
         if (isused != null)
         {
@@ -132,11 +132,11 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<Account> FindUserByEmail(string email)
+    /*public async Task<Account> FindUserByEmail(string email)
     {
         var result = await _accountRepository.FindUserByEmail(email);
         return result;
-    }
+    }*/
 
     public async Task<Result<LoginResponse>> Login(string email, string password)
     {
@@ -209,16 +209,23 @@ public class AuthService : IAuthService
 
     public async Task<Result<AccountResponse>> Register(RegisterRequest request)
     {
-        var isused = await FindUserByEmail(request.Email);
-        var response = new Result<AccountResponse>();
-        if (isused != null)
-        {
-            response.Messages = new[] { "This mail is already used" };
+        var ismailused = await _accountRepository.FindUserByEmail(request.Email);
+        var isphoneused = await _accountRepository.FindUserByPhone(request.Phone);
+		var response = new Result<AccountResponse>();
+		if (ismailused != null)
+		{
+			response.Messages = new[] { "This mail is already used" };
+			response.ResultStatus = ResultStatus.Duplicated;
+			return response;
+		}
+		if(isphoneused != null)
+		{
+            response.Messages = new[] { "This phone number is already used" };
             response.ResultStatus = ResultStatus.Duplicated;
             return response;
         }
-        else
-        {
+		else
+		{
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
             Account account = new Account();
             account.Email = request.Email;
@@ -259,7 +266,7 @@ public class AuthService : IAuthService
     public async Task<Result<string>> ResendVerifyEmail(string email)
     {
         var response = new Result<string>();
-        var user = await FindUserByEmail(email);
+        var user = await _accountRepository.FindUserByEmail(email);
         string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
         string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
 
@@ -615,26 +622,25 @@ public class AuthService : IAuthService
 
         return response;
     }
-
-    public async Task<Result<string>> SendMailRegister(string email, string token)
-    {
-        var response = new Result<string>();
-        var user = await FindUserByEmail(email);
-        string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
-        string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
-        string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
-
-        SendEmailRequest content = new SendEmailRequest
-        {
-            To = email,
-            Subject = "[GIVEAWAY] Verify Account",
-            Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
-        };
-        await _emailService.SendEmail(content);
-        response.Messages = ["Register successfully! Please check your email for verification in 3 minutes"];
-        response.ResultStatus = ResultStatus.Success;
-        return response;
-    }
+	public async Task<Result<string>> SendMailRegister(string email, string token)
+	{
+		var response = new Result<string>();
+		var user = await _accountRepository.FindUserByEmail(email);
+		string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
+		string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
+		string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
+    
+		SendEmailRequest content = new SendEmailRequest
+		{
+			To = email,
+			Subject = "[GIVEAWAY] Verify Account",
+			Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
+		};
+		await _emailService.SendEmail(content);
+		response.Messages = ["Register successfully! Please check your email for verification in 3 minutes"];
+		response.ResultStatus = ResultStatus.Success;
+		return response;
+	}
 
     public async Task<Result<string>> VerifyEmail(Guid id, string token)
     {

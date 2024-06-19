@@ -23,5 +23,11 @@ namespace WebApi.Controllers
         {
             return await _fashionItemService.GetAllFashionItemPagination(request);
         }
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Result<FashionItemDetailResponse>>> GetFashionItemById([FromRoute] Guid id)
+        {
+            return await _fashionItemService.GetFashionItemById(id);
+        }
+        
     }
 }

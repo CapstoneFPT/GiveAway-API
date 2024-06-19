@@ -13,5 +13,9 @@ namespace Repositories.FashionItems
     public interface IFashionItemRepository
     {
         Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(AuctionFashionItemRequest request);
+        Task<FashionItem> GetFashionItemById(Guid id);
+        Task<FashionItem> AddFashionItem(FashionItem request);
+        Task<FashionItem> UpdateFashionItem(FashionItem fashionItem);
+        Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id, AuctionFashionItemRequest request);
     }
 }

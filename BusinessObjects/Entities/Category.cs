@@ -11,4 +11,5 @@ public class Category
     public Guid? ParentId { get; set; }
     
     public ICollection<Category> Children = new List<Category>();
+    public ICollection<FashionItem> FashionItems { get; set; }
 }

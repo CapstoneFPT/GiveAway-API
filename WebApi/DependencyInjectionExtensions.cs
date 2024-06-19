@@ -65,7 +65,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IDeliveryService, DeliveryService>();
         serviceCollection.AddScoped<IImageService, ImageService>();
         serviceCollection.AddScoped<IInquiryService, InquiryService>();
-        serviceCollection.AddScoped<IFashionItemService, FashionFashionItemService>();
+        serviceCollection.AddScoped<IFashionItemService, FashionItemService>();
         serviceCollection.AddScoped<IOrderDetailService, OrderDetailService>();
         serviceCollection.AddScoped<IOrderService, OrderService>();
         serviceCollection.AddScoped<IPointPackageService, PointPackageService>();
@@ -92,7 +92,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IDeliveryRepository, DeliveryRepository>();
         serviceCollection.AddScoped<IImageRepository, ImageRepository>();
         serviceCollection.AddScoped<IInquiryRepository, InquiryRepository>();
-        serviceCollection.AddScoped<IFashionItemRepository, FashionFashionItemRepository>();
+        serviceCollection.AddScoped<IFashionItemRepository, FashionItemRepository>();
         serviceCollection.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
         serviceCollection.AddScoped<IOrderRepository, OrderRepository>();
         serviceCollection.AddScoped<IPointPackageRepository, PointPackageRepository>();

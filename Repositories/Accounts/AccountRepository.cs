@@ -120,5 +120,11 @@ namespace Repositories.Accounts
             int randomNumber = random.Next(100000, 999999);
             return randomNumber.ToString();
         }
+
+        public Task<Account> FindUserByPhone(string phone)
+        {
+            var user = _accountDao.GetQueryable().FirstOrDefault(c => c.Phone == phone);
+            return Task.FromResult((user == null) ? null : user);
+        }
     }
 }

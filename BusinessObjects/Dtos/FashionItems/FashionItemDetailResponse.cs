@@ -17,7 +17,7 @@ namespace BusinessObjects.Dtos.FashionItems
         public int Quantity { get; set; }
         public decimal? Value { get; set; }
         public string Condition { get; set; }
-        public int? Duration { get; set; }
+        public int? ConsignDuration { get; set; }
         public string Status { get; set; }
         public string ShopAddress { get; set; }
         public DateTime? StartDate { get; set; }
