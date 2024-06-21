@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Entities;
 
@@ -19,5 +20,5 @@ public  class FashionItem
     public Guid ShopId { get; set; }
     public Category Category { get; set; }
     public Guid CategoryId { get; set; }
-    public string Status { get; set; }
+    public FashionItemStatus Status { get; set; }
 }

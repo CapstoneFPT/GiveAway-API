@@ -17,7 +17,7 @@ namespace Services.Auctions
         Task<AuctionDetailResponse?> GetAuction(Guid id);
         Task<AuctionDetailResponse?> DeleteAuction(Guid id);
         Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request);
-        Task<AuctionDepositDetailResponse> CreateDeposit(Guid id, CreateAuctionDepositRequest request);
+        Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId, CreateAuctionDepositRequest request);
         Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId);
         Task<AuctionDetailResponse?> ApproveAuction(Guid id);
         Task<AuctionDetailResponse?> RejectAuction(Guid id);

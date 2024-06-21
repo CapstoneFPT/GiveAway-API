@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Entities;
 
@@ -15,7 +16,7 @@ public class Auction
     public int StepIncrement { get; set; }
     public AuctionFashionItem AuctionFashionItem { get; set; }
     public Guid AuctionFashionItemId { get; set; }
-    public string Status { get; set; }
+    public AuctionStatus Status { get; set; }
 
     public ICollection<AuctionDeposit> AuctionDeposits = new List<AuctionDeposit>();
     public ICollection<Bid> Bids = new List<Bid>();

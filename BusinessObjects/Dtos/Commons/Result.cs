@@ -68,3 +68,11 @@ public enum AuctionStatus
     OnGoing,
     Finished
 }
+
+public enum TransactionType
+{
+    AuctionDeposit,
+    Withdraw,
+    Purchase,
+    Refund
+}

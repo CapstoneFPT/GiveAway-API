@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
+using Repositories.AuctionDeposits;
 using Repositories.Auctions;
 using Repositories.Bids;
 
@@ -17,11 +18,13 @@ namespace Services.Auctions
     {
         private readonly IAuctionRepository _auctionRepository;
         private readonly IBidRepository _bidRepository;
+        private readonly IAuctionDepositRepository _auctionDepositRepository;
 
-        public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository)
+        public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository, IAuctionDepositRepository auctionDepositRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
+            _auctionDepositRepository = auctionDepositRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -89,9 +92,17 @@ namespace Services.Auctions
             }
         }
 
-        public Task<AuctionDepositDetailResponse> CreateDeposit(Guid id, CreateAuctionDepositRequest request)
+        public Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId, CreateAuctionDepositRequest request)
         {
-            throw new NotImplementedException();
+            try
+            {
+               var result = _auctionDepositRepository.CreateDeposit(auctionId, request);
+               return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
@@ -129,8 +140,8 @@ namespace Services.Auctions
         {
             try
             {
-              var result = await _bidRepository.CreateBid(id, request);
-              return result;
+                var result = await _bidRepository.CreateBid(id, request);
+                return result;
             }
             catch (Exception e)
             {
@@ -142,8 +153,7 @@ namespace Services.Auctions
         {
             try
             {
-
-                var result = _bidRepository.GetBids(id,request);
+                var result = _bidRepository.GetBids(id, request);
                 return result;
             }
             catch (Exception e)

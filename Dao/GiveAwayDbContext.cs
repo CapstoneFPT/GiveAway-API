@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Entities;
+﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
@@ -97,7 +98,11 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Auction>()
             .Property(e => e.EndDate).HasColumnType("timestamptz");
         modelBuilder.Entity<Auction>()
-            .Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
+            .Property(e => e.Status)
+            .HasConversion(
+                prop => prop.ToString(),
+                v => (AuctionStatus)Enum.Parse(typeof(AuctionStatus), v))
+            .HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Auction>()
             .Property(e => e.Title).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<Auction>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
@@ -135,7 +140,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Category>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
 
         modelBuilder.Entity<Category>().HasIndex(x => x.Name).IsUnique();
-        modelBuilder.Entity<Category>().Property(e=>e.Level).HasDefaultValue(1);  
+        modelBuilder.Entity<Category>().Property(e => e.Level).HasDefaultValue(1);
 
         #endregion
 
@@ -173,10 +178,13 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<FashionItem>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
         modelBuilder.Entity<FashionItem>().Property(e => e.Note).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<FashionItem>().Property(e => e.Value).HasColumnType("numeric");
-        modelBuilder.Entity<FashionItem>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<FashionItem>().Property(e => e.Status)
+            .HasConversion(prop => prop.ToString(), s => (FashionItemStatus)Enum.Parse(typeof(FashionItemStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
 
         modelBuilder.Entity<FashionItem>().HasOne(x => x.ConsignSaleDetail).WithOne(x => x.FashionItem)
             .HasForeignKey<ConsignSaleDetail>(x => x.FashionItemId).OnDelete(DeleteBehavior.Cascade);
+
         #endregion
 
         #region Order
@@ -216,8 +224,7 @@ public class GiveAwayDbContext : DbContext
 
         #region ConsignedSaleDetail
 
-        modelBuilder.Entity<ConsignSaleDetail>().ToTable("ConsignSaleDetail").HasKey(x => x.ConsignSaleDetailId); 
-        
+        modelBuilder.Entity<ConsignSaleDetail>().ToTable("ConsignSaleDetail").HasKey(x => x.ConsignSaleDetailId);
 
         #endregion
 
