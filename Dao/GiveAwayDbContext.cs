@@ -79,7 +79,9 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Account>()
             .Property(e => e.Fullname).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<Account>().Property(e => e.Role).HasColumnType("varchar").HasMaxLength(20);
-        modelBuilder.Entity<Account>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Account>().Property(e => e.Status)
+            .HasConversion(prop => prop.ToString(), s => (AccountStatus)Enum.Parse(typeof(AccountStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Account>().Property(e => e.Phone).HasColumnType("varchar").HasMaxLength(10);
 
         modelBuilder.Entity<Account>().HasIndex(x => x.Email).IsUnique();
@@ -150,6 +152,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Delivery>().Property(e => e.RecipientName).HasColumnType("varchar").HasMaxLength(50);
         modelBuilder.Entity<Delivery>().Property(e => e.Phone).HasColumnType("varchar").HasMaxLength(10);
         modelBuilder.Entity<Delivery>().Property(e => e.Address).HasColumnType("varchar").HasMaxLength(100);
+        modelBuilder.Entity<Delivery>().Property(e => e.AddressType)
+            .HasConversion(prop => prop.ToString(),
+                s => (AddressType)Enum.Parse(typeof(AddressType), s))
+            .HasColumnType("varchar").HasMaxLength(20);
 
         #endregion
 
@@ -194,6 +200,9 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(e => e.CreatedDate).HasColumnType("timestamptz").ValueGeneratedOnAdd();
         modelBuilder.Entity<Order>().Property(e => e.PaymentMethod).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Order>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
+        modelBuilder.Entity<Order>().Property(e => e.Status).HasConversion(prop => prop.ToString(),
+                s => (OrderStatus)Enum.Parse(typeof(OrderStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
 
         modelBuilder.Entity<Order>().HasOne(x => x.Transaction).WithOne(x => x.Order)
             .HasForeignKey<Transaction>(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
@@ -212,8 +221,12 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<ConsignSale>().Property(e => e.CreatedDate).HasColumnType("timestamptz")
             .ValueGeneratedOnAdd();
-        modelBuilder.Entity<ConsignSale>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
-        modelBuilder.Entity<ConsignSale>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(50);
+        modelBuilder.Entity<ConsignSale>().Property(e => e.Status)
+            .HasConversion(prop => prop.ToString(), s => (ConsignSaleStatus)Enum.Parse(typeof(ConsignSaleStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<ConsignSale>().Property(e => e.Type)
+            .HasConversion(prop => prop.ToString(),
+                s => (ConsignSaleType)Enum.Parse(typeof(ConsignSaleType), s)).HasColumnType("varchar").HasMaxLength(50);
         modelBuilder.Entity<ConsignSale>().Property(e => e.StartDate).HasColumnType("timestamptz").IsRequired(false);
         modelBuilder.Entity<ConsignSale>().Property(e => e.EndDate).HasColumnType("timestamptz").IsRequired(false);
 
@@ -245,7 +258,9 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Transaction>().ToTable("Transaction").HasKey(e => e.TransactionId);
         modelBuilder.Entity<Transaction>().Property(e => e.CreatedDate).HasColumnType("timestamptz")
             .ValueGeneratedOnAdd();
-        modelBuilder.Entity<Transaction>().Property(e => e.Type).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Transaction>().Property(e => e.Type)
+            .HasConversion(prop => prop.ToString(),
+                s => (TransactionType)Enum.Parse(typeof(TransactionType), s)).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Transaction>().HasOne(x => x.AuctionDeposit).WithOne(x => x.Transaction)
             .HasForeignKey<AuctionDeposit>(x => x.TransactionId).OnDelete(DeleteBehavior.Cascade);
 
@@ -263,6 +278,11 @@ public class GiveAwayDbContext : DbContext
         #region PointPackage
 
         modelBuilder.Entity<PointPackage>().ToTable("PointPackage").HasKey(e => e.PointPackageId);
+        modelBuilder.Entity<PointPackage>().Property(e => e.Status)
+            .HasConversion(prop => prop.ToString(),
+                s => (PointPackageStatus)Enum.Parse(typeof(PointPackageStatus), s)
+            ).HasColumnType("varchar")
+            .HasMaxLength(20);
 
         #endregion
     }

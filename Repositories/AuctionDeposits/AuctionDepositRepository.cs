@@ -63,7 +63,7 @@ namespace Repositories.AuctionDeposits
                 var transaction = new Transaction
                 {
                     Amount = auction.DepositFee,
-                    Type = TransactionType.AuctionDeposit.ToString(),
+                    Type = TransactionType.AuctionDeposit,
                     WalletId = wallet.WalletId,
                     CreatedDate = DateTime.UtcNow
                 };

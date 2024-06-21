@@ -109,7 +109,7 @@ public class AuthService : IAuthService
             account.Fullname = request.Fullname;
             account.Phone = request.Phone;
             account.Role = Roles.Staff.ToString();
-            account.Status = AccountStatus.Active.ToString();
+            account.Status = AccountStatus.Active;
             account.VerifiedAt = DateTime.UtcNow;
 
             var user = await _accountRepository.Register(account);
@@ -235,7 +235,7 @@ public class AuthService : IAuthService
             account.Fullname = request.Fullname;
             account.Phone = request.Phone;
             account.Role = Roles.Member.ToString();
-            account.Status = AccountStatus.NotVerify.ToString();
+            account.Status = AccountStatus.NotVerified;
 
             var user = await _accountRepository.Register(account);
 
@@ -656,7 +656,7 @@ public class AuthService : IAuthService
         {
             var user = await _accountRepository.FindOne(c => c.AccountId == id);
             user.VerifiedAt = DateTime.UtcNow;
-            user.Status = AccountStatus.Active.ToString();
+            user.Status = AccountStatus.Active;
             await _accountRepository.UpdateAccount(user);
             response.Messages = ["Verify successfully at" + DateTime.UtcNow.ToString()];
             response.ResultStatus = ResultStatus.Success;
