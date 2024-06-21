@@ -68,3 +68,10 @@ public enum AuctionStatus
     OnGoing,
     Finished
 }
+
+public enum CategoryStatus
+{
+    Available,
+    Unavailable,
+    Special
+}

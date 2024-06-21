@@ -108,7 +108,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("create-staff-account")]
     public async Task<ActionResult<Result<AccountResponse>>> CreateStaffAccount(
-        CreateStaffAccountRequest registerRequest)
+       [FromBody] CreateStaffAccountRequest registerRequest)
     {
         return await _authService.CreateStaffAccount(registerRequest);
     }

@@ -105,7 +105,7 @@ namespace Repositories.FashionItems
         {
             
             var listCate = await _categoryDao.GetQueryable()
-        .Where(c => c.ParentId == id)
+        .Where(c => c.ParentId == id && c.Status.Equals(CategoryStatus.Available.ToString()))
         .Select(c => c.CategoryId)
         .ToListAsync();
 

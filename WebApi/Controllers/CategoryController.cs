@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using BusinessObjects.Dtos.AuctionItems;
+using BusinessObjects.Dtos.Category;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Services.Categories;
 using Services.FashionItems;
@@ -35,7 +37,13 @@ namespace WebApi.Controllers
         [HttpGet("{categoryId}")]
         public async Task<ActionResult<Result<List<Category>>>> GetAllChildrenCategory([FromRoute] Guid categoryId)
         {
-            return Ok();
+            return await _categoryService.GetAllChildrenCategory(categoryId);
+        }
+
+        [HttpPost("{parentId}")]
+        public async Task<ActionResult<Result<Category>>> CreateCategory([FromRoute] Guid parentId,[FromBody] CategoryRequest request)
+        {
+            return await _categoryService.CreateCategory(parentId, request);
         }
     }
 }

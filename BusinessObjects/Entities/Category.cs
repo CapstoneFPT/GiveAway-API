@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Entities;
 
@@ -13,4 +14,5 @@ public class Category
     
     public ICollection<Category> Children = new List<Category>();
     public ICollection<FashionItem> FashionItems { get; set; }
+    public CategoryStatus Status { get; set; }
 }
