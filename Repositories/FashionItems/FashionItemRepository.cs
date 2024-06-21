@@ -103,40 +103,75 @@ namespace Repositories.FashionItems
 
         public  async Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id, AuctionFashionItemRequest request)
         {
-            var listCate = await _categoryDao.GetQueryable().Where(c => c.ParentId == id).Select(c => c.CategoryId).ToListAsync();
-
-            var listitem = await _categoryDao.GetQueryable()
-                .Include(c => c.FashionItems).ThenInclude(c => c.ConsignSaleDetail).ThenInclude(c => c.ConsignSale)
-                .ThenInclude(c => c.Member)
-                .ThenInclude(c => c.Shop)
-                .Where(c => listCate.Contains(c.CategoryId))
-                .SelectMany(a => a.FashionItems.Where(c => c.Status.Equals(FashionItemStatus.Available.ToString())).Select(c => new FashionItemDetailResponse
-                {
-                    ItemId = c.ItemId,
-                    Type = c.Type,
-                    SellingPrice = c.SellingPrice,
-                    Name = c.Name,
-                    Note = c.Note,
-                    Quantity = c.Quantity,
-                    Value = c.Value,
-                    Condition = c.Condition,
-                    ConsignDuration = c.ConsignSaleDetail.ConsignSale.ConsignDuration,
-                    Status = c.Status,
-                    StartDate = c.ConsignSaleDetail.ConsignSale.StartDate,
-                    EndDate = c.ConsignSaleDetail.ConsignSale.EndDate,
-                    ShopAddress = c.Shop.Address,
-                    Consigner = c.ConsignSaleDetail.ConsignSale.Member.Fullname,
-                    CategoryName = c.Category.Name,
-                }))
-                .AsNoTracking().ToListAsync();
             
+            var listCate = await _categoryDao.GetQueryable()
+        .Where(c => c.ParentId == id)
+        .Select(c => c.CategoryId)
+        .ToListAsync();
+
+            // Ensure there's at least one category ID to avoid unnecessary queries
+            if (listCate.Count == 0)
+            {
+                return new PaginationResponse<FashionItemDetailResponse>
+                {
+                    Items = new List<FashionItemDetailResponse>(),
+                    PageSize = request.PageSize,
+                    TotalCount = 0,
+                    SearchTerm = request.SearchTerm,
+                    PageNumber = request.PageNumber,
+                };
+            }
+
+            // Create the base query
+            var query = _categoryDao.GetQueryable()
+                .Where(c => listCate.Contains(c.CategoryId))
+                .SelectMany(c => c.FashionItems)
+                .Select(f => new FashionItemDetailResponse
+                {
+                    ItemId = f.ItemId,
+                    Type = f.Type,
+                    SellingPrice = f.SellingPrice,
+                    Name = f.Name,
+                    Note = f.Note,
+                    Quantity = f.Quantity,
+                    Value = f.Value,
+                    Condition = f.Condition,
+                    ConsignDuration = f.ConsignSaleDetail.ConsignSale.ConsignDuration,
+                    Status = f.Status,
+                    StartDate = f.ConsignSaleDetail.ConsignSale.StartDate,
+                    EndDate = f.ConsignSaleDetail.ConsignSale.EndDate,
+                    ShopAddress = f.Shop.Address,
+                    Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,
+                    CategoryName = f.Category.Name,
+                })
+                .AsNoTracking();
+
+            // Apply additional filters
+            if (!string.IsNullOrWhiteSpace(request.Status))
+            {
+                query = query.Where(f => EF.Functions.ILike(f.Status, $"%{request.Status}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Type))
+            {
+                query = query.Where(f => EF.Functions.ILike(f.Type, $"%{request.Type}%"));
+            }
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-                listitem = listitem.Where(x => x.Name.Contains(request.SearchTerm)).ToList();
+            {
+                query = query.Where(f => f.Name.Contains(request.SearchTerm));
+            }
 
-            var count = listitem.Count();
-            listitem = listitem.Skip((request.PageNumber -1) * request.PageSize).Take(request.PageSize).ToList();
+            // Get total count before pagination
+            var count = await query.CountAsync();
 
+            // Apply pagination in the database query
+            var listitem = await query
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
+
+            // Prepare the result
             var result = new PaginationResponse<FashionItemDetailResponse>
             {
                 Items = listitem,
@@ -146,7 +181,7 @@ namespace Repositories.FashionItems
                 PageNumber = request.PageNumber,
             };
 
-            
+
             return result;
         }
 

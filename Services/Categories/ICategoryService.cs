@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,7 @@ namespace Services.Categories
 {
     public interface ICategoryService
     {
+        Task<Result<List<Category>>> GetAllParentCategory();
+        Task<Result<List<Category>>> GetAllChildrenCategory();
     }
 }
