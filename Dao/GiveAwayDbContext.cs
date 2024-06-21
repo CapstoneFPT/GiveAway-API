@@ -142,8 +142,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Category>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
 
         modelBuilder.Entity<Category>().HasIndex(x => x.Name).IsUnique();
-        modelBuilder.Entity<Category>().Property(e => e.Level).HasDefaultValue(1);
-
+        modelBuilder.Entity<Category>().Property(e=>e.Level).HasDefaultValue(1);
+        modelBuilder.Entity<Category>().Property(e => e.Status).HasConversion(prop => prop.ToString(), s =>
+                (CategoryStatus)Enum.Parse(typeof(CategoryStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
         #endregion
 
         #region Delivery

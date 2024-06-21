@@ -28,6 +28,6 @@ namespace WebApi.Controllers
         {
             return await _fashionItemService.GetFashionItemById(id);
         }
-        
+
     }
 }

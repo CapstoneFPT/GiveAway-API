@@ -11,5 +11,7 @@ namespace BusinessObjects.Dtos.AuctionItems
         public string? SearchTerm { get; set; }
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
+        public string? Status { get; set; }
+        public string? Type { get; set; }
     }
 }

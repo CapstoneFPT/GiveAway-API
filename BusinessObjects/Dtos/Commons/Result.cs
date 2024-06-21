@@ -99,3 +99,9 @@ public enum AddressType
     Home,
     Business
 }
+public enum CategoryStatus
+{
+    Available,
+    Unavailable,
+    Special
+}
