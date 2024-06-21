@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 
 namespace Services.Auctions
@@ -18,5 +19,9 @@ namespace Services.Auctions
         Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request);
         Task<AuctionDepositDetailResponse> CreateDeposit(Guid id, CreateAuctionDepositRequest request);
         Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId);
+        Task<AuctionDetailResponse?> ApproveAuction(Guid id);
+        Task<AuctionDetailResponse?> RejectAuction(Guid id);
+        Task<BidDetailResponse?> PlaceBid(Guid id, CreateBidRequest request);
+        Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request);
     }
 }

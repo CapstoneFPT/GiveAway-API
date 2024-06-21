@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi;
 using WebApi.Utils.CustomProblemDetails;
+using WebApi.Utils.WebServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,8 @@ builder.Services.AddRepositories();
 builder.Services.AddDao();
 builder.Services.AddProblemDetails(options =>
 {
-    options.IncludeExceptionDetails = (ctx, ex) => builder.Environment.IsDevelopment() || builder.Environment.IsProduction();
+    options.IncludeExceptionDetails =
+        (ctx, ex) => builder.Environment.IsDevelopment() || builder.Environment.IsProduction();
     options.Map<DbCustomException>(e => new DbCustomProblemDetail()
     {
         Title = e.Title,
@@ -117,6 +119,41 @@ builder.Services.AddAuthentication(options =>
 builder
     .Services.AddControllers()
     .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+
+var config = builder.Configuration.GetSection("Kestrel");
+// if (!builder.Environment.IsDevelopment())
+// {
+//     var builderConfig = builder.Configuration;
+//     try
+//     {
+//         var httpsCertificatePath = builderConfig.GetSection(key: KestrelConstants.HttpsCertificatePath).Value;
+//         var httpsCertificatePassword = builderConfig.GetSection(key: KestrelConstants.HttpsCertificatePassword).Value;
+//             
+//         
+//         
+//         if (httpsCertificatePath.IsNullOrEmpty() || httpsCertificatePassword.IsNullOrEmpty())
+//         {
+//             throw new FileNotFoundException("https certificate not found", "fullchain.pem or privkey.pem");
+//         }
+//         
+//         builder.WebHost.ConfigureKestrel(options: options =>
+//         {
+//             options.ListenAnyIP(80);
+//             options.ListenAnyIP(81, listenOptions =>
+//             {
+//                 listenOptions.UseHttps(
+//                     builderConfig[httpsCertificatePath],
+//                     builderConfig[httpsCertificatePassword]
+//                 );
+//             });
+//         });
+//     }
+//     catch (Exception e)
+//     {
+//         throw new Exception("Error in configuring Kestrel", e);
+//     }
+// }
+
 
 var app = builder.Build();
 

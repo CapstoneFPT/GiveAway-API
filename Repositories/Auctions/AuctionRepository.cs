@@ -1,6 +1,8 @@
-﻿using BusinessObjects;
+﻿using System.Runtime.CompilerServices;
+using BusinessObjects;
 using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
@@ -17,16 +19,18 @@ namespace Repositories.Auctions
         private readonly GenericDao<AuctionFashionItem> _auctionFashionItemDao;
         private readonly GenericDao<Shop> _shopDao;
         private readonly GenericDao<Timeslot> _timeslotDao;
+        private readonly GenericDao<Bid> _bidDao;
 
 
         public AuctionRepository(GenericDao<Auction> auctionDao, GenericDao<Schedule> scheduleDao,
             GenericDao<AuctionFashionItem> auctionFashionItemDao, GenericDao<Shop> shopDao,
-            GenericDao<Timeslot> timeslotDao)
+            GenericDao<Timeslot> timeslotDao, GenericDao<Bid> bidDao)
         {
             _auctionDao = auctionDao;
             _scheduleDao = scheduleDao;
             _auctionFashionItemDao = auctionFashionItemDao;
             _shopDao = shopDao;
+            _bidDao = bidDao;
             _timeslotDao = timeslotDao;
         }
 
@@ -34,9 +38,6 @@ namespace Repositories.Auctions
         {
             try
             {
-                //insert auction
-                //insert auction item
-                //insert schedule
                 var auctionItem = await _auctionFashionItemDao.GetQueryable()
                     .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
 
@@ -73,6 +74,9 @@ namespace Repositories.Auctions
                 };
                 var auctionDetail = await _auctionDao.AddAsync(newAuction);
 
+                auctionItem.Status = FashionItemStatus.AwaitingAuction.ToString();
+                await _auctionFashionItemDao.UpdateAsync(auctionItem);
+
                 var newSchedule = new Schedule()
                 {
                     AuctionId = auctionDetail.AuctionId,
@@ -80,6 +84,8 @@ namespace Repositories.Auctions
                     TimeslotId = request.TimeslotId
                 };
                 var scheduleDetail = await _scheduleDao.AddAsync(newSchedule);
+
+                auctionItem.Status = FashionItemStatus.AwaitingAuction.ToString();
 
 
                 return new AuctionDetailResponse
@@ -265,28 +271,28 @@ namespace Repositories.Auctions
                 {
                     var shop = await _shopDao.GetQueryable()
                         .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
-                    
+
                     if (shop is null)
                     {
                         throw new Exception("Shop Not Found");
                     }
-                    
+
                     toBeUpdated.ShopId = request.ShopId.Value;
                 }
-                
+
                 if (request.AuctionItemId.HasValue)
                 {
                     var auctionFashionItem = await _auctionFashionItemDao.GetQueryable()
-                        .FirstOrDefaultAsync(x =>x.ItemId  == request.AuctionItemId.Value);
-                    
+                        .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId.Value);
+
                     if (auctionFashionItem is null)
                     {
                         throw new Exception("Auction Fashion Item Not Found");
                     }
-                    
+
                     toBeUpdated.AuctionFashionItemId = request.AuctionItemId.Value;
                 }
-                
+
                 await _auctionDao.UpdateAsync(toBeUpdated);
                 return new AuctionDetailResponse
                 {
@@ -298,5 +304,85 @@ namespace Repositories.Auctions
                 throw new Exception(e.Message);
             }
         }
+
+        public async Task<AuctionDetailResponse?> ApproveAuction(Guid id)
+        {
+            try
+            {
+                var toBeApproved = await _auctionDao.GetQueryable()
+                    .FirstOrDefaultAsync(x => x.AuctionId == id);
+
+                if (toBeApproved == null)
+                {
+                    throw new Exception("Not Found");
+                }
+
+                if (toBeApproved.Status == AuctionStatus.Rejected.ToString())
+                {
+                    throw new Exception("Auction already rejected");
+                }
+
+                toBeApproved.Status = AuctionStatus.Approved.ToString();
+                await _auctionDao.UpdateAsync(toBeApproved);
+
+                return new AuctionDetailResponse()
+                {
+                    AuctionId = toBeApproved.AuctionId,
+                    Status = toBeApproved.Status,
+                };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<AuctionDetailResponse?> RejectAuction(Guid id)
+        {
+            try
+            {
+                var toBeRejected = _auctionDao.GetQueryable()
+                    .FirstOrDefault(x => x.AuctionId == id);
+
+
+                if (toBeRejected == null)
+                {
+                    throw new Exception("Auction Not Found");
+                }
+
+                if (toBeRejected.Status == AuctionStatus.Approved.ToString())
+                {
+                    throw new Exception("Auction already approved");
+                }
+
+                toBeRejected.Status = AuctionStatus.Rejected.ToString();
+                var auctionItem = _auctionFashionItemDao.GetQueryable()
+                    .FirstOrDefault(x => x.ItemId == toBeRejected!.AuctionFashionItemId);
+
+                if (auctionItem == null)
+                {
+                    throw new Exception(" Auction Fashion Item Not Found");
+                }
+
+                auctionItem.Status = FashionItemStatus.Available.ToString();
+
+                var result = await _auctionDao.UpdateAsync(toBeRejected);
+                return new AuctionDetailResponse()
+                {
+                    AuctionId = result.AuctionId,
+                    Status = result.Status,
+                    AuctionFashionItem = new AuctionFashionItemDetailResponse()
+                    {
+                        AuctionItemStatus = result.AuctionFashionItem.Status
+                    }
+                };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+       
     }
 }
