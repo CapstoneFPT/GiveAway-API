@@ -20,6 +20,7 @@ namespace BusinessObjects.Dtos.FashionItems
         public int? ConsignDuration { get; set; }
         public string Status { get; set; }
         public string ShopAddress { get; set; }
+        public Guid ShopId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string Consigner { get; set; }

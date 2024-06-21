@@ -37,8 +37,19 @@ namespace Repositories.FashionItems
                 var query = _fashionitemDao.GetQueryable();
                 if (!string.IsNullOrWhiteSpace(request.SearchTerm))
                     query = query.Where(x => EF.Functions.ILike(x.Name, $"%{request.SearchTerm}%"));
+                if (!string.IsNullOrWhiteSpace(request.Status))
+                {
+                    query = query.Where(f => EF.Functions.ILike(f.Status, $"%{request.Status}%"));
+                }
 
-                query = query.Where(x => x.Status.Equals(FashionItemStatus.Available.ToString()) && x.Type.Equals(FashionItemType.ConsignedForSale.ToString()));
+                if (!string.IsNullOrWhiteSpace(request.Type))
+                {
+                    query = query.Where(f => EF.Functions.ILike(f.Type, $"%{request.Type}%"));
+                }
+                if (!string.IsNullOrWhiteSpace(request.ShopId.ToString()))
+                {
+                    query = query.Where(f => f.ShopId.Equals(request.ShopId.ToString()));
+                }
 
                 var count = await query.CountAsync();
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)
@@ -126,6 +137,7 @@ namespace Repositories.FashionItems
             var query = _categoryDao.GetQueryable()
                 .Where(c => listCate.Contains(c.CategoryId))
                 .SelectMany(c => c.FashionItems)
+                .Include((c => c.Shop))
                 .Select(f => new FashionItemDetailResponse
                 {
                     ItemId = f.ItemId,
@@ -141,6 +153,7 @@ namespace Repositories.FashionItems
                     StartDate = f.ConsignSaleDetail.ConsignSale.StartDate,
                     EndDate = f.ConsignSaleDetail.ConsignSale.EndDate,
                     ShopAddress = f.Shop.Address,
+                    ShopId = f.Shop.ShopId,
                     Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,
                     CategoryName = f.Category.Name,
                 })
@@ -161,7 +174,10 @@ namespace Repositories.FashionItems
             {
                 query = query.Where(f => f.Name.Contains(request.SearchTerm));
             }
-
+            if (!string.IsNullOrWhiteSpace(request.ShopId.ToString()))
+            {
+                query = query.Where(f => f.ShopId.Equals(request.ShopId.ToString()));
+            }
             // Get total count before pagination
             var count = await query.CountAsync();
 

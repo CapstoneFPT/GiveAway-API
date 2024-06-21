@@ -13,5 +13,6 @@ namespace BusinessObjects.Dtos.AuctionItems
         public int PageSize { get; set; } = 10;
         public string? Status { get; set; }
         public string? Type { get; set; }
+        public Guid? ShopId { get; set; }
     }
 }
