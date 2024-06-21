@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Shops;
+﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Shops;
 
 namespace BusinessObjects.Dtos.AuctionItems;
 
@@ -14,7 +15,7 @@ public class AuctionFashionItemDetailResponse
     public string Condition { get; set; }
     public int Duration { get; set; }
     public decimal InitialPrice { get; set; }
-    public string AuctionItemStatus { get; set; }
+    public FashionItemStatus AuctionItemStatus { get; set; }
     public Guid ShopId { get; set; }
     public Guid CategoryId { get; set; }
     public ShopDetailResponse? Shop { get; set; }

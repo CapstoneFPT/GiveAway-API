@@ -27,7 +27,7 @@ namespace Services.FashionItems
                 var item = new FashionItem();
                 var newdata = _mapper.Map(request, item);
                 newdata.ShopId = shopId;
-                newdata.Status = FashionItemStatus.Available.ToString();    
+                newdata.Status = FashionItemStatus.Available;    
                 response.Data = _mapper.Map<FashionItemDetailResponse>(await _fashionitemRepository.AddFashionItem(newdata));
                 response.Messages = ["Add successfully"];
                 response.ResultStatus = ResultStatus.Success;

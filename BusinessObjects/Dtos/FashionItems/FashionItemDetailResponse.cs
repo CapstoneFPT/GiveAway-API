@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Dtos.FashionItems
 {
@@ -18,7 +19,7 @@ namespace BusinessObjects.Dtos.FashionItems
         public decimal? Value { get; set; }
         public string Condition { get; set; }
         public int? ConsignDuration { get; set; }
-        public string Status { get; set; }
+        public FashionItemStatus Status { get; set; }
         public string ShopAddress { get; set; }
         public Guid ShopId { get; set; }
         public DateTime? StartDate { get; set; }

@@ -33,16 +33,16 @@ public class AuctionController : ControllerBase
 
         var result = await _auctionService.CreateAuction(request);
 
-        return CreatedAtAction(nameof(GetAuction), new { id = result.AuctionItemId }, result);
+        return CreatedAtAction(nameof(GetAuction), new { id = result.AuctionId }, result);
     }
-    
+
     [HttpPut("{id}/approve")]
     public async Task<ActionResult<AuctionDetailResponse>> ApproveAuction([FromRoute] Guid id)
     {
         var result = await _auctionService.ApproveAuction(id);
         return Ok(result);
     }
-    
+
     [HttpPut("{id}/reject")]
     public async Task<ActionResult<AuctionDetailResponse>> RejectAuction([FromRoute] Guid id)
     {
@@ -103,9 +103,10 @@ public class AuctionController : ControllerBase
     #region Bids
 
     [HttpGet("{id}/bids")]
-    public async Task<ActionResult<PaginationResponse<BidListResponse>>> GetBids([FromRoute] Guid id,[FromQuery] GetBidsRequest request)
+    public async Task<ActionResult<PaginationResponse<BidListResponse>>> GetBids([FromRoute] Guid id,
+        [FromQuery] GetBidsRequest request)
     {
-        var result = await _auctionService.GetBids(id,request);
+        var result = await _auctionService.GetBids(id, request);
         return Ok(result);
     }
 
@@ -156,10 +157,10 @@ public class AuctionController : ControllerBase
         throw new NotImplementedException();
     }
 
-    [HttpPost("{id}/deposits")]
+    [HttpPost("{auctionId}/deposits/place_deposit")]
     [ProducesResponseType(statusCode: StatusCodes.Status201Created, type: typeof(AuctionDepositDetailResponse))]
     [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<AuctionDepositDetailResponse>> CreateDeposit([FromRoute] Guid id,
+    public async Task<ActionResult<AuctionDepositDetailResponse>> PlaceDeposit([FromRoute] Guid auctionId,
         [FromBody] CreateAuctionDepositRequest request)
     {
         if (!ModelState.IsValid)
@@ -167,18 +168,18 @@ public class AuctionController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _auctionService.CreateDeposit(id, request);
-        return CreatedAtAction(nameof(GetDeposit), new { id = result.Id }, result);
+        var result = await _auctionService.PlaceDeposit(auctionId, request);
+        return CreatedAtAction(nameof(GetDeposit), new { auctionId = result.AuctionId, depositId = result.Id }, result);
     }
 
-    [HttpDelete("{id}/deposits/{depositId}")]
-    public async Task<ActionResult> DeleteDeposit([FromRoute] Guid id, [FromRoute] Guid depositId)
+    [HttpDelete("{auctionId}/deposits/{depositId}")]
+    public async Task<ActionResult> DeleteDeposit([FromRoute] Guid auctionId, [FromRoute] Guid depositId)
     {
         throw new NotImplementedException();
     }
 
-    [HttpPut("{id}/deposits/{depositId}")]
-    public async Task<ActionResult<AuctionDepositDetailResponse>> UpdateDeposit([FromRoute] Guid id,
+    [HttpPut("{auctionId}/deposits/{depositId}")]
+    public async Task<ActionResult<AuctionDepositDetailResponse>> UpdateDeposit([FromRoute] Guid auctionId,
         [FromRoute] Guid depositId,
         [FromBody] UpdateAuctionDepositRequest request)
     {
@@ -190,12 +191,12 @@ public class AuctionController : ControllerBase
         throw new NotImplementedException();
     }
 
-    [HttpGet("{id}/deposits/{depositId}")]
+    [HttpGet("{auctionId}/deposits/{depositId}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDepositDetailResponse))]
-    public async Task<ActionResult<AuctionDepositDetailResponse>> GetDeposit([FromRoute] Guid id,
+    public async Task<ActionResult<AuctionDepositDetailResponse>> GetDeposit([FromRoute] Guid auctionId,
         [FromRoute] Guid depositId)
     {
-        var result = await _auctionService.GetDeposit(id, depositId);
+        var result = await _auctionService.GetDeposit(auctionId, depositId);
         return Ok(result);
     }
 

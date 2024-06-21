@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Dtos.Auctions;
 
@@ -16,7 +17,7 @@ public class UpdateAuctionRequest :IValidatableObject
     [Range(0, int.MaxValue, ErrorMessage = "Error: Minimum deposit must be greater than 0")]
     public int? DepositFee { get; set; }
 
-    public string? Status { get; set; }
+    public AuctionStatus Status { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

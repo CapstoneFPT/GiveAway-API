@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Entities;
 
@@ -16,7 +17,7 @@ public class Account
     public string? PasswordResetToken { get; set; }
     public DateTime? ResetTokenExpires { get; set; }
     public string Role { get; set; }
-    public string Status { get; set; }
+    public AccountStatus Status { get; set; }
 
     public ICollection<ConsignSale> Requests = new List<ConsignSale>();
     public ICollection<Delivery> Deliveries = new List<Delivery>();

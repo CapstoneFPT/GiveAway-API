@@ -1,4 +1,6 @@
-﻿namespace BusinessObjects.Dtos.Auctions;
+﻿using BusinessObjects.Dtos.Commons;
+
+namespace BusinessObjects.Dtos.Auctions;
 
 public class AuctionListResponse
 {
@@ -7,7 +9,7 @@ public class AuctionListResponse
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public int DepositFee { get; set; }
-    public string Status { get; set; }
+    public AuctionStatus Status { get; set; }
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
 }

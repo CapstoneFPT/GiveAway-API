@@ -21,12 +21,14 @@ public enum Roles
     Staff,
     Member
 }
+
 public enum AccountStatus
 {
     Active,
     Inactive,
-    NotVerify
+    NotVerified
 }
+
 public enum FashionItemStatus
 {
     Available,
@@ -38,26 +40,35 @@ public enum FashionItemStatus
     Rejected,
     Returned
 }
+
 public enum FashionItemType
 {
     ConsignedForSale,
     ConsignedForAuction
 }
+
 public enum ConsignSaleStatus
 {
-    Pending, 
+    Pending,
     AwaitDelivery,
     Received,
     Completed,
     Rejected,
     Cancelled
 }
+
 public enum OrderStatus
 {
     AwaitingPayment,
     OnDelivery,
     Completed,
     Cancelled
+}
+
+public enum PointPackageStatus
+{
+    Active,
+    Inactive
 }
 
 public enum AuctionStatus
@@ -69,6 +80,25 @@ public enum AuctionStatus
     Finished
 }
 
+public enum TransactionType
+{
+    AuctionDeposit,
+    Withdraw,
+    Purchase,
+    Refund
+}
+
+public enum ConsignSaleType
+{
+    ConsignedForSale,
+    ConsignedForAuction
+}
+
+public enum AddressType
+{
+    Home,
+    Business
+}
 public enum CategoryStatus
 {
     Available,

@@ -162,7 +162,7 @@ namespace Repositories.FashionItems
             // Apply additional filters
             if (!string.IsNullOrWhiteSpace(request.Status))
             {
-                query = query.Where(f => EF.Functions.ILike(f.Status, $"%{request.Status}%"));
+                query = query.Where(f => EF.Functions.ILike(f.Status.ToString(), $"%{request.Status}%"));
             }
 
             if (!string.IsNullOrWhiteSpace(request.Type))

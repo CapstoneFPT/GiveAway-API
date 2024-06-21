@@ -1,4 +1,5 @@
 ﻿using BusinessObjects.Dtos.AuctionItems;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 
@@ -11,7 +12,7 @@ public class AuctionDetailResponse
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public int DepositFee { get; set; }
-    public string Status { get; set; }
+    public AuctionStatus Status { get; set; }
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
     public ShopDetailResponse Shop { get; set; }

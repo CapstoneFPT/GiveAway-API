@@ -39,7 +39,7 @@ namespace Repositories.Bids
                     throw new Exception("Auction not found");
                 }
 
-                if (auction.Status != AuctionStatus.OnGoing.ToString())
+                if (auction.Status != AuctionStatus.OnGoing)
                 {
                     throw new InvalidOperationException("Auction has not started yet");
                 }

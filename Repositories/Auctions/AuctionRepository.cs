@@ -46,6 +46,11 @@ namespace Repositories.Auctions
                     throw new Exception("Auction item not found");
                 }
 
+                if (auctionItem.Status != FashionItemStatus.Available)
+                {
+                    throw new Exception("Auction item is not available for auctioning");
+                }
+
                 var shop = await _shopDao.GetQueryable()
                     .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
 
@@ -68,13 +73,14 @@ namespace Repositories.Auctions
                     Title = request.Title,
                     ShopId = request.ShopId,
                     DepositFee = request.DepositFee,
+                    StepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100),
                     StartDate = request.ScheduleDate.ToDateTime(timeslot.StartTime),
                     EndDate = request.ScheduleDate.ToDateTime(timeslot.EndTime),
-                    Status = "Pending"
+                    Status = AuctionStatus.Pending
                 };
                 var auctionDetail = await _auctionDao.AddAsync(newAuction);
 
-                auctionItem.Status = FashionItemStatus.AwaitingAuction.ToString();
+                auctionItem.Status = FashionItemStatus.AwaitingAuction;
                 await _auctionFashionItemDao.UpdateAsync(auctionItem);
 
                 var newSchedule = new Schedule()
@@ -85,7 +91,7 @@ namespace Repositories.Auctions
                 };
                 var scheduleDetail = await _scheduleDao.AddAsync(newSchedule);
 
-                auctionItem.Status = FashionItemStatus.AwaitingAuction.ToString();
+                auctionItem.Status = FashionItemStatus.AwaitingAuction;
 
 
                 return new AuctionDetailResponse
@@ -206,7 +212,7 @@ namespace Repositories.Auctions
                             Duration = x.AuctionFashionItem.Duration,
                             InitialPrice = x.AuctionFashionItem.InitialPrice,
                             SellingPrice = x.AuctionFashionItem.SellingPrice,
-                            AuctionItemStatus = x.Status,
+                            AuctionItemStatus = x.AuctionFashionItem.Status,
                             Note = x.AuctionFashionItem.Note,
                             Value = x.AuctionFashionItem.Value,
                             ShopId = x.AuctionFashionItem.ShopId,
@@ -265,7 +271,7 @@ namespace Repositories.Auctions
                 toBeUpdated.StartDate = request.StartDate ?? toBeUpdated.StartDate;
                 toBeUpdated.EndDate = request.EndDate ?? toBeUpdated.EndDate;
                 toBeUpdated.DepositFee = request.DepositFee ?? toBeUpdated.DepositFee;
-                toBeUpdated.Status = request.Status ?? toBeUpdated.Status;
+                toBeUpdated.Status = request.Status;
 
                 if (request.ShopId.HasValue)
                 {
@@ -317,12 +323,12 @@ namespace Repositories.Auctions
                     throw new Exception("Not Found");
                 }
 
-                if (toBeApproved.Status == AuctionStatus.Rejected.ToString())
+                if (toBeApproved.Status == AuctionStatus.Rejected)
                 {
                     throw new Exception("Auction already rejected");
                 }
 
-                toBeApproved.Status = AuctionStatus.Approved.ToString();
+                toBeApproved.Status = AuctionStatus.Approved;
                 await _auctionDao.UpdateAsync(toBeApproved);
 
                 return new AuctionDetailResponse()
@@ -350,12 +356,12 @@ namespace Repositories.Auctions
                     throw new Exception("Auction Not Found");
                 }
 
-                if (toBeRejected.Status == AuctionStatus.Approved.ToString())
+                if (toBeRejected.Status == AuctionStatus.Approved)
                 {
                     throw new Exception("Auction already approved");
                 }
 
-                toBeRejected.Status = AuctionStatus.Rejected.ToString();
+                toBeRejected.Status = AuctionStatus.Rejected;
                 var auctionItem = _auctionFashionItemDao.GetQueryable()
                     .FirstOrDefault(x => x.ItemId == toBeRejected!.AuctionFashionItemId);
 
@@ -364,7 +370,7 @@ namespace Repositories.Auctions
                     throw new Exception(" Auction Fashion Item Not Found");
                 }
 
-                auctionItem.Status = FashionItemStatus.Available.ToString();
+                auctionItem.Status = FashionItemStatus.Available;
 
                 var result = await _auctionDao.UpdateAsync(toBeRejected);
                 return new AuctionDetailResponse()
