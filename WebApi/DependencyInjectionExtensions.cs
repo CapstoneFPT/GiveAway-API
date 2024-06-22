@@ -20,8 +20,6 @@ using Repositories.Schedules;
 using Repositories.Shops;
 using Repositories.Timeslots;
 using Repositories.Transactions;
-using Repositories.User;
-using Repositories.Wallets;
 using Services;
 using Services.Accounts;
 using Services.AuctionDeposits;
@@ -44,7 +42,6 @@ using Services.Schedules;
 using Services.Shops;
 using Services.Timeslots;
 using Services.Transactions;
-using Services.Wallets;
 
 namespace WebApi;
 
@@ -74,14 +71,12 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IShopService, ShopService>();
         serviceCollection.AddScoped<ITimeslotService, TimeslotService>();
         serviceCollection.AddScoped<ITransactionService, TransactionService>();
-        serviceCollection.AddScoped<IWalletService, WalletService>();
         serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }
 
     public static IServiceCollection AddRepositories(this IServiceCollection serviceCollection)
     {
-        serviceCollection.AddScoped<IUserRepository, UserRepository>();
         serviceCollection.AddScoped<IAccountRepository, AccountRepository>();
         serviceCollection.AddScoped<IAuctionDepositRepository, AuctionDepositRepository>();
         serviceCollection.AddScoped<IAuctionItemRepository, AuctionItemRepository>();
@@ -101,7 +96,6 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IShopRepository, ShopRepository>();
         serviceCollection.AddScoped<ITimeslotRepository, TimeslotRepository>();
         serviceCollection.AddScoped<ITransactionRepository, TransactionRepository>();
-        serviceCollection.AddScoped<IWalletRepository, WalletRepository>();
         return serviceCollection;
     }
     
@@ -126,7 +120,6 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<Shop>>();
         serviceCollection.AddScoped<GenericDao<Timeslot>>();
         serviceCollection.AddScoped<GenericDao<Transaction>>();
-        serviceCollection.AddScoped<GenericDao<Wallet>>();
         return serviceCollection;
     }
 }

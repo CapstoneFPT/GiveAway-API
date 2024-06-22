@@ -27,12 +27,18 @@ namespace Dao.Migrations
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "text");
+            
+            migrationBuilder.Sql(
+                @"ALTER TABLE ""Account"" ALTER COLUMN ""PasswordSalt"" TYPE TEXT USING ""PasswordSalt""::TEXT; ");
 
             migrationBuilder.Sql(
-                @"ALTER TABLE ""Account"" ALTER COLUMN ""PasswordSalt"" TYPE BYTEA USING ""PasswordSalt""::bytea ");
+                @"ALTER TABLE ""Account"" ALTER COLUMN ""PasswordHash"" TYPE TEXT USING ""PasswordHash""::TEXT; ");
 
             migrationBuilder.Sql(
-                @"ALTER TABLE ""Account"" ALTER COLUMN ""PasswordHash"" TYPE BYTEA USING ""PasswordHash""::bytea ");
+                @"ALTER TABLE ""Account"" ALTER COLUMN ""PasswordSalt"" TYPE BYTEA USING ""PasswordSalt""::bytea; ");
+
+            migrationBuilder.Sql(
+                @"ALTER TABLE ""Account"" ALTER COLUMN ""PasswordHash"" TYPE BYTEA USING ""PasswordHash""::bytea; ");
         }
 
         /// <inheritdoc />

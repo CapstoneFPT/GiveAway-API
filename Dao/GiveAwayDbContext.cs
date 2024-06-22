@@ -20,10 +20,12 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Delivery> Deliveries { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
     public DbSet<AuctionFashionItem> AuctionFashionItems { get; set; }
+    public DbSet<Member> Members { get; set; }
+    public DbSet<Staff> Staffs { get; set; }
+    public DbSet<Admin> Admins { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Timeslot> TimeSlots { get; set; }
-    public DbSet<Wallet> Wallets { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Bid> Bids { get; set; }
     public DbSet<AuctionDeposit> AuctionDeposits { get; set; }
@@ -74,6 +76,12 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Account>()
             .ToTable("Account")
             .HasKey(x => x.AccountId);
+        modelBuilder.Entity<Account>().HasDiscriminator(x => x.Role)
+            .HasValue<Account>(Roles.Account)
+            .HasValue<Member>(Roles.Member)
+            .HasValue<Staff>(Roles.Staff)
+            .HasValue<Admin>(Roles.Admin)
+            ;
         modelBuilder.Entity<Account>()
             .Property(e => e.Email).HasColumnType("varchar").HasMaxLength(50);
         modelBuilder.Entity<Account>()
@@ -81,6 +89,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Account>().Property(e => e.Role).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Account>().Property(e => e.Status)
             .HasConversion(prop => prop.ToString(), s => (AccountStatus)Enum.Parse(typeof(AccountStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Account>()
+            .Property(x => x.Role)
+            .HasConversion(prop => prop.ToString(), s => (Roles)Enum.Parse(typeof(Roles), s))
             .HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Account>().Property(e => e.Phone).HasColumnType("varchar").HasMaxLength(10);
 
@@ -141,10 +153,11 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Category>().ToTable("Category").HasKey(e => e.CategoryId);
         modelBuilder.Entity<Category>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
 
-        modelBuilder.Entity<Category>().Property(e=>e.Level).HasDefaultValue(1);
+        modelBuilder.Entity<Category>().Property(e => e.Level).HasDefaultValue(1);
         modelBuilder.Entity<Category>().Property(e => e.Status).HasConversion(prop => prop.ToString(), s =>
                 (CategoryStatus)Enum.Parse(typeof(CategoryStatus), s))
             .HasColumnType("varchar").HasMaxLength(20);
+
         #endregion
 
         #region Delivery
@@ -179,15 +192,18 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<FashionItem>().ToTable("FashionItem").HasKey(e => e.ItemId);
         modelBuilder.Entity<FashionItem>().HasDiscriminator(e => e.Type)
-            .HasValue<FashionItem>("ItemBase")
-            .HasValue<ConsignedForSaleFashionItem>("ConsignedForSale")
-            .HasValue<AuctionFashionItem>("ConsignedForAuction");
+            .HasValue<FashionItem>(FashionItemType.ItemBase)
+            .HasValue<ConsignedForSaleFashionItem>(FashionItemType.ConsignedForSale)
+            .HasValue<AuctionFashionItem>(FashionItemType.ConsignedForAuction);
         modelBuilder.Entity<FashionItem>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
         modelBuilder.Entity<FashionItem>().Property(e => e.Note).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<FashionItem>().Property(e => e.Value).HasColumnType("numeric");
         modelBuilder.Entity<FashionItem>().Property(e => e.Status)
             .HasConversion(prop => prop.ToString(), s => (FashionItemStatus)Enum.Parse(typeof(FashionItemStatus), s))
             .HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<FashionItem>().Property(x=>x.Type)
+            .HasConversion(prop=>prop.ToString(),s=>(FashionItemType)Enum.Parse(typeof(FashionItemType),s))
+            .HasColumnType("varchar").HasMaxLength(100);
 
         modelBuilder.Entity<FashionItem>().HasOne(x => x.ConsignSaleDetail).WithOne(x => x.FashionItem)
             .HasForeignKey<ConsignSaleDetail>(x => x.FashionItemId).OnDelete(DeleteBehavior.Cascade);
@@ -204,6 +220,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(e => e.Status).HasConversion(prop => prop.ToString(),
                 s => (OrderStatus)Enum.Parse(typeof(OrderStatus), s))
             .HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Order>()
+            .Property(x=>x.PaymentMethod)
+            .HasConversion(prop=>prop.ToString(),s=>(PaymentMethod)Enum.Parse(typeof(PaymentMethod),s))
+            .HasColumnType("varchar").HasMaxLength(30);
 
         modelBuilder.Entity<Order>().HasOne(x => x.Transaction).WithOne(x => x.Order)
             .HasForeignKey<Transaction>(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
@@ -267,14 +287,6 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
-
-        #region Wallet
-
-        modelBuilder.Entity<Wallet>().ToTable("Wallet").HasKey(e => e.WalletId);
-        modelBuilder.Entity<Wallet>().Property(e => e.BankAccountNumber).HasColumnType("varchar").HasMaxLength(20);
-        modelBuilder.Entity<Wallet>().Property(e => e.BankName).HasColumnType("varchar").HasMaxLength(100);
-
-        #endregion
 
         #region PointPackage
 

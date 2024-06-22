@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BusinessObjects.Dtos.Account.Request
 {
     public class UpdateAccountRequest
     {
         [Required, Phone]
-        public string Phone { get; set; }
+        public required string Phone { get; set; }
+
         [Required]
-        public string Fullname { get; set; }
+        public required string Fullname { get; set; }
     }
 }

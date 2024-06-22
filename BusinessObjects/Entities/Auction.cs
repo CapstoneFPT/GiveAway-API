@@ -13,6 +13,9 @@ public class Auction
     public int DepositFee { get; set; }
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
+    public Guid StaffId { get; set; }
+
+    public Staff Staff { get; set; }
     public int StepIncrement { get; set; }
     public AuctionFashionItem AuctionFashionItem { get; set; }
     public Guid AuctionFashionItemId { get; set; }

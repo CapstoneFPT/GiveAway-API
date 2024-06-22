@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Dtos.AuctionItems
 {
@@ -12,6 +13,6 @@ namespace BusinessObjects.Dtos.AuctionItems
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
         public string? Status { get; set; }
-        public string? Type { get; set; }
+        public FashionItemType? Type { get; set; }
     }
 }

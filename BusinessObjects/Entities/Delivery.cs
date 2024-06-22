@@ -13,5 +13,6 @@ public class Delivery
     public AddressType AddressType { set; get; }
     public Account Member { set; get; }
     public Guid MemberId { set; get; }
+    public bool IsDefault { set; get; }
 }
 

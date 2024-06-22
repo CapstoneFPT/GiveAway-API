@@ -1,6 +1,8 @@
-﻿namespace WebApi.Hubs;
+﻿using Microsoft.AspNetCore.SignalR;
 
-public class AuctionHub
+namespace WebApi.Hubs;
+
+public class AuctionHub : Hub
 {
     
 }

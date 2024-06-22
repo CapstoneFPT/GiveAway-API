@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi;
+using WebApi.Hubs;
 using WebApi.Utils.CustomProblemDetails;
 using WebApi.Utils.WebServer;
 
@@ -22,6 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddServices();
 builder.Services.AddRepositories();
 builder.Services.AddDao();
+builder.Services.AddSignalR();
 builder.Services.AddProblemDetails(options =>
 {
     options.IncludeExceptionDetails =
@@ -163,6 +165,7 @@ app.UseSwaggerUI();
 app.UseProblemDetails();
 app.UseCors("AllowAll");
 app.MapControllers();
+app.MapHub<AuctionHub>("/auctionHub");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
