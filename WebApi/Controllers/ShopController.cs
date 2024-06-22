@@ -16,7 +16,7 @@ namespace WebApi.Controllers
         {
             _fashionItemService = fashionItemService;
         }
-        [HttpPost("{shopId}")]
+        [HttpPost("{shopId}/fashionitems")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> AddFashionItem([FromRoute] Guid shopId, [FromBody] FashionItemDetailRequest request)
         {
             return await _fashionItemService.AddFashionItem(shopId, request);

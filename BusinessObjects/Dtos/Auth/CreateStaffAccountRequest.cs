@@ -21,5 +21,7 @@ namespace BusinessObjects.Dtos.Auth
         public string ConfirmPassword { get; set; } = string.Empty;
         [Required]
         public string Address {  get; set; } = string.Empty;
+        [Required, Phone] 
+        public string ShopPhone { get; set; } = string.Empty;
     }
 }

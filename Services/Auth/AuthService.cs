@@ -117,6 +117,7 @@ public class AuthService : IAuthService
             Shop shop = new Shop();
             shop.ShopId = new Guid();
             shop.Address = request.Address;
+            shop.Phone = request.ShopPhone;
             shop.StaffId = account.AccountId;
             await _shopRepository.CreateShop(shop);
 
