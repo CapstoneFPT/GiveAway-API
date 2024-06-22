@@ -14,7 +14,7 @@ namespace BusinessObjects.Dtos.Order
         public int Quantity { get; set; }
         public int TotalPrice { get; set; }
         public DateTime CreatedDate { get; set; }
-        public string PaymentMethod { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
         public DateTime PaymentDate { get; set; }
         public string CustomerName { get; set; }
         public string RecipientName { get; set; }
