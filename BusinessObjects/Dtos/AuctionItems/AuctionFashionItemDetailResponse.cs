@@ -6,7 +6,7 @@ namespace BusinessObjects.Dtos.AuctionItems;
 public class AuctionFashionItemDetailResponse
 {
     public Guid ItemId { get; set; }
-    public string Type { get; set; }
+    public FashionItemType Type { get; set; }
     public decimal SellingPrice { get; set; }
     public string Name { get; set; }
     public string Note { get; set; }

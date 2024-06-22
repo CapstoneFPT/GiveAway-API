@@ -16,15 +16,8 @@ public class Account
     public DateTime? VerifiedAt { get; set; }
     public string? PasswordResetToken { get; set; }
     public DateTime? ResetTokenExpires { get; set; }
-    public string Role { get; set; }
+    public Roles Role { get; set; }
     public AccountStatus Status { get; set; }
 
-    public ICollection<ConsignSale> Requests = new List<ConsignSale>();
-    public ICollection<Delivery> Deliveries = new List<Delivery>();
-    public ICollection<Order> Orders = new List<Order>();
-    public ICollection<Bid> Bids = new List<Bid>();
-    public ICollection<AuctionDeposit> AuctionDeposits = new List<AuctionDeposit>();
-
-    public Wallet Wallet { get; set; }
-    public Shop Shop { get; set; }
+    
 }

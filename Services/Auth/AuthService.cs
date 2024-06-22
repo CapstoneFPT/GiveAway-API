@@ -1,19 +1,15 @@
 ﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using AutoMapper;
-using BusinessObjects;
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Repositories.Accounts;
 using Repositories.Shops;
-using Repositories.User;
-using Repositories.Wallets;
 using Services.Emails;
 
 namespace Services.Auth;
@@ -26,14 +22,12 @@ public class AuthService : IAuthService
     private readonly IMemoryCache _cache;
     private readonly IMapper _mapper;
     private readonly IShopRepository _shopRepository;
-    private readonly IWalletRepository _walletRepository;
     private readonly IConfiguration _configuration;
     private readonly string tempdata = "tempdatakey";
-    private readonly User newuser = new User();
 
     public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService,
         IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository,
-        IWalletRepository walletRepository, IConfiguration configuration)
+         IConfiguration configuration)
     {
         _accountRepository = accountRepository;
         _tokenService = tokenService;
@@ -41,7 +35,6 @@ public class AuthService : IAuthService
         _cache = memoryCache;
         _mapper = mapper;
         _shopRepository = shopRepository;
-        _walletRepository = walletRepository;
         _configuration = configuration;
     }
 
@@ -108,7 +101,7 @@ public class AuthService : IAuthService
             account.PasswordSalt = passwordSalt;
             account.Fullname = request.Fullname;
             account.Phone = request.Phone;
-            account.Role = Roles.Staff.ToString();
+            account.Role = Roles.Staff;
             account.Status = AccountStatus.Active;
             account.VerifiedAt = DateTime.UtcNow;
 
@@ -210,58 +203,52 @@ public class AuthService : IAuthService
 
     public async Task<Result<AccountResponse>> Register(RegisterRequest request)
     {
-        var ismailused = await _accountRepository.FindUserByEmail(request.Email);
-        var isphoneused = await _accountRepository.FindUserByPhone(request.Phone);
-		var response = new Result<AccountResponse>();
-		if (ismailused != null)
-		{
-			response.Messages = new[] { "This mail is already used" };
-			response.ResultStatus = ResultStatus.Duplicated;
-			return response;
-		}
-		if(isphoneused != null)
-		{
+        var isMailUsed = await _accountRepository.FindUserByEmail(request.Email);
+        var isPhoneUsed = await _accountRepository.FindUserByPhone(request.Phone);
+        var response = new Result<AccountResponse>();
+        if (isMailUsed != null)
+        {
+            response.Messages = new[] { "This mail is already used" };
+            response.ResultStatus = ResultStatus.Duplicated;
+            return response;
+        }
+
+        if (isPhoneUsed != null)
+        {
             response.Messages = new[] { "This phone number is already used" };
             response.ResultStatus = ResultStatus.Duplicated;
             return response;
         }
-		else
-		{
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-            Account account = new Account();
-            account.Email = request.Email;
-            /*account.AccountId = new Guid();*/
-            account.PasswordHash = passwordHash;
-            account.PasswordSalt = passwordSalt;
-            account.Fullname = request.Fullname;
-            account.Phone = request.Phone;
-            account.Role = Roles.Member.ToString();
-            account.Status = AccountStatus.NotVerified;
 
-            var user = await _accountRepository.Register(account);
+        CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+        Member member = new Member();
+        member.Email = request.Email;
+        /*account.AccountId = new Guid();*/
+        member.PasswordHash = passwordHash;
+        member.PasswordSalt = passwordSalt;
+        member.Fullname = request.Fullname;
+        member.Phone = request.Phone;
+        member.Role = Roles.Member;
+        member.Status = AccountStatus.NotVerified;
 
-            Wallet wallet = new Wallet();
-            wallet.Balance = 0;
-            wallet.MemberId = account.AccountId;
-            await _walletRepository.CreateWallet(wallet);
+        var user = await _accountRepository.Register(member);
 
-            var token = _accountRepository.CreateRandomToken();
-            var cacheEntryOption = new MemoryCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromSeconds(190))
-                .SetPriority(CacheItemPriority.Normal);
-            _cache.Set(tempdata, token, cacheEntryOption);
-            var mail = SendMailRegister(account.Email, token);
+        var token = _accountRepository.CreateRandomToken();
+        var cacheEntryOption = new MemoryCacheEntryOptions()
+            .SetSlidingExpiration(TimeSpan.FromSeconds(190))
+            .SetPriority(CacheItemPriority.Normal);
+        _cache.Set(tempdata, token, cacheEntryOption);
+        var mail = SendMailRegister(member.Email, token);
 
-            response.ResultStatus = ResultStatus.Success;
-            response.Messages = mail.Result.Messages;
-            response.Data = _mapper.Map<AccountResponse>(user);
-            return response;
-            /*var cacheEntryOption = new MemoryCacheEntryOptions()
+        response.ResultStatus = ResultStatus.Success;
+        response.Messages = mail.Result.Messages;
+        response.Data = _mapper.Map<AccountResponse>(user);
+        return response;
+        /*var cacheEntryOption = new MemoryCacheEntryOptions()
                 .SetSlidingExpiration(TimeSpan.FromSeconds(60))
                 .SetPriority(CacheItemPriority.Normal);
             _cache.Set(newuser, account, cacheEntryOption);
             return await SendMailRegister(request.Email);*/
-        }
     }
 
     public async Task<Result<string>> ResendVerifyEmail(string email)
@@ -623,25 +610,26 @@ public class AuthService : IAuthService
 
         return response;
     }
-	public async Task<Result<string>> SendMailRegister(string email, string token)
-	{
-		var response = new Result<string>();
-		var user = await _accountRepository.FindUserByEmail(email);
-		string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
-		string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
-		string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
-    
-		SendEmailRequest content = new SendEmailRequest
-		{
-			To = email,
-			Subject = "[GIVEAWAY] Verify Account",
-			Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
-		};
-		await _emailService.SendEmail(content);
-		response.Messages = ["Register successfully! Please check your email for verification in 3 minutes"];
-		response.ResultStatus = ResultStatus.Success;
-		return response;
-	}
+
+    public async Task<Result<string>> SendMailRegister(string email, string token)
+    {
+        var response = new Result<string>();
+        var user = await _accountRepository.FindUserByEmail(email);
+        string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
+        string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
+        string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
+
+        SendEmailRequest content = new SendEmailRequest
+        {
+            To = email,
+            Subject = "[GIVEAWAY] Verify Account",
+            Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
+        };
+        await _emailService.SendEmail(content);
+        response.Messages = ["Register successfully! Please check your email for verification in 3 minutes"];
+        response.ResultStatus = ResultStatus.Success;
+        return response;
+    }
 
     public async Task<Result<string>> VerifyEmail(Guid id, string token)
     {

@@ -12,16 +12,14 @@ namespace Repositories.AuctionDeposits
         private readonly GenericDao<AuctionDeposit> _auctionDepositDao;
         private readonly GenericDao<Transaction> _transactionDao;
         private readonly GenericDao<Account> _memberDao;
-        private readonly GenericDao<Wallet> _walletDao;
         private readonly GenericDao<Auction> _auctionDao;
 
         public AuctionDepositRepository(GenericDao<AuctionDeposit> auctionDepositDao,
-            GenericDao<Transaction> transactionDao, GenericDao<Account> memberDao, GenericDao<Wallet> walletDao, GenericDao<Auction> auctionDao)
+            GenericDao<Transaction> transactionDao, GenericDao<Account> memberDao, GenericDao<Auction> auctionDao)
         {
             _auctionDepositDao = auctionDepositDao;
             _transactionDao = transactionDao;
             _memberDao = memberDao;
-            _walletDao = walletDao;
             _auctionDao = auctionDao;
         }
 
@@ -52,19 +50,11 @@ namespace Repositories.AuctionDeposits
                     throw new Exception("Deposit already exists");
                 }
 
-                var wallet = await _walletDao.GetQueryable()
-                    .FirstOrDefaultAsync(x => x.MemberId == request.MemberId);
-
-                if (wallet == null)
-                {
-                    throw new Exception("Wallet not found");
-                }
-
                 var transaction = new Transaction
                 {
                     Amount = auction.DepositFee,
                     Type = TransactionType.AuctionDeposit,
-                    WalletId = wallet.WalletId,
+                    MemberId = request.MemberId,
                     CreatedDate = DateTime.UtcNow
                 };
                 

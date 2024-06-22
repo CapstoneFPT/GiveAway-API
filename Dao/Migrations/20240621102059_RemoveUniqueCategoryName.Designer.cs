@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240621102059_RemoveUniqueCategoryName")]
+    partial class RemoveUniqueCategoryName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,10 +82,6 @@ namespace Dao.Migrations
                         .IsUnique();
 
                     b.ToTable("Account", (string)null);
-
-                    b.HasDiscriminator<string>("Role").HasValue("Account");
-
-                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Auction", b =>
@@ -101,9 +100,6 @@ namespace Dao.Migrations
                         .HasColumnType("timestamptz");
 
                     b.Property<Guid>("ShopId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("StaffId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("StartDate")
@@ -127,8 +123,6 @@ namespace Dao.Migrations
                     b.HasIndex("AuctionFashionItemId");
 
                     b.HasIndex("ShopId");
-
-                    b.HasIndex("StaffId");
 
                     b.ToTable("Auction", (string)null);
                 });
@@ -323,9 +317,6 @@ namespace Dao.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
-
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uuid");
 
@@ -385,8 +376,8 @@ namespace Dao.Migrations
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar");
+                        .HasMaxLength(21)
+                        .HasColumnType("character varying(21)");
 
                     b.Property<decimal?>("Value")
                         .HasColumnType("numeric");
@@ -491,7 +482,7 @@ namespace Dao.Migrations
 
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
-                        .HasMaxLength(30)
+                        .HasMaxLength(20)
                         .HasColumnType("varchar");
 
                     b.Property<string>("Status")
@@ -656,9 +647,6 @@ namespace Dao.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamptz");
 
-                    b.Property<Guid>("MemberId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("OrderId")
                         .HasColumnType("uuid");
 
@@ -667,38 +655,45 @@ namespace Dao.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar");
 
-                    b.HasKey("TransactionId");
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid");
 
-                    b.HasIndex("MemberId");
+                    b.HasKey("TransactionId");
 
                     b.HasIndex("OrderId")
                         .IsUnique();
 
+                    b.HasIndex("WalletId");
+
                     b.ToTable("Transaction", (string)null);
                 });
 
-            modelBuilder.Entity("BusinessObjects.Entities.Admin", b =>
+            modelBuilder.Entity("BusinessObjects.Entities.Wallet", b =>
                 {
-                    b.HasBaseType("BusinessObjects.Entities.Account");
-
-                    b.HasDiscriminator().HasValue("Admin");
-                });
-
-            modelBuilder.Entity("BusinessObjects.Entities.Member", b =>
-                {
-                    b.HasBaseType("BusinessObjects.Entities.Account");
+                    b.Property<Guid>("WalletId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Balance")
                         .HasColumnType("integer");
 
-                    b.HasDiscriminator().HasValue("Member");
-                });
+                    b.Property<string>("BankAccountNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar");
 
-            modelBuilder.Entity("BusinessObjects.Entities.Staff", b =>
-                {
-                    b.HasBaseType("BusinessObjects.Entities.Account");
+                    b.Property<string>("BankName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar");
 
-                    b.HasDiscriminator().HasValue("Staff");
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("WalletId");
+
+                    b.HasIndex("MemberId")
+                        .IsUnique();
+
+                    b.ToTable("Wallet", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.AuctionFashionItem", b =>
@@ -735,17 +730,9 @@ namespace Dao.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BusinessObjects.Entities.Staff", "Staff")
-                        .WithMany("Auctions")
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("AuctionFashionItem");
 
                     b.Navigation("Shop");
-
-                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.AuctionDeposit", b =>
@@ -970,7 +957,7 @@ namespace Dao.Migrations
 
             modelBuilder.Entity("BusinessObjects.Entities.Shop", b =>
                 {
-                    b.HasOne("BusinessObjects.Entities.Staff", "Staff")
+                    b.HasOne("BusinessObjects.Entities.Account", "Staff")
                         .WithOne("Shop")
                         .HasForeignKey("BusinessObjects.Entities.Shop", "StaffId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -981,20 +968,40 @@ namespace Dao.Migrations
 
             modelBuilder.Entity("BusinessObjects.Entities.Transaction", b =>
                 {
-                    b.HasOne("BusinessObjects.Entities.Member", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("BusinessObjects.Entities.Order", "Order")
                         .WithOne("Transaction")
                         .HasForeignKey("BusinessObjects.Entities.Transaction", "OrderId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.Navigation("Member");
+                    b.HasOne("BusinessObjects.Entities.Wallet", "Wallet")
+                        .WithMany()
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Order");
+
+                    b.Navigation("Wallet");
+                });
+
+            modelBuilder.Entity("BusinessObjects.Entities.Wallet", b =>
+                {
+                    b.HasOne("BusinessObjects.Entities.Account", "Member")
+                        .WithOne("Wallet")
+                        .HasForeignKey("BusinessObjects.Entities.Wallet", "MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("BusinessObjects.Entities.Account", b =>
+                {
+                    b.Navigation("Shop")
+                        .IsRequired();
+
+                    b.Navigation("Wallet")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Auction", b =>
@@ -1033,14 +1040,6 @@ namespace Dao.Migrations
             modelBuilder.Entity("BusinessObjects.Entities.Transaction", b =>
                 {
                     b.Navigation("AuctionDeposit");
-                });
-
-            modelBuilder.Entity("BusinessObjects.Entities.Staff", b =>
-                {
-                    b.Navigation("Auctions");
-
-                    b.Navigation("Shop")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.AuctionFashionItem", b =>

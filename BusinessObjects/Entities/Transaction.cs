@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Entities;
@@ -12,7 +13,7 @@ public class Transaction
    public TransactionType Type { get; set; }
    public Order? Order { get; set; }
    public Guid? OrderId { get; set; }
-   public Wallet Wallet { get; set; }
-   public Guid WalletId { get; set; }
+   public Guid MemberId { get; set; }
+   public Member Member { get; set; }
    public AuctionDeposit? AuctionDeposit { get; set; }
 }

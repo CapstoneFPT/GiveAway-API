@@ -18,8 +18,10 @@ public enum ResultStatus
 
 public enum Roles
 {
+    Account,
     Staff,
-    Member
+    Member,
+    Admin
 }
 
 public enum AccountStatus
@@ -43,6 +45,7 @@ public enum FashionItemStatus
 
 public enum FashionItemType
 {
+    ItemBase,
     ConsignedForSale,
     ConsignedForAuction
 }
@@ -104,4 +107,11 @@ public enum CategoryStatus
     Available,
     Unavailable,
     Special
+}
+
+public enum PaymentMethod
+{
+    COD,
+    Point,
+    QRCode
 }

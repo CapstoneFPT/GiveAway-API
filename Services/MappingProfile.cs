@@ -5,7 +5,6 @@ using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.Wallet;
 using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
@@ -22,10 +21,6 @@ namespace Services
             CreateMap<Account, AccountResponse>()
                 .ReverseMap();
             CreateMap<UpdateAccountRequest, Account>() .ReverseMap();
-            CreateMap<Wallet, WalletResponse>()
-                .ForMember(a => a.AccountName, opt => opt.MapFrom(a => a.Member.Fullname))
-                .ReverseMap();
-            CreateMap<UpdateWalletRequest, Wallet>() .ReverseMap();
             CreateMap<Delivery, DeliveryResponse>() 
                 .ForMember(a => a.Buyername, opt => opt.MapFrom(a => a.Member.Fullname))
                 .ReverseMap();
