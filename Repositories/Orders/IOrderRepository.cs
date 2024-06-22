@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Order;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,6 @@ namespace Repositories.Orders
 {
     public interface IOrderRepository
     {
+        Task<PaginationResponse<OrderResponse>> GetOrdersByAccountId(Guid accountId, OrderRequest request);
     }
 }
