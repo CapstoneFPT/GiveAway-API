@@ -88,7 +88,8 @@ public enum TransactionType
     AuctionDeposit,
     Withdraw,
     Purchase,
-    Refund
+    Refund,
+    Recharge
 }
 
 public enum ConsignSaleType

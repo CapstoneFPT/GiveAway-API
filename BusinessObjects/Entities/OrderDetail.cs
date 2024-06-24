@@ -12,10 +12,10 @@ public class OrderDetail
     public Order Order { get; set; }
     public Guid OrderId { get; set; }
     public FashionItem? FashionItem { get; set; }
-    public Guid? ItemId { get; set; }
+    public Guid? FashionItemId { get; set; }
     public PointPackage? PointPackage { get; set; }
     public Guid? PointPackageId { get; set; }
-    public ConsignSale? Request { get; set; }
-    public Guid? RequestId { get; set; }
+    public ConsignSale? ConsignSale { get; set; }
+    public Guid? ConsignSaleId { get; set; }
     
 }

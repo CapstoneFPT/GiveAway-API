@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240624093150_AdjustRedundantColumnInOrderDetail")]
+    partial class AdjustRedundantColumnInOrderDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,6 +106,9 @@ namespace Dao.Migrations
                     b.Property<Guid>("ShopId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamptz");
 
@@ -124,6 +130,8 @@ namespace Dao.Migrations
                     b.HasIndex("AuctionFashionItemId");
 
                     b.HasIndex("ShopId");
+
+                    b.HasIndex("StaffId");
 
                     b.ToTable("Auction", (string)null);
                 });
@@ -405,7 +413,10 @@ namespace Dao.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("FashionItemId")
+                    b.Property<Guid>("FashionItemItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ItemId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Url")
@@ -414,7 +425,7 @@ namespace Dao.Migrations
 
                     b.HasKey("ImageId");
 
-                    b.HasIndex("FashionItemId");
+                    b.HasIndex("FashionItemItemId");
 
                     b.ToTable("Image", (string)null);
                 });
@@ -724,9 +735,17 @@ namespace Dao.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BusinessObjects.Entities.Staff", "Staff")
+                        .WithMany("Auctions")
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("AuctionFashionItem");
 
                     b.Navigation("Shop");
+
+                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.AuctionDeposit", b =>
@@ -856,7 +875,7 @@ namespace Dao.Migrations
                 {
                     b.HasOne("BusinessObjects.Entities.FashionItem", "FashionItem")
                         .WithMany()
-                        .HasForeignKey("FashionItemId")
+                        .HasForeignKey("FashionItemItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1018,6 +1037,8 @@ namespace Dao.Migrations
 
             modelBuilder.Entity("BusinessObjects.Entities.Staff", b =>
                 {
+                    b.Navigation("Auctions");
+
                     b.Navigation("Shop")
                         .IsRequired();
                 });
