@@ -1,6 +1,6 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.Order;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;

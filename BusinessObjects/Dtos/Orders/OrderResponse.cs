@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessObjects.Dtos.Order
+namespace BusinessObjects.Dtos.Orders
 {
     public class OrderResponse
     {
