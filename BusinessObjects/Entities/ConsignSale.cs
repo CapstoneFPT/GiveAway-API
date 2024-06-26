@@ -8,6 +8,7 @@ public class ConsignSale
 {
     [Key] public Guid ConsignSaleId { get; set; }
     public ConsignSaleType Type { get; set; }
+    public string ConsignSaleCode { get; set; }
     public DateTime CreatedDate { get; set; }
     public int? ConsignDuration { get; set; }
     public DateTime? StartDate { get; set; }
