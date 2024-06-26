@@ -25,12 +25,5 @@ public class FashionItem
     public GenderType Gender { get; set; }
 }
 
-public enum SizeType
-{
-    XS,
-    S,
-    M,
-    L,
-    XL
-}
+
 

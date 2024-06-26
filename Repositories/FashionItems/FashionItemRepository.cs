@@ -75,6 +75,10 @@ namespace Repositories.FashionItems
                         ShopId = x.Shop.ShopId,
                         Consigner = x.ConsignSaleDetail.ConsignSale.Member.Fullname,
                         CategoryName = x.Category.Name,
+                        Size = x.Size,
+                        Color = x.Color,
+                        Brand = x.Brand,
+                        Gender = x.Gender,
                         Status = x.Status,
                     })
                     .AsNoTracking().ToListAsync();
@@ -144,13 +148,17 @@ namespace Repositories.FashionItems
                     Value = f.Value,
                     Condition = f.Condition,
                     ConsignDuration = f.ConsignSaleDetail.ConsignSale.ConsignDuration,
-                    Status = f.Status,
                     StartDate = f.ConsignSaleDetail.ConsignSale.StartDate,
                     EndDate = f.ConsignSaleDetail.ConsignSale.EndDate,
                     ShopAddress = f.Shop.Address,
                     ShopId = f.Shop.ShopId,
                     Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,
                     CategoryName = f.Category.Name,
+                    Size = f.Size,
+                    Color = f.Color,
+                    Brand = f.Brand,
+                    Gender = f.Gender,
+                    Status = f.Status,
                 })
                 .AsNoTracking();
 

@@ -1,7 +1,10 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
+using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Services.OrderDetails;
 using Services.Orders;
 
 namespace WebApi.Controllers
@@ -11,15 +14,23 @@ namespace WebApi.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
+        private readonly IOrderDetailService _orderDetailService;
 
-        public OrderController(IOrderService orderService)
+        public OrderController(IOrderService orderService, IOrderDetailService orderDetailService)
         {
             _orderService = orderService;
+            _orderDetailService = orderDetailService;
         }
-        [HttpGet("accounts/{accountId}")]
-        public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByAccountId([FromRoute] Guid accountId, [FromQuery] OrderRequest request)
+        
+        [HttpGet("{OrderId}/orderdetails")]
+        public async Task<ActionResult<Result<PaginationResponse<OrderDetailResponse<FashionItem>>>>> GetOrderDetailsByOrderId([FromRoute] Guid OrderId, [FromQuery] OrderDetailRequest request)
         {
-            return await _orderService.GetOrdersByAccountId(accountId, request);
+            return await _orderDetailService.GetOrderDetailsByOrderId(OrderId, request);
+        }
+        [HttpGet("{OrderId}/orderdetails/{OrderdetailId}")]
+        public async Task<ActionResult<Result<OrderDetailResponse<FashionItem>>>> GetOrderDetailById([FromRoute] Guid OrderdetailId)
+        {
+            return await _orderDetailService.GetOrderDetailById(OrderdetailId);
         }
     }
 }

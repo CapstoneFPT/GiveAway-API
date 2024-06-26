@@ -26,5 +26,9 @@ namespace BusinessObjects.Dtos.FashionItems
         public DateTime? EndDate { get; set; }
         public string Consigner { get; set; }
         public string CategoryName { get; set; }
+        public SizeType Size { get; set; }
+        public string Color { get; set; }
+        public string? Brand { get; set; } 
+        public GenderType Gender { get; set; }
     }
 }

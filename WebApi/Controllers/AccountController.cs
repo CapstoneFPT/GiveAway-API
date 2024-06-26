@@ -3,11 +3,13 @@ using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Deliveries;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.Deliveries;
+using Services.Orders;
 
 namespace WebApi.Controllers
 {
@@ -17,11 +19,13 @@ namespace WebApi.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly IDeliveryService _deliveryService;
+        private readonly IOrderService _orderService;
 
-        public AccountController(IAccountService accountService, IDeliveryService deliveryService)
+        public AccountController(IAccountService accountService, IDeliveryService deliveryService, IOrderService orderService)
         {
             _accountService = accountService;
             _deliveryService = deliveryService;
+            _orderService = orderService;
         }
         [HttpGet]
         public async Task<ActionResult<List<AccountResponse>>> GetAllAccounts()
@@ -63,6 +67,10 @@ namespace WebApi.Controllers
         {
             return await _deliveryService.DeleteDelivery(deliveryId);
         }
-      
+        [HttpGet("{accountId}/orders")]
+        public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByAccountId([FromRoute] Guid accountId, [FromQuery] OrderRequest request)
+        {
+            return await _orderService.GetOrdersByAccountId(accountId, request);
+        }
     }
 }
