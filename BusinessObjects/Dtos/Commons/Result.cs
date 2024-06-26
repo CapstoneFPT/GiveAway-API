@@ -34,6 +34,7 @@ public enum AccountStatus
 public enum FashionItemStatus
 {
     Available,
+    Unavailable,
     Sold,
     Pending,
     AwaitingAuction,
@@ -41,6 +42,18 @@ public enum FashionItemStatus
     Won,
     Rejected,
     Returned
+}
+
+public enum GenderType
+{
+    Male,
+    Female,
+}
+
+public enum TimeSlotStatus
+{
+    Enabled,
+    Disabled
 }
 
 public enum FashionItemType
@@ -88,7 +101,8 @@ public enum TransactionType
     AuctionDeposit,
     Withdraw,
     Purchase,
-    Refund
+    Refund,
+    Recharge
 }
 
 public enum ConsignSaleType
@@ -102,6 +116,7 @@ public enum AddressType
     Home,
     Business
 }
+
 public enum CategoryStatus
 {
     Available,

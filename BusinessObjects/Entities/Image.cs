@@ -8,5 +8,5 @@ public class Image
     public Guid ImageId { get; set; }
     public string Url { get; set; }
     public FashionItem FashionItem { get; set; }
-    public Guid ItemId { get; set; }
+    public Guid FashionItemId { get; set; }
 }

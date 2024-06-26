@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240624134258_RemoveStaffFromAuction")]
+    partial class RemoveStaffFromAuction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -230,10 +233,6 @@ namespace Dao.Migrations
                     b.Property<int?>("ConsignDuration")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ConsignSaleCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamptz");
@@ -270,9 +269,6 @@ namespace Dao.Migrations
                         .HasColumnType("varchar");
 
                     b.HasKey("ConsignSaleId");
-
-                    b.HasIndex("ConsignSaleCode")
-                        .IsUnique();
 
                     b.HasIndex("MemberId");
 
@@ -354,24 +350,12 @@ namespace Dao.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Brand")
-                        .HasColumnType("text");
-
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Condition")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -383,16 +367,14 @@ namespace Dao.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar");
 
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SellingPrice")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("ShopId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Size")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("varchar");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -489,9 +471,6 @@ namespace Dao.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("BidId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamptz");
@@ -501,10 +480,6 @@ namespace Dao.Migrations
 
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("OrderCode")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("PaymentDate")
                         .HasColumnType("timestamptz");
@@ -524,15 +499,9 @@ namespace Dao.Migrations
 
                     b.HasKey("OrderId");
 
-                    b.HasIndex("BidId")
-                        .IsUnique();
-
                     b.HasIndex("DeliveryId");
 
                     b.HasIndex("MemberId");
-
-                    b.HasIndex("OrderCode")
-                        .IsUnique();
 
                     b.ToTable("Order", (string)null);
                 });
@@ -554,6 +523,9 @@ namespace Dao.Migrations
 
                     b.Property<Guid?>("PointPackageId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
 
                     b.Property<int>("UnitPrice")
                         .HasColumnType("integer");
@@ -657,11 +629,6 @@ namespace Dao.Migrations
 
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time without time zone");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar");
 
                     b.HasKey("TimeslotId");
 
@@ -920,10 +887,6 @@ namespace Dao.Migrations
 
             modelBuilder.Entity("BusinessObjects.Entities.Order", b =>
                 {
-                    b.HasOne("BusinessObjects.Entities.Bid", "Bid")
-                        .WithOne("Order")
-                        .HasForeignKey("BusinessObjects.Entities.Order", "BidId");
-
                     b.HasOne("BusinessObjects.Entities.Delivery", "Delivery")
                         .WithMany()
                         .HasForeignKey("DeliveryId")
@@ -935,8 +898,6 @@ namespace Dao.Migrations
                         .HasForeignKey("MemberId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Bid");
 
                     b.Navigation("Delivery");
 
@@ -1023,12 +984,6 @@ namespace Dao.Migrations
             modelBuilder.Entity("BusinessObjects.Entities.Auction", b =>
                 {
                     b.Navigation("Schedule")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("BusinessObjects.Entities.Bid", b =>
-                {
-                    b.Navigation("Order")
                         .IsRequired();
                 });
 
