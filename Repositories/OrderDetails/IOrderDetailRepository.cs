@@ -13,5 +13,6 @@ namespace Repositories.OrderDetails
     {
         Task<PaginationResponse<OrderDetailResponse<FashionItem>>> GetAllOrderDetailByOrderId(Guid id, OrderDetailRequest request);
         Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id);
+        Task CreateOrderDetail(OrderDetail orderDetail);
     }
 }

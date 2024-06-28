@@ -5,6 +5,7 @@ using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,12 @@ namespace Services
                 .ForMember(a => a.ShopAddress, opt => opt.MapFrom(a => a.Shop.Address))
                 .ReverseMap();
             CreateMap<PaginationResponse<FashionItem>, PaginationResponse<FashionItemDetailResponse>>();
+            CreateMap<Order, OrderResponse>() 
+                .ForMember(a => a.CustomerName, opt => opt.MapFrom(a => a.Member.Fullname))
+                .ForMember(a => a.RecipientName, opt => opt.MapFrom(a => a.Delivery.RecipientName))
+                .ForMember(a => a.ContactNumber, opt => opt.MapFrom(a => a.Delivery.Phone))
+                .ForMember(a => a.Address, opt => opt.MapFrom(a => a.Delivery.Address))
+                .ReverseMap();
         }
     }
 }

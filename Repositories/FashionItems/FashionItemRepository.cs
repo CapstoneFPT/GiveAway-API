@@ -1,4 +1,6 @@
-﻿using BusinessObjects.Dtos.AuctionItems;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
@@ -18,11 +20,13 @@ namespace Repositories.FashionItems
     {
         private readonly GenericDao<FashionItem> _fashionitemDao;
         private readonly GenericDao<Category> _categoryDao;
+        private readonly IMapper _mapper;
 
-        public FashionItemRepository(GenericDao<FashionItem> fashionitemDao, GenericDao<Category> categoryDao)
+        public FashionItemRepository(GenericDao<FashionItem> fashionitemDao, GenericDao<Category> categoryDao, IMapper mapper)
         {
             _fashionitemDao = fashionitemDao;
             _categoryDao = categoryDao;
+            _mapper = mapper;
         }
 
         public async Task<FashionItem> AddFashionItem(FashionItem request)
@@ -58,29 +62,7 @@ namespace Repositories.FashionItems
                     .Take(request.PageSize);
 
                 var items = await query
-                    
-                    .Select(x => new FashionItemDetailResponse
-                    {
-                        ItemId = x.ItemId,
-                        Type = x.Type,
-                        Name = x.Name,
-                        SellingPrice = x.SellingPrice,
-                        Note = x.Note,
-                        Value = x.Value,
-                        Condition = x.Condition,
-                        ConsignDuration = x.ConsignSaleDetail.ConsignSale.ConsignDuration,
-                        StartDate = x.ConsignSaleDetail.ConsignSale.StartDate,
-                        EndDate = x.ConsignSaleDetail.ConsignSale.EndDate,
-                        ShopAddress = x.Shop.Address,
-                        ShopId = x.Shop.ShopId,
-                        Consigner = x.ConsignSaleDetail.ConsignSale.Member.Fullname,
-                        CategoryName = x.Category.Name,
-                        Size = x.Size,
-                        Color = x.Color,
-                        Brand = x.Brand,
-                        Gender = x.Gender,
-                        Status = x.Status,
-                    })
+                    .ProjectTo<FashionItemDetailResponse>(_mapper.ConfigurationProvider)
                     .AsNoTracking().ToListAsync();
 
                 var result = new PaginationResponse<FashionItemDetailResponse>

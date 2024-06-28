@@ -1,4 +1,5 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
@@ -31,6 +32,16 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<OrderDetailResponse<FashionItem>>>> GetOrderDetailById([FromRoute] Guid OrderdetailId)
         {
             return await _orderDetailService.GetOrderDetailById(OrderdetailId);
+        }
+        [HttpPost]
+        public async Task<ActionResult<Result<OrderResponse>>> CreateOrder(List<Guid> listItemId, [FromQuery] CreateOrderRequest order)
+        {
+            return await _orderService.CreateOrder(listItemId, order);
+        }
+        [HttpPut("{OrderId}/cancel")]
+        public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid OrderId)
+        {
+            return await _orderService.CancelOrder(OrderId);
         }
     }
 }

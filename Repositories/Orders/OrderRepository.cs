@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using AutoMapper.QueryableExtensions;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
@@ -24,13 +25,28 @@ namespace Repositories.Orders
             _orderDetailDao = orderDetailDao;
         }
 
+        public async Task<Order> CreateOrder(Order order)
+        {
+            await _orderDao.AddAsync(order);
+            return order;
+        }
+
+        public async Task<Order> GetOrderById(Guid id)
+        {
+            return await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderId == id);
+        }
+
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByAccountId(Guid accountId, OrderRequest request)
         {
             try
             {
                 var query = _orderDao.GetQueryable();
                     query = query.Where(c => c.MemberId == accountId);
-                    
+
+                if (request.Status != null)
+                {
+                    query = query.Where(f => f.Status == request.Status);
+                }
                 var count = await query.CountAsync();
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)
                     .Take(request.PageSize);
@@ -67,6 +83,12 @@ namespace Repositories.Orders
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public async Task<Order> UpdateOrder(Order order)
+        {
+            await _orderDao.UpdateAsync(order);
+            return order;
         }
     }
 }
