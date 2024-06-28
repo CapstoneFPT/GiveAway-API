@@ -77,6 +77,7 @@ public enum OrderStatus
 {
     AwaitingPayment,
     OnDelivery,
+    Refundable,
     Completed,
     Cancelled
 }

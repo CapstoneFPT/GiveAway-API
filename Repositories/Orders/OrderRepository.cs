@@ -60,6 +60,7 @@ namespace Repositories.Orders
                         Quantity = _orderDetailDao.GetQueryable().Count(c => c.OrderId.Equals(x.OrderId)),
                         TotalPrice = _orderDetailDao.GetQueryable().Sum(c => c.UnitPrice),
                         CreatedDate = x.CreatedDate,
+                        OrderCode = x.OrderCode,
                         PaymentMethod = x.PaymentMethod,
                         PaymentDate = x.PaymentDate,
                         CustomerName = x.Member.Fullname,
