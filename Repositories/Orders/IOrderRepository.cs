@@ -15,5 +15,6 @@ namespace Repositories.Orders
         Task<Order> CreateOrder(Order order);
         Task<Order> UpdateOrder(Order order);
         Task<Order> GetOrderById(Guid id);
+        Task<OrderResponse> CreateOrderHierarchy(List<Guid> listItemId, CreateOrderRequest request);
     }
 }

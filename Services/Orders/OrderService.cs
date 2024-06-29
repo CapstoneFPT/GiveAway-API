@@ -20,9 +20,7 @@ namespace Services.Orders
         private readonly IFashionItemRepository _fashionItemRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
         private readonly IMapper _mapper;
-        private static HashSet<string> generatedStrings = new HashSet<string>();
-        private static Random random = new Random();
-        private const string prefix = "GA-OD-";
+        
         public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository, IMapper mapper, IOrderDetailRepository orderDetailRepository)
         {
             _orderRepository = orderRepository;
@@ -36,7 +34,7 @@ namespace Services.Orders
             try
             {
                 var response = new Result<OrderResponse>();
-                int totalPrice = 0;
+                /*int totalPrice = 0;
                 Order order = new Order();
                 order.MemberId = orderRequest.MemberId;
                 order.PaymentMethod = orderRequest.PaymentMethod;
@@ -60,9 +58,10 @@ namespace Services.Orders
                 var resultUpdate = await _orderRepository.UpdateOrder(order);
 
                 var data = _mapper.Map<OrderResponse>(resultUpdate);
-                data.Quantity = listItemId.Count();
+                data.Quantity = listItemId.Count();*/
 
-                response.Data = data;
+
+                response.Data = await _orderRepository.CreateOrderHierarchy(listItemId, orderRequest);
                 response.Messages = [" Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
@@ -115,23 +114,7 @@ namespace Services.Orders
                 throw new Exception(ex.Message);
             }
         }
-        public static string GenerateUniqueString()
-        {
-            string newString;
-            do
-            {
-                newString = GenerateRandomString();
-            } while (generatedStrings.Contains(newString));
-
-            generatedStrings.Add(newString);
-            return newString;
-        }
-
-        private static string GenerateRandomString()
-        {
-            int number = random.Next(100000, 1000000); 
-            return prefix + number.ToString("D6");
-        }
+        
 
         
     }

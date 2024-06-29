@@ -36,6 +36,7 @@ public enum FashionItemStatus
     Available,
     Unavailable,
     Sold,
+    Refundable,
     Pending,
     AwaitingAuction,
     Bidding,
@@ -77,7 +78,6 @@ public enum OrderStatus
 {
     AwaitingPayment,
     OnDelivery,
-    Refundable,
     Completed,
     Cancelled
 }

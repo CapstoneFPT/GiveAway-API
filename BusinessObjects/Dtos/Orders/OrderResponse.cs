@@ -1,4 +1,7 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,7 +23,8 @@ namespace BusinessObjects.Dtos.Orders
         public string CustomerName { get; set; }
         public string RecipientName { get; set; }
         public string ContactNumber { get; set; }
-        public string Address { get; set; }
+        public string? Address { get; set; }
         public OrderStatus Status { get; set; }
+        public List<ShopOrderResponse>? shopOrderResponses { get; set; }
     }
 }

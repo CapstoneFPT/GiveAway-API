@@ -18,6 +18,6 @@ public class Account
     public DateTime? ResetTokenExpires { get; set; }
     public Roles Role { get; set; }
     public AccountStatus Status { get; set; }
+    public int Balance { get; set; }
 
-    
 }
