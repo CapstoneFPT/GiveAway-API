@@ -378,6 +378,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Feedback>()
             .ToTable("Feedback")
             .HasKey(x => x.FeedbackId);
+        
 
         #endregion
     }
