@@ -8,4 +8,5 @@ public class Member : Account
     public ICollection<Order> Orders = new List<Order>();
     public ICollection<Bid> Bids = new List<Bid>();
     public ICollection<AuctionDeposit> AuctionDeposits = new List<AuctionDeposit>();
+    public ICollection<Refund> Refunds = new List<Refund>();
 }
