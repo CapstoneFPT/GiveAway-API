@@ -38,7 +38,6 @@ namespace Services.Orders
                 Order order = new Order();
                 order.MemberId = orderRequest.MemberId;
                 order.PaymentMethod = orderRequest.PaymentMethod;
-                order.DeliveryId = orderRequest.DeliveryId;
                 order.Status = OrderStatus.AwaitingPayment;
                 order.CreatedDate = DateTime.UtcNow;
                 order.TotalPrice = totalPrice;

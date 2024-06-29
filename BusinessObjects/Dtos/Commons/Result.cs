@@ -81,7 +81,12 @@ public enum OrderStatus
     Completed,
     Cancelled
 }
-
+public enum RefundStatus
+{
+    Pending,
+    Approved,
+    Rejected
+}
 public enum PointPackageStatus
 {
     Active,
