@@ -12,11 +12,10 @@ namespace BusinessObjects.Dtos.FashionItems
     {
         public Guid ItemId { get; set; }
         public FashionItemType Type { get; set; }
-        public decimal SellingPrice { get; set; }
+        public int SellingPrice { get; set; }
         public string Name { get; set; }
         public string Note { get; set; }
-        public int Quantity { get; set; }
-        public decimal? Value { get; set; }
+        public int? Value { get; set; }
         public string Condition { get; set; }
         public int? ConsignDuration { get; set; }
         public FashionItemStatus Status { get; set; }
@@ -26,5 +25,9 @@ namespace BusinessObjects.Dtos.FashionItems
         public DateTime? EndDate { get; set; }
         public string Consigner { get; set; }
         public string CategoryName { get; set; }
+        public SizeType Size { get; set; }
+        public string Color { get; set; }
+        public string? Brand { get; set; } 
+        public GenderType Gender { get; set; }
     }
 }

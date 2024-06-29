@@ -9,10 +9,10 @@ namespace Repositories.Deliveries
 {
     public interface IDeliveryRepository
     {
-        Task<List<Delivery>> GetDeliveryByMemberId(Guid id);
-        Task<Delivery> CreateDelivery(Delivery delivery);
-        Task<Delivery> UpdateDelivery(Delivery delivery);
-        Task<Delivery> GetDeliveryById(Guid id);
-        Task DeleteDelivery(Delivery delivery);
+        Task<List<Address>> GetDeliveryByMemberId(Guid id);
+        Task<Address> CreateDelivery(Address address);
+        Task<Address> UpdateDelivery(Address address);
+        Task<Address> GetDeliveryById(Guid id);
+        Task DeleteDelivery(Address address);
     }
 }

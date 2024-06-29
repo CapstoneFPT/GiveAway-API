@@ -108,7 +108,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<AuctionDeposit>>();
         serviceCollection.AddScoped<GenericDao<Bid>>();
         serviceCollection.AddScoped<GenericDao<Category>>();
-        serviceCollection.AddScoped<GenericDao<Delivery>>();
+        serviceCollection.AddScoped<GenericDao<Address>>();
         serviceCollection.AddScoped<GenericDao<Image>>();
         serviceCollection.AddScoped<GenericDao<Inquiry>>();
         serviceCollection.AddScoped<GenericDao<OrderDetail>>();

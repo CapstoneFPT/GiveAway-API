@@ -80,7 +80,12 @@ public enum OrderStatus
     Completed,
     Cancelled
 }
-
+public enum RefundStatus
+{
+    Pending,
+    Approved,
+    Rejected
+}
 public enum PointPackageStatus
 {
     Active,
@@ -129,4 +134,12 @@ public enum PaymentMethod
     COD,
     Point,
     QRCode
+}
+public enum SizeType
+{
+    XS,
+    S,
+    M,
+    L,
+    XL
 }

@@ -13,6 +13,8 @@ public class Transaction
    public TransactionType Type { get; set; }
    public Order? Order { get; set; }
    public Guid? OrderId { get; set; }
+   public Refund? Refund { get; set; }
+   public Guid? RefundId { get; set; }
    public Guid MemberId { get; set; }
    public Member Member { get; set; }
    public AuctionDeposit? AuctionDeposit { get; set; }

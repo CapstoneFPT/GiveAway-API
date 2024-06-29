@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240629074445_ChangeRelationshipOfDeliveryAndRenameItToAddress")]
+    partial class ChangeRelationshipOfDeliveryAndRenameItToAddress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -418,34 +421,6 @@ namespace Dao.Migrations
                     b.HasDiscriminator<string>("Type").HasValue("ItemBase");
 
                     b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("BusinessObjects.Entities.Feedback", b =>
-                {
-                    b.Property<Guid>("FeedbackId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("MemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ShopId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("FeedbackId");
-
-                    b.HasIndex("MemberId");
-
-                    b.HasIndex("ShopId");
-
-                    b.ToTable("Feedback", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Image", b =>
@@ -959,25 +934,6 @@ namespace Dao.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
-
-                    b.Navigation("Shop");
-                });
-
-            modelBuilder.Entity("BusinessObjects.Entities.Feedback", b =>
-                {
-                    b.HasOne("BusinessObjects.Entities.Member", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BusinessObjects.Entities.Shop", "Shop")
-                        .WithMany()
-                        .HasForeignKey("ShopId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Member");
 
                     b.Navigation("Shop");
                 });
