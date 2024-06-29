@@ -8,10 +8,13 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Shared;
 using WebApi;
+using WebApi.EventHandler;
 using WebApi.Hubs;
 using WebApi.Utils.CustomProblemDetails;
 using WebApi.Utils.WebServer;
@@ -24,6 +27,9 @@ builder.Services.AddServices();
 builder.Services.AddRepositories();
 builder.Services.AddDao();
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<AuctionTimerService>();
+builder.Services.AddScoped<IEventHandler<BidPlacedEvent>, BidPlacedEventHandler>();
+builder.Services.AddScoped<IEventHandler<AuctionEndedEvent>, AuctionEndedEventHandler>();
 builder.Services.AddProblemDetails(options =>
 {
     options.IncludeExceptionDetails =
@@ -82,8 +88,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(
         name: "AllowAll",
-        policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); }
+        policy => { policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(); }
     );
+
+    options.AddPolicy(name: "AllowSpecificOrigins",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
+                .Build();
+        });
 });
 
 string? jwtIssuer = builder.Configuration[Services.Utils.JwtConstants.JwtIssuer];
@@ -163,9 +176,9 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseProblemDetails();
-app.UseCors("AllowAll");
 app.MapControllers();
-app.MapHub<AuctionHub>("/auctionHub");
+app.UseCors("AllowAll");
+app.MapHub<AuctionHub>("/auctionHub").RequireCors("AllowSpecificOrigins");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

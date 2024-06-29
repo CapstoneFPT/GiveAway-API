@@ -34,9 +34,9 @@ namespace Repositories.Bids
                 var auction = await _auctionDao.GetQueryable().Include(x => x.AuctionFashionItem)
                     .FirstOrDefaultAsync(x => x.AuctionId == id);
 
-                if (auction == null)
+                if (auction == null || auction.EndDate <= DateTime.UtcNow || auction.Status == AuctionStatus.Finished)
                 {
-                    throw new Exception("Auction not found");
+                    throw new Exception("Auction not found or have ended");
                 }
 
                 if (auction.Status != AuctionStatus.OnGoing)
@@ -61,12 +61,9 @@ namespace Repositories.Bids
                     throw new InvalidOperationException("You have already bid on this auction");
                 }
 
-                if (request.Amount < auction.AuctionFashionItem.InitialPrice)
-                {
-                    throw new InvalidOperationException("Bid amount must be greater than initial price");
-                }
+                var nextBidAmount = latestBid != null ? latestBid.Amount + auction.StepIncrement : auction.AuctionFashionItem.InitialPrice;
 
-                if (latestBid != null && request.Amount <= latestBid.Amount)
+                if (request.Amount != nextBidAmount)
                 {
                     throw new InvalidOperationException("Bid amount must be greater than previous bid");
                 }
@@ -82,20 +79,11 @@ namespace Repositories.Bids
 
                 var result = await _bidDao.AddAsync(newBid);
 
-                if (latestBid == null)
+                if (latestBid != null)
                 {
-                    return new BidDetailResponse
-                    {
-                        AuctionId = id,
-                        Amount = result.Amount,
-                        MemberId = result.MemberId,
-                        Id = result.BidId,
-                        IsWinning = true
-                    };
+                    latestBid.IsWinning = false;
+                    await _bidDao.UpdateAsync(latestBid);
                 }
-
-                latestBid.IsWinning = false;
-                await _bidDao.UpdateAsync(latestBid);
 
                 return new BidDetailResponse
                 {
@@ -103,7 +91,8 @@ namespace Repositories.Bids
                     Amount = result.Amount,
                     MemberId = result.MemberId,
                     Id = result.BidId,
-                    IsWinning = true
+                    IsWinning = true,
+                    NextAmount = result.Amount + auction.StepIncrement 
                 };
             }
             catch (Exception e)
