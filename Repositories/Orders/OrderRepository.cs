@@ -63,9 +63,9 @@ namespace Repositories.Orders
                         PaymentMethod = x.PaymentMethod,
                         PaymentDate = x.PaymentDate,
                         CustomerName = x.Member.Fullname,
-                        RecipientName = x.Delivery.RecipientName,
-                        ContactNumber = x.Delivery.Phone,
-                        Address = x.Delivery.Address,
+                        RecipientName = x.RecipientName,
+                        ContactNumber = x.Phone,
+                        Address = x.Address,
                         Status = x.Status,
                     })
                     .AsNoTracking().ToListAsync();

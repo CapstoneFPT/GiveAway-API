@@ -11,37 +11,37 @@ namespace Repositories.Deliveries
 {
     public class DeliveryRepository : IDeliveryRepository
     {
-        private readonly GenericDao<Delivery> _deliveryDao;
+        private readonly GenericDao<Address> _deliveryDao;
 
-        public DeliveryRepository(GenericDao<Delivery> genericDao)
+        public DeliveryRepository(GenericDao<Address> genericDao)
         {
             _deliveryDao = genericDao;
         }
 
-        public async Task<Delivery> CreateDelivery(Delivery delivery)
+        public async Task<Address> CreateDelivery(Address address)
         {
-            return await _deliveryDao.AddAsync(delivery);
+            return await _deliveryDao.AddAsync(address);
         }
 
-        public async Task DeleteDelivery(Delivery delivery)
+        public async Task DeleteDelivery(Address address)
         {
-            await _deliveryDao.DeleteAsync(delivery);
+            await _deliveryDao.DeleteAsync(address);
         }
 
-        public async Task<Delivery> GetDeliveryById(Guid id)
+        public async Task<Address> GetDeliveryById(Guid id)
         {
-            return await _deliveryDao.GetQueryable().Include(c => c.Member).FirstOrDefaultAsync(c => c.DeliveryId.Equals(id));
+            return await _deliveryDao.GetQueryable().Include(c => c.Member).FirstOrDefaultAsync(c => c.AddressId.Equals(id));
         }
 
-        public async Task<List<Delivery>> GetDeliveryByMemberId(Guid id)
+        public async Task<List<Address>> GetDeliveryByMemberId(Guid id)
         {
             var list = await _deliveryDao.GetQueryable().Include(c => c.Member).Where(c => c.MemberId.Equals(id)).ToListAsync();
             return list;
         }
 
-        public async Task<Delivery> UpdateDelivery(Delivery delivery)
+        public async Task<Address> UpdateDelivery(Address address)
         {
-            return await _deliveryDao.UpdateAsync(delivery);
+            return await _deliveryDao.UpdateAsync(address);
         }
     }
 }

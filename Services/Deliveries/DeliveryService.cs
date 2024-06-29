@@ -35,7 +35,7 @@ namespace Services.Deliveries
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-            var delivery = new Delivery();
+            var delivery = new Address();
             delivery.MemberId = accountId;
             var request = _mapper.Map(deliveryRequest, delivery);
             response.Data = _mapper.Map<DeliveryResponse>(await _deliveryRepository.CreateDelivery(delivery));
