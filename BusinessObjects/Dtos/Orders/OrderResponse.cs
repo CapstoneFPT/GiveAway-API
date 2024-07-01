@@ -26,5 +26,6 @@ namespace BusinessObjects.Dtos.Orders
         public string? Address { get; set; }
         public OrderStatus Status { get; set; }
         public List<ShopOrderResponse>? shopOrderResponses { get; set; }
+        public List<Guid?>? listItemExisted { get; set; }
     }
 }

@@ -34,7 +34,7 @@ namespace WebApi.Controllers
             return await _orderDetailService.GetOrderDetailById(OrderdetailId);
         }
         [HttpPost]
-        public async Task<ActionResult<Result<OrderResponse>>> CreateOrder(List<Guid> listItemId, [FromQuery] CreateOrderRequest order)
+        public async Task<ActionResult<Result<OrderResponse>>> CreateOrder(List<Guid?> listItemId, [FromQuery] CreateOrderRequest order)
         {
             return await _orderService.CreateOrder(listItemId, order);
         }

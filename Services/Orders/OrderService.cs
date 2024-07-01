@@ -29,39 +29,41 @@ namespace Services.Orders
             _orderDetailRepository = orderDetailRepository;
         }
 
-        public async Task<Result<OrderResponse>> CreateOrder(List<Guid> listItemId, CreateOrderRequest orderRequest)
+        public async Task<Result<OrderResponse>> CreateOrder(List<Guid?> listItemId, CreateOrderRequest orderRequest)
         {
             try
             {
                 var response = new Result<OrderResponse>();
-                /*int totalPrice = 0;
-                Order order = new Order();
-                order.MemberId = orderRequest.MemberId;
-                order.PaymentMethod = orderRequest.PaymentMethod;
-                order.Status = OrderStatus.AwaitingPayment;
-                order.CreatedDate = DateTime.UtcNow;
-                order.TotalPrice = totalPrice;
-                order.OrderCode = GenerateRandomString();
-
-                var result = await _orderRepository.CreateOrder(order);
-                foreach (var id in listItemId){
-                    var item = await _fashionItemRepository.GetFashionItemById(id);
-                    OrderDetail orderDetail = new OrderDetail();
-                    orderDetail.OrderId = order.OrderId;
-                    orderDetail.UnitPrice = item.SellingPrice;
-                    orderDetail.FashionItemId = id;
-                    await _orderDetailRepository.CreateOrderDetail(orderDetail);
-                    totalPrice += item.SellingPrice;
+                if (listItemId is null)
+                {
+                    response.Messages = ["You have no item for order"];
+                    response.ResultStatus = ResultStatus.Empty;
+                    return response;
                 }
-                order.TotalPrice = totalPrice;
-                var resultUpdate = await _orderRepository.UpdateOrder(order);
-
-                var data = _mapper.Map<OrderResponse>(resultUpdate);
-                data.Quantity = listItemId.Count();*/
-
+                var checkItemAvailable = await _orderRepository.IsOrderAvailable(listItemId);
+                if(checkItemAvailable.Count > 0)
+                {
+                    var orderResponse = new OrderResponse();
+                    orderResponse.listItemExisted = checkItemAvailable;
+                    response.Data = orderResponse;
+                    response.ResultStatus = ResultStatus.Error;
+                    response.Messages = ["There are some unvailable items. Please check your order again"];
+                    return response;
+                }
+                var checkOrderExisted = await _orderRepository.IsOrderExisted(listItemId, orderRequest.MemberId);
+                if(checkOrderExisted.Count > 0)
+                {
+                    var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
+                    var orderResponse = new OrderResponse();
+                    orderResponse.listItemExisted = listItemExisted;
+                    response.Data = orderResponse;
+                    response.ResultStatus = ResultStatus.Duplicated;
+                    response.Messages = ["You already order those items. Please remove them"];
+                    return response;
+                }
 
                 response.Data = await _orderRepository.CreateOrderHierarchy(listItemId, orderRequest);
-                response.Messages = [" Create Successfully"];
+                response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }catch (Exception ex)

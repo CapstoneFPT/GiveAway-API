@@ -46,7 +46,7 @@ namespace Repositories.Orders
             return order;
         }
 
-        public async Task<OrderResponse> CreateOrderHierarchy(List<Guid> listItemId, CreateOrderRequest orderRequest)
+        public async Task<OrderResponse> CreateOrderHierarchy(List<Guid?> listItemId, CreateOrderRequest orderRequest)
         {
             var listItem = await _fashionItemDao.GetQueryable().Include(c => c.Shop).Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
             var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
@@ -56,7 +56,9 @@ namespace Repositories.Orders
                 order.MemberId = orderRequest.MemberId;
                 order.Member = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == orderRequest.MemberId);
                 order.PaymentMethod = orderRequest.PaymentMethod;
-                order.DeliveryId = orderRequest.DeliveryId;
+                order.Address = orderRequest.Address;
+                order.RecipientName = orderRequest.RecipientName;
+                order.Phone = orderRequest.Phone;
                 order.Status = OrderStatus.AwaitingPayment;
                 order.CreatedDate = DateTime.UtcNow;
                 order.TotalPrice = totalPrice;
@@ -102,7 +104,11 @@ namespace Repositories.Orders
                 TotalPrice = order.TotalPrice,
                 OrderCode = order.OrderCode,
                 CreatedDate = order.CreatedDate,
-                PaymentMethod = orderRequest.PaymentMethod,
+                PaymentMethod = order.PaymentMethod,
+                Address = order.Address,
+                RecipientName = order.RecipientName,
+                ContactNumber = order.Phone,
+                CustomerName = order.Member.Fullname,
                 Status = order.Status,
                 shopOrderResponses = listShopOrderResponse,
             };
@@ -185,6 +191,26 @@ namespace Repositories.Orders
         {
             int number = random.Next(100000, 1000000);
             return prefix + number.ToString("D6");
+        }
+
+        public async Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberId)
+        {
+            var listorderdetail = await _orderDetailDao.GetQueryable().Where(c => c.Order.MemberId == memberId).Where(c => listItemId.Contains(c.FashionItemId)).ToListAsync();
+            return listorderdetail;
+        }
+
+        public async Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId)
+        {
+            var listItemNotAvailable = new List<Guid?>();
+            var listItem = await _fashionItemDao.GetQueryable().Include(c => c.Shop).Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
+            foreach (FashionItem item in listItem)
+            {
+                if (!item.Status.Equals(FashionItemStatus.Available.ToString()))
+                {
+                    listItemNotAvailable.Add(item.ItemId);
+                }
+            }
+            return listItemNotAvailable;
         }
     }
 }
