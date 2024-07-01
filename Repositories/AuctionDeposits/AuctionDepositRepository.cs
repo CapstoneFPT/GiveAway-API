@@ -39,7 +39,7 @@ namespace Repositories.AuctionDeposits
                     throw new Exception("Auction Not found");
                 }
 
-                var timeDiff = DateTime.UtcNow - auction.StartDate;
+                var timeDiff = auction.StartDate - DateTime.UtcNow;
                 if (timeDiff.Hours < 24)
                 {
                     throw new Exception("Deposit period is over");
