@@ -5,17 +5,20 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
 using Repositories.FashionItems;
+using Repositories.Images;
 
 namespace Services.FashionItems
 {
     public class FashionItemService : IFashionItemService
     {
         private readonly IFashionItemRepository _fashionitemRepository;
+        private readonly IImageRepository _imageRepository;
         private readonly IMapper _mapper;
 
-        public FashionItemService(IFashionItemRepository fashionitemRepository, IMapper mapper)
+        public FashionItemService(IFashionItemRepository fashionitemRepository, IImageRepository imageRepository, IMapper mapper)
         {
             _fashionitemRepository = fashionitemRepository;
+            _imageRepository = imageRepository;
             _mapper = mapper;
         }
 
@@ -27,8 +30,18 @@ namespace Services.FashionItems
                 var item = new FashionItem();
                 var newdata = _mapper.Map(request, item);
                 newdata.ShopId = shopId;
-                newdata.Status = FashionItemStatus.Available;    
-                response.Data = _mapper.Map<FashionItemDetailResponse>(await _fashionitemRepository.AddFashionItem(newdata));
+                newdata.Status = FashionItemStatus.Available;
+                var newItem = await _fashionitemRepository.AddFashionItem(newdata);
+                foreach (string img in request.Images)
+                {
+                    var newimage = new Image()
+                    {
+                        Url = img,
+                        FashionItemId = newItem.ItemId,
+                    };
+                    await _imageRepository.AddImage(newimage);
+                }
+                response.Data = _mapper.Map<FashionItemDetailResponse>(newItem);
                 response.Messages = ["Add successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;

@@ -5,7 +5,8 @@ public class ShopDetailResponse
     public Guid ShopId { get; set; }
     public string Address { get; set; }
     public Guid StaffId { get; set; }
-    public StaffDetailResponse? Staff { get; set; }
+    public string Phone {  get; set; }
+    /*public StaffDetailResponse? Staff { get; set; }*/
 }
 
 public class StaffDetailResponse

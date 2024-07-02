@@ -24,5 +24,7 @@ namespace BusinessObjects.Dtos.FashionItems
         public string Condition { get; set; }
         [Required]
         public Guid CategoryId { get; set; }
+        [Required]
+        public List<string> Images { get; set; }
     }
 }

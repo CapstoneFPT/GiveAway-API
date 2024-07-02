@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Entities;
+﻿using BusinessObjects.Dtos.Shops;
+using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,6 @@ namespace Repositories.Shops
     public interface IShopRepository
     {
         Task<Shop> CreateShop(Shop shop);
+        Task<List<ShopDetailResponse>> GetAllShop();
     }
 }

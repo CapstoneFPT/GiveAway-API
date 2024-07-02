@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Shops;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,6 @@ namespace Services.Shops
 {
     public interface IShopService
     {
+        Task<Result<List<ShopDetailResponse>>> GetAllShop();
     }
 }

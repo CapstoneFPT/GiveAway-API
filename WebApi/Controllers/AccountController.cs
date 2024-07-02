@@ -2,12 +2,14 @@
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
+using Services.ConsignSales;
 using Services.Deliveries;
 using Services.Orders;
 
@@ -20,13 +22,17 @@ namespace WebApi.Controllers
         private readonly IAccountService _accountService;
         private readonly IDeliveryService _deliveryService;
         private readonly IOrderService _orderService;
+        private readonly IConsignSaleService _consignSaleService;
 
-        public AccountController(IAccountService accountService, IDeliveryService deliveryService, IOrderService orderService)
+        public AccountController(IAccountService accountService, IDeliveryService deliveryService, 
+            IOrderService orderService, IConsignSaleService consignSaleService)
         {
             _accountService = accountService;
             _deliveryService = deliveryService;
             _orderService = orderService;
+            _consignSaleService = consignSaleService;
         }
+
         [HttpGet]
         public async Task<ActionResult<List<AccountResponse>>> GetAllAccounts()
         {
@@ -71,6 +77,16 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByAccountId([FromRoute] Guid accountId, [FromQuery] OrderRequest request)
         {
             return await _orderService.GetOrdersByAccountId(accountId, request);
+        }
+        [HttpGet("{accountId}/consignsales")]
+        public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSale([FromRoute] Guid accountId, [FromQuery] ConsignSaleRequest request)
+        {
+            return await _consignSaleService.GetAllConsignSales(accountId, request);
+        }
+        [HttpGet("{accountId}/consignsales/{consignsaleId}")]
+        public async Task<ActionResult<Result<ConsignSaleResponse>>> GetConsignSaleById([FromRoute] Guid accountId, [FromRoute] Guid consignsaleId)
+        {
+            return await _consignSaleService.GetConsignSaleById(accountId, consignsaleId);
         }
     }
 }
