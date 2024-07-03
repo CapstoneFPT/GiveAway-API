@@ -167,6 +167,7 @@ namespace Repositories.Auctions
                            ShopId = x.Shop.ShopId,
                            Address = x.Shop.Address,
                            StaffId = x.Shop.StaffId,
+                           Phone = x.Shop.Phone
                         },
                         AuctionItemId = x.AuctionFashionItemId
                     }).AsNoTracking().ToListAsync();
