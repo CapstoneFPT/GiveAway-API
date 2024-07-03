@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
+using Microsoft.Extensions.DependencyInjection;
 using Repositories.AuctionDeposits;
 using Repositories.Auctions;
 using Repositories.Bids;
@@ -19,12 +20,15 @@ namespace Services.Auctions
         private readonly IAuctionRepository _auctionRepository;
         private readonly IBidRepository _bidRepository;
         private readonly IAuctionDepositRepository _auctionDepositRepository;
+        private readonly IServiceProvider _serviceProvider;
 
-        public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository, IAuctionDepositRepository auctionDepositRepository)
+        public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
+            IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
             _auctionDepositRepository = auctionDepositRepository;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -96,8 +100,8 @@ namespace Services.Auctions
         {
             try
             {
-               var result = _auctionDepositRepository.CreateDeposit(auctionId, request);
-               return result;
+                var result = _auctionDepositRepository.CreateDeposit(auctionId, request);
+                return result;
             }
             catch (Exception e)
             {
@@ -141,6 +145,12 @@ namespace Services.Auctions
             try
             {
                 var result = await _bidRepository.CreateBid(id, request);
+                if (result == null)
+                {
+                    throw new Exception("Bid not created");
+                }
+
+
                 return result;
             }
             catch (Exception e)
@@ -149,6 +159,7 @@ namespace Services.Auctions
             }
         }
 
+      
         public Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
         {
             try
@@ -160,6 +171,19 @@ namespace Services.Auctions
             {
                 Console.WriteLine(e);
                 throw;
+            }
+        }
+
+        public Task<BidDetailResponse?> GetLargestBid(Guid auctionId)
+        {
+            try
+            {
+                var result = _bidRepository.GetLargestBid(auctionId);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
             }
         }
     }

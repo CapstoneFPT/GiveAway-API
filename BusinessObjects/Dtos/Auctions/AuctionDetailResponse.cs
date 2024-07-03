@@ -15,6 +15,7 @@ public class AuctionDetailResponse
     public AuctionStatus Status { get; set; }
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
+    public int StepIncrement { get; set; }
     public ShopDetailResponse Shop { get; set; }
     public AuctionFashionItemDetailResponse AuctionFashionItem { get; set; }
 }

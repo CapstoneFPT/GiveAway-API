@@ -6,4 +6,5 @@ public class AuctionDepositListResponse
     public Guid AuctionId { get; set; }
     public DateTime DepositDate { get; set; }
     public decimal Amount { get; set; }
+    public Guid MemberId { get; set; }
 }
