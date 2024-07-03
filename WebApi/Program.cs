@@ -13,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApi;
-using WebApi.EventHandler;
 using WebApi.Hubs;
 using WebApi.Utils.CustomProblemDetails;
 using WebApi.Utils.WebServer;
