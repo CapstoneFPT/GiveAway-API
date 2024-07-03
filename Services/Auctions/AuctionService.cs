@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Repositories.AuctionDeposits;
 using Repositories.Auctions;
 using Repositories.Bids;
-using Shared;
 
 namespace Services.Auctions
 {
@@ -23,7 +22,8 @@ namespace Services.Auctions
         private readonly IAuctionDepositRepository _auctionDepositRepository;
         private readonly IServiceProvider _serviceProvider;
 
-        public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository, IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider)
+        public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
+            IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
@@ -100,8 +100,8 @@ namespace Services.Auctions
         {
             try
             {
-               var result = _auctionDepositRepository.CreateDeposit(auctionId, request);
-               return result;
+                var result = _auctionDepositRepository.CreateDeposit(auctionId, request);
+                return result;
             }
             catch (Exception e)
             {
@@ -149,12 +149,8 @@ namespace Services.Auctions
                 {
                     throw new Exception("Bid not created");
                 }
-                var bidPlacedEvent = new BidPlacedEvent()
-                {
-                    AuctionId = id,
-                    Bid = result
-                };
-                await PublishEvent(bidPlacedEvent);
+
+
                 return result;
             }
             catch (Exception e)
@@ -163,15 +159,7 @@ namespace Services.Auctions
             }
         }
 
-        private async Task PublishEvent<TEvent>(TEvent auctionEvent)
-        {
-            var handlers = _serviceProvider.GetServices<IEventHandler<TEvent>>();
-            foreach (var handler in handlers)
-            {
-                await handler.Handle(auctionEvent);
-            }
-        }
-
+      
         public Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
         {
             try
@@ -183,6 +171,19 @@ namespace Services.Auctions
             {
                 Console.WriteLine(e);
                 throw;
+            }
+        }
+
+        public Task<BidDetailResponse?> GetLargestBid(Guid auctionId)
+        {
+            try
+            {
+                var result = _bidRepository.GetLargestBid(auctionId);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
             }
         }
     }

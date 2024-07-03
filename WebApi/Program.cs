@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Shared;
 using WebApi;
 using WebApi.EventHandler;
 using WebApi.Hubs;
@@ -26,10 +25,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddServices();
 builder.Services.AddRepositories();
 builder.Services.AddDao();
-builder.Services.AddSignalR();
-builder.Services.AddHostedService<AuctionTimerService>();
-builder.Services.AddScoped<IEventHandler<BidPlacedEvent>, BidPlacedEventHandler>();
-builder.Services.AddScoped<IEventHandler<AuctionEndedEvent>, AuctionEndedEventHandler>();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
 builder.Services.AddProblemDetails(options =>
 {
     options.IncludeExceptionDetails =
@@ -94,8 +93,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
-                .Build();
+            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials().SetIsOriginAllowedToAllowWildcardSubdomains();
         });
 });
 

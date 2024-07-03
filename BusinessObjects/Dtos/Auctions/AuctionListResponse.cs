@@ -1,4 +1,5 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Shops;
 
 namespace BusinessObjects.Dtos.Auctions;
 
@@ -12,4 +13,5 @@ public class AuctionListResponse
     public AuctionStatus Status { get; set; }
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
+    public ShopDetailResponse Shop { get; set; }
 }

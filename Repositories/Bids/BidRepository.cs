@@ -18,8 +18,8 @@ namespace Repositories.Bids
         private readonly GenericDao<Account> _memberDao;
         private readonly GenericDao<AuctionDeposit> _auctionDepositDao;
 
-        public BidRepository(GenericDao<Auction> auctionDao, GenericDao<Bid> bidDao,GenericDao<Account> memberDao,
-             GenericDao<AuctionDeposit> auctionDepositDao)
+        public BidRepository(GenericDao<Auction> auctionDao, GenericDao<Bid> bidDao, GenericDao<Account> memberDao,
+            GenericDao<AuctionDeposit> auctionDepositDao)
         {
             _auctionDao = auctionDao;
             _bidDao = bidDao;
@@ -46,7 +46,7 @@ namespace Repositories.Bids
 
                 var auctionDeposit = await _auctionDepositDao.GetQueryable()
                     .FirstOrDefaultAsync(x => x.AuctionId == id && x.MemberId == request.MemberId);
-                
+
                 if (auctionDeposit == null)
                 {
                     throw new Exception("Member has not place a deposit yet");
@@ -61,9 +61,11 @@ namespace Repositories.Bids
                     throw new InvalidOperationException("You have already bid on this auction");
                 }
 
-                var nextBidAmount = latestBid != null ? latestBid.Amount + auction.StepIncrement : auction.AuctionFashionItem.InitialPrice;
+                var currentBidRequired = latestBid != null
+                    ? latestBid.Amount + auction.StepIncrement
+                    : auction.AuctionFashionItem.InitialPrice;
 
-                if (request.Amount != nextBidAmount)
+                if (request.Amount < currentBidRequired)
                 {
                     throw new InvalidOperationException("Bid amount must be greater than previous bid");
                 }
@@ -92,7 +94,8 @@ namespace Repositories.Bids
                     MemberId = result.MemberId,
                     Id = result.BidId,
                     IsWinning = true,
-                    NextAmount = result.Amount + auction.StepIncrement 
+                    CreatedDate = result.CreatedDate,
+                    NextAmount = result.Amount + auction.StepIncrement
                 };
             }
             catch (Exception e)
@@ -122,7 +125,7 @@ namespace Repositories.Bids
                     .ToListAsync();
 
                 var count = await _bidDao.GetQueryable().Where(x => x.AuctionId == id).CountAsync();
-                
+
                 return new PaginationResponse<BidListResponse>
                 {
                     Items = items,
@@ -132,6 +135,32 @@ namespace Repositories.Bids
                     Filters = ["AuctionId"],
                     OrderBy = "-CreatedDate"
                 };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<BidDetailResponse?> GetLargestBid(Guid auctionId)
+        {
+            try
+            {
+                var result = await _bidDao.GetQueryable()
+                        .OrderByDescending(x => x.Amount)
+                        .Select(x => new BidDetailResponse()
+                        {
+                            Amount = x.Amount,
+                            AuctionId = x.AuctionId,
+                            Id = x.BidId,
+                            MemberId = x.MemberId,
+                            CreatedDate = x.CreatedDate,
+                            IsWinning = x.IsWinning
+                        })
+                        .FirstOrDefaultAsync(x => x.AuctionId == auctionId)
+                    ;
+              
+                return result;
             }
             catch (Exception e)
             {

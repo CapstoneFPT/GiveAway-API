@@ -124,6 +124,7 @@ namespace Repositories.Auctions
                     },
                     DepositFee = auctionDetail.DepositFee,
                     ShopId = auctionDetail.ShopId,
+                    StepIncrement = auctionDetail.StepIncrement,
                     AuctionItemId = auctionDetail.AuctionFashionItemId,
                 };
             }
@@ -139,6 +140,7 @@ namespace Repositories.Auctions
             {
                 var query = _auctionDao.GetQueryable();
 
+                query = query.Include(x => x.Shop);
 
                 if (!string.IsNullOrWhiteSpace(request.SearchTerm))
                     query = query.Where(x => EF.Functions.ILike(x.Title, $"%{request.SearchTerm}%"));
@@ -160,6 +162,12 @@ namespace Repositories.Auctions
                         EndDate = x.EndDate,
                         Status = x.Status,
                         ShopId = x.ShopId,
+                        Shop = new ShopDetailResponse
+                        {
+                           ShopId = x.Shop.ShopId,
+                           Address = x.Shop.Address,
+                           StaffId = x.Shop.StaffId,
+                        },
                         AuctionItemId = x.AuctionFashionItemId
                     }).AsNoTracking().ToListAsync();
 
@@ -201,6 +209,7 @@ namespace Repositories.Auctions
                         },
                         Status = x.Status,
                         Title = x.Title,
+                        StepIncrement = x.StepIncrement,
                         AuctionFashionItem = new AuctionFashionItemDetailResponse
                         {
                             ItemId = x.AuctionFashionItem.ItemId,

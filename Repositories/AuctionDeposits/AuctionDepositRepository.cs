@@ -40,7 +40,7 @@ namespace Repositories.AuctionDeposits
                 }
 
                 var timeDiff = auction.StartDate - DateTime.UtcNow;
-                if (timeDiff.Hours < 24)
+                if (timeDiff.TotalHours < 24)
                 {
                     throw new Exception("Deposit period is over");
                 }

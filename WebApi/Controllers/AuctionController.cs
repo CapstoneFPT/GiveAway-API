@@ -149,6 +149,13 @@ public class AuctionController : ControllerBase
 
     #endregion
 
+    [HttpGet("{id}/bids/latest")]
+    public async Task<ActionResult<BidDetailResponse>> GetLatestBid([FromRoute] Guid id)
+    {
+       var result = await _auctionService.GetLargestBid(auctionId:id); 
+        return Ok(result);
+    }
+
     #region AuctionDeposits
 
     [HttpGet("{id}/deposits")]

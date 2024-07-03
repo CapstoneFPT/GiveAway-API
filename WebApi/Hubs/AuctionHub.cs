@@ -34,6 +34,7 @@ public class AuctionHub : Hub<IAuctionClient>
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, auctionId.ToString());
     }
     
+    
     public override async Task OnConnectedAsync()
     {
         var auctionId = Context.GetHttpContext().Request.Query["auctionId"];
@@ -54,10 +55,24 @@ public class AuctionHub : Hub<IAuctionClient>
         }
         await base.OnDisconnectedAsync(exception);
     }
+
+    public async Task PlaceBid(Guid auctionId, CreateBidRequest request)
+    {
+        var bidResponse = await _auctionService.PlaceBid(auctionId, request);
+        if (bidResponse !=null)
+        {
+            await Clients.Group(auctionId.ToString()).ReceiveBidUpdate(bidResponse);
+        }
+        else
+        {
+            await Clients.Caller.ReceiveErrorMessage("Bid not created");
+        }
+    }
 }
 
 public interface IAuctionClient
 {
     Task ReceiveBidUpdate(BidDetailResponse bid);
     Task AuctionEnded(Guid auctionId);
+    Task ReceiveErrorMessage(string message);
 }

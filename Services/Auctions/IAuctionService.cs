@@ -23,5 +23,6 @@ namespace Services.Auctions
         Task<AuctionDetailResponse?> RejectAuction(Guid id);
         Task<BidDetailResponse?> PlaceBid(Guid id, CreateBidRequest request);
         Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request);
+        Task<BidDetailResponse?> GetLargestBid(Guid auctionId);
     }
 }
