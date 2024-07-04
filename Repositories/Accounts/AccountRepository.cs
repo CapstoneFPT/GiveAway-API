@@ -55,10 +55,10 @@ namespace Repositories.Accounts
             return Task.FromResult((user == null) ? null : user);
         }
 
-        public Task<Account> FindUserByPasswordResetToken(string token)
+        public async Task<Account> FindUserByPasswordResetToken(string token)
         {
-            var user = _accountDao.GetQueryable().FirstOrDefault(c => c.PasswordResetToken == token);
-            return Task.FromResult((user == null) ? null : user);
+            var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.PasswordResetToken == token);
+            return user;
         }
 
         public async Task<Account> GetAccountById(Guid id)
@@ -102,7 +102,8 @@ namespace Repositories.Accounts
         public async Task<Account> ResetPasswordToken(Account user)
         {
             user.PasswordResetToken = CreateRandomToken();
-            user.ResetTokenExpires = DateTime.Now.AddDays(1);
+            user.ResetTokenExpires = DateTime.UtcNow.AddMinutes(3);
+            await _accountDao.UpdateAsync(user);
             return await Task.FromResult(user);
         }
 

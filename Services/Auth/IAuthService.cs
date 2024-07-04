@@ -13,7 +13,7 @@ public interface IAuthService
     //Task<Account> FindUserByEmail(string email);
     Task<Result<string>> SendMail(string email);
     Task<Result<string>> CheckPassword(string email, string newpass);
-    Task<Account> ChangeToNewPassword(string confirmtoken);
+    Task<Result<AccountResponse>> ChangeToNewPassword(string confirmtoken);
     Task<Result<AccountResponse>> Register(RegisterRequest request);
     Task<Result<string>> VerifyEmail(Guid id, string token);
     Task<Result<AccountResponse>> CreateStaffAccount(CreateStaffAccountRequest request);
