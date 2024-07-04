@@ -18,5 +18,6 @@ namespace Repositories.Orders
         Task<OrderResponse> CreateOrderHierarchy(List<Guid?> listItemId, CreateOrderRequest request);
         Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberid);
         Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId);
+        Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.Execution;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
@@ -59,7 +60,14 @@ namespace Repositories.Orders
                 order.Address = orderRequest.Address;
                 order.RecipientName = orderRequest.RecipientName;
                 order.Phone = orderRequest.Phone;
+            if (orderRequest.PaymentMethod.Equals(PaymentMethod.COD))
+            {
+                order.Status = OrderStatus.OnDelivery;
+            }
+            else
+            {
                 order.Status = OrderStatus.AwaitingPayment;
+            }
                 order.CreatedDate = DateTime.UtcNow;
                 order.TotalPrice = totalPrice;
                 order.OrderCode = GenerateRandomString();
@@ -125,11 +133,15 @@ namespace Repositories.Orders
             try
             {
                 var query = _orderDao.GetQueryable();
-                    query = query.Where(c => c.MemberId == accountId);
+                    query = query.Where(c => c.MemberId == accountId).OrderByDescending(c => c.CreatedDate);
 
                 if (request.Status != null)
                 {
                     query = query.Where(f => f.Status == request.Status);
+                }
+                if (request.OrderCode != null)
+                {
+                    query = query.Where(f => f.OrderCode.ToUpper().Equals(f.OrderCode.ToUpper()));
                 }
                 var count = await query.CountAsync();
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)
@@ -211,6 +223,65 @@ namespace Repositories.Orders
                 }
             }
             return listItemNotAvailable;
+        }
+
+        public async Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest request)
+        {
+            try
+            {
+                var listItemId = await _fashionItemDao.GetQueryable().Where(c => c.ShopId == shopId).Select(c => c.ItemId).ToListAsync();
+
+                var listOrderdetail = new List<OrderDetailResponse<FashionItem>>();
+                foreach (var itemId in listItemId)
+                {
+                    var orderDetail = await _orderDetailDao.GetQueryable().FirstOrDefaultAsync(c => c.FashionItemId.Equals(itemId));
+                    if (orderDetail != null)
+                    {
+                        var newOrderDetail = new OrderDetailResponse<FashionItem>();
+                        newOrderDetail.OrderId = orderDetail.OrderId;
+                        newOrderDetail.UnitPrice = orderDetail.UnitPrice;
+                        newOrderDetail.FashionItemDetail = await _fashionItemDao.GetQueryable().FirstOrDefaultAsync(c => c.ItemId == itemId);
+
+                        listOrderdetail.Add(newOrderDetail);
+                    }
+                }
+                var listOrderResponse = new List<OrderResponse>();
+
+                foreach (var orderId in listOrderdetail.Select(c => c.OrderId).Distinct())
+                {
+                    var orderRespponse = new OrderResponse();
+                    orderRespponse = await _orderDao.GetQueryable().ProjectTo<OrderResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync(c => c.OrderId == orderId);
+                    orderRespponse.orderDetailResponses = listOrderdetail.Where(c => c.OrderId == orderId).ToList();
+                    listOrderResponse.Add(orderRespponse);
+                }
+
+                if (request.Status != null)
+                {
+                    listOrderResponse = listOrderResponse.Where(f => f.Status == request.Status).ToList();
+                }
+                if (request.OrderCode != null)
+                {
+                    listOrderResponse = listOrderResponse.Where(f => f.OrderCode.ToUpper().Equals(f.OrderCode.ToUpper())).ToList();
+                }
+
+                var count = listOrderResponse.Count();
+                listOrderResponse = listOrderResponse.Skip((request.PageNumber - 1) * request.PageSize)
+                    .Take(request.PageSize).ToList();
+
+                var result = new PaginationResponse<OrderResponse>
+                {
+                    Items = listOrderResponse,
+                    PageSize = request.PageSize,
+                    TotalCount = count,
+                    SearchTerm = request.OrderCode,
+                    PageNumber = request.PageNumber,
+                };
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }

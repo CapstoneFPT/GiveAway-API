@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
+using MailKit.Search;
 using Repositories.FashionItems;
 using Repositories.OrderDetails;
 using Repositories.Orders;
@@ -115,8 +116,28 @@ namespace Services.Orders
                 throw new Exception(ex.Message);
             }
         }
-        
 
-        
+        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest)
+        {
+            try
+            {
+                var response = new Result<PaginationResponse<OrderResponse>>();
+                var order = await _orderRepository.GetOrdersByShopId(shopId, orderRequest);
+                if (order.TotalCount == 0)
+                {
+                    response.Messages = ["Cound not find your order"];
+                    response.ResultStatus = ResultStatus.NotFound;
+                    return response;
+                }
+                response.Data = order;
+                response.Messages = ["Your list contains " + order.TotalCount + " orders"];
+                response.ResultStatus = ResultStatus.Success;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }
