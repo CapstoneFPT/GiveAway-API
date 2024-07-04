@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.Auctions;
 using Microsoft.AspNetCore.Authentication;
 using Repositories.AuctionItems;
 
@@ -220,15 +221,5 @@ namespace Services.Orders
                 throw new Exception(ex.Message);
             }
         }
-    }
-
-    public class CreateOrderFromBidRequest
-    {
-        public int TotalPrice { get; set; }
-        public string OrderCode { get; set; }
-        public Guid BidId { get; set; }
-        public Guid MemberId { get; set; }
-        public PaymentMethod PaymentMethod { get; set; }
-        public Guid AuctionFashionItemId { get; set; }
     }
 }

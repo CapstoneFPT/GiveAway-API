@@ -13,7 +13,6 @@ namespace BusinessObjects.Dtos.Orders
 
         public PaymentMethod PaymentMethod { get; set; }
         public string Address { get; set; }
-        public int? TotalAmount { get; set; }
         public string? RecipientName { get; set; }
         public string? Phone {  get; set; }
     }
