@@ -82,22 +82,16 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("forgot-password")]
-    public async Task<Result<string>> ForgotPassword(string email, string newpass)
+    public async Task<Result<string>> ForgotPassword([FromQuery]ForgetPasswordRequest request)
     {
-        var user = await _authService.CheckPassword(email, newpass);
+        var user = await _authService.CheckPassword(request.Email, request.Password);
         return user;
     }
 
     [HttpPut("reset-password")]
-    public async Task<IActionResult> ResetPassword(string confirmtoken)
+    public async Task<ActionResult<Result<AccountResponse>>> ResetPassword(string confirmtoken)
     {
-        var user = await _authService.ChangeToNewPassword(confirmtoken);
-        if (user == null)
-        {
-            return BadRequest("Invalid token");
-        }
-        else
-            return Ok(user);
+        return await _authService.ChangeToNewPassword(confirmtoken);
     }
 
     [HttpPost("register")]

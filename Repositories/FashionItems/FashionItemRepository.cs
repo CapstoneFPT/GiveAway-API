@@ -154,7 +154,7 @@ namespace Repositories.FashionItems
 
             if (request.Type != null)
             {
-                query = query.Where(x => x.Type.Equals(request.Type));
+                query = query.Where(x => request.Type.Contains(x.Type));
             }
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
