@@ -208,4 +208,10 @@ public class AuctionController : ControllerBase
     }
 
     #endregion
+    
+    [HttpGet("current-time")]
+    public IActionResult  GetCurrentTime()
+    {
+        return Ok(new {currentTime = DateTime.UtcNow});
+    }
 }

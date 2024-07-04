@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Services.Orders
 {
@@ -20,12 +21,13 @@ namespace Services.Orders
         private readonly IFashionItemRepository _fashionItemRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
         private readonly IMapper _mapper;
-        
-        public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository, IMapper mapper, IOrderDetailRepository orderDetailRepository)
+
+        public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
+            IMapper mapper, IOrderDetailRepository orderDetailRepository)
         {
             _orderRepository = orderRepository;
             _fashionItemRepository = fashionItemRepository;
-            _mapper = mapper;   
+            _mapper = mapper;
             _orderDetailRepository = orderDetailRepository;
         }
 
@@ -34,14 +36,15 @@ namespace Services.Orders
             try
             {
                 var response = new Result<OrderResponse>();
-                if (listItemId is null)
+                if (listItemId.Count == 0)
                 {
                     response.Messages = ["You have no item for order"];
                     response.ResultStatus = ResultStatus.Empty;
                     return response;
                 }
+
                 var checkItemAvailable = await _orderRepository.IsOrderAvailable(listItemId);
-                if(checkItemAvailable.Count > 0)
+                if (checkItemAvailable.Count > 0)
                 {
                     var orderResponse = new OrderResponse();
                     orderResponse.listItemExisted = checkItemAvailable;
@@ -50,8 +53,9 @@ namespace Services.Orders
                     response.Messages = ["There are some unvailable items. Please check your order again"];
                     return response;
                 }
+
                 var checkOrderExisted = await _orderRepository.IsOrderExisted(listItemId, orderRequest.MemberId);
-                if(checkOrderExisted.Count > 0)
+                if (checkOrderExisted.Count > 0)
                 {
                     var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
                     var orderResponse = new OrderResponse();
@@ -66,57 +70,75 @@ namespace Services.Orders
                 response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message, ex);
             }
         }
 
-        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId, OrderRequest request)
+        public async Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest)
+        {
+            return null;
+        }
+
+        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId,
+            OrderRequest request)
         {
             try
             {
                 var response = new Result<PaginationResponse<OrderResponse>>();
                 var listOrder = await _orderRepository.GetOrdersByAccountId(accountId, request);
-                if(listOrder.TotalCount == 0)
+                if (listOrder.TotalCount == 0)
                 {
                     response.Messages = ["You don't have any order"];
                     response.ResultStatus = ResultStatus.Empty;
                     return response;
                 }
+
                 response.Data = listOrder;
                 response.Messages = ["There are " + listOrder.TotalCount + " in total"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
+
         public async Task<Result<string>> CancelOrder(Guid orderId)
         {
             try
             {
                 var response = new Result<string>();
                 var order = await _orderRepository.GetOrderById(orderId);
-                if(order == null || order.Status != OrderStatus.AwaitingPayment)
+                if (order == null || order.Status != OrderStatus.AwaitingPayment)
                 {
                     response.Messages = ["Cound not find your order"];
                     response.ResultStatus = ResultStatus.NotFound;
                     return response;
                 }
+
                 order.Status = OrderStatus.Cancelled;
                 await _orderRepository.UpdateOrder(order);
                 response.Messages = ["Your order is cancelled"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
-        
+    }
 
-        
+    public class CreateOrderFromBidRequest
+    {
+        public int TotalPrice { get; set; }
+        public string OrderCode { get; set; }
+        public Guid BidId { get; set; }
+        public Guid MemberId { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
     }
 }

@@ -14,5 +14,6 @@ namespace Services.Orders
         Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId, OrderRequest request);
         Task<Result<OrderResponse>> CreateOrder(List<Guid?> listItemId, CreateOrderRequest order);
         Task<Result<string>> CancelOrder(Guid orderId);
+        Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
     }
 }

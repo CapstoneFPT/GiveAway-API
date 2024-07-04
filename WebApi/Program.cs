@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Services.Auctions;
 using WebApi;
 using WebApi.Hubs;
 using WebApi.Utils.CustomProblemDetails;
@@ -24,6 +25,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddServices();
 builder.Services.AddRepositories();
 builder.Services.AddDao();
+builder.Services.AddHostedService<AuctionEndingService>();
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;

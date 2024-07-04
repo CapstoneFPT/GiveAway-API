@@ -164,10 +164,10 @@ namespace Repositories.Auctions
                         ShopId = x.ShopId,
                         Shop = new ShopDetailResponse
                         {
-                           ShopId = x.Shop.ShopId,
-                           Address = x.Shop.Address,
-                           StaffId = x.Shop.StaffId,
-                           Phone = x.Shop.Phone
+                            ShopId = x.Shop.ShopId,
+                            Address = x.Shop.Address,
+                            StaffId = x.Shop.StaffId,
+                            Phone = x.Shop.Phone
                         },
                         AuctionItemId = x.AuctionFashionItemId
                     }).AsNoTracking().ToListAsync();
@@ -397,6 +397,42 @@ namespace Repositories.Auctions
             }
         }
 
-       
+        public Task UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus)
+        {
+            try
+            {
+                var toBeUpdated = _auctionDao.GetQueryable()
+                    .FirstOrDefault(x => x.AuctionId == auctionId);
+                if (toBeUpdated == null)
+                {
+                    throw new Exception("Auction Not Found");
+                }
+
+                toBeUpdated.Status = auctionStatus;
+                return _auctionDao.UpdateAsync(toBeUpdated);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<List<Auction>> GetAuctionEndingNow()
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+                var result = await _auctionDao.GetQueryable()
+                    .Where(a => a.EndDate <= now && a.Status == AuctionStatus.OnGoing)
+                    .ToListAsync();
+
+                return result;
+            }
+            catch (Exception e)
+            {
+               throw new Exception(e.Message); 
+            }
+        }
+        
     }
 }

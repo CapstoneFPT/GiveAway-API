@@ -1,4 +1,7 @@
-﻿namespace BusinessObjects.Dtos.Bids;
+﻿using BusinessObjects.Dtos.AuctionDeposits;
+using BusinessObjects.Entities;
+
+namespace BusinessObjects.Dtos.Bids;
 
 public class BidDetailResponse
 {

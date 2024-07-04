@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Entities;
 
 namespace Repositories.Auctions
 {
@@ -18,5 +19,7 @@ namespace Repositories.Auctions
         Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request);
         Task<AuctionDetailResponse?> ApproveAuction(Guid id);
         Task<AuctionDetailResponse?> RejectAuction(Guid id);
+        Task UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus);
+        Task<List<Auction>> GetAuctionEndingNow();
     }
 }

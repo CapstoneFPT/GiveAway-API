@@ -7,11 +7,15 @@ using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Repositories.AuctionDeposits;
 using Repositories.Auctions;
 using Repositories.Bids;
+using Repositories.OrderDetails;
+using Repositories.Orders;
+using Services.Orders;
 
 namespace Services.Auctions
 {
@@ -21,14 +25,16 @@ namespace Services.Auctions
         private readonly IBidRepository _bidRepository;
         private readonly IAuctionDepositRepository _auctionDepositRepository;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IOrderRepository _orderRepository;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
-            IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider)
+            IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,IOrderRepository orderRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
             _auctionDepositRepository = auctionDepositRepository;
             _serviceProvider = serviceProvider;
+            _orderRepository = orderRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -42,6 +48,70 @@ namespace Services.Auctions
             {
                 throw new Exception(e.Message);
             }
+        }
+
+        public async Task<Result<OrderResponse>> EndAuction(Guid id)
+        {
+            var auction = await _auctionRepository.GetAuction(id);
+            if (auction is null)
+            {
+                return new Result<OrderResponse>()
+                {
+                    ResultStatus = ResultStatus.NotFound,
+                    Messages = new[] { "Auction Not Found" }
+                };
+            }
+
+            if (auction.Status != AuctionStatus.OnGoing)
+            {
+                return new Result<OrderResponse>()
+                {
+                    ResultStatus = ResultStatus.Error,
+                    Messages = new[] { "Auction is not on going" }
+                };
+            }
+
+            var winningBid = await _bidRepository.GetLargestBid(id);
+            if (winningBid is null)
+            {
+                await _auctionRepository.UpdateAuctionStatus(auctionId: id, AuctionStatus.Finished);
+                return new Result<OrderResponse>()
+                {
+                    ResultStatus = ResultStatus.Empty, Messages = new[] { "No Bids" }
+                };
+            }
+
+            using var scope = _serviceProvider.CreateScope();
+            var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+
+            var createOrderRequest = new CreateOrderFromBidRequest()
+            {
+                MemberId = winningBid.MemberId,
+                OrderCode = "SomeRando",
+                PaymentMethod = PaymentMethod.Point,
+                TotalPrice = winningBid.Amount,
+                BidId = winningBid.Id
+            };
+
+
+            var orderResult = await orderService.CreateOrderFromBid(createOrderRequest);
+
+            if (orderResult.ResultStatus != ResultStatus.Success)
+            {
+                return new Result<OrderResponse>()
+                {
+                    ResultStatus = ResultStatus.Error,
+                    Messages = new[] { "Failed to create order" }
+                };
+            }
+
+            await _auctionRepository.UpdateAuctionStatus(auctionId: id, AuctionStatus.Finished);
+
+            return new Result<OrderResponse>()
+            {
+                ResultStatus = ResultStatus.Success,
+                Messages = new[] { "Auction Ended Successfully and Order Created" }, Data = orderResult.Data
+            };
         }
 
         public Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
@@ -159,7 +229,7 @@ namespace Services.Auctions
             }
         }
 
-      
+
         public Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
         {
             try
@@ -186,5 +256,7 @@ namespace Services.Auctions
                 throw new Exception(e.Message);
             }
         }
+
+       
     }
 }
