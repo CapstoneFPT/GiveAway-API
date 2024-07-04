@@ -12,8 +12,9 @@ namespace Services.Orders
     public interface IOrderService
     {
         Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId, OrderRequest request);
-        Task<Result<OrderResponse>> CreateOrder(List<Guid?> listItemId, CreateOrderRequest order);
+        Task<Result<OrderResponse>> CreateOrder(Guid accountId,List<Guid?> listItemId, CreateOrderRequest order);
         Task<Result<string>> CancelOrder(Guid orderId);
         Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
+        Task<Result<string>> ConfirmOrderDeliveried(Guid orderId);
     }
 }

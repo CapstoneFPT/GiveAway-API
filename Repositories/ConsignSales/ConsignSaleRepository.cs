@@ -37,7 +37,7 @@ namespace Repositories.ConsignSales
                 {
                     query = query.Where(f => f.ShopId.Equals(request.ShopId));
                 }
-                query = query.Where(c => c.MemberId == accountId);
+                query = query.Where(c => c.MemberId == accountId || c.ShopId == accountId);
 
                 var count = await query.CountAsync();
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)

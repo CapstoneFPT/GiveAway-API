@@ -33,15 +33,16 @@ namespace WebApi.Controllers
         {
             return await _orderDetailService.GetOrderDetailById(OrderdetailId);
         }
-        [HttpPost]
-        public async Task<ActionResult<Result<OrderResponse>>> CreateOrder(List<Guid?> listItemId, [FromQuery] CreateOrderRequest order)
-        {
-            return await _orderService.CreateOrder(listItemId, order);
-        }
+        
         [HttpPut("{OrderId}/cancel")]
         public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid OrderId)
         {
             return await _orderService.CancelOrder(OrderId);
+        }
+        [HttpPut("{OrderId}/confirm-deliveried")]
+        public async Task<ActionResult<Result<string>>> ConfirmOrder([FromRoute] Guid OrderId)
+        {
+            return await _orderService.ConfirmOrderDeliveried(OrderId);
         }
     }
 }

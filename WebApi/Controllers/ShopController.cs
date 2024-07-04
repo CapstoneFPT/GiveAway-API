@@ -1,9 +1,11 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Shops;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Services.ConsignSales;
 using Services.FashionItems;
 using Services.Orders;
 using Services.Shops;
@@ -17,12 +19,14 @@ namespace WebApi.Controllers
         private readonly IFashionItemService _fashionItemService;
         private readonly IShopService _shopService;
         private readonly IOrderService _orderService;
+        private readonly IConsignSaleService _consignSaleService;
 
-        public ShopController(IFashionItemService fashionItemService, IShopService shopService, IOrderService orderService)
+        public ShopController(IFashionItemService fashionItemService, IShopService shopService, IOrderService orderService, IConsignSaleService consignSaleService)
         {
             _fashionItemService = fashionItemService;
             _shopService = shopService;
             _orderService = orderService;
+            _consignSaleService = consignSaleService;
         }
 
         [HttpPost("{shopId}/fashionitems")]
@@ -44,6 +48,11 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByShopId([FromRoute] Guid shopId, [FromQuery] OrderRequest orderRequest)
         {
             return await _orderService.GetOrdersByShopId(shopId, orderRequest);
+        }
+        [HttpGet("{shopId}/consignsales")]
+        public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId([FromRoute] Guid shopId, [FromQuery] ConsignSaleRequest request)
+        {
+            return await _consignSaleService.GetAllConsignSales(shopId, request);
         }
     }
 }

@@ -10,8 +10,7 @@ namespace BusinessObjects.Dtos.Orders
 {
     public class CreateOrderRequest
     {
-        [Required]
-        public Guid MemberId { get; set; }
+
         public PaymentMethod PaymentMethod { get; set; }
         public string Address { get; set; }
         public string RecipientName { get; set; }

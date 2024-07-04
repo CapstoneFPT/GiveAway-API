@@ -47,15 +47,15 @@ namespace Repositories.Orders
             return order;
         }
 
-        public async Task<OrderResponse> CreateOrderHierarchy(List<Guid?> listItemId, CreateOrderRequest orderRequest)
+        public async Task<OrderResponse> CreateOrderHierarchy(Guid accountId, List<Guid?> listItemId, CreateOrderRequest orderRequest)
         {
             var listItem = await _fashionItemDao.GetQueryable().Include(c => c.Shop).Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
             var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
 
             int totalPrice = 0;
                 Order order = new Order();
-                order.MemberId = orderRequest.MemberId;
-                order.Member = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == orderRequest.MemberId);
+                order.MemberId = accountId;
+                order.Member = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
                 order.PaymentMethod = orderRequest.PaymentMethod;
                 order.Address = orderRequest.Address;
                 order.RecipientName = orderRequest.RecipientName;
@@ -70,7 +70,7 @@ namespace Repositories.Orders
             }
                 order.CreatedDate = DateTime.UtcNow;
                 order.TotalPrice = totalPrice;
-                order.OrderCode = GenerateRandomString();
+                order.OrderCode = GenerateUniqueString();
 
                 var result = await CreateOrder(order);
 
