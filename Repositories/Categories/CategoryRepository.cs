@@ -33,7 +33,7 @@ namespace Repositories.Categories
 
         public async Task<List<Category>> GetAllChildrenCategory(Guid id, int level)
         {
-            return await _categoryDao.GetQueryable().Where(c => c.ParentId == id && c.Level == level && c.Status.Equals(CategoryStatus.Available.ToString())).ToListAsync();
+            return await _categoryDao.GetQueryable().Where(c => c.ParentId == id && c.Level == level && c.Status.Equals(CategoryStatus.Available)).ToListAsync();
         }
 
         public async Task<Category> AddCategory(Category category)

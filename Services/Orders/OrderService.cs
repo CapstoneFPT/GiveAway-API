@@ -35,7 +35,7 @@ namespace Services.Orders
             _auctionItemRepository = auctionItemRepository;
         }
 
-        public async Task<Result<OrderResponse>> CreateOrder(List<Guid?> listItemId, CreateOrderRequest orderRequest)
+        public async Task<Result<OrderResponse>> CreateOrder(Guid accountId ,List<Guid?> listItemId, CreateOrderRequest orderRequest)
         {
             try
             {
@@ -58,7 +58,7 @@ namespace Services.Orders
                     return response;
                 }
 
-                var checkOrderExisted = await _orderRepository.IsOrderExisted(listItemId, orderRequest.MemberId);
+                var checkOrderExisted = await _orderRepository.IsOrderExisted(listItemId, accountId);
                 if (checkOrderExisted.Count > 0)
                 {
                     var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
@@ -70,7 +70,7 @@ namespace Services.Orders
                     return response;
                 }
 
-                response.Data = await _orderRepository.CreateOrderHierarchy(listItemId, orderRequest);
+                response.Data = await _orderRepository.CreateOrderHierarchy(accountId,listItemId, orderRequest);
                 response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
@@ -185,6 +185,30 @@ namespace Services.Orders
 
                 response.Data = order;
                 response.Messages = ["Your list contains " + order.TotalCount + " orders"];
+                response.ResultStatus = ResultStatus.Success;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<Result<string>> ConfirmOrderDeliveried(Guid orderId)
+        {
+            try
+            {
+                var response = new Result<string>();
+                var order = await _orderRepository.GetOrderById(orderId);
+                if (order == null || order.Status != OrderStatus.AwaitingPayment)
+                {
+                    response.Messages = ["Cound not find your order"];
+                    response.ResultStatus = ResultStatus.NotFound;
+                    return response;
+                }
+                order.Status = OrderStatus.Completed;
+                await _orderRepository.UpdateOrder(order);
+                response.Messages = ["This order is completed! The status has changed to completed"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
