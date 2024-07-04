@@ -109,6 +109,7 @@ namespace Repositories.Orders
             var orderResponse = new OrderResponse()
             {
                 OrderId = order.OrderId,
+                Quantity = listOrderDetailResponse.Count,
                 TotalPrice = order.TotalPrice,
                 OrderCode = order.OrderCode,
                 CreatedDate = order.CreatedDate,
@@ -217,7 +218,7 @@ namespace Repositories.Orders
             var listItem = await _fashionItemDao.GetQueryable().Include(c => c.Shop).Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
             foreach (FashionItem item in listItem)
             {
-                if (!item.Status.Equals(FashionItemStatus.Available.ToString()))
+                if (!item.Status.Equals(FashionItemStatus.Available))
                 {
                     listItemNotAvailable.Add(item.ItemId);
                 }

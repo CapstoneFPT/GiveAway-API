@@ -26,9 +26,9 @@ namespace Repositories
             CreateMap<DeliveryRequest, Address>() .ReverseMap();
             CreateMap<FashionItemDetailRequest, FashionItem>() .ReverseMap();
             CreateMap<FashionItem, FashionItemDetailResponse>()
-                .ForMember(a => a.Consigner, opt => opt.MapFrom(a => a.ConsignSaleDetail.ConsignSale.Member.Fullname))
-                .ForMember(a => a.CategoryName, opt => opt.MapFrom(a => a.Category.Name))
-                .ForMember(a => a.ShopAddress, opt => opt.MapFrom(a => a.Shop.Address))
+                .ForPath(a => a.Consigner, opt => opt.MapFrom(a => a.ConsignSaleDetail.ConsignSale.Member.Fullname))
+                .ForPath(a => a.CategoryName, opt => opt.MapFrom(a => a.Category.Name))
+                .ForPath(a => a.ShopAddress, opt => opt.MapFrom(a => a.Shop.Address))
                 .ReverseMap();
             CreateMap<PaginationResponse<FashionItem>, PaginationResponse<FashionItemDetailResponse>>();
             CreateMap<Order, OrderResponse>() 
