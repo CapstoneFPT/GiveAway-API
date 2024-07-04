@@ -211,6 +211,7 @@ namespace Repositories.Auctions
                         Status = x.Status,
                         Title = x.Title,
                         StepIncrement = x.StepIncrement,
+                        AuctionItemId = x.AuctionFashionItemId,
                         AuctionFashionItem = new AuctionFashionItemDetailResponse
                         {
                             ItemId = x.AuctionFashionItem.ItemId,

@@ -35,7 +35,8 @@ namespace Services.Orders
             _auctionItemRepository = auctionItemRepository;
         }
 
-        public async Task<Result<OrderResponse>> CreateOrder(Guid accountId ,List<Guid?> listItemId, CreateOrderRequest orderRequest)
+        public async Task<Result<OrderResponse>> CreateOrder(Guid accountId, List<Guid?> listItemId,
+            CreateOrderRequest orderRequest)
         {
             try
             {
@@ -70,7 +71,7 @@ namespace Services.Orders
                     return response;
                 }
 
-                response.Data = await _orderRepository.CreateOrderHierarchy(accountId,listItemId, orderRequest);
+                response.Data = await _orderRepository.CreateOrderHierarchy(accountId, listItemId, orderRequest);
                 response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
@@ -94,22 +95,23 @@ namespace Services.Orders
                     TotalPrice = orderRequest.TotalPrice,
                     CreatedDate = DateTime.UtcNow,
                 };
+                var orderResult = await _orderRepository.CreateOrder(toBeAdded);
 
-                var orderDetail = new OrderDetail()
-                {
-                    OrderId = toBeAdded.OrderId,
-                    FashionItemId = orderRequest.AuctionFashionItemId,
-                    UnitPrice = orderRequest.TotalPrice,
-                };
+                var orderDetails =
+                        new OrderDetail()
+                        {
+                            OrderId = orderResult.OrderId,
+                            FashionItemId = orderRequest.AuctionFashionItemId,
+                            UnitPrice = orderRequest.TotalPrice,
+                        }
+                    ;
+                var orderDetailResult =
+                    await _orderDetailRepository.CreateOrderDetail(orderDetails);
 
-                toBeAdded.OrderDetails.Add(orderDetail);
-
-                var result = await _orderRepository.CreateOrder(toBeAdded);
-
-
+                orderResult.OrderDetails = new List<OrderDetail>() { orderDetailResult };
                 return new Result<OrderResponse>()
                 {
-                    Data = _mapper.Map<Order, OrderResponse>(result),
+                    Data = _mapper.Map<Order, OrderResponse>(orderResult),
                     ResultStatus = ResultStatus.Success
                 };
             }
@@ -206,6 +208,7 @@ namespace Services.Orders
                     response.ResultStatus = ResultStatus.NotFound;
                     return response;
                 }
+
                 order.Status = OrderStatus.Completed;
                 await _orderRepository.UpdateOrder(order);
                 response.Messages = ["This order is completed! The status has changed to completed"];

@@ -23,9 +23,9 @@ namespace Repositories.OrderDetails
             _orderDetailDao = orderdetailDao;
         }
 
-        public async Task CreateOrderDetail(OrderDetail orderDetail)
+        public async Task<OrderDetail> CreateOrderDetail(OrderDetail orderDetail)
         {
-            await _orderDetailDao.AddAsync(orderDetail);
+           return await _orderDetailDao.AddAsync(orderDetail);
         }
 
         public async Task<PaginationResponse<OrderDetailResponse<FashionItem>>> GetAllOrderDetailByOrderId(Guid id, OrderDetailRequest request)
