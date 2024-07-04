@@ -1,4 +1,5 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace BusinessObjects.Dtos.ConsignSales
 {
     public class ConsignSaleResponse
     {
+        public Guid ConsignSaleId { get; set; }
         public ConsignSaleType Type { get; set; }
         public string ConsignSaleCode { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -22,6 +24,6 @@ namespace BusinessObjects.Dtos.ConsignSales
         public int TotalPrice { get; set; }
         public int SoldPrice { get; set; }
         public int MemberReceivedAmount { get; set; }
-        public ICollection<ConsignSaleDetail>? ConsignSaleDetails { get; set; } = new List<ConsignSaleDetail>();
+        public ICollection<ConsignSaleDetailResponse>? ConsignSaleDetails { get; set; } = new List<ConsignSaleDetailResponse>();
     }
 }
