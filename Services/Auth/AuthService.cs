@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
 using Repositories.Shops;
 using Services.Emails;
@@ -24,6 +25,7 @@ public class AuthService : IAuthService
     private readonly IShopRepository _shopRepository;
     private readonly IConfiguration _configuration;
     private readonly string tempdata = "tempdatakey";
+    private readonly string newpass = "newpasskey";
 
     public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService,
         IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository,
@@ -38,23 +40,35 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
 
-    public async Task<Account> ChangeToNewPassword(string confirmtoken)
+    public async Task<Result<AccountResponse>> ChangeToNewPassword(string confirmtoken)
     {
         var user = await _accountRepository.FindUserByPasswordResetToken(confirmtoken);
-        if (user == null || user.ResetTokenExpires < DateTime.Now)
+        if (user == null || user.ResetTokenExpires < DateTime.UtcNow)
         {
-            return null;
+            return new Result<AccountResponse>()
+            {
+                Messages = ["Invalid token or token is expired"],
+                ResultStatus = ResultStatus.Error,
+            };
         }
         else
         {
-            /*user.Password = _cache.Get<string>(newpassword);
+            CreatePasswordHash(_cache.Get<string>(newpass), out byte[] passwordHash, out byte[] passwordSalt);
+            user.PasswordHash = passwordHash;
+            user.PasswordSalt = passwordSalt;
             user.ResetTokenExpires = null;
-            user.PasswordResetToken = null;*/
-            return user;
+            user.PasswordResetToken = null;
+            await _accountRepository.UpdateAccount(user);
+            return new Result<AccountResponse>()
+            {
+                Data = _mapper.Map<AccountResponse>(user),
+                Messages = ["Change password successfully"],
+                ResultStatus = ResultStatus.Success
+            };
         }
     }
 
-    public async Task<Result<string>> CheckPassword(string email, string newpass)
+    public async Task<Result<string>> CheckPassword(string email, string newpassword)
     {
         var response = new Result<string>();
         var account = await _accountRepository.FindUserByEmail(email);
@@ -64,7 +78,7 @@ public class AuthService : IAuthService
             response.Messages = new[] { "User not found" };
             return response;
         }
-        else if (VerifyPasswordHash(newpass, account.PasswordHash, account.PasswordSalt))
+        else if (VerifyPasswordHash(newpassword, account.PasswordHash, account.PasswordSalt))
         {
             response.ResultStatus = ResultStatus.Duplicated;
             response.Messages = new[] { "This password is duplicated with the old password" };
@@ -73,9 +87,9 @@ public class AuthService : IAuthService
         else
         {
             var cacheEntryOption = new MemoryCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromSeconds(60))
+                .SetSlidingExpiration(TimeSpan.FromSeconds(180))
                 .SetPriority(CacheItemPriority.Normal);
-            _cache.Set(tempdata, newpass, cacheEntryOption);
+            _cache.Set(newpass, newpassword, cacheEntryOption);
             response = await SendMail(email);
             return response;
         }
@@ -255,6 +269,12 @@ public class AuthService : IAuthService
     {
         var response = new Result<string>();
         var user = await _accountRepository.FindUserByEmail(email);
+        if(user.VerifiedAt != null)
+        {
+            response.Messages = ["This account is already verified"];
+            response.ResultStatus = ResultStatus.Error;
+            return response;
+        }
         string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
         string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
 
@@ -273,6 +293,7 @@ public class AuthService : IAuthService
             Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
         };
         await _emailService.SendEmail(content);
+        response.Data = formattedLink;
         response.Messages =
             ["Resend verification email successfully! Please check your email for verification in 3 minutes"];
         response.ResultStatus = ResultStatus.Success;
