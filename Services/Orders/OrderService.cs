@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Repositories.AuctionItems;
 
 namespace Services.Orders
 {
@@ -21,15 +22,17 @@ namespace Services.Orders
         private readonly IOrderRepository _orderRepository;
         private readonly IFashionItemRepository _fashionItemRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
+        private readonly IAuctionItemRepository _auctionItemRepository;
         private readonly IMapper _mapper;
 
         public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
-            IMapper mapper, IOrderDetailRepository orderDetailRepository)
+            IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository)
         {
             _orderRepository = orderRepository;
             _fashionItemRepository = fashionItemRepository;
             _mapper = mapper;
             _orderDetailRepository = orderDetailRepository;
+            _auctionItemRepository = auctionItemRepository;
         }
 
         public async Task<Result<OrderResponse>> CreateOrder(List<Guid?> listItemId, CreateOrderRequest orderRequest)
@@ -80,7 +83,40 @@ namespace Services.Orders
 
         public async Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest)
         {
-            return null;
+            try
+            {
+                var toBeAdded = new Order()
+                {
+                    BidId = orderRequest.BidId,
+                    OrderCode = orderRequest.OrderCode,
+                    PaymentMethod = orderRequest.PaymentMethod,
+                    MemberId = orderRequest.MemberId,
+                    TotalPrice = orderRequest.TotalPrice,
+                    CreatedDate = DateTime.UtcNow,
+                };
+
+                var orderDetail = new OrderDetail()
+                {
+                    OrderId = toBeAdded.OrderId,
+                    FashionItemId = orderRequest.AuctionFashionItemId,
+                    UnitPrice = orderRequest.TotalPrice,
+                };
+
+                toBeAdded.OrderDetails.Add(orderDetail);
+
+                var result = await _orderRepository.CreateOrder(toBeAdded);
+
+
+                return new Result<OrderResponse>()
+                {
+                    Data = _mapper.Map<Order, OrderResponse>(result),
+                    ResultStatus = ResultStatus.Success
+                };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId,
@@ -133,7 +169,8 @@ namespace Services.Orders
             }
         }
 
-        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest)
+        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId,
+            OrderRequest orderRequest)
         {
             try
             {
@@ -145,6 +182,7 @@ namespace Services.Orders
                     response.ResultStatus = ResultStatus.NotFound;
                     return response;
                 }
+
                 response.Data = order;
                 response.Messages = ["Your list contains " + order.TotalCount + " orders"];
                 response.ResultStatus = ResultStatus.Success;
@@ -164,5 +202,6 @@ namespace Services.Orders
         public Guid BidId { get; set; }
         public Guid MemberId { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
+        public Guid AuctionFashionItemId { get; set; }
     }
 }

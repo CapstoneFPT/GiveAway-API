@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
-using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
@@ -11,13 +10,8 @@ using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Services
+namespace Repositories
 {
     public class MappingProfile : Profile
     {

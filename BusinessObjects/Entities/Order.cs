@@ -18,10 +18,10 @@ public class Order
     public Bid? Bid { get; set; }
     public OrderStatus Status { get; set; }
 
-    public Transaction Transaction { get; set; }
-    public string RecipientName { get; set; }
-    public string Phone { get; set; }
-    public string Address { get; set; }
+    public Transaction? Transaction { get; set; }
+    public string? RecipientName { get; set; }
+    public string? Phone { get; set; }
+    public string? Address { get; set; }
 
     public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();
 }

@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Entities;
 using Dao;
+using Repositories;
 using Repositories.Accounts;
 using Repositories.AuctionDeposits;
 using Repositories.AuctionItems;
