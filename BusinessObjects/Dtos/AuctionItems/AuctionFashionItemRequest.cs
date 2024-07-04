@@ -15,5 +15,6 @@ namespace BusinessObjects.Dtos.AuctionItems
         public FashionItemStatus? Status { get; set; }
         public string? Type { get; set; }
         public Guid? ShopId { get; set; }
+        public GenderType? GenderType { get; set; }
     }
 }

@@ -56,7 +56,10 @@ namespace Repositories.FashionItems
                 {
                     query = query.Where(f => f.ShopId.Equals(request.ShopId));
                 }
-
+                if (request.GenderType != null)
+                {
+                    query = query.Where(f => f.Type.Equals(request.GenderType));
+                }
                 var count = await query.CountAsync();
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)
                     .Take(request.PageSize);
