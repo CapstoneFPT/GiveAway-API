@@ -88,5 +88,7 @@ namespace WebApi.Controllers
         {
             return await _consignSaleService.GetConsignSaleById(accountId, consignsaleId);
         }
+        /*[HttpPost("{accountId}/consignsales/{consignsaleId}")]
+        public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSale()*/
     }
 }

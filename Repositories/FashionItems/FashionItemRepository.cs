@@ -49,7 +49,7 @@ namespace Repositories.FashionItems
 
                 if (request.Type != null)
                 {
-                    query = query.Where(f => f.Type.Equals(request.Type));
+                    query = query.Where(f => request.Type.Contains(f.Type));
                 }
 
                 if (request.ShopId != null)
@@ -58,7 +58,7 @@ namespace Repositories.FashionItems
                 }
                 if (request.GenderType != null)
                 {
-                    query = query.Where(f => f.Type.Equals(request.GenderType));
+                    query = query.Where(f => f.Gender.Equals(request.GenderType));
                 }
                 var count = await query.CountAsync();
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)

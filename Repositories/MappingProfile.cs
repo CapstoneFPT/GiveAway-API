@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.FashionItems;
@@ -59,7 +60,12 @@ namespace Services
                 .ForPath(a => a.FashionItemDetail.Color, opt => opt.MapFrom(a => a.FashionItem.Color))
                 .ForPath(a => a.FashionItemDetail.Brand, opt => opt.MapFrom(a => a.FashionItem.Brand))
                 .ReverseMap();
-            CreateMap<ConsignSale, ConsignSaleResponse>() .ReverseMap();
+            CreateMap<ConsignSale, ConsignSaleResponse>()
+                .ForMember(a => a.ConsignSaleDetails, opt => opt.MapFrom(a => a.ConsignSaleDetails))
+                .ReverseMap();
+            CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse>()
+                .ForMember(dest => dest.FashionItem, opt => opt.MapFrom(src => src.FashionItem))
+                .ReverseMap();
             CreateMap<Shop, ShopDetailResponse>() .ReverseMap();
         }
     }

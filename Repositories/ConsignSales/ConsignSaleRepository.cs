@@ -25,7 +25,7 @@ namespace Repositories.ConsignSales
             try
             {
                 var query = _consignSaleDao.GetQueryable();
-                query = query.Where(c => c.MemberId == accountId);
+
                 if (!string.IsNullOrWhiteSpace(request.ConsignSaleCode))
                     query = query.Where(x => EF.Functions.ILike(x.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
                 if (request.Status != null)
@@ -45,6 +45,7 @@ namespace Repositories.ConsignSales
 
                 var items = await query
                     .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                    .OrderByDescending(c => c.CreatedDate)
                     .AsNoTracking().ToListAsync();
 
                 var result = new PaginationResponse<ConsignSaleResponse>

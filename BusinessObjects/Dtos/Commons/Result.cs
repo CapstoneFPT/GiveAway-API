@@ -114,7 +114,8 @@ public enum TransactionType
 public enum ConsignSaleType
 {
     ConsignedForSale,
-    ConsignedForAuction
+    ConsignedForAuction,
+    ForSale
 }
 
 public enum AddressType
