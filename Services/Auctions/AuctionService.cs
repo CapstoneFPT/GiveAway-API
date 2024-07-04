@@ -11,6 +11,7 @@ using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Repositories.AuctionDeposits;
+using Repositories.AuctionItems;
 using Repositories.Auctions;
 using Repositories.Bids;
 using Repositories.OrderDetails;
@@ -26,15 +27,17 @@ namespace Services.Auctions
         private readonly IAuctionDepositRepository _auctionDepositRepository;
         private readonly IServiceProvider _serviceProvider;
         private readonly IOrderRepository _orderRepository;
+        private readonly IAuctionItemRepository _auctionItemRepository;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
-            IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,IOrderRepository orderRepository)
+            IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,IOrderRepository orderRepository,IAuctionItemRepository auctionItemRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
             _auctionDepositRepository = auctionDepositRepository;
             _serviceProvider = serviceProvider;
             _orderRepository = orderRepository;
+            _auctionItemRepository = auctionItemRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -74,7 +77,7 @@ namespace Services.Auctions
             var winningBid = await _bidRepository.GetLargestBid(id);
             if (winningBid is null)
             {
-                await _auctionRepository.UpdateAuctionStatus(auctionId: id, AuctionStatus.Finished);
+                await _auctionRepository.UpdateAuctionStatus(auctionId: id, auctionStatus: AuctionStatus.Finished);
                 return new Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.Empty, Messages = new[] { "No Bids" }
@@ -106,13 +109,33 @@ namespace Services.Auctions
                 };
             }
 
-            await _auctionRepository.UpdateAuctionStatus(auctionId: id, AuctionStatus.Finished);
+            await _auctionRepository.UpdateAuctionStatus(auctionId: id, auctionStatus: AuctionStatus.Finished);
 
             return new Result<OrderResponse>()
             {
                 ResultStatus = ResultStatus.Success,
                 Messages = new[] { "Auction Ended Successfully and Order Created" }, Data = orderResult.Data
             };
+        }
+
+        public async Task StartAuction(Guid auctionId)
+        {
+            try
+            {
+                var auctionUpdateResult = await _auctionRepository.UpdateAuctionStatus(auctionId, AuctionStatus.OnGoing);
+
+                var auctionFashionItemId = auctionUpdateResult
+                    .AuctionFashionItemId;
+                
+                var auctionItemUpdateResult = await _auctionItemRepository
+                    .UpdateAuctionItemStatus(auctionFashionItemId, FashionItemStatus.Bidding);
+
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message)
+                    ;
+            }
         }
 
         public Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)

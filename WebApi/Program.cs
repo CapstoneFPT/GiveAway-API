@@ -26,6 +26,7 @@ builder.Services.AddServices();
 builder.Services.AddRepositories();
 builder.Services.AddDao();
 builder.Services.AddHostedService<AuctionEndingService>();
+builder.Services.AddHostedService<AuctionStartingService>();
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;

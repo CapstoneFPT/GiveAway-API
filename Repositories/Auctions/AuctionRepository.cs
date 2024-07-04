@@ -398,7 +398,7 @@ namespace Repositories.Auctions
             }
         }
 
-        public Task UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus)
+        public Task<Auction> UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus)
         {
             try
             {
@@ -431,9 +431,24 @@ namespace Repositories.Auctions
             }
             catch (Exception e)
             {
-               throw new Exception(e.Message); 
+                throw new Exception(e.Message);
             }
         }
-        
+
+        public async Task<List<Auction>> GetAuctionStartingNow()
+        {
+            try
+            {
+                var result = await _auctionDao.GetQueryable()
+                    .Where(a => a.StartDate <= DateTime.UtcNow && a.Status == AuctionStatus.Approved)
+                    .ToListAsync();
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
     }
 }

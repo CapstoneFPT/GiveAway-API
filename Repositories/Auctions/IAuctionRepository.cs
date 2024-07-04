@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +20,8 @@ namespace Repositories.Auctions
         Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request);
         Task<AuctionDetailResponse?> ApproveAuction(Guid id);
         Task<AuctionDetailResponse?> RejectAuction(Guid id);
-        Task UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus);
+        Task<Auction> UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus);
         Task<List<Auction>> GetAuctionEndingNow();
+        Task<List<Auction>> GetAuctionStartingNow();
     }
 }
