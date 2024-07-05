@@ -4,6 +4,7 @@ using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,6 +20,7 @@ namespace Repositories.Orders
         Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberid);
         Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId);
         Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
+        Task<Order?> GetSingleOrder(Expression<Func<Order,bool>> predicate);
         Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId);
     }
 }
