@@ -42,6 +42,7 @@ using Services.Schedules;
 using Services.Shops;
 using Services.Timeslots;
 using Services.Transactions;
+using Services.VnPayService;
 
 namespace WebApi;
 
@@ -71,6 +72,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IShopService, ShopService>();
         serviceCollection.AddScoped<ITimeslotService, TimeslotService>();
         serviceCollection.AddScoped<ITransactionService, TransactionService>();
+        serviceCollection.AddScoped<IVnPayService, VnPayService>();
         serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }

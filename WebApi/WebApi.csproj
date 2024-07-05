@@ -39,4 +39,8 @@
       <None Include="appsettings.Development.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Utils\VNPay\" />
+    </ItemGroup>
+
 </Project>

@@ -13,6 +13,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
@@ -126,6 +127,21 @@ namespace Repositories.Orders
         public async Task<Order> GetOrderById(Guid id)
         {
             return await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderId == id);
+        }
+
+        public async Task<Order?> GetSingleOrder(Expression<Func<Order,bool>> predicate)
+        {
+            try
+            {
+                var result = await _orderDao
+                    .GetQueryable()
+                    .SingleOrDefaultAsync(predicate);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception();
+            } 
         }
 
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByAccountId(Guid accountId, OrderRequest request)

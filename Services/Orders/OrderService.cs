@@ -122,6 +122,57 @@ namespace Services.Orders
             }
         }
 
+        public async Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order)
+        {
+            try
+            {
+                var orderResult = await _orderRepository.CreateOrder(new Order()
+                {
+                    OrderCode = OrderRepository.GenerateUniqueString(),
+                    CreatedDate = DateTime.UtcNow,
+                    MemberId = order.MemberId,
+                    TotalPrice = order.TotalPrice,
+                    PaymentMethod = order.PaymentMethod,
+                    Status = OrderStatus.AwaitingPayment,
+                });
+
+                var orderDetailResult = await _orderDetailRepository.CreateOrderDetail(new OrderDetail()
+                {
+                    OrderId = orderResult.OrderId,
+                    UnitPrice = order.TotalPrice,
+                    PointPackageId = order.PointPackageId,
+                });
+
+                return new Result<OrderResponse>()
+                {
+                    Data = _mapper.Map<Order,OrderResponse>(orderResult),
+                    ResultStatus = ResultStatus.Success
+                };
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task<Order?> GetOrderByCode(string orderCode)
+        {
+            try
+            {
+                var result = await _orderRepository.GetSingleOrder(x => x.OrderCode == orderCode);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public Task UpdateOrder(Order order)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId,
             OrderRequest request)
         {
