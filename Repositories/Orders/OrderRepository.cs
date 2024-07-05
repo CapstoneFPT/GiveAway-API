@@ -285,9 +285,30 @@ namespace Repositories.Orders
             }
         }
 
-        public Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId)
+        public async Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var order = await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderId == orderId);
+                var listorderdetail = await _orderDetailDao.GetQueryable().Where(c => c.OrderId == orderId && c.FashionItem.ShopId == shopId)
+                    .AsNoTracking() .ToListAsync();
+                foreach ( var item in listorderdetail )
+                {
+                    item.FashionItem.Status = FashionItemStatus.Refundable;
+                    await _orderDetailDao.UpdateAsync(item);
+                }
+                if(!listorderdetail.Any(c => c.FashionItem.Status.Equals(FashionItemStatus.Refundable)))
+                {
+                    return await _orderDao.GetQueryable().ProjectTo<OrderResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync(c => c.OrderId == orderId);
+                }
+                order.Status = OrderStatus.Completed;
+                await _orderDao.UpdateAsync(order);
+                return await _orderDao.GetQueryable().ProjectTo<OrderResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync(c => c.OrderId == orderId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }

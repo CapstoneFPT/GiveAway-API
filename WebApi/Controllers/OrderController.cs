@@ -40,7 +40,7 @@ namespace WebApi.Controllers
             return await _orderService.CancelOrder(OrderId);
         }
         [HttpPut("{OrderId}/confirm-deliveried")]
-        public async Task<ActionResult<Result<string>>> ConfirmOrder([FromRoute] Guid OrderId)
+        public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrder([FromRoute] Guid OrderId)
         {
             return await _orderService.ConfirmOrderDeliveried(OrderId);
         }

@@ -197,11 +197,11 @@ namespace Services.Orders
             }
         }
 
-        public async Task<Result<string>> ConfirmOrderDeliveried(Guid orderId)
+        public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId)
         {
             try
             {
-                var response = new Result<string>();
+                var response = new Result<OrderResponse>();
                 var order = await _orderRepository.GetOrderById(orderId);
                 if (order == null || order.Status != OrderStatus.AwaitingPayment)
                 {
