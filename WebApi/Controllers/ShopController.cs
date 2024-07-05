@@ -44,12 +44,17 @@ namespace WebApi.Controllers
         {
             return await _shopService.GetAllShop();
         }
+        [HttpGet("{shopId}")]
+        public async Task<ActionResult<Result<ShopDetailResponse>>> GetShopById([FromRoute] Guid shopId)
+        {
+            return await _shopService.GetShopById(shopId);
+        }
         [HttpGet("{shopId}/orders")]
         public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByShopId([FromRoute] Guid shopId, [FromQuery] OrderRequest orderRequest)
         {
             return await _orderService.GetOrdersByShopId(shopId, orderRequest);
         }
-        [HttpPut("{shopId}/shops/{OrderId}/confirm-deliveried")]
+        [HttpPut("{shopId}/orders/{OrderId}/confirm-deliveried")]
         public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrder([FromRoute] Guid shopId,[FromRoute] Guid OrderId)
         {
             return await _orderService.ConfirmOrderDeliveried(shopId,OrderId);

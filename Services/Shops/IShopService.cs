@@ -11,5 +11,6 @@ namespace Services.Shops
     public interface IShopService
     {
         Task<Result<List<ShopDetailResponse>>> GetAllShop();
+        Task<Result<ShopDetailResponse>> GetShopById(Guid shopid);
     }
 }

@@ -235,7 +235,11 @@ public class AuthService : IAuthService
                 Role = account.Role,
                 Id = account.AccountId
             };
-
+            if (account.Role.Equals(Roles.Staff))
+            {
+                var shop = await _shopRepository.GetShopByAccountId(account.AccountId);
+                data.ShopId = shop.ShopId;
+            }
             return new Result<LoginResponse>()
             {
                 Data = data,

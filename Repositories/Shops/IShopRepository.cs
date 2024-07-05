@@ -12,5 +12,7 @@ namespace Repositories.Shops
     {
         Task<Shop> CreateShop(Shop shop);
         Task<List<ShopDetailResponse>> GetAllShop();
+        Task<ShopDetailResponse> GetShopByAccountId(Guid id);
+        Task<ShopDetailResponse> GetShopById(Guid id);
     }
 }

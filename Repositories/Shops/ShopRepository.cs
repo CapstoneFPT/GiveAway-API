@@ -37,5 +37,19 @@ namespace Repositories.Shops
                 .AsNoTracking().ToListAsync();
             return listshop;
         }
+
+        public async Task<ShopDetailResponse> GetShopByAccountId(Guid id)
+        {
+            var shop = await _shopDao.GetQueryable().Where(c => c.StaffId == id && c.Staff.Status.Equals(AccountStatus.Active)).ProjectTo<ShopDetailResponse>(_mapper.ConfigurationProvider)
+                .AsNoTracking().FirstOrDefaultAsync();
+            return shop;
+        }
+
+        public async Task<ShopDetailResponse> GetShopById(Guid id)
+        {
+            var shop = await _shopDao.GetQueryable().Where(c => c.ShopId == id && c.Staff.Status.Equals(AccountStatus.Active)).ProjectTo<ShopDetailResponse>(_mapper.ConfigurationProvider)
+                .AsNoTracking().FirstOrDefaultAsync();
+            return shop;
+        }
     }
 }
