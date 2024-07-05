@@ -49,6 +49,11 @@ namespace WebApi.Controllers
         {
             return await _orderService.GetOrdersByShopId(shopId, orderRequest);
         }
+        [HttpPut("{shopId}/shops/{OrderId}/confirm-deliveried")]
+        public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrder([FromRoute] Guid shopId,[FromRoute] Guid OrderId)
+        {
+            return await _orderService.ConfirmOrderDeliveried(shopId,OrderId);
+        }
         [HttpGet("{shopId}/consignsales")]
         public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId([FromRoute] Guid shopId, [FromQuery] ConsignSaleRequest request)
         {

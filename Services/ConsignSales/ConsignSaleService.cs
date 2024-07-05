@@ -36,12 +36,12 @@ namespace Services.ConsignSales
             }
         }
 
-        public async Task<Result<ConsignSaleResponse>> GetConsignSaleById(Guid accountId, Guid consignId)
+        public async Task<Result<ConsignSaleResponse>> GetConsignSaleById(Guid consignId)
         {
             try
             {
                 var response = new Result<ConsignSaleResponse>();
-                var Consign = await _consignSaleRepository.GetConsignSaleById(accountId, consignId);
+                var Consign = await _consignSaleRepository.GetConsignSaleById(consignId);
                 if (Consign == null)
                 {
                     response.Messages = ["Consignment is not found"];

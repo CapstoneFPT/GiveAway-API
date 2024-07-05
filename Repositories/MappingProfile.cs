@@ -36,6 +36,7 @@ namespace Repositories
                 .ForMember(a => a.RecipientName, opt => opt.MapFrom(a => a.RecipientName))
                 .ForMember(a => a.ContactNumber, opt => opt.MapFrom(a => a.Phone))
                 .ForMember(a => a.Address, opt => opt.MapFrom(a => a.Address))
+                .ForMember(a => a.Quantity, opt => opt.MapFrom(a => a.OrderDetails.Count()))
                 .ReverseMap();
             CreateMap<OrderDetail, OrderDetailResponse<FashionItemDetailResponse>>()
                 .ForPath(a => a.FashionItemDetail.ShopId, opt => opt.MapFrom(a => a.FashionItem.ShopId))

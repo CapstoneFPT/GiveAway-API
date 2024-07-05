@@ -35,6 +35,7 @@ public enum FashionItemStatus
 {
     Available,
     Unavailable,
+    OnDelivery,
     Sold,
     Refundable,
     Pending,

@@ -64,11 +64,11 @@ namespace Repositories.ConsignSales
             }
         }
 
-        public async Task<ConsignSaleResponse> GetConsignSaleById(Guid accountId, Guid consignId)
+        public async Task<ConsignSaleResponse> GetConsignSaleById(Guid consignId)
         {
             try
             {
-                var consignSale = await _consignSaleDao.GetQueryable().Where(c => c.MemberId == accountId && c.ConsignSaleId == consignId)
+                var consignSale = await _consignSaleDao.GetQueryable().Where(c => c.ConsignSaleId == consignId)
                     .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
                 return consignSale;
 
