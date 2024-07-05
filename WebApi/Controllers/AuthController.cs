@@ -10,6 +10,7 @@ using Services.Auth;
 using Services.Emails;
 using BusinessObjects.Dtos.Account.Response;
 using Microsoft.AspNetCore.Identity;
+using BusinessObjects.Dtos.Account.Request;
 
 namespace WebApi.Controllers;
 
@@ -117,5 +118,10 @@ public class AuthController : ControllerBase
     public async Task<Result<string>> ResendVerifyEmail(string email)
     {
         return await _authService.ResendVerifyEmail(email);
+    }
+    [HttpPut("{accountId}/change-password")]
+    public async Task<ActionResult<Result<AccountResponse>>> ChangePassword([FromRoute] Guid accountId, [FromBody] ChangePasswordRequest request)
+    {
+        return await _authService.CheckPasswordToChange(accountId, request);
     }
 }

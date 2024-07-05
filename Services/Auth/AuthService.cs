@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using AutoMapper;
+using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
@@ -92,6 +93,43 @@ public class AuthService : IAuthService
             _cache.Set(newpass, newpassword, cacheEntryOption);
             response = await SendMail(email);
             return response;
+        }
+    }
+
+    public async Task<Result<AccountResponse>> CheckPasswordToChange(Guid accountId, ChangePasswordRequest request)
+    {
+        try
+        {
+            var response = new Result<AccountResponse>();
+            var account = await _accountRepository.FindOne(c => c.AccountId == accountId);
+            if (account is null)
+            {
+                response.ResultStatus = ResultStatus.NotFound;
+                response.Messages = new[] { "User not found" };
+                return response;
+            }
+            else if (!VerifyPasswordHash(request.CurrentPassword, account.PasswordHash, account.PasswordSalt))
+            {
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = new[] { "Your current is incorrecr" };
+                return response;
+            }else if(VerifyPasswordHash(request.NewPassword, account.PasswordHash, account.PasswordSalt)){
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = new[] { "This new password is same as the current password. Please enter the new one" };
+                return response;
+            }
+            CreatePasswordHash(request.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
+            account.PasswordHash = passwordHash;
+            account.PasswordSalt = passwordSalt;
+            await _accountRepository.UpdateAccount(account);
+            response.Data = _mapper.Map<AccountResponse>(account);
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = new[] { "Change password successfully" };
+            return response;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
         }
     }
 

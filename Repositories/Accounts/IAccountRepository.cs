@@ -1,4 +1,6 @@
-﻿using BusinessObjects.Entities;
+﻿using BusinessObjects.Dtos.Account.Request;
+using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,5 +27,6 @@ namespace Repositories.Accounts
         Task<Account> UpdateAccount(Account account);
         string CreateRandomToken();
         Task<Account> FindUserByPhone(string phone);
+        Task<AccountResponse> ChangePassword(Guid accountId, ChangePasswordRequest request);
     }
 }

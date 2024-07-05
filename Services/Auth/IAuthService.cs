@@ -1,4 +1,5 @@
 ﻿using BusinessObjects;
+using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
@@ -18,4 +19,5 @@ public interface IAuthService
     Task<Result<string>> VerifyEmail(Guid id, string token);
     Task<Result<AccountResponse>> CreateStaffAccount(CreateStaffAccountRequest request);
     Task<Result<string>> ResendVerifyEmail(string email);
+    Task<Result<AccountResponse>> CheckPasswordToChange(Guid accountId, ChangePasswordRequest request);
 }

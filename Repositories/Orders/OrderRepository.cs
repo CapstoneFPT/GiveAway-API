@@ -284,5 +284,10 @@ namespace Repositories.Orders
                 throw new Exception(ex.Message);
             }
         }
+
+        public Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

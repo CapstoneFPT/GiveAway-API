@@ -1,4 +1,6 @@
 ﻿using BusinessObjects;
+using BusinessObjects.Dtos.Account.Request;
+using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;
@@ -126,6 +128,11 @@ namespace Repositories.Accounts
         {
             var user = _accountDao.GetQueryable().FirstOrDefault(c => c.Phone == phone);
             return Task.FromResult((user == null) ? null : user);
+        }
+
+        public Task<AccountResponse> ChangePassword(Guid accountId, ChangePasswordRequest request)
+        {
+            throw new NotImplementedException();
         }
     }
 }
