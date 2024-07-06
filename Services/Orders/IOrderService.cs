@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Entities;
 
 namespace Services.Orders
 {
@@ -18,5 +19,9 @@ namespace Services.Orders
         Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
         Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId);
         Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
+        Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
+        Task<Order?> GetOrderById(Guid orderId);
+        Task UpdateOrder(Order order);
+        Task<List<OrderDetail>> GetOrderDetailByOrderId(Guid orderId);
     }
 }

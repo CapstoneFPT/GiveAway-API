@@ -1,3 +1,4 @@
+using System.Configuration;
 using System.Text;
 using System.Text.Json.Serialization;
 using BusinessObjects;
@@ -13,7 +14,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Services.Auctions;
+using Services.VnPayService;
 using WebApi;
+using WebApi.Controllers;
 using WebApi.Hubs;
 using WebApi.Utils.CustomProblemDetails;
 using WebApi.Utils.WebServer;
@@ -27,6 +30,8 @@ builder.Services.AddRepositories();
 builder.Services.AddDao();
 builder.Services.AddHostedService<AuctionEndingService>();
 builder.Services.AddHostedService<AuctionStartingService>();
+builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPay"));
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
@@ -161,7 +166,7 @@ var config = builder.Configuration.GetSection("Kestrel");
 //                     builderConfig[httpsCertificatePassword]
 //                 );
 //             });
-//         });
+//         })
 //     }
 //     catch (Exception e)
 //     {

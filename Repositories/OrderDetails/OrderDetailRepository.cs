@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
@@ -65,6 +66,20 @@ namespace Repositories.OrderDetails
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<List<OrderDetail>> GetOrderDetails(Expression<Func<OrderDetail, bool>> predicate)
+        {
+            try
+            {
+                var result = await _orderDetailDao.GetQueryable().Where(predicate).ToListAsync();
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+        
 
         public async Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id)
         {
