@@ -4,6 +4,7 @@ using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,6 +131,27 @@ namespace Repositories.Accounts
             return Task.FromResult((user == null) ? null : user);
         }
 
-        
+        public async Task<string> GetAdminAccount(string email, string password)
+        {
+            IConfiguration config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", true, true)
+                .Build();
+
+            // Check if the configuration key exists
+            if (config.GetSection("AdminAccount").Exists())
+            {
+                string emailJson = config["AdminAccount:Email"];
+                string passwordJson = config["AdminAccount:Password"];
+
+                // Check if both email and password match
+                if (emailJson == email && passwordJson == password)
+                {
+                    return emailJson;
+                }
+            }
+
+            return null;
+        }
     }
 }

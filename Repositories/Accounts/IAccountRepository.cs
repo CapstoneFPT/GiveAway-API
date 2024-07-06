@@ -27,6 +27,6 @@ namespace Repositories.Accounts
         Task<Account> UpdateAccount(Account account);
         string CreateRandomToken();
         Task<Account> FindUserByPhone(string phone);
-        
+        Task<string> GetAdminAccount(string email, string password);
     }
 }

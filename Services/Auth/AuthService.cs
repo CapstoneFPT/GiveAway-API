@@ -191,16 +191,37 @@ public class AuthService : IAuthService
             var account = await _accountRepository.FindOne(x =>
                 x.Email.Equals(email)
             );
-
-            if (account is null)
+            var admin = await _accountRepository.GetAdminAccount(email, password);
+            if (account is null && admin is null)
             {
                 return new Result<LoginResponse>()
                 {
                     ResultStatus = ResultStatus.NotFound,
-                    Messages = ["Member Not Found"]
+                    Messages = ["Account is not Found"]
                 };
             }
+            else if(admin != null)
+            {
+                var claimsadmin = new List<Claim>()
+                {
+                    new(ClaimTypes.Name, admin),
+                    new(ClaimTypes.Role, Roles.Admin.ToString())
+                };
+                var accessTokenadmin = _tokenService.GenerateAccessToken(claimsadmin);
 
+                var dataadmin = new LoginResponse()
+                {
+                    AccessToken = accessTokenadmin,
+                    Email = admin,
+                    Role = Roles.Admin,
+                };
+                return new Result<LoginResponse>()
+                {
+                    Data = dataadmin,
+                    Messages = ["Login successfully. Welcome Admin"],
+                    ResultStatus = ResultStatus.Success
+                };
+            }
             if (!VerifyPasswordHash(password, account.PasswordHash, account.PasswordSalt))
             {
                 return new Result<LoginResponse>()
