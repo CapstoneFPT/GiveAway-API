@@ -39,6 +39,11 @@ namespace WebApi.Controllers
         {
             return await _fashionItemService.UpdateFashionItem(itemId, shopId, request);
         }
+        [HttpPut("{shopId}/fashionitems/{itemid}/check-unavailable")]
+        public async Task<ActionResult<Result<FashionItemDetailResponse>>> CheckItemUnavailable([FromRoute] Guid shopId, [FromRoute] Guid itemid)
+        {
+            return await _fashionItemService.CheckItemUnavailable(shopId, itemid); 
+        }
         [HttpGet]
         public async Task<ActionResult<Result<List<ShopDetailResponse>>>> GetAllShop()
         {

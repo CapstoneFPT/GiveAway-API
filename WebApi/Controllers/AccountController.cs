@@ -88,8 +88,11 @@ namespace WebApi.Controllers
         {
             return await _consignSaleService.GetAllConsignSales(accountId, request);
         }
-        
-        /*[HttpPost("{accountId}/consignsales/{consignsaleId}")]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSale()*/
+
+        [HttpPost("{accountId}/consignsales")]
+        public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSale([FromRoute] Guid accountId, [FromBody] CreateConsignSaleRequest request)
+        {
+            return await _consignSaleService.CreateConsignSale(accountId, request);
+        }
     }
 }

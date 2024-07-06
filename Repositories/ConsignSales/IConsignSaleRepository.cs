@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
+using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,6 @@ namespace Repositories.ConsignSales
     {
         Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSale(Guid accountId, ConsignSaleRequest request);
         Task<ConsignSaleResponse> GetConsignSaleById(Guid consignId);
+        Task<ConsignSaleResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request);
     }
 }

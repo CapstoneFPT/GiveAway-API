@@ -12,5 +12,6 @@ namespace Services.FashionItems
         Task<Result<FashionItemDetailResponse>> AddFashionItem(Guid shopId, FashionItemDetailRequest request);
         Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId, Guid shopId, FashionItemDetailRequest request);
         Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetItemByCategoryHierarchy(Guid id, AuctionFashionItemRequest request);
+        Task<Result<FashionItemDetailResponse>> CheckItemUnavailable(Guid shopId, Guid itemId); 
     }
 }

@@ -135,5 +135,36 @@ namespace Services.FashionItems
                 throw new Exception(e.Message);
             }
         }
+
+        public async Task<Result<FashionItemDetailResponse>> CheckItemUnavailable(Guid shopId, Guid itemId)
+        {
+            try
+            {
+                var response = new Result<FashionItemDetailResponse>();
+                var item = await _fashionitemRepository.GetFashionItemById(itemId);
+                if(item != null)
+                {
+                    if (!item.Status.Equals(FashionItemStatus.Available))
+                    {
+                        response.Messages = ["This item is already not on the selling process"];
+                        response.ResultStatus = ResultStatus.Error;
+                        return response;
+                    }
+                    item.Status = FashionItemStatus.Unavailable;
+                    await _fashionitemRepository.UpdateFashionItem(item);
+                    response.Data = _mapper.Map<FashionItemDetailResponse>(item);
+                    response.Messages = ["This item status has successfully changed to unvailable"];
+                    response.ResultStatus= ResultStatus.Success;
+                    return response;
+                }
+                response.Messages = ["Can not found the item"];
+                response.ResultStatus = ResultStatus.NotFound;
+                return response;
+            }
+            catch(Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
     }
 }
