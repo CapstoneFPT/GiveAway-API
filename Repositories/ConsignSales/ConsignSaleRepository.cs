@@ -224,5 +224,10 @@ namespace Repositories.ConsignSales
                 throw new Exception(ex.Message, ex);
             }
         }
+
+        public async Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId)
+        {
+            return await _consignSaleDao.GetQueryable().Where(c => c.MemberId == accountId).ToListAsync();
+        }
     }
 }
