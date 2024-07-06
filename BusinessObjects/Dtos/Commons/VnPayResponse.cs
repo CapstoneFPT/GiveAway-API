@@ -1,6 +1,6 @@
 ﻿namespace BusinessObjects.Dtos.Commons;
 
-public class VnPaymentResponseModel
+public class VnPaymentResponse
 {
     public bool Success { get; set; }
     public string PaymentMethod { get; set; }

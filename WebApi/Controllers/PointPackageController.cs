@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using System.Collections.Specialized;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ public class PointPackageController : ControllerBase
     private readonly ITransactionService _transactionService;
 
     public PointPackageController(ILogger<PointPackageController> logger, IPointPackageService pointPackageService,
-         IOrderService orderService,IVnPayService vnPayService,ITransactionService transactionService)
+        IOrderService orderService, IVnPayService vnPayService, ITransactionService transactionService)
     {
         _logger = logger;
         _pointPackageService = pointPackageService;
@@ -44,8 +45,9 @@ public class PointPackageController : ControllerBase
         return Ok(result);
     }
 
-  [HttpPost("{pointPackageId}/purchase")]
-    public async Task<IActionResult> Purchase([FromRoute] Guid pointPackageId, [FromBody] PurchasePointPackageRequest request)
+    [HttpPost("{pointPackageId}/purchase")]
+    public async Task<IActionResult> Purchase([FromRoute] Guid pointPackageId,
+        [FromBody] PurchasePointPackageRequest request)
     {
         try
         {
@@ -55,7 +57,7 @@ public class PointPackageController : ControllerBase
                 return NotFound("Point package not found");
             }
 
-            var order = new PointPackageOrder() 
+            var order = new PointPackageOrder()
             {
                 MemberId = request.MemberId,
                 TotalPrice = pointPackage.Price,
@@ -69,13 +71,14 @@ public class PointPackageController : ControllerBase
 
             var paymentUrl = _vnPayService.CreatePaymentUrl(
                 orderResult.Data
-                    .OrderCode,
+                    .OrderId,
                 orderResult.Data
                     .TotalPrice,
                 $"Purchase point package: {pointPackage.Points} points"
             );
 
-            _logger.LogInformation($"Point package purchase initiated. OrderCode: {orderResult.Data.OrderCode}, MemberId: {request.MemberId}, Package: {pointPackage.Points} points");
+            _logger.LogInformation(
+                $"Point package purchase initiated. OrderCode: {orderResult.Data.OrderCode}, MemberId: {request.MemberId}, Package: {pointPackage.Points} points");
 
             return Ok(new { paymentUrl, orderCode = order.OrderCode });
         }
@@ -87,16 +90,20 @@ public class PointPackageController : ControllerBase
     }
 
     [HttpGet("payment-return")]
-    public async Task<IActionResult> PaymentReturn([FromQuery] IQueryCollection collection)
+    public async Task<IActionResult> PaymentReturn()
     {
-        var response = _vnPayService.ProcessPayment(collection);
+        var requestParams = Request.Query;
+        var response = _vnPayService.ProcessPayment(requestParams);
 
         if (response.Success)
         {
             try
             {
-                var transaction = await _transactionService.CreateTransaction(response);
-                var order = await _orderService.GetOrderByCode(response.OrderId);
+                var transaction = await _transactionService.CreateTransaction(response, TransactionType.Recharge);
+                var order = await _orderService.GetOrderById(new Guid(response.OrderId));
+                var orderDetails = await _orderService.GetOrderDetailByOrderId(new Guid(response.OrderId));
+                var pointPackageId = orderDetails[0].PointPackageId.Value;
+                var pointPackage = await _pointPackageService.GetPointPackageDetail(pointPackageId);
 
                 if (order == null)
                 {
@@ -107,27 +114,35 @@ public class PointPackageController : ControllerBase
                 if (order.Status != OrderStatus.AwaitingPayment)
                 {
                     _logger.LogWarning($"Order already processed: {response.OrderId}");
-                    return Ok(new { success = true, message = "Order already processed", orderCode = response.OrderId });
+                    return Ok(new
+                        { success = true, message = "Order already processed", orderCode = response.OrderId });
                 }
 
-                await _pointPackageService.AddPointsToBalance(order.MemberId, 4444);
+                await _pointPackageService.AddPointsToBalance(order.MemberId, amount: pointPackage.Points);
 
                 order.Status = OrderStatus.Completed;
                 order.PaymentDate = DateTime.UtcNow;
                 await _orderService.UpdateOrder(order);
 
-                _logger.LogInformation($"Point package purchase successful. OrderCode: {response.OrderId}, Points: {order.TotalPrice}");
+                _logger.LogInformation(
+                    $"Point package purchase successful. OrderCode: {response.OrderId}, Points: {order.TotalPrice}");
 
-                return Ok(new { success = true, message = "Payment successful", orderCode = response.OrderId, points = order.TotalPrice });
+                return Ok(new
+                {
+                    success = true, message = "Payment successful", orderCode = response.OrderId,
+                    TotalPrice = order.TotalPrice
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing successful payment");
-                return StatusCode(500, new { success = false, message = "An error occurred while processing your payment." });
+                return StatusCode(500,
+                    new { success = false, message = "An error occurred while processing your payment." });
             }
         }
 
-        _logger.LogWarning($"Payment failed. OrderCode: {response.OrderId}, ResponseCode: {response.VnPayResponseCode}");
+        _logger.LogWarning(
+            $"Payment failed. OrderCode: {response.OrderId}, ResponseCode: {response.VnPayResponseCode}");
         return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
     }
 }
@@ -135,21 +150,4 @@ public class PointPackageController : ControllerBase
 public class PurchasePointPackageRequest
 {
     public Guid MemberId { get; set; }
-}
-
-public class VnPayResponseData
-{
-    public string vnp_TmnCode { get; set; }
-    public string vnp_Amount { get; set; }
-    public string vnp_BankCode { get; set; }
-    public string vnp_BankTranNo { get; set; }
-    public string vnp_CardType { get; set; }
-    public string vnp_PayDate { get; set; }
-    public string vnp_OrderInfo { get; set; }
-    public string vnp_TransactionNo { get; set; }
-    public string vnp_ResponseCode { get; set; }
-    public string vnp_TransactionStatus { get; set; }
-    public string vnp_TxnRef { get; set; }
-    public string vnp_SecureHashType { get; set; }
-    public string vnp_SecureHash { get; set; }
 }

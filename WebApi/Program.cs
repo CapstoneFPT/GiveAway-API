@@ -31,6 +31,7 @@ builder.Services.AddDao();
 builder.Services.AddHostedService<AuctionEndingService>();
 builder.Services.AddHostedService<AuctionStartingService>();
 builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPay"));
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
@@ -165,7 +166,7 @@ var config = builder.Configuration.GetSection("Kestrel");
 //                     builderConfig[httpsCertificatePassword]
 //                 );
 //             });
-//         });
+//         })
 //     }
 //     catch (Exception e)
 //     {

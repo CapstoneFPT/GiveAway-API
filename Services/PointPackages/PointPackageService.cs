@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Entities;
+﻿using System.Linq.Expressions;
+using BusinessObjects.Entities;
 using Repositories.PointPackages;
 
 namespace Services.PointPackages;
@@ -11,19 +12,35 @@ public class PointPackageService : IPointPackageService
     {
         _pointPackageRepository = pointPackageRepository;
     }
-    
+
     public Task<object?> GetList()
     {
         throw new NotImplementedException();
     }
 
-    public Task<PointPackage?> GetPointPackageDetail(Guid pointPackageId)
+    public async Task<PointPackage?> GetPointPackageDetail(Guid pointPackageId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var result = await _pointPackageRepository.GetSingle(x => x.PointPackageId == pointPackageId);
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
     }
 
-    public Task AddPointsToBalance(Guid orderMemberId, int amount)
+    public Task AddPointsToBalance(Guid accountId, int amount)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return _pointPackageRepository.AddPointsToBalance(accountId, amount);
+        }
+        catch (Exception e)
+        {
+            throw new Exception();
+        }
     }
 }

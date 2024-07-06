@@ -17,5 +17,6 @@ public class Transaction
    public Guid? RefundId { get; set; }
    public Guid MemberId { get; set; }
    public Member Member { get; set; }
+   public string TransactionNumber { get; set; }
    public AuctionDeposit? AuctionDeposit { get; set; }
 }

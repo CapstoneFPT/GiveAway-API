@@ -6,5 +6,5 @@ public interface IPointPackageService
 {
     Task<object?> GetList();
     Task<PointPackage?> GetPointPackageDetail(Guid pointPackageId);
-    Task AddPointsToBalance(Guid orderMemberId, int amount);
+    Task AddPointsToBalance(Guid accountId, int amount);
 }

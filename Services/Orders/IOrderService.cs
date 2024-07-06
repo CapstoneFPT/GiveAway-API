@@ -20,7 +20,8 @@ namespace Services.Orders
         Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId);
         Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
         Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
-        Task<Order?> GetOrderByCode(string orderCode);
+        Task<Order?> GetOrderById(Guid orderId);
         Task UpdateOrder(Order order);
+        Task<List<OrderDetail>> GetOrderDetailByOrderId(Guid orderId);
     }
 }

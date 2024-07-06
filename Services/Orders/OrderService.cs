@@ -122,6 +122,18 @@ namespace Services.Orders
             }
         }
 
+        public async Task<List<OrderDetail>> GetOrderDetailByOrderId(Guid orderId)
+        {
+            try
+            {
+                return await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderId);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
         public async Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order)
         {
             try
@@ -145,7 +157,7 @@ namespace Services.Orders
 
                 return new Result<OrderResponse>()
                 {
-                    Data = _mapper.Map<Order,OrderResponse>(orderResult),
+                    Data = _mapper.Map<Order, OrderResponse>(orderResult),
                     ResultStatus = ResultStatus.Success
                 };
             }
@@ -155,11 +167,12 @@ namespace Services.Orders
             }
         }
 
-        public async Task<Order?> GetOrderByCode(string orderCode)
+
+        public async Task<Order?> GetOrderById(Guid orderId)
         {
             try
             {
-                var result = await _orderRepository.GetSingleOrder(x => x.OrderCode == orderCode);
+                var result = await _orderRepository.GetSingleOrder(x => x.OrderId == orderId);
                 return result;
             }
             catch (Exception e)
@@ -168,9 +181,16 @@ namespace Services.Orders
             }
         }
 
-        public Task UpdateOrder(Order order)
+        public async Task UpdateOrder(Order order)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await _orderRepository.UpdateOrder(order);
+            }
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
         }
 
         public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId,
@@ -248,7 +268,7 @@ namespace Services.Orders
             }
         }
 
-        public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId)
+        public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId, Guid orderId)
         {
             try
             {
@@ -260,16 +280,20 @@ namespace Services.Orders
                     response.ResultStatus = ResultStatus.NotFound;
                     return response;
                 }
+
                 var orderResponse = await _orderRepository.ConfirmOrderDelivered(shopId, orderId);
                 response.Data = orderResponse;
                 if (orderResponse.Status.Equals(OrderStatus.Completed))
                 {
-                    response.Messages = ["This order of your shop is finally deliveried! The order status has changed to completed"];
+                    response.Messages =
+                        ["This order of your shop is finally deliveried! The order status has changed to completed"];
                 }
                 else
                 {
-                    response.Messages = ["The order of your shop is deliveried! The item status has changed to refundable"];
+                    response.Messages =
+                        ["The order of your shop is deliveried! The item status has changed to refundable"];
                 }
+
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
