@@ -18,6 +18,33 @@ namespace Services.ConsignSales
             _accountRepository = accountRepository;
         }
 
+        public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
+        {
+            var response = new Result<ConsignSaleResponse>();
+            var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
+            if (consign == null)
+            {
+                response.Messages = ["Can not find the consign"];
+                response.ResultStatus = ResultStatus.NotFound;
+                return response;
+            }else if(!consign.Status.Equals(ConsignSaleStatus.Pending))
+            {
+                response.Messages = ["This consign is not allowed to aprroval"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+            else if(!status.Equals(ConsignSaleStatus.AwaitDelivery) && !status.Equals(ConsignSaleStatus.Rejected))
+            {
+                response.Messages = ["Status not available"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+            response.Data = await _consignSaleRepository.ApprovalConsignSale(consignId,status);
+            response.Messages = ["Approval successfully"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
+
         public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
         {
             try

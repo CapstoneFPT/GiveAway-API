@@ -193,5 +193,36 @@ namespace Repositories.ConsignSales
             int number = random.Next(100000, 1000000);
             return prefix + number.ToString("D6");
         }
+
+        public async Task<ConsignSaleResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
+        {
+            try
+            {
+                var consign = await _consignSaleDao.GetQueryable()
+                .Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)
+                .Where(c => c.ConsignSaleId == consignId)
+                .FirstOrDefaultAsync();
+                if (status.Equals(ConsignSaleStatus.Rejected))
+                {
+                    consign.Status = ConsignSaleStatus.Rejected;
+                    foreach (var consigndetail in consign.ConsignSaleDetails)
+                    {
+                        var item = await _fashionItemDao.GetQueryable().FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
+                        item.Status = FashionItemStatus.Rejected;
+                        await _fashionItemDao.UpdateAsync(item);
+                    }
+                }
+                else
+                {
+                    consign.Status = ConsignSaleStatus.AwaitDelivery;
+                }
+                await _consignSaleDao.UpdateAsync(consign);
+                return _mapper.Map<ConsignSaleResponse>(consign);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }
+        }
     }
 }

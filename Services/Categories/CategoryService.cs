@@ -22,9 +22,16 @@ namespace Services.Categories
 
         public async Task<Result<List<Category>>> GetAllChildrenCategory(Guid categoryId)
         {
-            var cate = await _categoryRepository.GetCategoryById(categoryId);
-            var listChildren = await _categoryRepository.GetAllChildrenCategory(cate.CategoryId, (cate.Level + 1));
             var response = new Result<List<Category>>();
+            var cate = await _categoryRepository.GetCategoryById(categoryId);
+            if (cate.Status.Equals("Unavailable"))
+            {
+                response.Messages = new[] { "This is an unavailable category" };
+                response.ResultStatus = ResultStatus.NotFound;
+                return response;
+            }
+            var listChildren = await _categoryRepository.GetAllChildrenCategory(cate.CategoryId, (cate.Level + 1));
+            
             if (!listChildren.Any())
             {
                 response.Messages = new[] { "This is the final category" };
