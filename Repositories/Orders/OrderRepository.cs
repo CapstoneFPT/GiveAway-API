@@ -301,9 +301,55 @@ namespace Repositories.Orders
             }
         }
 
-        public Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId)
+        public async Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var orderResponse = new OrderResponse();
+                var order = await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderId == orderId);
+                var listorderdetailEachShop = await _orderDetailDao.GetQueryable().Include(c => c.FashionItem).Where(c => c.OrderId == orderId && c.FashionItem.ShopId == shopId)
+                    .AsNoTracking() .ToListAsync();
+                var listItemEachshop = listorderdetailEachShop.Select(c => c.FashionItem).ToList();
+
+
+                foreach ( var item in listItemEachshop )
+                {
+                    item.Status = FashionItemStatus.Refundable;
+                    await _fashionItemDao.UpdateAsync(item);
+                }
+                var listorderdetail = await _orderDetailDao.GetQueryable().Include(c => c.FashionItem).Where(c => c.OrderId == orderId)
+                    .AsNoTracking().ToListAsync();
+
+                
+                var listOrderdetailResponse = new List<OrderDetailResponse<FashionItem>>();
+                foreach (var item in listItemEachshop)
+                {
+                    var orderDetail = await _orderDetailDao.GetQueryable().FirstOrDefaultAsync(c => c.FashionItemId.Equals(item.ItemId));
+                    if (orderDetail != null)
+                    {
+                        var newOrderDetail = new OrderDetailResponse<FashionItem>();
+                        newOrderDetail.OrderId = orderDetail.OrderId;
+                        newOrderDetail.UnitPrice = orderDetail.UnitPrice;
+                        newOrderDetail.FashionItemDetail = await _fashionItemDao.GetQueryable().FirstOrDefaultAsync(c => c.ItemId == item.ItemId);
+
+                        listOrderdetailResponse.Add(newOrderDetail);
+                    }
+                }
+                var listItem = listorderdetail.Select(c => c.FashionItem).ToList();
+                if (!listItem.Any(c => c.Status.Equals(FashionItemStatus.OnDelivery)))
+                {
+                    order.Status = OrderStatus.Completed;
+                    await _orderDao.UpdateAsync(order);
+                    
+                }
+                orderResponse = await _orderDao.GetQueryable().Where(c => c.OrderId == orderId).ProjectTo<OrderResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
+                orderResponse.orderDetailResponses = listOrderdetailResponse;
+                return orderResponse;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 }

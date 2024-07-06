@@ -11,6 +11,6 @@ namespace Repositories.ConsignSales
     public interface IConsignSaleRepository
     {
         Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSale(Guid accountId, ConsignSaleRequest request);
-        Task<ConsignSaleResponse> GetConsignSaleById(Guid accountId, Guid consignId);
+        Task<ConsignSaleResponse> GetConsignSaleById(Guid consignId);
     }
 }

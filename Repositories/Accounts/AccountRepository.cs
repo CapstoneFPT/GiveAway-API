@@ -130,9 +130,6 @@ namespace Repositories.Accounts
             return Task.FromResult((user == null) ? null : user);
         }
 
-        public Task<AccountResponse> ChangePassword(Guid accountId, ChangePasswordRequest request)
-        {
-            throw new NotImplementedException();
-        }
+        
     }
 }

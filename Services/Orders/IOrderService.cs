@@ -17,7 +17,7 @@ namespace Services.Orders
         Task<Result<OrderResponse>> CreateOrder(Guid accountId,List<Guid?> listItemId, CreateOrderRequest order);
         Task<Result<string>> CancelOrder(Guid orderId);
         Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
-        Task<Result<string>> ConfirmOrderDeliveried(Guid orderId);
+        Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId);
         Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
         Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderByCode(string orderCode);

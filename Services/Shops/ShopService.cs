@@ -40,5 +40,28 @@ namespace Services.Shops
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<Result<ShopDetailResponse>> GetShopById(Guid shopid)
+        {
+            try
+            {
+                var response = new Result<ShopDetailResponse>();
+                var result = await _shopRepository.GetShopById(shopid);
+                if (result != null)
+                {
+                    response.Data = result;
+                    response.Messages = ["Successfully"];
+                    response.ResultStatus = ResultStatus.Success;
+                    return response;
+                }
+                response.Messages = ["There isn't any shop available"];
+                response.ResultStatus = ResultStatus.NotFound;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }

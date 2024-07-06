@@ -248,22 +248,28 @@ namespace Services.Orders
             }
         }
 
-        public async Task<Result<string>> ConfirmOrderDeliveried(Guid orderId)
+        public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId)
         {
             try
             {
-                var response = new Result<string>();
+                var response = new Result<OrderResponse>();
                 var order = await _orderRepository.GetOrderById(orderId);
-                if (order == null || order.Status != OrderStatus.AwaitingPayment)
+                if (order == null || order.Status != OrderStatus.OnDelivery)
                 {
                     response.Messages = ["Cound not find your order"];
                     response.ResultStatus = ResultStatus.NotFound;
                     return response;
                 }
-
-                order.Status = OrderStatus.Completed;
-                await _orderRepository.UpdateOrder(order);
-                response.Messages = ["This order is completed! The status has changed to completed"];
+                var orderResponse = await _orderRepository.ConfirmOrderDelivered(shopId, orderId);
+                response.Data = orderResponse;
+                if (orderResponse.Status.Equals(OrderStatus.Completed))
+                {
+                    response.Messages = ["This order of your shop is finally deliveried! The order status has changed to completed"];
+                }
+                else
+                {
+                    response.Messages = ["The order of your shop is deliveried! The item status has changed to refundable"];
+                }
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }

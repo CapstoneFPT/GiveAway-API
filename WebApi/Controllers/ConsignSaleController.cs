@@ -16,10 +16,10 @@ namespace WebApi.Controllers
         {
             _consignsaleService = consignsaleService;
         }
-        [HttpGet("consignsales/{consignsaleId}")]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> GetConsignSaleById([FromRoute] Guid accountId, [FromRoute] Guid consignsaleId)
+        [HttpGet("{consignsaleId}")]
+        public async Task<ActionResult<Result<ConsignSaleResponse>>> GetConsignSaleById([FromRoute] Guid consignsaleId)
         {
-            return await _consignsaleService.GetConsignSaleById(accountId, consignsaleId);
+            return await _consignsaleService.GetConsignSaleById(consignsaleId);
         }
     }
 }
