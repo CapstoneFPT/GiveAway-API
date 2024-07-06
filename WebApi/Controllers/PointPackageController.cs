@@ -95,9 +95,7 @@ public class PointPackageController : ControllerBase
         {
             try
             {
-                //add trasactionn
-                
-                
+                var transaction = await _transactionService.CreateTransaction(response);
                 var order = await _orderService.GetOrderByCode(response.OrderId);
 
                 if (order == null)
@@ -128,11 +126,9 @@ public class PointPackageController : ControllerBase
                 return StatusCode(500, new { success = false, message = "An error occurred while processing your payment." });
             }
         }
-        else
-        {
-            _logger.LogWarning($"Payment failed. OrderCode: {response.OrderId}, ResponseCode: {response.VnPayResponseCode}");
-            return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
-        }
+
+        _logger.LogWarning($"Payment failed. OrderCode: {response.OrderId}, ResponseCode: {response.VnPayResponseCode}");
+        return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
     }
 }
 
