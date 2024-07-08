@@ -150,7 +150,7 @@ namespace Services.FashionItems
                         await _fashionitemRepository.UpdateFashionItem(item);
                         response.Messages = ["This item status has successfully changed to available"];
                         response.Data = _mapper.Map<FashionItemDetailResponse>(item);
-                        response.ResultStatus = ResultStatus.Error;
+                        response.ResultStatus = ResultStatus.Success;
                         return response;
                     }
                     item.Status = FashionItemStatus.Unavailable;

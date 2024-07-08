@@ -28,7 +28,7 @@ namespace WebApi.Controllers
         {
             return await _fashionItemService.GetFashionItemById(id);
         }
-        [HttpPut("{itemid}/check-unavailable")]
+        [HttpPut("{itemid}/check-availability")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> CheckFashionItemAvailability([FromRoute] Guid itemid)
         {
             return await _fashionItemService.CheckFashionItemAvailability(itemid);
