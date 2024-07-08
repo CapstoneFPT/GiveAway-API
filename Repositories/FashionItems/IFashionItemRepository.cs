@@ -17,5 +17,6 @@ namespace Repositories.FashionItems
         Task<FashionItem> AddFashionItem(FashionItem request);
         Task<FashionItem> UpdateFashionItem(FashionItem fashionItem);
         Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id, AuctionFashionItemRequest request);
+        Task BulkUpdate(List<FashionItem> fashionItems);
     }
 }

@@ -10,4 +10,5 @@ public class Member : Account
     public ICollection<AuctionDeposit> AuctionDeposits = new List<AuctionDeposit>();
     public ICollection<Refund> Refunds = new List<Refund>();
     public ICollection<Feedback> Feedbacks = new List<Feedback>();
+    public ICollection<Transaction> Transactions = new List<Transaction>();
 }

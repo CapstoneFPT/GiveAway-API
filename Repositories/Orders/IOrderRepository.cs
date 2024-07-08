@@ -22,5 +22,7 @@ namespace Repositories.Orders
         Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
         Task<Order?> GetSingleOrder(Expression<Func<Order,bool>> predicate);
         Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId);
+        Task<List<Order>> GetOrders(Expression<Func<Order, bool>> predicate);
+        Task BulkUpdate(List<Order> ordersToUpdate);
     }
 }

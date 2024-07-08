@@ -3,6 +3,7 @@ using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,5 +15,6 @@ namespace Repositories.Shops
         Task<List<ShopDetailResponse>> GetAllShop();
         Task<ShopDetailResponse> GetShopByAccountId(Guid id);
         Task<ShopDetailResponse> GetShopById(Guid id);
+        Task<Shop?> GetSingleShop(Expression<Func<Shop, bool>> predicate);
     }
 }

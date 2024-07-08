@@ -124,4 +124,12 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<Transaction>>();
         return serviceCollection;
     }
+
+    public static IServiceCollection AddLongRunningServices(this IServiceCollection serviceCollection)
+    {
+        serviceCollection.AddHostedService<AuctionEndingService>();
+        serviceCollection.AddHostedService<AuctionStartingService>();
+        serviceCollection.AddHostedService<OrderCancelingService>();
+        return serviceCollection;
+    }
 }

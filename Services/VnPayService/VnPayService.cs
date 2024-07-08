@@ -17,7 +17,7 @@ public class VnPayService : IVnPayService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public string CreatePaymentUrl(Guid orderId, long amount, string orderInfo)
+    public string CreatePaymentUrl(Guid orderId, long amount, string orderInfo,string resourceName)
     {
         var tick = DateTime.Now.Ticks.ToString();
         
@@ -32,7 +32,7 @@ public class VnPayService : IVnPayService
         _vnPayLibrary.AddRequestData("vnp_OrderInfo", orderId.ToString());
         _vnPayLibrary.AddRequestData("vnp_OrderType", "other");
         _vnPayLibrary.AddRequestData("vnp_ExpireDate", DateTime.Now.AddMinutes(15).ToString("yyyyMMddHHmmss"));
-        _vnPayLibrary.AddRequestData("vnp_ReturnUrl", _vnPaySettings.ReturnUrl);
+        _vnPayLibrary.AddRequestData("vnp_ReturnUrl", $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}/api/{resourceName}/payment-return");
         _vnPayLibrary.AddRequestData("vnp_TxnRef", tick);
         
         var result =  _vnPayLibrary.CreateRequestUrl(_vnPaySettings.PaymentUrl, _vnPaySettings.HashSecret);
@@ -56,7 +56,7 @@ public class VnPayService : IVnPayService
         var vnp_OrderInfo = _vnPayLibrary.GetResponseData("vnp_OrderInfo");
         
         bool isValidSignature = _vnPayLibrary.ValidateSignature(
-            vnp_SecureHash, _vnPaySettings.HashSecret);
+            vnp_SecureHash!, _vnPaySettings.HashSecret);
 
         if (isValidSignature)
         {
@@ -68,7 +68,7 @@ public class VnPayService : IVnPayService
                 OrderId = vnp_OrderInfo,
                 PaymentId = vnp_TransactionNo,
                 TransactionId = vnp_TransactionNo,
-                Token = vnp_SecureHash,
+                Token = vnp_SecureHash!,
                 VnPayResponseCode = vnp_ResponseCode
             };
         } 

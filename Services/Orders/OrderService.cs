@@ -1,20 +1,15 @@
 ﻿using AutoMapper;
 using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
-using MailKit.Search;
 using Repositories.FashionItems;
 using Repositories.OrderDetails;
 using Repositories.Orders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BusinessObjects.Dtos.Auctions;
-using Microsoft.AspNetCore.Authentication;
+using Repositories.Accounts;
 using Repositories.AuctionItems;
+using Repositories.PointPackages;
+using Repositories.Shops;
 
 namespace Services.Orders
 {
@@ -25,15 +20,23 @@ namespace Services.Orders
         private readonly IOrderDetailRepository _orderDetailRepository;
         private readonly IAuctionItemRepository _auctionItemRepository;
         private readonly IMapper _mapper;
+        private readonly IAccountRepository _accountRepository;
+        private readonly IPointPackageRepository _pointPackageRepository;
+        private readonly IShopRepository _shopRepository;
 
         public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
-            IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository)
+            IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository,
+            IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
+            IShopRepository shopRepository)
         {
             _orderRepository = orderRepository;
             _fashionItemRepository = fashionItemRepository;
             _mapper = mapper;
             _orderDetailRepository = orderDetailRepository;
             _auctionItemRepository = auctionItemRepository;
+            _pointPackageRepository = pointPackageRepository;
+            _accountRepository = accountRepository;
+            _shopRepository = shopRepository;
         }
 
         public async Task<Result<OrderResponse>> CreateOrder(Guid accountId, List<Guid?> listItemId,
@@ -132,6 +135,92 @@ namespace Services.Orders
             {
                 throw new Exception(e.Message);
             }
+        }
+
+        public async Task<List<Order>> GetOrdersToCancel()
+        {
+            try
+            {
+                var oneDayAgo = DateTime.UtcNow.AddDays(-1);
+                var ordersToCancel = await _orderRepository.GetOrders(x =>
+                    x.CreatedDate < oneDayAgo
+                    && x.Status == OrderStatus.AwaitingPayment
+                    && x.PaymentMethod != PaymentMethod.COD);
+
+                return ordersToCancel;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        
+
+        public void CancelOrders(List<Order> ordersToCancel)
+        {
+            try
+            {
+                ordersToCancel.ForEach(x => x.Status = OrderStatus.Cancelled);
+                _orderRepository.BulkUpdate(ordersToCancel);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task UpdateShopBalance(Order order)
+        {
+            try
+            {
+                if (order.Status != OrderStatus.Completed)
+                {
+                    throw new Exception("Can not update balance if order is not completed");
+                }
+
+                var shopTotals = order.OrderDetails
+                    .GroupBy(item => item.FashionItem!.ShopId)
+                    .Select(group =>
+                        new
+                        {
+                            ShopId = group.Key,
+                            Total = group.Sum(item => item.UnitPrice)
+                        });
+
+                foreach (var shopTotal in shopTotals)
+                {
+                    var shop = await _shopRepository.GetSingleShop(x=>x.ShopId == shopTotal.ShopId);
+                    var staff = await _accountRepository.GetAccountById(shop!.StaffId);
+                    staff.Balance += shopTotal.Total;
+                    await _accountRepository.UpdateAccount(staff);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task UpdateFashionItemStatus(Guid orderOrderId)
+        {
+            try
+            {
+                var orderDetails = await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderOrderId);
+                orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.Unavailable);
+                var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
+                await _fashionItemRepository.BulkUpdate(fashionItems!);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        private async void CancelOrder(Order x)
+        {
+            x.Status = OrderStatus.Cancelled;
+            await _orderRepository.UpdateOrder(x);
         }
 
         public async Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order)

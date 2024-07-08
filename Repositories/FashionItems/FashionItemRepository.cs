@@ -22,7 +22,8 @@ namespace Repositories.FashionItems
         private readonly GenericDao<Category> _categoryDao;
         private readonly IMapper _mapper;
 
-        public FashionItemRepository(GenericDao<FashionItem> fashionitemDao, GenericDao<Category> categoryDao, IMapper mapper)
+        public FashionItemRepository(GenericDao<FashionItem> fashionitemDao, GenericDao<Category> categoryDao,
+            IMapper mapper)
         {
             _fashionitemDao = fashionitemDao;
             _categoryDao = categoryDao;
@@ -56,10 +57,12 @@ namespace Repositories.FashionItems
                 {
                     query = query.Where(f => f.ShopId.Equals(request.ShopId));
                 }
+
                 if (request.GenderType != null)
                 {
                     query = query.Where(f => f.Gender.Equals(request.GenderType));
                 }
+
                 var count = await query.CountAsync();
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)
                     .Take(request.PageSize);
@@ -104,7 +107,6 @@ namespace Repositories.FashionItems
         public async Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,
             AuctionFashionItemRequest request)
         {
-           
             var listCate = new List<Guid>();
             await GetCategoryIdsRecursive(id, listCate);
             if (listCate.Count == 0)
@@ -185,6 +187,18 @@ namespace Repositories.FashionItems
 
 
             return result;
+        }
+
+        public async Task BulkUpdate(List<FashionItem> fashionItems)
+        {
+            try
+            {
+                await _fashionitemDao.UpdateRange(fashionItems);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public async Task<FashionItem> UpdateFashionItem(FashionItem fashionItem)

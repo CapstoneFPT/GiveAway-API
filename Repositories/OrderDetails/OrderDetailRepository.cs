@@ -26,10 +26,11 @@ namespace Repositories.OrderDetails
 
         public async Task<OrderDetail> CreateOrderDetail(OrderDetail orderDetail)
         {
-           return await _orderDetailDao.AddAsync(orderDetail);
+            return await _orderDetailDao.AddAsync(orderDetail);
         }
 
-        public async Task<PaginationResponse<OrderDetailResponse<FashionItem>>> GetAllOrderDetailByOrderId(Guid id, OrderDetailRequest request)
+        public async Task<PaginationResponse<OrderDetailResponse<FashionItem>>> GetAllOrderDetailByOrderId(Guid id,
+            OrderDetailRequest request)
         {
             try
             {
@@ -48,7 +49,6 @@ namespace Repositories.OrderDetails
                         FashionItemDetail = x.FashionItem,
                         OrderId = x.OrderId,
                         UnitPrice = x.UnitPrice,
-                        
                     })
                     .AsNoTracking().ToListAsync();
 
@@ -71,7 +71,10 @@ namespace Repositories.OrderDetails
         {
             try
             {
-                var result = await _orderDetailDao.GetQueryable().Where(predicate).ToListAsync();
+                var result = await _orderDetailDao.GetQueryable()
+                    .Include(x => x.FashionItem)
+                    .Where(predicate)
+                    .ToListAsync();
                 return result;
             }
             catch (Exception e)
@@ -79,7 +82,7 @@ namespace Repositories.OrderDetails
                 throw new Exception(e.Message);
             }
         }
-        
+
 
         public async Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id)
         {

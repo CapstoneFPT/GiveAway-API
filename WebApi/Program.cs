@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Services.Auctions;
+using Services.Orders;
 using Services.VnPayService;
 using WebApi;
 using WebApi.Controllers;
@@ -28,8 +29,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddServices();
 builder.Services.AddRepositories();
 builder.Services.AddDao();
-builder.Services.AddHostedService<AuctionEndingService>();
-builder.Services.AddHostedService<AuctionStartingService>();
+builder.Services.AddLongRunningServices();
 builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPay"));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR(options =>
