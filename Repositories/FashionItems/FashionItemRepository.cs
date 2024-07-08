@@ -208,6 +208,8 @@ namespace Repositories.FashionItems
         {
             var parentCate = await _categoryDao.GetQueryable().FirstOrDefaultAsync(c => c.CategoryId == id);
             if (parentCate == null) return;
+            
+            categoryIds.Add(parentCate.CategoryId);
 
             var listCate = await _categoryDao.GetQueryable()
                 .Where(c => c.ParentId == id && c.Status.Equals(CategoryStatus.Available))
