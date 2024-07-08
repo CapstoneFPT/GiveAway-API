@@ -6,6 +6,7 @@ using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Services.Accounts;
 using Services.OrderDetails;
 using Services.Orders;
 using Services.Transactions;
@@ -22,14 +23,17 @@ namespace WebApi.Controllers
         private readonly IVnPayService _vnPayService;
         private readonly ITransactionService _transactionService;
         private readonly ILogger<OrderController> _logger;
+        private readonly IAccountService _accountService;
 
         public OrderController(IOrderService orderService, IOrderDetailService orderDetailService, IVnPayService
-            vnPayService, ITransactionService transactionService, ILogger<OrderController> logger)
+                vnPayService, ITransactionService transactionService, ILogger<OrderController> logger,
+            IAccountService accountService)
         {
             _orderService = orderService;
             _orderDetailService = orderDetailService;
             _vnPayService = vnPayService;
             _transactionService = transactionService;
+            _accountService = accountService;
             _logger = logger;
         }
 
@@ -80,7 +84,10 @@ namespace WebApi.Controllers
         [HttpGet("payment-return")]
         public async Task<IActionResult> PaymentReturn()
         {
-            var requestParams = Request.Query; var response = _vnPayService.ProcessPayment(requestParams); var order = await _orderService.GetOrderById(new Guid(response.OrderId)); if (response.Success)
+            var requestParams = Request.Query;
+            var response = _vnPayService.ProcessPayment(requestParams);
+            var order = await _orderService.GetOrderById(new Guid(response.OrderId));
+            if (response.Success)
             {
                 try
                 {
@@ -103,16 +110,10 @@ namespace WebApi.Controllers
                     {
                         order.Status = OrderStatus.Completed;
                         order.PaymentDate = DateTime.UtcNow;
-                        
-                        using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
-                        {
-                            await _orderService.UpdateOrder(order);
-                            await _orderService.UpdateFashionItemStatus(order.OrderId);
-                            await _orderService.UpdateShopBalance(order);
-                        } 
-                        
-                        
 
+                        await _orderService.UpdateOrder(order);
+                        await _orderService.UpdateFashionItemStatus(order.OrderId);
+                        await _orderService.UpdateShopBalance(order);
 
                         return Ok(new
                             { success = true, message = "Payment success", orderCode = response.OrderId });
@@ -129,10 +130,36 @@ namespace WebApi.Controllers
                 $"Payment failed. OrderCode: {response.OrderId}, ResponseCode: {response.VnPayResponseCode}");
             return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
         }
+
+        [HttpPost("{orderId}/pay/points")]
+        public async Task<IActionResult> PurchaseOrderWithPoints([FromRoute] Guid orderId,
+            [FromBody] PurchaseOrderRequest request)
+        {
+            var order = await _orderService.GetOrderById(orderId);
+
+            if (order == null)
+            {
+                throw new Exception("Order");
+            }
+
+            if (order.PaymentMethod != PaymentMethod.Point)
+            {
+                throw new Exception("Order is not paid by points");
+            }
+
+
+            await _accountService.DeductPoints(request.MemberId, order.TotalPrice);
+            await _orderService.UpdateOrder(order);
+            await _orderService.UpdateFashionItemStatus(order.OrderId);
+            await _orderService.UpdateShopBalance(order);
+            
+            return Ok(new
+                { success = true, message = "Payment success", orderCode = order.OrderId });
+        }
     }
 
     public class PurchaseOrderRequest
     {
-        public string MemberId { get; set; }
+        public Guid MemberId { get; set; }
     }
 }

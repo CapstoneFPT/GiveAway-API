@@ -34,6 +34,17 @@ namespace WebApi.Controllers
         {
             return await _categoryService.GetAllParentCategory();
         }
+
+        [HttpGet("tree")]
+        public async Task<ActionResult<CategoryTreeResult>> GetTree([FromQuery] Guid? shopId)
+        {
+            var result = await _categoryService.GetTree(shopId);
+            return Ok(new CategoryTreeResult()
+            {
+                ShopId = shopId,
+                Categories = result
+            });
+        }
         [HttpGet("{categoryId}")]
         public async Task<ActionResult<Result<List<Category>>>> GetAllChildrenCategory([FromRoute] Guid categoryId)
         {
@@ -45,5 +56,11 @@ namespace WebApi.Controllers
         {
             return await _categoryService.CreateCategory(parentId, request);
         }
+    }
+
+    public class CategoryTreeResult
+    {
+        public Guid? ShopId { get; set; }
+        public List<CategoryTreeNode> Categories { get; set; }
     }
 }

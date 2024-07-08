@@ -98,5 +98,25 @@ namespace Services.Accounts
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
+
+        public async Task DeductPoints(Guid requestMemberId, int orderTotalPrice)
+        {
+            try
+            {
+                var member = await _account.GetAccountById(requestMemberId);
+
+                if (member.Balance < orderTotalPrice)
+                {
+                   throw new Exception("Not enough points, please head to the recharge page"); 
+                }
+                
+                member.Balance -= orderTotalPrice;
+                await _account.UpdateAccount(member);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
     }
 }

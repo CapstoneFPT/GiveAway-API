@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Category;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Services.Categories
 {
@@ -14,5 +15,6 @@ namespace Services.Categories
         Task<Result<List<Category>>> GetAllParentCategory();
         Task<Result<List<Category>>> GetAllChildrenCategory(Guid categoryId);
         Task<Result<Category>> CreateCategory(Guid parentId, CategoryRequest request);
+        Task<List<CategoryTreeNode>> GetTree(Guid? shopId = null);
     }
 }

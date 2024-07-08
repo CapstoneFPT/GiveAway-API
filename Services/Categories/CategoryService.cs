@@ -101,6 +101,19 @@ namespace Services.Categories
             }
         }
 
+        public async Task<List<CategoryTreeNode>> GetTree(Guid? shopId = null)
+        {
+            try
+            {
+                var result = await _categoryRepository.GetCategoryTree(shopId);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
         public async Task<Result<List<Category>>> GetAllParentCategory()
         {
             try
