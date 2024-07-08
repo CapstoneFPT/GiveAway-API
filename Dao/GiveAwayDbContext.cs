@@ -44,6 +44,7 @@ public class GiveAwayDbContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(GetConnectionString());
+        optionsBuilder.EnableSensitiveDataLogging(true);
     }
 
     private string? GetConnectionString()
@@ -115,6 +116,28 @@ public class GiveAwayDbContext : DbContext
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
 
+        modelBuilder.Entity<Member>()
+            .HasMany(x => x.Bids)
+            .WithOne(x => x.Member)
+            .HasForeignKey(x => x.MemberId);
+        
+        modelBuilder.Entity<Member>()
+            .HasMany(x => x.Feedbacks)
+            .WithOne(x => x.Member)
+            .HasForeignKey(x => x.MemberId);
+        
+        modelBuilder.Entity<Member>()
+            .HasMany(x => x.Transactions)
+            .WithOne(x => x.Member)
+            .HasForeignKey(x => x.MemberId);
+        
+        
+        modelBuilder.Entity<Member>()
+            .HasMany(x => x.AuctionDeposits)
+            .WithOne(x => x.Member)
+            .HasForeignKey(x => x.MemberId);
+        
+
         #endregion
 
         #region Auction
@@ -181,7 +204,7 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
-        #region Address 
+        #region Address
 
         modelBuilder.Entity<Address>().ToTable("Address").HasKey(e => e.AddressId);
         modelBuilder.Entity<Address>().Property(e => e.RecipientName).HasColumnType("varchar").HasMaxLength(50);
@@ -255,6 +278,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(e => e.CreatedDate).HasColumnType("timestamptz").ValueGeneratedOnAdd();
         modelBuilder.Entity<Order>().Property(e => e.PaymentMethod).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Order>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
+        modelBuilder.Entity<Order>()
+            .HasMany(x => x.OrderDetails)
+            .WithOne(x => x.Order)
+            .HasForeignKey(x => x.OrderId);
 
         modelBuilder.Entity<Order>().Property(e => e.Status).HasConversion(prop => prop.ToString(),
                 s => (OrderStatus)Enum.Parse(typeof(OrderStatus), s))
@@ -371,6 +398,7 @@ public class GiveAwayDbContext : DbContext
                 s => (RefundStatus)Enum.Parse(typeof(RefundStatus), s)
             ).HasColumnType("varchar")
             .HasMaxLength(20);
+
         #endregion
 
         #region Feedback
@@ -378,7 +406,6 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Feedback>()
             .ToTable("Feedback")
             .HasKey(x => x.FeedbackId);
-        
 
         #endregion
     }

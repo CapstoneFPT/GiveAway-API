@@ -74,8 +74,7 @@ public class PointPackageController : ControllerBase
                     .OrderId,
                 orderResult.Data
                     .TotalPrice,
-                $"Purchase point package: {pointPackage.Points} points"
-            );
+                $"Purchase point package: {pointPackage.Points} points", "pointpackages");
 
             _logger.LogInformation(
                 $"Point package purchase initiated. OrderCode: {orderResult.Data.OrderCode}, MemberId: {request.MemberId}, Package: {pointPackage.Points} points");
