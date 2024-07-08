@@ -39,20 +39,20 @@ namespace Services.Orders
             _shopRepository = shopRepository;
         }
 
-        public async Task<Result<OrderResponse>> CreateOrder(Guid accountId, List<Guid?> listItemId,
+        public async Task<Result<OrderResponse>> CreateOrder(Guid accountId, 
             CreateOrderRequest orderRequest)
         {
             try
             {
                 var response = new Result<OrderResponse>();
-                if (listItemId.Count == 0)
+                if (orderRequest.listItemId.Count == 0)
                 {
                     response.Messages = ["You have no item for order"];
                     response.ResultStatus = ResultStatus.Empty;
                     return response;
                 }
 
-                var checkItemAvailable = await _orderRepository.IsOrderAvailable(listItemId);
+                var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
                 if (checkItemAvailable.Count > 0)
                 {
                     var orderResponse = new OrderResponse();
@@ -63,7 +63,7 @@ namespace Services.Orders
                     return response;
                 }
 
-                var checkOrderExisted = await _orderRepository.IsOrderExisted(listItemId, accountId);
+                var checkOrderExisted = await _orderRepository.IsOrderExisted(orderRequest.listItemId, accountId);
                 if (checkOrderExisted.Count > 0)
                 {
                     var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
@@ -75,7 +75,7 @@ namespace Services.Orders
                     return response;
                 }
 
-                response.Data = await _orderRepository.CreateOrderHierarchy(accountId, listItemId, orderRequest);
+                response.Data = await _orderRepository.CreateOrderHierarchy(accountId, orderRequest.listItemId, orderRequest);
                 response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;

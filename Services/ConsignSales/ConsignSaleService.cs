@@ -45,6 +45,34 @@ namespace Services.ConsignSales
             return response;
         }
 
+        public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId)
+        {
+            try
+            {
+                var response = new Result<ConsignSaleResponse>();
+                var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
+                if(consign == null)
+                {
+                    response.Messages = ["Consign is not found"];
+                    response.ResultStatus = ResultStatus.Error;
+                    return response;
+                }else if (!consign.Status.Equals(ConsignSaleStatus.AwaitDelivery))
+                {
+                    response.Messages = ["This consign is not allowed to confirm"];
+                    response.ResultStatus = ResultStatus.Error;
+                    return response;
+                }
+                response.Data = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
+                response.Messages = ["Confirm received successfully"];
+                response.ResultStatus = ResultStatus.Success;
+                return response;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
         {
             try

@@ -45,7 +45,7 @@ namespace Repositories.FashionItems
                     query = query.Where(x => EF.Functions.ILike(x.Name, $"%{request.SearchTerm}%"));
                 if (request.Status != null)
                 {
-                    query = query.Where(f => f.Status == request.Status);
+                    query = query.Where(f => request.Status.Contains(f.Status));
                 }
 
                 if (request.Type != null)
@@ -134,9 +134,7 @@ namespace Repositories.FashionItems
                     Note = f.Note,
                     Value = f.Value,
                     Condition = f.Condition,
-                    ConsignDuration = f.ConsignSaleDetail.ConsignSale.ConsignDuration,
-                    StartDate = f.ConsignSaleDetail.ConsignSale.StartDate,
-                    EndDate = f.ConsignSaleDetail.ConsignSale.EndDate,
+
                     ShopAddress = f.Shop.Address,
                     ShopId = f.Shop.ShopId,
                     Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,
@@ -151,7 +149,7 @@ namespace Repositories.FashionItems
 
             if (request.Status != null)
             {
-                query = query.Where(f => f.Status == request.Status);
+                query = query.Where(f => request.Status.Contains(f.Status));
             }
 
             if (request.Type != null)

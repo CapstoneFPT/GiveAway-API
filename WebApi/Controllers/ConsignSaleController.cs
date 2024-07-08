@@ -26,5 +26,10 @@ namespace WebApi.Controllers
         {
             return await _consignsaleService.ApprovalConsignSale(consignsaleId, consignStatus);
         }
+        [HttpPut("{consignsaleId}/confirm-received")]
+        public async Task<ActionResult<Result<ConsignSaleResponse>>> ConfirmReceivedFromShop([FromRoute] Guid consignsaleId)
+        {
+            return await _consignsaleService.ConfirmReceivedFromShop(consignsaleId);
+        }
     }
 }
