@@ -91,15 +91,15 @@ namespace Services.FashionItems
             return response;
         }
 
-        public async Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId, Guid shopId, FashionItemDetailRequest request)
+        public async Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId, FashionItemDetailRequest request)
         {
             try
             {
                 var response = new Result<FashionItemDetailResponse>();
                 var item = await _fashionitemRepository.GetFashionItemById(itemId);
-                if (!item.ShopId.Equals(shopId))
+                if (item is null)
                 {
-                    response.Messages = ["Not allowed"];
+                    response.Messages = ["Item is not found"];
                     response.ResultStatus = ResultStatus.Error;
                     return response;
                 }
@@ -136,7 +136,7 @@ namespace Services.FashionItems
             }
         }
 
-        public async Task<Result<FashionItemDetailResponse>> CheckItemUnavailable(Guid shopId, Guid itemId)
+        public async Task<Result<FashionItemDetailResponse>> CheckFashionItemAvailability(Guid itemId)
         {
             try
             {
@@ -144,16 +144,19 @@ namespace Services.FashionItems
                 var item = await _fashionitemRepository.GetFashionItemById(itemId);
                 if(item != null)
                 {
-                    if (!item.Status.Equals(FashionItemStatus.Available))
+                    if (item.Status.Equals(FashionItemStatus.Unavailable))
                     {
-                        response.Messages = ["This item is already not on the selling process"];
+                        item.Status = FashionItemStatus.Available;
+                        await _fashionitemRepository.UpdateFashionItem(item);
+                        response.Messages = ["This item status has successfully changed to available"];
+                        response.Data = _mapper.Map<FashionItemDetailResponse>(item);
                         response.ResultStatus = ResultStatus.Error;
                         return response;
                     }
                     item.Status = FashionItemStatus.Unavailable;
                     await _fashionitemRepository.UpdateFashionItem(item);
                     response.Data = _mapper.Map<FashionItemDetailResponse>(item);
-                    response.Messages = ["This item status has successfully changed to unvailable"];
+                    response.Messages = ["This item status has successfully changed to unavailable"];
                     response.ResultStatus= ResultStatus.Success;
                     return response;
                 }

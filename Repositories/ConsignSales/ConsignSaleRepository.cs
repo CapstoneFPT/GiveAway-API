@@ -229,5 +229,32 @@ namespace Repositories.ConsignSales
         {
             return await _consignSaleDao.GetQueryable().Where(c => c.MemberId == accountId).ToListAsync();
         }
+
+        public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
+        {
+            try
+            {
+                var consign = await _consignSaleDao.GetQueryable()
+                .Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)
+                .Where(c => c.ConsignSaleId == consignId)
+                .FirstOrDefaultAsync();
+
+                consign.Status = ConsignSaleStatus.Received;
+                consign.StartDate = DateTime.UtcNow;
+                consign.EndDate = DateTime.UtcNow.AddDays(60);
+                await _consignSaleDao.UpdateAsync(consign);
+                foreach (var consigndetail in consign.ConsignSaleDetails)
+                {
+                    var item = await _fashionItemDao.GetQueryable().FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
+                    item.Status = FashionItemStatus.Unavailable;
+                    await _fashionItemDao.UpdateAsync(item);
+                }
+                return _mapper.Map<ConsignSaleResponse>(consign);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"{ex.Message}");
+            }
+        }
     }
 }
