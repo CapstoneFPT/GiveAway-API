@@ -147,6 +147,8 @@ namespace WebApi.Controllers
                 throw new Exception("Order is not paid by points");
             }
 
+            order.PaymentDate = DateTime.UtcNow;
+            order.Status = OrderStatus.Completed;
 
             await _accountService.DeductPoints(request.MemberId, order.TotalPrice);
             await _orderService.UpdateOrder(order);
