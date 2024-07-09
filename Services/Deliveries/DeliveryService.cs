@@ -29,7 +29,7 @@ namespace Services.Deliveries
         {
             var response = new Result<DeliveryResponse>();
             var list = await _deliveryRepository.GetDeliveryByMemberId(accountId);
-            if(list.Count() >= 5)
+            if(list.Count >= 5)
             {
                 response.Messages = ["Maxium deliveries! Please delete or update"];
                 response.ResultStatus = ResultStatus.Error;

@@ -17,7 +17,7 @@ namespace Repositories.Orders
         Task<Order> UpdateOrder(Order order);
         Task<Order> GetOrderById(Guid id);
         Task<OrderResponse> CreateOrderHierarchy(Guid accountId ,List<Guid?> listItemId, CreateOrderRequest request);
-        Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberid);
+        Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberId);
         Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId);
         Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
         Task<Order?> GetSingleOrder(Expression<Func<Order,bool>> predicate);

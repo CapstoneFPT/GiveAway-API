@@ -40,7 +40,7 @@ namespace Services.Categories
             }
 
             response.Data = listChildren;
-            response.Messages = new[] { "List children categories with " + listChildren.Count() };
+            response.Messages = new[] { "List children categories with " + listChildren.Count };
             response.ResultStatus = ResultStatus.Success;
             return response;
         }

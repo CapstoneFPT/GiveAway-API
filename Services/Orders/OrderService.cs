@@ -18,41 +18,40 @@ namespace Services.Orders
         private readonly IOrderRepository _orderRepository;
         private readonly IFashionItemRepository _fashionItemRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
-        private readonly IAuctionItemRepository _auctionItemRepository;
+       
         private readonly IMapper _mapper;
         private readonly IAccountRepository _accountRepository;
-        private readonly IPointPackageRepository _pointPackageRepository;
+       
         private readonly IShopRepository _shopRepository;
 
         public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
-            IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository,
-            IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
+            IMapper mapper, IOrderDetailRepository orderDetailRepository, 
+            IAccountRepository accountRepository, 
             IShopRepository shopRepository)
         {
             _orderRepository = orderRepository;
             _fashionItemRepository = fashionItemRepository;
             _mapper = mapper;
             _orderDetailRepository = orderDetailRepository;
-            _auctionItemRepository = auctionItemRepository;
-            _pointPackageRepository = pointPackageRepository;
+          
             _accountRepository = accountRepository;
             _shopRepository = shopRepository;
         }
 
         public async Task<Result<OrderResponse>> CreateOrder(Guid accountId,
-            CreateOrderRequest orderRequest)
+            CreateOrderRequest order)
         {
             try
             {
                 var response = new Result<OrderResponse>();
-                if (orderRequest.listItemId.Count == 0)
+                if (order.listItemId.Count == 0)
                 {
                     response.Messages = ["You have no item for order"];
                     response.ResultStatus = ResultStatus.Empty;
                     return response;
                 }
 
-                var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
+                var checkItemAvailable = await _orderRepository.IsOrderAvailable(order.listItemId);
                 if (checkItemAvailable.Count > 0)
                 {
                     var orderResponse = new OrderResponse();
@@ -63,7 +62,7 @@ namespace Services.Orders
                     return response;
                 }
 
-                var checkOrderExisted = await _orderRepository.IsOrderExisted(orderRequest.listItemId, accountId);
+                var checkOrderExisted = await _orderRepository.IsOrderExisted(order.listItemId, accountId);
                 if (checkOrderExisted.Count > 0)
                 {
                     var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
@@ -76,7 +75,7 @@ namespace Services.Orders
                 }
 
                 response.Data =
-                    await _orderRepository.CreateOrderHierarchy(accountId, orderRequest.listItemId, orderRequest);
+                    await _orderRepository.CreateOrderHierarchy(accountId, order.listItemId, order);
                 response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
@@ -242,7 +241,7 @@ namespace Services.Orders
             }
         }
 
-        private async void CancelOrder(Order x)
+        private async Task CancelOrder(Order x)
         {
             x.Status = OrderStatus.Cancelled;
             await _orderRepository.UpdateOrder(x);
@@ -262,7 +261,7 @@ namespace Services.Orders
                     Status = OrderStatus.AwaitingPayment,
                 });
 
-                var orderDetailResult = await _orderDetailRepository.CreateOrderDetail(new OrderDetail()
+                await _orderDetailRepository.CreateOrderDetail(new OrderDetail()
                 {
                     OrderId = orderResult.OrderId,
                     UnitPrice = order.TotalPrice,

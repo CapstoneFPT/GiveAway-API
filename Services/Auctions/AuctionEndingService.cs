@@ -49,11 +49,11 @@ public class AuctionEndingService : BackgroundService
             {
 
                 await auctionService.EndAuction(auction.AuctionId);
-                _logger.LogInformation($"Auction {auction.AuctionId} has been ended");
+                _logger.LogInformation("Auction {AuctionId} has been ended", auction.AuctionId);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, $"Failed to end auction {auction.AuctionId}");
+                _logger.LogError(e, "Failed to end auction {AuctionId}", auction.AuctionId);
             } 
         }
     }

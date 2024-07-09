@@ -24,7 +24,7 @@ namespace Services.Shops
             {
                 var response = new Result<List<ShopDetailResponse>>();
                 var result = await _shopRepository.GetAllShop();
-                if(result.Count() > 0)
+                if(result.Count != 0)
                 {
                     response.Data = result;
                     response.Messages = ["Successfully"];

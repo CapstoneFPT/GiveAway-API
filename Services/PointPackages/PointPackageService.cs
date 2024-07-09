@@ -6,7 +6,7 @@ namespace Services.PointPackages;
 
 public class PointPackageService : IPointPackageService
 {
-    private IPointPackageRepository _pointPackageRepository;
+    private readonly IPointPackageRepository _pointPackageRepository;
 
     public PointPackageService(IPointPackageRepository pointPackageRepository)
     {

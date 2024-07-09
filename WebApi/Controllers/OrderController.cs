@@ -93,13 +93,13 @@ namespace WebApi.Controllers
                 {
                     if (order == null)
                     {
-                        _logger.LogWarning($"Order not found for OrderCode: {response.OrderId}");
+                        _logger.LogWarning("Order not found for OrderCode: {OrderId}", response.OrderId);
                         return BadRequest(new { success = false, message = "Order not found" });
                     }
 
                     if (order.Status != OrderStatus.AwaitingPayment)
                     {
-                        _logger.LogWarning($"Order already processed: {response.OrderId}");
+                        _logger.LogWarning("Order already processed: {OrderId}",response.OrderId);
                         return Ok(new
                             { success = true, message = "Order already processed", orderCode = response.OrderId });
                     }
@@ -121,13 +121,13 @@ namespace WebApi.Controllers
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e.Message);
+                    _logger.LogError(e,e.Message);
                     return StatusCode(500, new { success = false, message = "Payment failed" });
                 }
             }
 
             _logger.LogWarning(
-                $"Payment failed. OrderCode: {response.OrderId}, ResponseCode: {response.VnPayResponseCode}");
+                "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId, response.VnPayResponseCode);
             return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
         }
 

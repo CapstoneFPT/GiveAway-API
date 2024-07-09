@@ -13,7 +13,6 @@ namespace Repositories.ConsignSales
     public class ConsignSaleRepository : IConsignSaleRepository
     {
         private readonly GenericDao<ConsignSale> _consignSaleDao;
-        private readonly GenericDao<Account> _accountDao;
         private readonly GenericDao<FashionItem> _fashionItemDao;
         private readonly GenericDao<Image> _imageDao;
         private readonly GenericDao<ConsignSaleDetail> _consignSaleDetailDao;
@@ -22,11 +21,10 @@ namespace Repositories.ConsignSales
         private static Random random = new Random();
         private const string prefix = "GA-CS-";
 
-        public ConsignSaleRepository(GenericDao<ConsignSale> consignSaleDao, GenericDao<Account> accountDao, GenericDao<FashionItem> fashionItemDao, 
+        public ConsignSaleRepository(GenericDao<ConsignSale> consignSaleDao, GenericDao<FashionItem> fashionItemDao, 
             GenericDao<Image> imageDao, GenericDao<ConsignSaleDetail> consignSaleDetailDao, IMapper mapper)
         {
             _consignSaleDao = consignSaleDao;
-            _accountDao = accountDao;
             _fashionItemDao = fashionItemDao;
             _imageDao = imageDao;
             _consignSaleDetailDao = consignSaleDetailDao;

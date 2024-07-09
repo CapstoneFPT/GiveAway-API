@@ -19,12 +19,10 @@ namespace WebApi.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly IEmailService _emailService;
 
-    public AuthController(IAuthService authService, IEmailService emailService)
+    public AuthController(IAuthService authService)
     {
         _authService = authService;
-        _emailService = emailService;
     }
 
     [HttpPost("login")]

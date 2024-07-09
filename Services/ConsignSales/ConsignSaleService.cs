@@ -88,7 +88,7 @@ namespace Services.ConsignSales
                 }
                 //check list consign status pending co' dat gioi han. = 5 chua
                 var listconsignpending = await _consignSaleRepository.GetAllConsignPendingByAccountId(accountId);
-                if(listconsignpending.Count() >= 5)
+                if(listconsignpending.Count >= 5)
                 {
                     response.Messages = ["You have reached the consignment limit"];
                     response.ResultStatus = ResultStatus.Error;

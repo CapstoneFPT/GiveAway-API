@@ -11,15 +11,13 @@ namespace Repositories.AuctionDeposits
     {
         private readonly GenericDao<AuctionDeposit> _auctionDepositDao;
         private readonly GenericDao<Transaction> _transactionDao;
-        private readonly GenericDao<Account> _memberDao;
         private readonly GenericDao<Auction> _auctionDao;
 
         public AuctionDepositRepository(GenericDao<AuctionDeposit> auctionDepositDao,
-            GenericDao<Transaction> transactionDao, GenericDao<Account> memberDao, GenericDao<Auction> auctionDao)
+            GenericDao<Transaction> transactionDao,  GenericDao<Auction> auctionDao)
         {
             _auctionDepositDao = auctionDepositDao;
             _transactionDao = transactionDao;
-            _memberDao = memberDao;
             _auctionDao = auctionDao;
         }
 

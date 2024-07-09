@@ -77,7 +77,7 @@ public class PointPackageController : ControllerBase
                 $"Purchase point package: {pointPackage.Points} points", "pointpackages");
 
             _logger.LogInformation(
-                $"Point package purchase initiated. OrderCode: {orderResult.Data.OrderCode}, MemberId: {request.MemberId}, Package: {pointPackage.Points} points");
+                "Point package purchase initiated. OrderCode: {OrderCode}, MemberId: {MemberId}, Package: {Points} points",orderResult.Data.OrderCode, request.MemberId, pointPackage.Points);
 
             return Ok(new { paymentUrl, orderCode = order.OrderCode });
         }
@@ -98,7 +98,7 @@ public class PointPackageController : ControllerBase
         {
             try
             {
-                var transaction = await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Recharge);
+                 await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Recharge);
                 var order = await _orderService.GetOrderById(new Guid(response.OrderId));
                 var orderDetails = await _orderService.GetOrderDetailByOrderId(new Guid(response.OrderId));
                 var pointPackageId = orderDetails[0].PointPackageId.Value;
@@ -106,25 +106,25 @@ public class PointPackageController : ControllerBase
 
                 if (order == null)
                 {
-                    _logger.LogWarning($"Order not found for OrderCode: {response.OrderId}");
+                    _logger.LogWarning("Order not found for OrderCode: {OrderId}", response.OrderId);
                     return BadRequest(new { success = false, message = "Order not found" });
                 }
 
                 if (order.Status != OrderStatus.AwaitingPayment)
                 {
-                    _logger.LogWarning($"Order already processed: {response.OrderId}");
+                    _logger.LogWarning("Order already processed: {OrderId}", response.OrderId);
                     return Ok(new
                         { success = true, message = "Order already processed", orderCode = response.OrderId });
                 }
 
-                await _pointPackageService.AddPointsToBalance(order.MemberId.Value, amount: pointPackage.Points);
+                await _pointPackageService.AddPointsToBalance(order.MemberId!.Value, amount: pointPackage!.Points);
 
                 order.Status = OrderStatus.Completed;
                 order.PaymentDate = DateTime.UtcNow;
                 await _orderService.UpdateOrder(order);
 
                 _logger.LogInformation(
-                    $"Point package purchase successful. OrderCode: {response.OrderId}, Points: {order.TotalPrice}");
+                    "Point package purchase successful. OrderCode: {OrderId}, Points: {TotalPrice}", response.OrderId, order.TotalPrice);
 
                 return Ok(new
                 {
@@ -141,7 +141,7 @@ public class PointPackageController : ControllerBase
         }
 
         _logger.LogWarning(
-            $"Payment failed. OrderCode: {response.OrderId}, ResponseCode: {response.VnPayResponseCode}");
+            "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId, response.VnPayResponseCode);
         return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
     }
 }

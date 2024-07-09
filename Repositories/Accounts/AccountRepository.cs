@@ -92,7 +92,6 @@ namespace Repositories.Accounts
                 }
                 else
                 {
-                    //user.PasswordSalt = password;
                     return Task.FromResult(user);
                 }
             }

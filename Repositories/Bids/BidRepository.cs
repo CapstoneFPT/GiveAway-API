@@ -15,15 +15,13 @@ namespace Repositories.Bids
     {
         private readonly GenericDao<Auction> _auctionDao;
         private readonly GenericDao<Bid> _bidDao;
-        private readonly GenericDao<Account> _memberDao;
         private readonly GenericDao<AuctionDeposit> _auctionDepositDao;
 
-        public BidRepository(GenericDao<Auction> auctionDao, GenericDao<Bid> bidDao, GenericDao<Account> memberDao,
+        public BidRepository(GenericDao<Auction> auctionDao, GenericDao<Bid> bidDao, 
             GenericDao<AuctionDeposit> auctionDepositDao)
         {
             _auctionDao = auctionDao;
             _bidDao = bidDao;
-            _memberDao = memberDao;
             _auctionDepositDao = auctionDepositDao;
         }
 

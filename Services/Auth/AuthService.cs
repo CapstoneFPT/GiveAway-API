@@ -69,7 +69,7 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<Result<string>> CheckPassword(string email, string newpassword)
+    public async Task<Result<string>> CheckPassword(string email, string newPassword)
     {
         var response = new Result<string>();
         var account = await _accountRepository.FindUserByEmail(email);
@@ -79,7 +79,7 @@ public class AuthService : IAuthService
             response.Messages = new[] { "User not found" };
             return response;
         }
-        else if (VerifyPasswordHash(newpassword, account.PasswordHash, account.PasswordSalt))
+        else if (VerifyPasswordHash(newPassword, account.PasswordHash, account.PasswordSalt))
         {
             response.ResultStatus = ResultStatus.Duplicated;
             response.Messages = new[] { "This password is duplicated with the old password" };
@@ -90,7 +90,7 @@ public class AuthService : IAuthService
             var cacheEntryOption = new MemoryCacheEntryOptions()
                 .SetSlidingExpiration(TimeSpan.FromSeconds(180))
                 .SetPriority(CacheItemPriority.Normal);
-            _cache.Set(newpass, newpassword, cacheEntryOption);
+            _cache.Set(this.newpass, newPassword, cacheEntryOption);
             response = await SendMail(email);
             return response;
         }
@@ -113,7 +113,9 @@ public class AuthService : IAuthService
                 response.ResultStatus = ResultStatus.Error;
                 response.Messages = new[] { "Your current is incorrecr" };
                 return response;
-            }else if(VerifyPasswordHash(request.NewPassword, account.PasswordHash, account.PasswordSalt)){
+            }
+            else if (VerifyPasswordHash(request.NewPassword, account.PasswordHash, account.PasswordSalt))
+            {
                 response.ResultStatus = ResultStatus.Error;
                 response.Messages = new[] { "This new password is same as the current password. Please enter the new one" };
                 return response;
@@ -160,7 +162,7 @@ public class AuthService : IAuthService
             var user = await _accountRepository.Register(account);
 
             Shop shop = new Shop();
-            shop.ShopId = new Guid();
+            shop.ShopId = Guid.Empty;
             shop.Address = request.Address;
             shop.Phone = request.ShopPhone;
             shop.StaffId = account.AccountId;
@@ -200,7 +202,7 @@ public class AuthService : IAuthService
                     Messages = ["Account is not Found"]
                 };
             }
-            else if(admin != null)
+            else if (admin != null)
             {
                 var claimsadmin = new List<Claim>()
                 {
@@ -332,7 +334,7 @@ public class AuthService : IAuthService
     {
         var response = new Result<string>();
         var user = await _accountRepository.FindUserByEmail(email);
-        if(user.VerifiedAt != null)
+        if (user.VerifiedAt != null)
         {
             response.Messages = ["This account is already verified"];
             response.ResultStatus = ResultStatus.Error;

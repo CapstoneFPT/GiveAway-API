@@ -29,26 +29,22 @@ namespace Services.Auctions
         private readonly IBidRepository _bidRepository;
         private readonly IAuctionDepositRepository _auctionDepositRepository;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IOrderRepository _orderRepository;
         private readonly IAuctionItemRepository _auctionItemRepository;
         private readonly IAccountService _accountService;
-        private readonly ITransactionService _transactionService;
         private readonly ITransactionRepository _transactionRepository;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
             IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
-            IOrderRepository orderRepository, IAuctionItemRepository auctionItemRepository,
-            IAccountService accountService, ITransactionService transactionService,
+            IAuctionItemRepository auctionItemRepository,
+            IAccountService accountService,
             ITransactionRepository transactionRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
             _auctionDepositRepository = auctionDepositRepository;
             _serviceProvider = serviceProvider;
-            _orderRepository = orderRepository;
             _auctionItemRepository = auctionItemRepository;
             _accountService = accountService;
-            _transactionService = transactionService;
             _transactionRepository = transactionRepository;
         }
 

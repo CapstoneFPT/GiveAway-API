@@ -19,18 +19,16 @@ namespace Repositories.Auctions
         private readonly GenericDao<AuctionFashionItem> _auctionFashionItemDao;
         private readonly GenericDao<Shop> _shopDao;
         private readonly GenericDao<Timeslot> _timeslotDao;
-        private readonly GenericDao<Bid> _bidDao;
 
 
         public AuctionRepository(GenericDao<Auction> auctionDao, GenericDao<Schedule> scheduleDao,
             GenericDao<AuctionFashionItem> auctionFashionItemDao, GenericDao<Shop> shopDao,
-            GenericDao<Timeslot> timeslotDao, GenericDao<Bid> bidDao)
+            GenericDao<Timeslot> timeslotDao)
         {
             _auctionDao = auctionDao;
             _scheduleDao = scheduleDao;
             _auctionFashionItemDao = auctionFashionItemDao;
             _shopDao = shopDao;
-            _bidDao = bidDao;
             _timeslotDao = timeslotDao;
         }
 
@@ -89,7 +87,7 @@ namespace Repositories.Auctions
                     Date = request.ScheduleDate,
                     TimeslotId = request.TimeslotId
                 };
-                var scheduleDetail = await _scheduleDao.AddAsync(newSchedule);
+                await _scheduleDao.AddAsync(newSchedule);
 
                 auctionItem.Status = FashionItemStatus.AwaitingAuction;
 
@@ -371,8 +369,8 @@ namespace Repositories.Auctions
                 }
 
                 toBeRejected.Status = AuctionStatus.Rejected;
-                var auctionItem = _auctionFashionItemDao.GetQueryable()
-                    .FirstOrDefault(x => x.ItemId == toBeRejected!.AuctionFashionItemId);
+                var auctionItem = await _auctionFashionItemDao.GetQueryable()
+                    .FirstOrDefaultAsync(x => x.ItemId == toBeRejected!.AuctionFashionItemId);
 
                 if (auctionItem == null)
                 {

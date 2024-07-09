@@ -41,7 +41,6 @@ namespace Repositories.OrderDetails
                 query = query.Skip((request.PageNumber - 1) * request.PageSize)
                     .Take(request.PageSize);
 
-                var list = await _orderDetailDao.GetQueryable().CountAsync();
 
                 var items = await query
                     .Select(x => new OrderDetailResponse<FashionItem>
