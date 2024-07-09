@@ -51,6 +51,11 @@ namespace WebApi.Controllers
         {
             return await _orderService.GetOrdersByShopId(shopId, orderRequest);
         }
+        [HttpPost("{shopId}/orders")]
+        public async Task<ActionResult<Result<OrderResponse>>> CreateOrderByShop([FromRoute] Guid shopId, [FromQuery] CreateOrderRequest orderRequest)
+        {
+            return await _orderService.CreateOrderByShop(shopId, orderRequest);
+        }
         [HttpPut("{shopId}/orders/{OrderId}/confirm-deliveried")]
         public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrder([FromRoute] Guid shopId,[FromRoute] Guid OrderId)
         {
@@ -61,5 +66,6 @@ namespace WebApi.Controllers
         {
             return await _consignSaleService.GetAllConsignSales(shopId, request);
         }
+
     }
 }

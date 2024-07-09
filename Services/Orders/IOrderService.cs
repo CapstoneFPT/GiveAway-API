@@ -27,5 +27,6 @@ namespace Services.Orders
         void CancelOrders(List<Order> ordersToCancel);
         Task UpdateShopBalance(Order order);
         Task UpdateFashionItemStatus(Guid orderOrderId);
+        Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest request);
     }
 }

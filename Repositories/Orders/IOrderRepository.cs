@@ -16,7 +16,7 @@ namespace Repositories.Orders
         Task<Order> CreateOrder(Order order);
         Task<Order> UpdateOrder(Order order);
         Task<Order> GetOrderById(Guid id);
-        Task<OrderResponse> CreateOrderHierarchy(Guid accountId ,List<Guid?> listItemId, CreateOrderRequest request);
+        Task<OrderResponse> CreateOrderHierarchy(Guid accountId ,CreateOrderRequest request);
         Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberid);
         Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId);
         Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
@@ -24,5 +24,6 @@ namespace Repositories.Orders
         Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId);
         Task<List<Order>> GetOrders(Expression<Func<Order, bool>> predicate);
         Task BulkUpdate(List<Order> ordersToUpdate);
+        Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest);
     }
 }
