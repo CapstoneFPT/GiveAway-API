@@ -10,9 +10,11 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Exception = System.Exception;
 
 namespace Repositories.FashionItems
 {
@@ -199,6 +201,36 @@ namespace Repositories.FashionItems
             }
         }
 
+        public Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem, bool>> predicate)
+        {
+            try
+            {
+                var queryable = _fashionitemDao
+                    .GetQueryable()
+                    .Where(predicate);
+
+                var result = queryable.ToListAsync();
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task UpdateFashionItems(List<FashionItem> fashionItems)
+        {
+            try
+            {
+                await _fashionitemDao.UpdateRange(fashionItems);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
         public async Task<FashionItem> UpdateFashionItem(FashionItem fashionItem)
         {
             return await _fashionitemDao.UpdateAsync(fashionItem);
@@ -221,7 +253,7 @@ namespace Repositories.FashionItems
             // {
             //     await GetCategoryIdsRecursive(childId, categoryIds);
             // }
-            
+
             if (!categoryIds.Add(id.Value)) return;
 
             var childCategories = await _categoryDao.GetQueryable()

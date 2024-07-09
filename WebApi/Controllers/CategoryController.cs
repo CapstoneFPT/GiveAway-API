@@ -24,6 +24,7 @@ namespace WebApi.Controllers
             _fashionitemService = fashionitemService;
             _categoryService = categoryService;
         }
+       
         [HttpGet("{categoryId}/fahsionitems")]
         public async Task<ActionResult<Result<PaginationResponse<FashionItemDetailResponse>>>> GetItemsByCategoryHierarchy([FromRoute] Guid categoryId, [FromQuery] AuctionFashionItemRequest request)
         {

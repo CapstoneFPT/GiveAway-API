@@ -16,7 +16,10 @@ using Repositories.Auctions;
 using Repositories.Bids;
 using Repositories.OrderDetails;
 using Repositories.Orders;
+using Repositories.Transactions;
+using Services.Accounts;
 using Services.Orders;
+using Services.Transactions;
 
 namespace Services.Auctions
 {
@@ -28,9 +31,15 @@ namespace Services.Auctions
         private readonly IServiceProvider _serviceProvider;
         private readonly IOrderRepository _orderRepository;
         private readonly IAuctionItemRepository _auctionItemRepository;
+        private readonly IAccountService _accountService;
+        private readonly ITransactionService _transactionService;
+        private readonly ITransactionRepository _transactionRepository;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
-            IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,IOrderRepository orderRepository,IAuctionItemRepository auctionItemRepository)
+            IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
+            IOrderRepository orderRepository, IAuctionItemRepository auctionItemRepository,
+            IAccountService accountService, ITransactionService transactionService,
+            ITransactionRepository transactionRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
@@ -38,6 +47,9 @@ namespace Services.Auctions
             _serviceProvider = serviceProvider;
             _orderRepository = orderRepository;
             _auctionItemRepository = auctionItemRepository;
+            _accountService = accountService;
+            _transactionService = transactionService;
+            _transactionRepository = transactionRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -122,14 +134,14 @@ namespace Services.Auctions
         {
             try
             {
-                var auctionUpdateResult = await _auctionRepository.UpdateAuctionStatus(auctionId, AuctionStatus.OnGoing);
+                var auctionUpdateResult =
+                    await _auctionRepository.UpdateAuctionStatus(auctionId, AuctionStatus.OnGoing);
 
                 var auctionFashionItemId = auctionUpdateResult
                     .AuctionFashionItemId;
-                
+
                 var auctionItemUpdateResult = await _auctionItemRepository
                     .UpdateAuctionItemStatus(auctionFashionItemId, FashionItemStatus.Bidding);
-
             }
             catch (Exception e)
             {
@@ -190,11 +202,30 @@ namespace Services.Auctions
             }
         }
 
-        public Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId, CreateAuctionDepositRequest request)
+        public async Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId,
+            CreateAuctionDepositRequest request)
         {
             try
             {
-                var result = _auctionDepositRepository.CreateDeposit(auctionId, request);
+                var auction = await _auctionRepository.GetAuction(auctionId);
+
+                if (auction is null)
+                {
+                    throw new Exception("Auction Not Found");
+                }
+
+                await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
+                var transaction = new Transaction()
+                {
+                    Amount = auction.DepositFee,
+                    Type = TransactionType.AuctionDeposit,
+                    MemberId = request.MemberId,
+                    CreatedDate = DateTime.UtcNow,
+                    TransactionNumber = "N/A"
+                };
+                await _transactionRepository.CreateTransaction(transaction);
+
+                var result = await _auctionDepositRepository.CreateDeposit(auctionId, request);
                 return result;
             }
             catch (Exception e)
@@ -280,7 +311,5 @@ namespace Services.Auctions
                 throw new Exception(e.Message);
             }
         }
-
-       
     }
 }
