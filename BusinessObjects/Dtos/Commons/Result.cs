@@ -111,7 +111,11 @@ public enum TransactionType
     Refund,
     Recharge
 }
-
+public enum PurchaseType
+{
+    Online,
+    Offline
+}
 public enum ConsignSaleType
 {
     ConsignedForSale,
@@ -136,7 +140,8 @@ public enum PaymentMethod
 {
     COD,
     Point,
-    QRCode
+    QRCode,
+    Cash
 }
 public enum SizeType
 {

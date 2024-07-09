@@ -221,7 +221,7 @@ namespace Services.Auctions
                     Type = TransactionType.AuctionDeposit,
                     MemberId = request.MemberId,
                     CreatedDate = DateTime.UtcNow,
-                    TransactionNumber = "N/A"
+                    VnPayTransactionNumber = "N/A"
                 };
                 await _transactionRepository.CreateTransaction(transaction);
 

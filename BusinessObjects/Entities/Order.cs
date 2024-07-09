@@ -13,12 +13,14 @@ public class Order
     public PaymentMethod PaymentMethod { get; set; }
     public DateTime? PaymentDate { get; set; }
     public DateTime? CompletedDate { get; set; }
-    public Account Member { get; set; }
-    public Guid MemberId { get; set; }
+    public Account? Member { get; set; }
+    public Guid? MemberId { get; set; }
     public Guid? BidId { get; set; }
     public Bid? Bid { get; set; }
     public OrderStatus Status { get; set; }
+  
 
+    public PurchaseType PurchaseType { get; set; }
     public Transaction? Transaction { get; set; }
     public string? RecipientName { get; set; }
     public string? Phone { get; set; }
@@ -26,3 +28,4 @@ public class Order
 
     public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();
 }
+

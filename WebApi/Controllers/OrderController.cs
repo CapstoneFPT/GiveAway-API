@@ -104,7 +104,7 @@ namespace WebApi.Controllers
                             { success = true, message = "Order already processed", orderCode = response.OrderId });
                     }
 
-                    var transaction = await _transactionService.CreateTransaction(response, TransactionType.Purchase);
+                    var transaction = await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Purchase);
 
                     if (transaction.ResultStatus == ResultStatus.Success)
                     {
