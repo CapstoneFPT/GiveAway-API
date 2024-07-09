@@ -78,7 +78,7 @@ namespace Repositories.Auctions
                 };
                 var auctionDetail = await _auctionDao.AddAsync(newAuction);
 
-                auctionItem.Status = FashionItemStatus.AwaitingAuction;
+                auctionItem.Status = FashionItemStatus.PendingAuction;
                 await _auctionFashionItemDao.UpdateAsync(auctionItem);
 
                 var newSchedule = new Schedule()

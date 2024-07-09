@@ -39,6 +39,7 @@ public enum FashionItemStatus
     Sold,
     Refundable,
     Pending,
+    PendingAuction,
     AwaitingAuction,
     Bidding,
     Won,
