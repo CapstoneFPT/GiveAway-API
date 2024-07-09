@@ -23,7 +23,7 @@ namespace Services.Transactions
             _orderRepository = orderRepository;
         }
 
-        public async Task<Result<TransactionDetailResponse>> CreateTransaction(VnPaymentResponse vnPayResponse,
+        public async Task<Result<TransactionDetailResponse>> CreateTransactionFromVnPay(VnPaymentResponse vnPayResponse,
             TransactionType transactionType)
         {
             try
@@ -36,7 +36,7 @@ namespace Services.Transactions
                     OrderId = new Guid(vnPayResponse.OrderId),
                     CreatedDate = DateTime.UtcNow,
                     Amount = order.TotalPrice,
-                    TransactionNumber = vnPayResponse.TransactionId,
+                    VnPayTransactionNumber = vnPayResponse.TransactionId,
                     MemberId = order.MemberId,
                     Type = transactionType 
                 };

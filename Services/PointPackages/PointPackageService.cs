@@ -36,6 +36,7 @@ public class PointPackageService : IPointPackageService
     {
         try
         {
+            
             return _pointPackageRepository.AddPointsToBalance(accountId, amount);
         }
         catch (Exception e)

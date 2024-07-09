@@ -72,7 +72,9 @@ public class AuthController : ControllerBase
                 {
                     name,
                     givenName,
-                    email
+                    email,
+                    response.Succeeded,
+                    response.Properties.Items
                 }
             );
         }

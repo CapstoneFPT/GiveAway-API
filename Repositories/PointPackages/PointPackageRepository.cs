@@ -35,6 +35,11 @@ public class PointPackageRepository : IPointPackageRepository
         {
             var account = await _accountDao.GetQueryable()
                 .FirstOrDefaultAsync(x => x.AccountId == accountId);
+
+            if (account == null)
+            {
+               throw new Exception("Account not found");
+            }
             
             account.Balance += amount;
             await _accountDao.UpdateAsync(account);

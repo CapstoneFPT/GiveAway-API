@@ -98,7 +98,7 @@ public class PointPackageController : ControllerBase
         {
             try
             {
-                var transaction = await _transactionService.CreateTransaction(response, TransactionType.Recharge);
+                var transaction = await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Recharge);
                 var order = await _orderService.GetOrderById(new Guid(response.OrderId));
                 var orderDetails = await _orderService.GetOrderDetailByOrderId(new Guid(response.OrderId));
                 var pointPackageId = orderDetails[0].PointPackageId.Value;
@@ -117,7 +117,7 @@ public class PointPackageController : ControllerBase
                         { success = true, message = "Order already processed", orderCode = response.OrderId });
                 }
 
-                await _pointPackageService.AddPointsToBalance(order.MemberId, amount: pointPackage.Points);
+                await _pointPackageService.AddPointsToBalance(order.MemberId.Value, amount: pointPackage.Points);
 
                 order.Status = OrderStatus.Completed;
                 order.PaymentDate = DateTime.UtcNow;

@@ -282,6 +282,10 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.OrderDetails)
             .WithOne(x => x.Order)
             .HasForeignKey(x => x.OrderId);
+        
+        modelBuilder.Entity<Order>().Property(e => e.PurchaseType)
+            .HasConversion(prop => prop.ToString(), s => (PurchaseType)Enum.Parse(typeof(PurchaseType), s))
+            .HasColumnType("varchar").HasMaxLength(20);
 
         modelBuilder.Entity<Order>().Property(e => e.Status).HasConversion(prop => prop.ToString(),
                 s => (OrderStatus)Enum.Parse(typeof(OrderStatus), s))
@@ -376,6 +380,10 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
+        #region Shop
+
+
+        #endregion
 
         #region PointPackage
 

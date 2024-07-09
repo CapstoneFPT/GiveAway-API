@@ -39,7 +39,7 @@ namespace Services.Orders
             _shopRepository = shopRepository;
         }
 
-        public async Task<Result<OrderResponse>> CreateOrder(Guid accountId, 
+        public async Task<Result<OrderResponse>> CreateOrder(Guid accountId,
             CreateOrderRequest orderRequest)
         {
             try
@@ -155,7 +155,6 @@ namespace Services.Orders
             }
         }
 
-        
 
         public void CancelOrders(List<Order> ordersToCancel)
         {
@@ -190,7 +189,7 @@ namespace Services.Orders
 
                 foreach (var shopTotal in shopTotals)
                 {
-                    var shop = await _shopRepository.GetSingleShop(x=>x.ShopId == shopTotal.ShopId);
+                    var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopTotal.ShopId);
                     var staff = await _accountRepository.GetAccountById(shop!.StaffId);
                     staff.Balance += shopTotal.Total;
                     await _accountRepository.UpdateAccount(staff);
@@ -210,6 +209,31 @@ namespace Services.Orders
                 orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.Unavailable);
                 var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
                 await _fashionItemRepository.BulkUpdate(fashionItems!);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task PayWithPoints(Guid orderId, Guid requestMemberId)
+        {
+            try
+            {
+                var order = await _orderRepository.GetOrderById(orderId);
+                
+                if (order == null)
+                {
+                    throw new Exception("Order not found");
+                }
+                
+                if (order.MemberId != requestMemberId)
+                {
+                    throw new Exception("Not authorized");
+                }
+                
+                order.Status = OrderStatus.OnDelivery;
+                await _orderRepository.UpdateOrder(order);
             }
             catch (Exception e)
             {

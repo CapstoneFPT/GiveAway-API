@@ -21,6 +21,7 @@ public class ConsignSale
     public int TotalPrice { get; set; }
     public int SoldPrice { get; set; }
     public int MemberReceivedAmount { get; set; }
+    public Transaction? Transaction { get; set; }
     public ICollection<ConsignSaleDetail>? ConsignSaleDetails { get; set; } = new List<ConsignSaleDetail>();
 }
 

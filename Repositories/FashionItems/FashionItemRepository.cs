@@ -10,9 +10,11 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Exception = System.Exception;
 
 namespace Repositories.FashionItems
 {
@@ -107,7 +109,7 @@ namespace Repositories.FashionItems
         public async Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,
             AuctionFashionItemRequest request)
         {
-            var listCate = new List<Guid>();
+            var listCate = new HashSet<Guid>();
             await GetCategoryIdsRecursive(id, listCate);
             if (listCate.Count == 0)
             {
@@ -124,27 +126,6 @@ namespace Repositories.FashionItems
             var query = _categoryDao.GetQueryable()
                 .Where(c => listCate.Contains(c.CategoryId))
                 .SelectMany(c => c.FashionItems)
-                .Include((c => c.Shop))
-                .Select(f => new FashionItemDetailResponse
-                {
-                    ItemId = f.ItemId,
-                    Type = f.Type,
-                    SellingPrice = f.SellingPrice,
-                    Name = f.Name,
-                    Note = f.Note,
-                    Value = f.Value,
-                    Condition = f.Condition,
-
-                    ShopAddress = f.Shop.Address,
-                    ShopId = f.Shop.ShopId,
-                    Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,
-                    CategoryName = f.Category.Name,
-                    Size = f.Size,
-                    Color = f.Color,
-                    Brand = f.Brand,
-                    Gender = f.Gender,
-                    Status = f.Status,
-                })
                 .AsNoTracking();
 
             if (request.Status != null)
@@ -159,7 +140,7 @@ namespace Repositories.FashionItems
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
-                query = query.Where(f => f.Name.Contains(request.SearchTerm));
+                query = query.Where(f => EF.Functions.ILike(f.Name, $"%{request.SearchTerm}%"));
             }
 
             if (request.ShopId != null)
@@ -169,14 +150,35 @@ namespace Repositories.FashionItems
 
             var count = await query.CountAsync();
 
-            var listitem = await query
+            var items = await query
                 .Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize)
+                .Select(
+                    f => new FashionItemDetailResponse
+                    {
+                        ItemId = f.ItemId,
+                        Type = f.Type,
+                        SellingPrice = f.SellingPrice,
+                        Name = f.Name,
+                        Note = f.Note,
+                        Value = f.Value,
+                        Condition = f.Condition,
+                        ShopAddress = f.Shop.Address,
+                        ShopId = f.Shop.ShopId,
+                        Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,
+                        CategoryName = f.Category.Name,
+                        Size = f.Size,
+                        Color = f.Color,
+                        Brand = f.Brand,
+                        Gender = f.Gender,
+                        Status = f.Status,
+                    }
+                )
                 .ToListAsync();
 
             var result = new PaginationResponse<FashionItemDetailResponse>
             {
-                Items = listitem,
+                Items = items,
                 PageSize = request.PageSize,
                 TotalCount = count,
                 SearchTerm = request.SearchTerm,
@@ -199,23 +201,67 @@ namespace Repositories.FashionItems
             }
         }
 
+        public Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem, bool>> predicate)
+        {
+            try
+            {
+                var queryable = _fashionitemDao
+                    .GetQueryable()
+                    .Where(predicate);
+
+                var result = queryable.ToListAsync();
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public async Task UpdateFashionItems(List<FashionItem> fashionItems)
+        {
+            try
+            {
+                await _fashionitemDao.UpdateRange(fashionItems);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
         public async Task<FashionItem> UpdateFashionItem(FashionItem fashionItem)
         {
             return await _fashionitemDao.UpdateAsync(fashionItem);
         }
 
-        private async Task GetCategoryIdsRecursive(Guid? id, List<Guid> categoryIds)
+        private async Task GetCategoryIdsRecursive(Guid? id, HashSet<Guid> categoryIds)
         {
-            var parentCate = await _categoryDao.GetQueryable().FirstOrDefaultAsync(c => c.CategoryId == id);
-            if (parentCate == null) return;
+            // var parentCate = await _categoryDao.GetQueryable().FirstOrDefaultAsync(c => c.CategoryId == id);
+            // if (parentCate == null) return;
+            //
+            // categoryIds.Add(parentCate.CategoryId);
+            //
+            // var listCate = await _categoryDao.GetQueryable()
+            //     .Where(c => c.ParentId == id && c.Status.Equals(CategoryStatus.Available))
+            //     .Select(c => c.CategoryId)
+            //     .ToListAsync();
+            // categoryIds.AddRange(listCate);
+            //
+            // foreach (var childId in listCate)
+            // {
+            //     await GetCategoryIdsRecursive(childId, categoryIds);
+            // }
 
-            var listCate = await _categoryDao.GetQueryable()
-                .Where(c => c.ParentId == id && c.Status.Equals(CategoryStatus.Available))
+            if (!categoryIds.Add(id.Value)) return;
+
+            var childCategories = await _categoryDao.GetQueryable()
+                .Where(c => c.ParentId == id && c.Status == CategoryStatus.Available)
                 .Select(c => c.CategoryId)
                 .ToListAsync();
-            categoryIds.AddRange(listCate);
 
-            foreach (var childId in listCate)
+            foreach (var childId in childCategories)
             {
                 await GetCategoryIdsRecursive(childId, categoryIds);
             }
