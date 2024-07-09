@@ -64,6 +64,7 @@ namespace Repositories.Orders
             order.Member =  await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
             order.PaymentMethod = orderRequest.PaymentMethod;
             order.Address = orderRequest.Address;
+            order.PurchaseType = PurchaseType.Online;
             order.RecipientName = orderRequest.RecipientName;
             order.Phone = orderRequest.Phone;
             if (orderRequest.PaymentMethod.Equals(PaymentMethod.COD))
@@ -192,6 +193,7 @@ namespace Repositories.Orders
                         RecipientName = x.RecipientName,
                         ContactNumber = x.Phone,
                         Address = x.Address,
+                        PurchaseType = x.PurchaseType,
                         Status = x.Status,
                     })
                     .AsNoTracking().ToListAsync();

@@ -12,6 +12,7 @@ namespace BusinessObjects.Dtos.OrderDetails
 
         public int UnitPrice { get; set; }
         public Guid OrderId { get; set; }
+        public DateTime RefundExpirationDate { get; set; }
         public T FashionItemDetail { get; set;}
     }
 }

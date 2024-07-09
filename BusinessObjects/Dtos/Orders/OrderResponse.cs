@@ -24,6 +24,7 @@ namespace BusinessObjects.Dtos.Orders
         public string RecipientName { get; set; }
         public string ContactNumber { get; set; }
         public string? Address { get; set; }
+        public PurchaseType PurchaseType { get; set; }
         public OrderStatus Status { get; set; }
         public List<ShopOrderResponse>? shopOrderResponses { get; set; }
         public List<Guid?>? listItemExisted { get; set; }
