@@ -25,5 +25,6 @@ namespace Repositories.Orders
         Task<List<Order>> GetOrders(Expression<Func<Order, bool>> predicate);
         Task BulkUpdate(List<Order> ordersToUpdate);
         Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest);
+        string GenerateUniqueString();
     }
 }

@@ -102,7 +102,7 @@ namespace Services.Auctions
             var createOrderRequest = new CreateOrderFromBidRequest()
             {
                 MemberId = winningBid.MemberId,
-                OrderCode = OrderRepository.GenerateUniqueString(),
+                OrderCode = _orderRepository.GenerateUniqueString(),
                 PaymentMethod = PaymentMethod.Point,
                 TotalPrice = winningBid.Amount,
                 BidId = winningBid.Id,

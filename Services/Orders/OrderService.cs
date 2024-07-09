@@ -253,7 +253,7 @@ namespace Services.Orders
             {
                 var orderResult = await _orderRepository.CreateOrder(new Order()
                 {
-                    OrderCode = OrderRepository.GenerateUniqueString(),
+                    OrderCode = _orderRepository.GenerateUniqueString(),
                     CreatedDate = DateTime.UtcNow,
                     MemberId = order.MemberId,
                     TotalPrice = order.TotalPrice,

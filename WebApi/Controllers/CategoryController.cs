@@ -52,10 +52,10 @@ namespace WebApi.Controllers
             return await _categoryService.GetAllChildrenCategory(categoryId);
         }
 
-        [HttpPost("{parentId}")]
-        public async Task<ActionResult<Result<Category>>> CreateCategory([FromRoute] Guid parentId,[FromBody] CategoryRequest request)
+        [HttpPost("{categoryId}")]
+        public async Task<ActionResult<Result<Category>>> CreateCategory([FromRoute] Guid categoryId, [FromBody] CategoryRequest request)
         {
-            return await _categoryService.CreateCategory(parentId, request);
+            return await _categoryService.CreateCategory(categoryId, request);
         }
     }
 

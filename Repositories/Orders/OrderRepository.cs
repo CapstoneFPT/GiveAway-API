@@ -123,6 +123,7 @@ namespace Repositories.Orders
                 OrderCode = order.OrderCode,
                 CreatedDate = order.CreatedDate,
                 PaymentMethod = order.PaymentMethod,
+                PurchaseType = order.PurchaseType,
                 Address = order.Address,
                 RecipientName = order.RecipientName,
                 ContactNumber = order.Phone,
@@ -161,7 +162,7 @@ namespace Repositories.Orders
             try
             {
                 var query = _orderDao.GetQueryable();
-                query = query.Where(c => c.MemberId == accountId).OrderByDescending(c => c.CreatedDate);
+                query = query.Include(c => c.Member).Where(c => c.MemberId == accountId).OrderByDescending(c => c.CreatedDate);
 
                 if (request.Status != null)
                 {
@@ -219,13 +220,13 @@ namespace Repositories.Orders
             return order;
         }
 
-        public static string GenerateUniqueString()
+        public string GenerateUniqueString()
         {
             string newString;
             do
             {
                 newString = GenerateRandomString();
-            } while (generatedStrings.Contains(newString));
+            } while (generatedStrings.Contains(newString) || IsCodeExisted(newString) != null);
 
             generatedStrings.Add(newString);
             return newString;
@@ -236,7 +237,10 @@ namespace Repositories.Orders
             int number = random.Next(100000, 1000000);
             return prefix + number.ToString("D6");
         }
-
+        private async Task<Order?> IsCodeExisted(string code)
+        {
+            return await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderCode.Equals(code));
+        }
         public async Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberId)
         {
             var listorderdetail = await _orderDetailDao.GetQueryable().Where(c => c.Order.MemberId == memberId)
@@ -357,14 +361,19 @@ namespace Repositories.Orders
                         .FirstOrDefaultAsync(c => c.FashionItemId.Equals(item.ItemId));
                     if (orderDetail != null)
                     {
+                        orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
+                        await _orderDetailDao.UpdateAsync(orderDetail);
+
                         var newOrderDetail = new OrderDetailResponse<FashionItem>();
                         newOrderDetail.OrderId = orderDetail.OrderId;
                         newOrderDetail.UnitPrice = orderDetail.UnitPrice;
-                        newOrderDetail.FashionItemDetail = await _fashionItemDao.GetQueryable()
-                            .FirstOrDefaultAsync(c => c.ItemId == item.ItemId);
+                        newOrderDetail.RefundExpirationDate = orderDetail.RefundExpirationDate;
+                        newOrderDetail.FashionItemDetail = item;
 
                         listOrderdetailResponse.Add(newOrderDetail);
                     }
+                    else
+                        throw new Exception();
                 }
 
                 var listItem = listorderdetail.Select(c => c.FashionItem).ToList();
@@ -432,20 +441,13 @@ namespace Repositories.Orders
             }
 
             Order order = new Order();
-            /*order.MemberId = accountId;
-            order.Member = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);*/
+            order.PurchaseType = PurchaseType.Offline;
             order.PaymentMethod = orderRequest.PaymentMethod;
             order.Address = orderRequest.Address;
             order.RecipientName = orderRequest.RecipientName;
             order.Phone = orderRequest.Phone;
-            if (orderRequest.PaymentMethod.Equals(PaymentMethod.COD))
-            {
-                order.Status = OrderStatus.OnDelivery;
-            }
-            else
-            {
-                order.Status = OrderStatus.AwaitingPayment;
-            }
+            order.Status = OrderStatus.AwaitingPayment;
+            
 
             order.CreatedDate = DateTime.UtcNow;
             order.TotalPrice = totalPrice;
