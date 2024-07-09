@@ -28,5 +28,6 @@ namespace Services.Orders
         Task UpdateShopBalance(Order order);
         Task UpdateFashionItemStatus(Guid orderOrderId);
         Task PayWithPoints(Guid orderId, Guid requestMemberId);
+        Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest request);
     }
 }

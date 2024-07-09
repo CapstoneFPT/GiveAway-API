@@ -46,7 +46,7 @@ namespace Repositories.ConsignSales
                     Status = ConsignSaleStatus.Pending,
                     TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice),
                     SoldPrice = 0,
-                    MemberReceivedAmount = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice),
+                    MemberReceivedAmount = 0,
                     ConsignSaleCode = GenerateUniqueString(),
                 };
                 await _consignSaleDao.AddAsync(newConsign);

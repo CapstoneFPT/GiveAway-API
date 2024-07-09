@@ -32,12 +32,13 @@ namespace Services.Auctions
         private readonly IAuctionItemRepository _auctionItemRepository;
         private readonly IAccountService _accountService;
         private readonly ITransactionRepository _transactionRepository;
+        private readonly IOrderRepository _orderRepository;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
             IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
             IAuctionItemRepository auctionItemRepository,
             IAccountService accountService,
-            ITransactionRepository transactionRepository)
+            ITransactionRepository transactionRepository, IOrderRepository orderRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
@@ -46,6 +47,7 @@ namespace Services.Auctions
             _auctionItemRepository = auctionItemRepository;
             _accountService = accountService;
             _transactionRepository = transactionRepository;
+            _orderRepository = orderRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -98,7 +100,7 @@ namespace Services.Auctions
             var createOrderRequest = new CreateOrderFromBidRequest()
             {
                 MemberId = winningBid.MemberId,
-                OrderCode = OrderRepository.GenerateUniqueString(),
+                OrderCode = _orderRepository.GenerateUniqueString(),
                 PaymentMethod = PaymentMethod.Point,
                 TotalPrice = winningBid.Amount,
                 BidId = winningBid.Id,

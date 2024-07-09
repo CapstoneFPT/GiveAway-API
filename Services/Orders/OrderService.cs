@@ -74,8 +74,7 @@ namespace Services.Orders
                     return response;
                 }
 
-                response.Data =
-                    await _orderRepository.CreateOrderHierarchy(accountId, order.listItemId, order);
+                response.Data = await _orderRepository.CreateOrderHierarchy(accountId, order);
                 response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
@@ -253,7 +252,7 @@ namespace Services.Orders
             {
                 var orderResult = await _orderRepository.CreateOrder(new Order()
                 {
-                    OrderCode = OrderRepository.GenerateUniqueString(),
+                    OrderCode = _orderRepository.GenerateUniqueString(),
                     CreatedDate = DateTime.UtcNow,
                     MemberId = order.MemberId,
                     TotalPrice = order.TotalPrice,
@@ -413,6 +412,40 @@ namespace Services.Orders
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest request)
+        {
+            try
+            {
+                var response = new Result<OrderResponse>();
+                if (request.listItemId.Count == 0)
+                {
+                    response.Messages = ["You have no item for order"];
+                    response.ResultStatus = ResultStatus.Empty;
+                    return response;
+                }
+
+                var checkItemAvailable = await _orderRepository.IsOrderAvailable(request.listItemId);
+                if (checkItemAvailable.Count > 0)
+                {
+                    var orderResponse = new OrderResponse();
+                    orderResponse.listItemExisted = checkItemAvailable;
+                    response.Data = orderResponse;
+                    response.ResultStatus = ResultStatus.Error;
+                    response.Messages = ["There are some unvailable items. Please check your order again"];
+                    return response;
+                }
+
+                response.Data = await _orderRepository.CreateOrderByShop(shopId, request);
+                response.Messages = ["Create Successfully"];
+                response.ResultStatus = ResultStatus.Success;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
             }
         }
     }
