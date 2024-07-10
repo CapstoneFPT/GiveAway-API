@@ -17,26 +17,19 @@ public class TokenService : ITokenService
 
     public string GenerateAccessToken(List<Claim> claims)
     {
-        try
-        {
-            var securityKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration[Utils.JwtConstants.JwtKey]!)
-            );
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        var securityKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_configuration[Utils.JwtConstants.JwtKey]!)
+        );
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(
-                _configuration[Utils.JwtConstants.JwtIssuer],
-                _configuration[Utils.JwtConstants.JwtAudience],
-                claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: credentials
-            );
+        var token = new JwtSecurityToken(
+            _configuration[Utils.JwtConstants.JwtIssuer],
+            _configuration[Utils.JwtConstants.JwtAudience],
+            claims,
+            expires: DateTime.Now.AddDays(1),
+            signingCredentials: credentials
+        );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-        catch (Exception e)
-        {
-            throw new Exception(e.Message);
-        }
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

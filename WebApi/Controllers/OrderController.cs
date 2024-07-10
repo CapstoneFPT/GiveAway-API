@@ -1,10 +1,7 @@
-﻿using System.Transactions;
-using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.FashionItems;
+﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.OrderDetails;
-using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
-using Microsoft.AspNetCore.Http;
+using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.OrderDetails;
@@ -65,12 +62,12 @@ namespace WebApi.Controllers
 
             if (order == null)
             {
-                throw new Exception("Order not found");
+                throw new OrderNotFoundException();
             }
 
             if (order.PaymentMethod != PaymentMethod.QRCode)
             {
-                throw new Exception("Order is not paid by QR code");
+                throw new WrongPaymentMethodException("Order is not paid by QRCode");
             }
 
             var paymentUrl = _vnPayService.CreatePaymentUrl(
@@ -139,12 +136,12 @@ namespace WebApi.Controllers
 
             if (order == null)
             {
-                throw new Exception("Order");
+                throw new OrderNotFoundException();
             }
 
             if (order.PaymentMethod != PaymentMethod.Point)
             {
-                throw new Exception("Order is not paid by points");
+                throw new WrongPaymentMethodException("Order is not paid by Point");
             }
 
             order.PaymentDate = DateTime.UtcNow;
@@ -159,6 +156,7 @@ namespace WebApi.Controllers
                 { success = true, message = "Payment success", orderCode = order.OrderId });
         }
     }
+
 
     public class PurchaseOrderRequest
     {

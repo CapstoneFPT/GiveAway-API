@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using AutoMapper.Execution;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
@@ -9,21 +8,13 @@ using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using static Org.BouncyCastle.Asn1.Cmp.Challenge;
-using Member = BusinessObjects.Entities.Member;
 
 namespace Repositories.Orders
 {
     public class OrderRepository : IOrderRepository
     {
-        private readonly GenericDao<Order> _orderDao;
+        private readonly GenericDao<Order?> _orderDao;
         private readonly GenericDao<OrderDetail> _orderDetailDao;
         private readonly GenericDao<FashionItem> _fashionItemDao;
         private readonly GenericDao<Shop> _shopDao;
@@ -33,7 +24,7 @@ namespace Repositories.Orders
         private static Random random = new Random();
         private const string prefix = "GA-OD-";
 
-        public OrderRepository(GenericDao<Order> orderDao, GenericDao<OrderDetail> orderDetailDao,
+        public OrderRepository(GenericDao<Order?> orderDao, GenericDao<OrderDetail> orderDetailDao,
             GenericDao<FashionItem> fashionItemDao,
             GenericDao<Shop> shopDao, GenericDao<Account> accountDao, IMapper mapper)
         {
@@ -45,7 +36,7 @@ namespace Repositories.Orders
             _mapper = mapper;
         }
 
-        public async Task<Order> CreateOrder(Order order)
+        public async Task<Order?> CreateOrder(Order? order)
         {
             await _orderDao.AddAsync(order);
             return order;
@@ -59,9 +50,9 @@ namespace Repositories.Orders
             var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
 
             int totalPrice = 0;
-            Order order = new Order();
+            Order? order = new Order();
             order.MemberId = accountId;
-            order.Member =  await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
+            order.Member = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
             order.PaymentMethod = request.PaymentMethod;
             order.Address = request.Address;
             order.PurchaseType = PurchaseType.Online;
@@ -79,7 +70,7 @@ namespace Repositories.Orders
             order.CreatedDate = DateTime.UtcNow;
             order.TotalPrice = totalPrice;
             order.OrderCode = GenerateUniqueString();
-            
+
             await CreateOrder(order);
 
             var listOrderDetailResponse = new List<OrderDetailResponse<FashionItemDetailResponse>>();
@@ -88,7 +79,7 @@ namespace Repositories.Orders
             {
                 var item = await _fashionItemDao.GetQueryable().Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);
-                OrderDetail orderDetail = new OrderDetail();
+                var orderDetail = new OrderDetail();
                 orderDetail.OrderId = order.OrderId;
                 orderDetail.UnitPrice = item.SellingPrice;
                 orderDetail.FashionItemId = id;
@@ -134,7 +125,7 @@ namespace Repositories.Orders
             return orderResponse;
         }
 
-        public async Task<Order> GetOrderById(Guid id)
+        public async Task<Order?> GetOrderById(Guid id)
         {
             return await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderId == id);
         }
@@ -159,62 +150,55 @@ namespace Repositories.Orders
 
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByAccountId(Guid accountId, OrderRequest request)
         {
-            try
+            var query = _orderDao.GetQueryable();
+            query = query.Include(c => c.Member).Where(c => c.MemberId == accountId)
+                .OrderByDescending(c => c.CreatedDate);
+
+            if (request.Status != null)
             {
-                var query = _orderDao.GetQueryable();
-                query = query.Include(c => c.Member).Where(c => c.MemberId == accountId).OrderByDescending(c => c.CreatedDate);
-
-                if (request.Status != null)
-                {
-                    query = query.Where(f => f.Status == request.Status);
-                }
-
-                if (request.OrderCode != null)
-                {
-                    query = query.Where(f => f.OrderCode.ToUpper().Equals(f.OrderCode.ToUpper()));
-                }
-
-                var count = await query.CountAsync();
-                query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                    .Take(request.PageSize);
-
-               
-
-                var items = await query
-                    .Select(x => new OrderResponse
-                    {
-                        OrderId = x.OrderId,
-                        Quantity = _orderDetailDao.GetQueryable().Count(c => c.OrderId.Equals(x.OrderId)),
-                        TotalPrice = _orderDetailDao.GetQueryable().Sum(c => c.UnitPrice),
-                        CreatedDate = x.CreatedDate,
-                        OrderCode = x.OrderCode,
-                        PaymentMethod = x.PaymentMethod,
-                        PaymentDate = x.PaymentDate,
-                        CustomerName = x.Member.Fullname,
-                        RecipientName = x.RecipientName,
-                        ContactNumber = x.Phone,
-                        Address = x.Address,
-                        PurchaseType = x.PurchaseType,
-                        Status = x.Status,
-                    })
-                    .AsNoTracking().ToListAsync();
-
-                var result = new PaginationResponse<OrderResponse>
-                {
-                    Items = items,
-                    PageSize = request.PageSize,
-                    TotalCount = count,
-                    PageNumber = request.PageNumber,
-                };
-                return result;
+                query = query.Where(f => f.Status == request.Status);
             }
-            catch (Exception ex)
+
+            if (request.OrderCode != null)
             {
-                throw new Exception(ex.Message);
+                query = query.Where(f => f.OrderCode.ToUpper().Equals(f.OrderCode.ToUpper()));
             }
+
+            var count = await query.CountAsync();
+            query = query.Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize);
+
+
+            var items = await query
+                .Select(x => new OrderResponse
+                {
+                    OrderId = x.OrderId,
+                    Quantity = _orderDetailDao.GetQueryable().Count(c => c.OrderId.Equals(x.OrderId)),
+                    TotalPrice = _orderDetailDao.GetQueryable().Sum(c => c.UnitPrice),
+                    CreatedDate = x.CreatedDate,
+                    OrderCode = x.OrderCode,
+                    PaymentMethod = x.PaymentMethod,
+                    PaymentDate = x.PaymentDate,
+                    CustomerName = x.Member.Fullname,
+                    RecipientName = x.RecipientName,
+                    ContactNumber = x.Phone,
+                    Address = x.Address,
+                    PurchaseType = x.PurchaseType,
+                    Status = x.Status,
+                })
+                .AsNoTracking().ToListAsync();
+
+            var result = new PaginationResponse<OrderResponse>
+            {
+                Items = items,
+                PageSize = request.PageSize,
+                TotalCount = count,
+                PageNumber = request.PageNumber,
+            };
+            return result;
         }
 
-        public async Task<Order> UpdateOrder(Order order)
+        public async Task<Order?> UpdateOrder(Order? order)
         {
             await _orderDao.UpdateAsync(order);
             return order;
@@ -237,10 +221,12 @@ namespace Repositories.Orders
             int number = random.Next(100000, 1000000);
             return prefix + number.ToString("D6");
         }
+
         private async Task<Order?> IsCodeExisted(string code)
         {
             return await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderCode.Equals(code));
         }
+
         public async Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberid)
         {
             var listorderdetail = await _orderDetailDao.GetQueryable().Where(c => c.Order.MemberId == memberid)
@@ -392,12 +378,12 @@ namespace Repositories.Orders
             }
         }
 
-        public async Task<List<Order>> GetOrders(Expression<Func<Order, bool>> predicate)
+        public async Task<List<Order?>> GetOrders(Expression<Func<Order?, bool>> predicate)
         {
             try
             {
                 var result = await _orderDao.GetQueryable()
-                    .Where(x=>x.Status != null && x.PaymentMethod != null)
+                    .Where(x => x.Status != null && x.PaymentMethod != null)
                     .Where(predicate)
                     .ToListAsync();
 
@@ -410,7 +396,7 @@ namespace Repositories.Orders
             }
         }
 
-        public async Task BulkUpdate(List<Order> ordersToUpdate)
+        public async Task BulkUpdate(List<Order?> ordersToUpdate)
         {
             try
             {
@@ -432,21 +418,20 @@ namespace Repositories.Orders
 
             //tao moi account neu la khach vang lai hoac kiem' account bang phone
             var member = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.Phone.Equals(orderRequest.Phone));
-            if(member == null)
+            if (member == null)
             {
                 Account newMember = new Account();
                 newMember.Role = Roles.Account;
-
             }
 
-            Order order = new Order();
+            Order? order = new Order();
             order.PurchaseType = PurchaseType.Offline;
             order.PaymentMethod = orderRequest.PaymentMethod;
             order.Address = orderRequest.Address;
             order.RecipientName = orderRequest.RecipientName;
             order.Phone = orderRequest.Phone;
             order.Status = OrderStatus.AwaitingPayment;
-            
+
 
             order.CreatedDate = DateTime.UtcNow;
             order.TotalPrice = totalPrice;

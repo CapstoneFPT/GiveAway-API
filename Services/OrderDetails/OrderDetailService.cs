@@ -23,48 +23,37 @@ namespace Services.OrderDetails
 
         public async Task<Result<OrderDetailResponse<FashionItem>>> GetOrderDetailById(Guid orderId)
         {
-            try
+            var response = new Result<OrderDetailResponse<FashionItem>>();
+            var listOrder = await _orderDetailRepository.GetOrderDetailById(orderId);
+            if (listOrder is null)
             {
-                var response = new Result<OrderDetailResponse<FashionItem>>();
-                var listOrder = await _orderDetailRepository.GetOrderDetailById(orderId);
-                if (listOrder is null)
-                {
-                    response.Messages = ["Can not found the order detail"];
-                    response.ResultStatus = ResultStatus.NotFound;
-                    return response;
-                }
-                response.Data = listOrder;
-                response.Messages = ["Successfully"];
-                response.ResultStatus = ResultStatus.Success;
+                response.Messages = ["Can not found the order detail"];
+                response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            response.Data = listOrder;
+            response.Messages = ["Successfully"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
         }
 
-        public async Task<Result<PaginationResponse<OrderDetailResponse<FashionItem>>>> GetOrderDetailsByOrderId(Guid orderId, OrderDetailRequest request)
+        public async Task<Result<PaginationResponse<OrderDetailResponse<FashionItem>>>> GetOrderDetailsByOrderId(
+            Guid orderId, OrderDetailRequest request)
         {
-            try
+            var response = new Result<PaginationResponse<OrderDetailResponse<FashionItem>>>();
+            var listOrder = await _orderDetailRepository.GetAllOrderDetailByOrderId(orderId, request);
+            if (listOrder.TotalCount == 0)
             {
-                var response = new Result<PaginationResponse<OrderDetailResponse<FashionItem>>>();
-                var listOrder = await _orderDetailRepository.GetAllOrderDetailByOrderId(orderId, request);
-                if (listOrder.TotalCount == 0)
-                {
-                    response.Messages = ["You don't have any order"];
-                    response.ResultStatus = ResultStatus.Empty;
-                    return response;
-                }
-                response.Data = listOrder;
-                response.Messages = ["There are " + listOrder.TotalCount + " in total"];
-                response.ResultStatus = ResultStatus.Success;
+                response.Messages = ["You don't have any order"];
+                response.ResultStatus = ResultStatus.Empty;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            response.Data = listOrder;
+            response.Messages = ["There are " + listOrder.TotalCount + " in total"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
         }
     }
 }

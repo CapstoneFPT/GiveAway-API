@@ -30,7 +30,7 @@ public class AuthService : IAuthService
 
     public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService,
         IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository,
-         IConfiguration configuration)
+        IConfiguration configuration)
     {
         _accountRepository = accountRepository;
         _tokenService = tokenService;
@@ -98,41 +98,35 @@ public class AuthService : IAuthService
 
     public async Task<Result<AccountResponse>> CheckPasswordToChange(Guid accountId, ChangePasswordRequest request)
     {
-        try
+        var response = new Result<AccountResponse>();
+        var account = await _accountRepository.FindOne(c => c.AccountId == accountId);
+        if (account is null)
         {
-            var response = new Result<AccountResponse>();
-            var account = await _accountRepository.FindOne(c => c.AccountId == accountId);
-            if (account is null)
-            {
-                response.ResultStatus = ResultStatus.NotFound;
-                response.Messages = new[] { "User not found" };
-                return response;
-            }
-            else if (!VerifyPasswordHash(request.CurrentPassword, account.PasswordHash, account.PasswordSalt))
-            {
-                response.ResultStatus = ResultStatus.Error;
-                response.Messages = new[] { "Your current is incorrecr" };
-                return response;
-            }
-            else if (VerifyPasswordHash(request.NewPassword, account.PasswordHash, account.PasswordSalt))
-            {
-                response.ResultStatus = ResultStatus.Error;
-                response.Messages = new[] { "This new password is same as the current password. Please enter the new one" };
-                return response;
-            }
-            CreatePasswordHash(request.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
-            account.PasswordHash = passwordHash;
-            account.PasswordSalt = passwordSalt;
-            await _accountRepository.UpdateAccount(account);
-            response.Data = _mapper.Map<AccountResponse>(account);
-            response.ResultStatus = ResultStatus.Success;
-            response.Messages = new[] { "Change password successfully" };
+            response.ResultStatus = ResultStatus.NotFound;
+            response.Messages = new[] { "User not found" };
             return response;
         }
-        catch (Exception ex)
+        else if (!VerifyPasswordHash(request.CurrentPassword, account.PasswordHash, account.PasswordSalt))
         {
-            throw new Exception(ex.Message);
+            response.ResultStatus = ResultStatus.Error;
+            response.Messages = new[] { "Your current is incorrecr" };
+            return response;
         }
+        else if (VerifyPasswordHash(request.NewPassword, account.PasswordHash, account.PasswordSalt))
+        {
+            response.ResultStatus = ResultStatus.Error;
+            response.Messages = new[] { "This new password is same as the current password. Please enter the new one" };
+            return response;
+        }
+
+        CreatePasswordHash(request.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
+        account.PasswordHash = passwordHash;
+        account.PasswordSalt = passwordSalt;
+        await _accountRepository.UpdateAccount(account);
+        response.Data = _mapper.Map<AccountResponse>(account);
+        response.ResultStatus = ResultStatus.Success;
+        response.Messages = new[] { "Change password successfully" };
+        return response;
     }
 
     public async Task<Result<AccountResponse>> CreateStaffAccount(CreateStaffAccountRequest request)
@@ -148,7 +142,7 @@ public class AuthService : IAuthService
         else
         {
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-            Account account = new Account();
+            Account? account = new Account();
             account.Email = request.Email;
             /*account.AccountId = new Guid();*/
             account.PasswordHash = passwordHash;
@@ -193,7 +187,7 @@ public class AuthService : IAuthService
             var account = await _accountRepository.FindOne(x =>
                 x.Email.Equals(email)
             );
-            var admin = await _accountRepository.GetAdminAccount(email, password);
+            var admin = _accountRepository.GetAdminAccount(email, password);
             if (account is null && admin is null)
             {
                 return new Result<LoginResponse>()
@@ -224,6 +218,7 @@ public class AuthService : IAuthService
                     ResultStatus = ResultStatus.Success
                 };
             }
+
             if (!VerifyPasswordHash(password, account.PasswordHash, account.PasswordSalt))
             {
                 return new Result<LoginResponse>()
@@ -263,6 +258,7 @@ public class AuthService : IAuthService
                 var shop = await _shopRepository.GetShopByAccountId(account.AccountId);
                 data.ShopId = shop.ShopId;
             }
+
             return new Result<LoginResponse>()
             {
                 Data = data,
@@ -300,7 +296,7 @@ public class AuthService : IAuthService
         }
 
         CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-        Member member = new Member();
+        Member? member = new Member();
         member.Email = request.Email;
         /*account.AccountId = new Guid();*/
         member.PasswordHash = passwordHash;
@@ -340,6 +336,7 @@ public class AuthService : IAuthService
             response.ResultStatus = ResultStatus.Error;
             return response;
         }
+
         string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
         string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
 

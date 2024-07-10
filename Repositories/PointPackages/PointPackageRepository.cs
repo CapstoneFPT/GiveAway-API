@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,36 +19,21 @@ public class PointPackageRepository : IPointPackageRepository
 
     public async Task<PointPackage?> GetSingle(Expression<Func<PointPackage, bool>> predicate)
     {
-        try
-        {
-            var result = await _pointPackageDao.GetQueryable().FirstOrDefaultAsync(predicate);
-            return result;
-        }
-        catch (Exception e)
-        {
-            throw new Exception(e.Message);
-        }
+        var result = await _pointPackageDao.GetQueryable().FirstOrDefaultAsync(predicate);
+        return result;
     }
 
     public async Task AddPointsToBalance(Guid accountId, int amount)
     {
-        try
-        {
-            var account = await _accountDao.GetQueryable()
-                .FirstOrDefaultAsync(x => x.AccountId == accountId);
+        var account = await _accountDao.GetQueryable()
+            .FirstOrDefaultAsync(x => x.AccountId == accountId);
 
-            if (account == null)
-            {
-               throw new Exception("Account not found");
-            }
-            
-            account.Balance += amount;
-            await _accountDao.UpdateAsync(account);
-        }
-        catch (Exception e)
+        if (account == null)
         {
-            throw new Exception();
+            throw new AccountNotFoundException();
         }
+
+        account.Balance += amount;
+        await _accountDao.UpdateAsync(account);
     }
-    
 }

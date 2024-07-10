@@ -37,53 +37,39 @@ public class AuthController : ControllerBase
     [HttpGet("login-google")]
     public IActionResult GoogleLogin()
     {
-        try
-        {
-            var props = new AuthenticationProperties() { RedirectUri = Url.Action(nameof(GoogleSignin)) };
-            return Challenge(props, GoogleDefaults.AuthenticationScheme);
-        }
-        catch (Exception e)
-        {
-            throw new Exception("Something went wrong with google sign in",e.InnerException);
-        }
+        var props = new AuthenticationProperties() { RedirectUri = Url.Action(nameof(GoogleSignin)) };
+        return Challenge(props, GoogleDefaults.AuthenticationScheme);
     }
 
     [HttpGet("signin-google")]
     public async Task<IActionResult> GoogleSignin()
     {
-        try
+        var response = await HttpContext.AuthenticateAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme
+        );
+        if (response.Principal is null)
         {
-            var response = await HttpContext.AuthenticateAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme
-            );
-            if (response.Principal is null)
+            return BadRequest("Principle is null here");
+        }
+
+        var name = response.Principal.FindFirstValue(ClaimTypes.Name);
+        var givenName = response.Principal.FindFirstValue(ClaimTypes.GivenName);
+        var email = response.Principal.FindFirstValue(ClaimTypes.Email);
+
+        return Ok(
+            new
             {
-                return BadRequest("Principle is null here");
+                name,
+                givenName,
+                email,
+                response.Succeeded,
+                response.Properties.Items
             }
-
-            var name = response.Principal.FindFirstValue(ClaimTypes.Name);
-            var givenName = response.Principal.FindFirstValue(ClaimTypes.GivenName);
-            var email = response.Principal.FindFirstValue(ClaimTypes.Email);
-
-            return Ok(
-                new
-                {
-                    name,
-                    givenName,
-                    email,
-                    response.Succeeded,
-                    response.Properties.Items
-                }
-            );
-        }
-        catch (Exception e)
-        {
-            throw new Exception("Something went wrong with google sign in", e.InnerException);
-        }
+        );
     }
 
     [HttpGet("forgot-password")]
-    public async Task<Result<string>> ForgotPassword([FromQuery]ForgetPasswordRequest request)
+    public async Task<Result<string>> ForgotPassword([FromQuery] ForgetPasswordRequest request)
     {
         var user = await _authService.CheckPassword(request.Email, request.Password);
         return user;
@@ -103,7 +89,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("create-staff-account")]
     public async Task<ActionResult<Result<AccountResponse>>> CreateStaffAccount(
-       [FromBody] CreateStaffAccountRequest registerRequest)
+        [FromBody] CreateStaffAccountRequest registerRequest)
     {
         return await _authService.CreateStaffAccount(registerRequest);
     }
@@ -119,8 +105,10 @@ public class AuthController : ControllerBase
     {
         return await _authService.ResendVerifyEmail(email);
     }
+
     [HttpPut("{accountId}/change-password")]
-    public async Task<ActionResult<Result<AccountResponse>>> ChangePassword([FromRoute] Guid accountId, [FromBody] ChangePasswordRequest request)
+    public async Task<ActionResult<Result<AccountResponse>>> ChangePassword([FromRoute] Guid accountId,
+        [FromBody] ChangePasswordRequest request)
     {
         return await _authService.CheckPasswordToChange(accountId, request);
     }
