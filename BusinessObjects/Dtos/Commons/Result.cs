@@ -110,7 +110,7 @@ public enum TransactionType
     Withdraw,
     Purchase,
     Refund,
-    Recharge
+    Recharge,
 }
 public enum PurchaseType
 {

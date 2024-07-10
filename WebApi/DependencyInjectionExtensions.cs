@@ -16,6 +16,7 @@ using Repositories.FashionItems;
 using Repositories.OrderDetails;
 using Repositories.Orders;
 using Repositories.PointPackages;
+using Repositories.Revenues;
 using Repositories.Schedules;
 using Repositories.Shops;
 using Repositories.Timeslots;
@@ -38,6 +39,7 @@ using Services.Inquiries;
 using Services.OrderDetails;
 using Services.Orders;
 using Services.PointPackages;
+using Services.Revenue;
 using Services.Schedules;
 using Services.Shops;
 using Services.Timeslots;
@@ -73,6 +75,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<ITimeslotService, TimeslotService>();
         serviceCollection.AddScoped<ITransactionService, TransactionService>();
         serviceCollection.AddScoped<IVnPayService, VnPayService>();
+        serviceCollection.AddScoped<IRevenueService, RevenueService>();
         serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }
@@ -98,6 +101,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IShopRepository, ShopRepository>();
         serviceCollection.AddScoped<ITimeslotRepository, TimeslotRepository>();
         serviceCollection.AddScoped<ITransactionRepository, TransactionRepository>();
+        serviceCollection.AddScoped<IRevenueRepository, RevenueRepository>();
         return serviceCollection;
     }
     

@@ -25,7 +25,7 @@ public class Order
     public string? RecipientName { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
-
+    
     public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();
 }
 
