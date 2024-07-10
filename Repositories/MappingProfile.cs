@@ -48,7 +48,7 @@ namespace Repositories
                 .ForPath(a => a.FashionItemDetail.Condition, opt => opt.MapFrom(a => a.FashionItem.Condition))
                 .ForPath(a => a.FashionItemDetail.ConsignDuration, opt => opt.MapFrom(a => a.FashionItem.ConsignSaleDetail.ConsignSale.ConsignDuration))
                 .ForPath(a => a.FashionItemDetail.ShopAddress, opt => opt.MapFrom(a => a.FashionItem.Shop.Address))
-                
+                .ForPath(a => a.FashionItemDetail.Status, opt => opt.MapFrom(a => a.FashionItem.Status))
                 .ForPath(a => a.FashionItemDetail.Consigner, opt => opt.MapFrom(a => a.FashionItem.ConsignSaleDetail.ConsignSale.Member.Fullname))
                 .ForPath(a => a.FashionItemDetail.CategoryName, opt => opt.MapFrom(a => a.FashionItem.Category.Name))
                 .ForPath(a => a.FashionItemDetail.Color, opt => opt.MapFrom(a => a.FashionItem.Color))

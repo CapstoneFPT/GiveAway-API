@@ -266,5 +266,20 @@ namespace Repositories.FashionItems
                 await GetCategoryIdsRecursive(childId, categoryIds);
             }
         }
+
+        public async Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> listItemId)
+        {
+            var listItemNotbelongshop = new List<Guid?>();
+            var listItem = await _fashionitemDao.GetQueryable().Include(c => c.Shop)
+                .Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
+            foreach (FashionItem item in listItem)
+            {
+                if (!item.ShopId.Equals(shopId))
+                {
+                    listItemNotbelongshop.Add(item.ItemId);
+                }
+            }
+            return listItemNotbelongshop;
+        }
     }
 }

@@ -52,7 +52,7 @@ namespace WebApi.Controllers
             return await _orderService.GetOrdersByShopId(shopId, orderRequest);
         }
         [HttpPost("{shopId}/orders")]
-        public async Task<ActionResult<Result<OrderResponse>>> CreateOrderByShop([FromRoute] Guid shopId, [FromQuery] CreateOrderRequest orderRequest)
+        public async Task<ActionResult<Result<OrderResponse>>> CreateOrderByShop([FromRoute] Guid shopId, [FromBody] CreateOrderRequest orderRequest)
         {
             return await _orderService.CreateOrderByShop(shopId, orderRequest);
         }

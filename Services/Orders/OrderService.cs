@@ -56,10 +56,10 @@ namespace Services.Orders
                 if (checkItemAvailable.Count > 0)
                 {
                     var orderResponse = new OrderResponse();
-                    orderResponse.listItemExisted = checkItemAvailable;
+                    orderResponse.listItemNotAvailable = checkItemAvailable;
                     response.Data = orderResponse;
                     response.ResultStatus = ResultStatus.Error;
-                    response.Messages = ["There are some unvailable items. Please check your order again"];
+                    response.Messages = ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
                     return response;
                 }
 
@@ -68,7 +68,7 @@ namespace Services.Orders
                 {
                     var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
                     var orderResponse = new OrderResponse();
-                    orderResponse.listItemExisted = listItemExisted;
+                    orderResponse.listItemNotAvailable = listItemExisted;
                     response.Data = orderResponse;
                     response.ResultStatus = ResultStatus.Duplicated;
                     response.Messages = ["You already order those items. Please remove them"];
@@ -432,13 +432,23 @@ namespace Services.Orders
                 if (checkItemAvailable.Count > 0)
                 {
                     var orderResponse = new OrderResponse();
-                    orderResponse.listItemExisted = checkItemAvailable;
+                    orderResponse.listItemNotAvailable = checkItemAvailable;
                     response.Data = orderResponse;
                     response.ResultStatus = ResultStatus.Error;
-                    response.Messages = ["There are some unvailable items. Please check your order again"];
+                    response.Messages = ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
                     return response;
                 }
-
+                var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, orderRequest.listItemId);
+                if(isitembelongshop.Count > 0)
+                {
+                    var orderResponse = new OrderResponse();
+                    orderResponse.listItemNotAvailable = isitembelongshop;
+                    response.Data = orderResponse;
+                    response.ResultStatus = ResultStatus.Error;
+                    response.Messages = ["There are " + isitembelongshop.Count + " items not belong to this shop. Please check your order again"];
+                    return response;
+                }
+                
                 response.Data = await _orderRepository.CreateOrderByShop(shopId, orderRequest);
                 response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;

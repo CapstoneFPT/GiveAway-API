@@ -21,5 +21,6 @@ namespace Repositories.FashionItems
         Task BulkUpdate(List<FashionItem> fashionItems);
         Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem,bool>> predicate);
         Task UpdateFashionItems(List<FashionItem> fashionItems);
+        Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> itemId);
     }
 }
