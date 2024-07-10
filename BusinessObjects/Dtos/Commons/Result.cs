@@ -123,6 +123,11 @@ public enum ConsignSaleType
     ForSale
 }
 
+public enum ConsignSaleMethod
+{
+    Online,
+    Offline
+}
 public enum AddressType
 {
     Home,

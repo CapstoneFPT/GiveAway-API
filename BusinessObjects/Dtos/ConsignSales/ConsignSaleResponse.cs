@@ -21,6 +21,7 @@ namespace BusinessObjects.Dtos.ConsignSales
         public Guid ShopId { get; set; }
         public Guid MemberId { get; set; }
         public ConsignSaleStatus Status { get; set; }
+        public ConsignSaleMethod ConsignSaleMethod { get; set; }
         public int TotalPrice { get; set; }
         public int SoldPrice { get; set; }
         public int MemberReceivedAmount { get; set; }

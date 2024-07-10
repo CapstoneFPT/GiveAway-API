@@ -299,6 +299,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().HasOne(x => x.Transaction).WithOne(x => x.Order)
             .HasForeignKey<Transaction>(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<Order>().Property(x => x.Address).HasColumnType("varchar").HasMaxLength(255);
+        modelBuilder.Entity<Order>().Property(x => x.RecipientName).HasColumnType("varchar").HasMaxLength(100);
+        modelBuilder.Entity<Order>().Property(x => x.Phone).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Order>().Property(x => x.Email).HasColumnType("varchar").HasMaxLength(50);
         #endregion
 
         #region OrderDetail
@@ -337,7 +341,13 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<ConsignSale>().HasMany(x => x.ConsignSaleDetails).WithOne(x => x.ConsignSale)
             .HasForeignKey(x => x.ConsignSaleId);
-
+        modelBuilder.Entity<ConsignSale>().Property(x => x.Address).HasColumnType("varchar").HasMaxLength(255);
+        modelBuilder.Entity<ConsignSale>().Property(x => x.RecipientName).HasColumnType("varchar").HasMaxLength(100);
+        modelBuilder.Entity<ConsignSale>().Property(x => x.Phone).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<ConsignSale>().Property(x => x.Email).HasColumnType("varchar").HasMaxLength(50);
+        modelBuilder.Entity<ConsignSale>().Property(e => e.ConsignSaleMethod)
+            .HasConversion(prop => prop.ToString(), s => (ConsignSaleMethod)Enum.Parse(typeof(ConsignSaleMethod), s))
+            .HasColumnType("varchar").HasMaxLength(20);
         #endregion
 
         #region ConsignedSaleDetail

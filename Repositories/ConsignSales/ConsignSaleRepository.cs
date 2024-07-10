@@ -48,8 +48,9 @@ namespace Repositories.ConsignSales
                     Status = ConsignSaleStatus.Pending,
                     TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice),
                     SoldPrice = 0,
+                    ConsignSaleMethod = ConsignSaleMethod.Online,
                     MemberReceivedAmount = 0,
-                    ConsignSaleCode = GenerateUniqueString(),
+                    ConsignSaleCode = await GenerateUniqueString(),
                 };
                 await _consignSaleDao.AddAsync(newConsign);
 
@@ -176,12 +177,13 @@ namespace Repositories.ConsignSales
                 throw new Exception(ex.Message);
             }
         }
-        public static string GenerateUniqueString()
+        public async Task<string> GenerateUniqueString()
         {
             string newString;
             do
             {
                 newString = GenerateRandomString();
+                var isCodeExisted = await _consignSaleDao.GetQueryable().FirstOrDefaultAsync(c => c.ConsignSaleCode.Equals(newString));
             } while (generatedStrings.Contains(newString));
 
             generatedStrings.Add(newString);
@@ -255,6 +257,99 @@ namespace Repositories.ConsignSales
             {
                 throw new Exception($"{ex.Message}");
             }
+        }
+
+        public async Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request)
+        {
+            //tao moi 1 consign
+            var isMemberExisted = await _accountDao.GetQueryable().Where(c => c.Phone.Equals(request.Phone)).FirstOrDefaultAsync();
+            ConsignSale newConsign = new ConsignSale()
+            {
+                Type = request.Type,
+                CreatedDate = DateTime.UtcNow,
+                ConsignDuration = 60,
+                ShopId = shopId,
+                Status = ConsignSaleStatus.Received,
+                ConsignSaleMethod = ConsignSaleMethod.Offline,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(60),
+                TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice),
+                SoldPrice = 0,
+                MemberReceivedAmount = 0,
+                ConsignSaleCode = await GenerateUniqueString(),
+            };
+            if (isMemberExisted != null)
+            {
+                newConsign.MemberId = isMemberExisted.AccountId;
+            }
+            else
+            {
+                newConsign.RecipientName = request.RecipientName;
+                newConsign.Address = request.Address;
+                newConsign.Phone = request.Phone;
+                newConsign.Email = request.Email;
+            }
+            await _consignSaleDao.AddAsync(newConsign);
+            //tao nhung~ mon do trong consign moi'
+            foreach (var item in request.fashionItemForConsigns)
+            {
+                FashionItem fashionItem = new FashionItem()
+                {
+                    SellingPrice = item.ConfirmedPrice,
+                    Name = item.Name,
+                    Note = item.Note,
+                    Value = item.Value,
+                    Condition = item.Condition,
+                    ShopId = shopId,
+                    CategoryId = item.CategoryId,
+                    Status = FashionItemStatus.Unavailable,
+                    Brand = item.Brand,
+                    Color = item.Color,
+                    Size = item.Size,
+                    Gender = item.Gender,
+                };
+                switch (request.Type)
+                {
+                    case ConsignSaleType.ConsignedForSale:
+                        fashionItem.Type = FashionItemType.ConsignedForSale;
+                        break;
+                    case ConsignSaleType.ConsignedForAuction:
+                        fashionItem.Type = FashionItemType.ConsignedForAuction;
+                        break;
+                    default:
+                        fashionItem.Type = FashionItemType.ItemBase;
+                        break;
+                }
+                await _fashionItemDao.AddAsync(fashionItem);
+
+                //them image tuong ung voi moi mon do
+                for (int i = 0; i < item.Image.Count(); i++)
+                {
+                    Image img = new Image()
+                    {
+                        FashionItemId = fashionItem.ItemId,
+                        Url = item.Image[i]
+                    };
+                    await _imageDao.AddAsync(img);
+                }
+
+
+                //tao moi consigndetail tuong ung voi mon do
+                ConsignSaleDetail consignDetail = new ConsignSaleDetail()
+                {
+                    ConfirmedPrice = item.ConfirmedPrice,
+                    DealPrice = item.DealPrice,
+                    FashionItemId = fashionItem.ItemId,
+                    FashionItem = fashionItem,
+                    ConsignSaleId = newConsign.ConsignSaleId
+                };
+                await _consignSaleDetailDao.AddAsync(consignDetail);
+            }
+            var consignResponse = await _consignSaleDao.GetQueryable()
+                .Where(c => c.ConsignSaleId == newConsign.ConsignSaleId)
+                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
+            return consignResponse;
         }
     }
 }

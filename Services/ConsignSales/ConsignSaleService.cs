@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
+using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
@@ -97,6 +98,42 @@ namespace Services.ConsignSales
                 //tao moi' 1 consign form
                 var consign = await _consignSaleRepository.CreateConsignSale(accountId, request);
                 if(consign == null)
+                {
+                    response.Messages = ["There is an error. Can not find consign"];
+                    response.ResultStatus = ResultStatus.Error;
+                    return response;
+                }
+                response.Data = consign;
+                response.ResultStatus = ResultStatus.Success;
+                response.Messages = ["Create successfully"];
+                return response;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request)
+        {
+            try
+            {
+                var response = new Result<ConsignSaleResponse>();
+                var isMemberExisted = await _accountRepository.FindUserByPhone(request.Phone);
+                if(isMemberExisted != null)
+                {
+                    var account = await _accountRepository.GetAccountById(isMemberExisted.AccountId);
+                    if (account == null || account.Status.Equals(AccountStatus.Inactive) || account.Status.Equals(AccountStatus.NotVerified))
+                    {
+                        response.Messages = ["This account is not available to consign"];
+                        response.ResultStatus = ResultStatus.Error;
+                        return response;
+                    }
+                }
+
+                //tao moi' 1 consign form
+                var consign = await _consignSaleRepository.CreateConsignSaleByShop(shopId, request);
+                if (consign == null)
                 {
                     response.Messages = ["There is an error. Can not find consign"];
                     response.ResultStatus = ResultStatus.Error;

@@ -15,13 +15,19 @@ public class ConsignSale
     public DateTime? EndDate { get; set; }
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
-    public Account Member { get; set; }
-    public Guid MemberId { get; set; }
+    public Account? Member { get; set; }
+    public Guid? MemberId { get; set; }
     public ConsignSaleStatus Status { get; set; }
     public int TotalPrice { get; set; }
     public int SoldPrice { get; set; }
     public int MemberReceivedAmount { get; set; }
     public Transaction? Transaction { get; set; }
+    
+    public string? RecipientName { get; set; }
+    public string? Phone { get; set; }
+    public string? Address { get; set; }
+    [EmailAddress] public string? Email { get; set; }
+    public ConsignSaleMethod ConsignSaleMethod { get; set; }
     public ICollection<ConsignSaleDetail>? ConsignSaleDetails { get; set; } = new List<ConsignSaleDetail>();
 }
 
