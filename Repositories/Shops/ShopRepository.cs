@@ -46,7 +46,7 @@ namespace Repositories.Shops
                 .Where(c => c.StaffId == id && c.Staff.Status.Equals(AccountStatus.Active))
                 .ProjectTo<ShopDetailResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().FirstOrDefaultAsync();
-            return shop;
+            return shop!;
         }
 
         public async Task<ShopDetailResponse> GetShopById(Guid id)
@@ -55,23 +55,16 @@ namespace Repositories.Shops
                 .Where(c => c.ShopId == id && c.Staff.Status.Equals(AccountStatus.Active))
                 .ProjectTo<ShopDetailResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().FirstOrDefaultAsync();
-            return shop;
+            return shop!;
         }
 
 
         public async Task<Shop?> GetSingleShop(Expression<Func<Shop, bool>> predicate)
         {
-            try
-            {
-                var result = await _shopDao
-                    .GetQueryable()
-                    .SingleOrDefaultAsync(predicate);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = await _shopDao
+                .GetQueryable()
+                .SingleOrDefaultAsync(predicate);
+            return result;
         }
     }
 }

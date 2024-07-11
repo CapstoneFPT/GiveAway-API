@@ -8,54 +8,48 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Utils;
 
 namespace Repositories.Accounts
 {
     public class AccountRepository : IAccountRepository
     {
-        private readonly GenericDao<Account> _accountDao;
-        public AccountRepository(GenericDao<Account> genericDao)
+        private readonly GenericDao<Account?> _accountDao;
+
+        public AccountRepository(GenericDao<Account?> genericDao)
         {
             _accountDao = genericDao;
         }
 
-        public Task<List<Account>> FindMany(
-        Func<Account, bool> predicate,
-        int page,
-        int pageSize
-    )
+        public Task<List<Account?>> FindMany(
+            Expression<Func<Account?, bool>> predicate,
+            int page,
+            int pageSize
+        )
         {
-            try
-            {
-                var users = _accountDao.GetQueryable().Where(predicate).Skip((page * pageSize) - 1).Take(pageSize).ToList();
+            var result = _accountDao.GetQueryable()
+                .Where(predicate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
-                return Task.FromResult(users);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            return result;
         }
 
-        public Task<Account?> FindOne(Func<Account, bool> predicate)
+        public Task<Account?> FindOne(Expression<Func<Account?, bool>> predicate)
         {
-            try
-            {
-                var result = _accountDao.GetQueryable().FirstOrDefault(predicate);
-                return Task.FromResult<Account?>(result);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = _accountDao.GetQueryable().FirstOrDefaultAsync(predicate);
+
+            return result;
         }
 
-        public Task<Account> FindUserByEmail(string email)
+        public async Task<Account?> FindUserByEmail(string email)
         {
-            var user = _accountDao.GetQueryable().FirstOrDefault(c => c.Email == email);
-            return Task.FromResult((user == null) ? null : user);
+            var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.Email == email);
+            return user;
         }
 
         public async Task<Account> FindUserByPasswordResetToken(string token)
@@ -64,45 +58,34 @@ namespace Repositories.Accounts
             return user;
         }
 
-        public async Task<Account> GetAccountById(Guid id)
+        public async Task<Account?> GetAccountById(Guid id)
         {
-                var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
-                return user;
+            var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
+            return user;
         }
-        public async Task<List<Account>> GetAllAccounts()
+
+        public async Task<List<Account?>> GetAllAccounts()
         {
             var list = await _accountDao.GetQueryable().ToListAsync();
             return list;
         }
 
-        public async Task<Account> Register(Account account)
+        public async Task<Account?> Register(Account? account)
         {
             var result = await _accountDao.AddAsync(account);
             return result;
         }
 
-        public Task ResetPassword(Guid uid, string password)
+        public async Task ResetPassword(Guid uid, string password)
         {
-            try
+            var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == uid);
+            if (user == null)
             {
-                var user = _accountDao.GetQueryable().FirstOrDefault(c => c.AccountId == uid);
-                if (user == null)
-                {
-                    throw new Exception();
-                }
-                else
-                {
-                    //user.PasswordSalt = password;
-                    return Task.FromResult(user);
-                }
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
+                throw new AccountNotFoundException();
             }
         }
 
-        public async Task<Account> ResetPasswordToken(Account user)
+        public async Task<Account?> ResetPasswordToken(Account? user)
         {
             user.PasswordResetToken = CreateRandomToken();
             user.ResetTokenExpires = DateTime.UtcNow.AddMinutes(3);
@@ -110,7 +93,7 @@ namespace Repositories.Accounts
             return await Task.FromResult(user);
         }
 
-        public async Task<Account> UpdateAccount(Account account)
+        public async Task<Account?> UpdateAccount(Account? account)
         {
             await _accountDao.UpdateAsync(account);
             return await Task.FromResult<Account>(account);
@@ -125,13 +108,14 @@ namespace Repositories.Accounts
             return randomNumber.ToString();
         }
 
-        public Task<Account> FindUserByPhone(string phone)
+        public Task<Account?> FindUserByPhone(string phone)
         {
-            var user = _accountDao.GetQueryable().FirstOrDefault(c => c.Phone == phone);
-            return Task.FromResult((user == null) ? null : user);
+            var user = _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.Phone == phone);
+
+            return user;
         }
 
-        public async Task<string> GetAdminAccount(string email, string password)
+        public string? GetAdminAccount(string email, string password)
         {
             IConfiguration config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -141,7 +125,7 @@ namespace Repositories.Accounts
             // Check if the configuration key exists
             if (config.GetSection("AdminAccount").Exists())
             {
-                string emailJson = config["AdminAccount:Email"];
+                string? emailJson = config["AdminAccount:Email"];
                 string passwordJson = config["AdminAccount:Password"];
 
                 // Check if both email and password match

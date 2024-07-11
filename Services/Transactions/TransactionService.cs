@@ -30,7 +30,7 @@ namespace Services.Transactions
             {
                 var order = await _orderRepository.GetSingleOrder(x => x.OrderId == new Guid(vnPayResponse.OrderId));
 
-                if (order == null) throw new Exception("Order not found");
+                if (order == null) throw new OrderNotFoundException();
                 var transaction = new Transaction()
                 {
                     OrderId = new Guid(vnPayResponse.OrderId),
@@ -47,7 +47,7 @@ namespace Services.Transactions
                 {
                     Data = new TransactionDetailResponse
                     {
-                        TransactionId = createTransactionResult.TransactionId
+                        TransactionId = createTransactionResult!.TransactionId
                     },
                     ResultStatus = ResultStatus.Success
                 };
@@ -58,5 +58,9 @@ namespace Services.Transactions
                 throw;
             }
         }
+    }
+
+    public class OrderNotFoundException : Exception
+    {
     }
 }

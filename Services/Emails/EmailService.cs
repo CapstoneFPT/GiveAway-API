@@ -34,10 +34,10 @@ namespace Services.Emails
 
             // dùng SmtpClient của MailKit
             using var smtp = new SmtpClient();
-            smtp.Connect(_config.GetSection("MailSettings:Host").Value, 587, SecureSocketOptions.Auto);
-            smtp.Authenticate(_config.GetSection("MailSettings:Mail").Value, _config.GetSection("MailSettings:Password").Value);
-            smtp.Send(email);
-            smtp.Disconnect(true);
+            await smtp.ConnectAsync(_config.GetSection("MailSettings:Host").Value, 587, SecureSocketOptions.Auto);
+            await smtp.AuthenticateAsync(_config.GetSection("MailSettings:Mail").Value, _config.GetSection("MailSettings:Password").Value);
+            await smtp.SendAsync(email);
+            await smtp.DisconnectAsync(true);
         }
 
     }

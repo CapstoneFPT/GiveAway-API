@@ -27,58 +27,44 @@ namespace Services.FashionItems
         public async Task<Result<FashionItemDetailResponse>> AddFashionItem(Guid shopId,
             FashionItemDetailRequest request)
         {
-            try
+            var response = new Result<FashionItemDetailResponse>();
+            var item = new FashionItem();
+            var newdata = _mapper.Map(request, item);
+            newdata.ShopId = shopId;
+            newdata.Status = FashionItemStatus.Available;
+            var newItem = await _fashionitemRepository.AddFashionItem(newdata);
+            foreach (string img in request.Images)
             {
-                var response = new Result<FashionItemDetailResponse>();
-                var item = new FashionItem();
-                var newdata = _mapper.Map(request, item);
-                newdata.ShopId = shopId;
-                newdata.Status = FashionItemStatus.Available;
-                var newItem = await _fashionitemRepository.AddFashionItem(newdata);
-                foreach (string img in request.Images)
+                var newimage = new Image()
                 {
-                    var newimage = new Image()
-                    {
-                        Url = img,
-                        FashionItemId = newItem.ItemId,
-                    };
-                    await _imageRepository.AddImage(newimage);
-                }
+                    Url = img,
+                    FashionItemId = newItem.ItemId,
+                };
+                await _imageRepository.AddImage(newimage);
+            }
 
-                response.Data = _mapper.Map<FashionItemDetailResponse>(newItem);
-                response.Messages = ["Add successfully"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            response.Data = _mapper.Map<FashionItemDetailResponse>(newItem);
+            response.Messages = ["Add successfully"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
         }
 
         public async Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetAllFashionItemPagination(
             AuctionFashionItemRequest request)
         {
-            try
+            var response = new Result<PaginationResponse<FashionItemDetailResponse>>();
+            var result = await _fashionitemRepository.GetAllFashionItemPagination(request);
+            if (result.TotalCount < 1)
             {
-                var response = new Result<PaginationResponse<FashionItemDetailResponse>>();
-                var result = await _fashionitemRepository.GetAllFashionItemPagination(request);
-                if (result.TotalCount < 1)
-                {
-                    response.ResultStatus = ResultStatus.Empty;
-                    response.Messages = ["Empty"];
-                    return response;
-                }
-
-                response.Data = result;
-                response.ResultStatus = ResultStatus.Success;
-                response.Messages = ["Rsult in page: " + result.PageNumber];
+                response.ResultStatus = ResultStatus.Empty;
+                response.Messages = ["Empty"];
                 return response;
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+
+            response.Data = result;
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["Rsult in page: " + result.PageNumber];
+            return response;
         }
 
         public async Task<Result<FashionItemDetailResponse>> GetFashionItemById(Guid id)
@@ -101,117 +87,82 @@ namespace Services.FashionItems
         public async Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId,
             FashionItemDetailRequest request)
         {
-            try
+            var response = new Result<FashionItemDetailResponse>();
+            var item = await _fashionitemRepository.GetFashionItemById(itemId);
+            if (item is null)
             {
-                var response = new Result<FashionItemDetailResponse>();
-                var item = await _fashionitemRepository.GetFashionItemById(itemId);
-                if (item is null)
-                {
-                    response.Messages = ["Item is not found"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
-                }
-
-                var newdata = _mapper.Map(request, item);
-                response.Data =
-                    _mapper.Map<FashionItemDetailResponse>(await _fashionitemRepository.UpdateFashionItem(newdata));
-                response.ResultStatus = ResultStatus.Success;
-                response.Messages = ["Update Successfully"];
+                response.Messages = ["Item is not found"];
+                response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+
+            var newdata = _mapper.Map(request, item);
+            response.Data =
+                _mapper.Map<FashionItemDetailResponse>(await _fashionitemRepository.UpdateFashionItem(newdata));
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["Update Successfully"];
+            return response;
         }
 
         public async Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetItemByCategoryHierarchy(
             Guid categoryId, AuctionFashionItemRequest request)
         {
-            try
+            var response = new Result<PaginationResponse<FashionItemDetailResponse>>();
+            var items = await _fashionitemRepository.GetItemByCategoryHierarchy(categoryId, request);
+            if (items.TotalCount > 0)
             {
-                var response = new Result<PaginationResponse<FashionItemDetailResponse>>();
-                var items = await _fashionitemRepository.GetItemByCategoryHierarchy(categoryId, request);
-                if (items.TotalCount > 0)
-                {
-                    response.Data = items;
-                    response.ResultStatus = ResultStatus.Success;
-                    response.Messages = ["Successfully with " + response.Data.TotalCount + " items"];
-                    return response;
-                }
-
-                response.ResultStatus = ResultStatus.Empty;
-                response.Messages = ["Empty"];
+                response.Data = items;
+                response.ResultStatus = ResultStatus.Success;
+                response.Messages = ["Successfully with " + response.Data.TotalCount + " items"];
                 return response;
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+
+            response.ResultStatus = ResultStatus.Empty;
+            response.Messages = ["Empty"];
+            return response;
         }
 
         public async Task<Result<FashionItemDetailResponse>> CheckFashionItemAvailability(Guid itemId)
         {
-            try
+            var response = new Result<FashionItemDetailResponse>();
+            var item = await _fashionitemRepository.GetFashionItemById(itemId);
+            if (item != null)
             {
-                var response = new Result<FashionItemDetailResponse>();
-                var item = await _fashionitemRepository.GetFashionItemById(itemId);
-                if (item != null)
+                if (item.Status.Equals(FashionItemStatus.Unavailable))
                 {
-                    if (item.Status.Equals(FashionItemStatus.Unavailable))
-                    {
-                        item.Status = FashionItemStatus.Available;
-                        await _fashionitemRepository.UpdateFashionItem(item);
-                        response.Messages = ["This item status has successfully changed to available"];
-                        response.Data = _mapper.Map<FashionItemDetailResponse>(item);
-                        response.ResultStatus = ResultStatus.Success;
-                        return response;
-                    }
-
-                    item.Status = FashionItemStatus.Unavailable;
+                    item.Status = FashionItemStatus.Available;
                     await _fashionitemRepository.UpdateFashionItem(item);
+                    response.Messages = ["This item status has successfully changed to available"];
                     response.Data = _mapper.Map<FashionItemDetailResponse>(item);
-                    response.Messages = ["This item status has successfully changed to unavailable"];
                     response.ResultStatus = ResultStatus.Success;
                     return response;
                 }
 
-                response.Messages = ["Can not found the item"];
-                response.ResultStatus = ResultStatus.NotFound;
+                item.Status = FashionItemStatus.Unavailable;
+                await _fashionitemRepository.UpdateFashionItem(item);
+                response.Data = _mapper.Map<FashionItemDetailResponse>(item);
+                response.Messages = ["This item status has successfully changed to unavailable"];
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+
+            response.Messages = ["Can not found the item"];
+            response.ResultStatus = ResultStatus.NotFound;
+            return response;
         }
 
         public async Task<List<FashionItem>> GetRefundableItems()
         {
-            try
-            {
-                Expression<Func<FashionItem, bool>> predicate = x => x.Status == FashionItemStatus.Refundable;
-                var result = await _fashionitemRepository
-                    .GetFashionItems(predicate);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            Expression<Func<FashionItem, bool>> predicate = x => x.Status == FashionItemStatus.Refundable;
+            var result = await _fashionitemRepository
+                .GetFashionItems(predicate);
+            return result;
         }
 
         public Task ChangeToSoldItems(List<FashionItem> refundableItems)
         {
-            try
-            {
-                refundableItems.ForEach(x=>x.Status = FashionItemStatus.Sold);
-                return _fashionitemRepository.UpdateFashionItems(refundableItems);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            refundableItems.ForEach(x => x.Status = FashionItemStatus.Sold);
+            return _fashionitemRepository.UpdateFashionItems(refundableItems);
         }
     }
 }

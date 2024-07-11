@@ -21,10 +21,10 @@ namespace Services.Orders
         Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
         Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderById(Guid orderId);
-        Task UpdateOrder(Order order);
+        Task UpdateOrder(Order? order);
         Task<List<OrderDetail>> GetOrderDetailByOrderId(Guid orderId);
-        Task<List<Order>> GetOrdersToCancel();
-        void CancelOrders(List<Order> ordersToCancel);
+        Task<List<Order?>> GetOrdersToCancel();
+        void CancelOrders(List<Order?> ordersToCancel);
         Task UpdateShopBalance(Order order);
         Task UpdateFashionItemStatus(Guid orderOrderId);
         Task PayWithPoints(Guid orderId, Guid requestMemberId);

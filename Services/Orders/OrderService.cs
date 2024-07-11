@@ -221,17 +221,17 @@ namespace Services.Orders
             try
             {
                 var order = await _orderRepository.GetOrderById(orderId);
-                
+
                 if (order == null)
                 {
                     throw new Exception("Order not found");
                 }
-                
+
                 if (order.MemberId != requestMemberId)
                 {
                     throw new Exception("Not authorized");
                 }
-                
+
                 order.Status = OrderStatus.OnDelivery;
                 await _orderRepository.UpdateOrder(order);
             }
@@ -439,7 +439,7 @@ namespace Services.Orders
                     return response;
                 }
                 var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, orderRequest.listItemId);
-                if(isitembelongshop.Count > 0)
+                if (isitembelongshop.Count > 0)
                 {
                     var orderResponse = new OrderResponse();
                     orderResponse.listItemNotAvailable = isitembelongshop;
@@ -448,7 +448,7 @@ namespace Services.Orders
                     response.Messages = ["There are " + isitembelongshop.Count + " items not belong to this shop. Please check your order again"];
                     return response;
                 }
-                
+
                 response.Data = await _orderRepository.CreateOrderByShop(shopId, orderRequest);
                 response.Messages = ["Create Successfully"];
                 response.ResultStatus = ResultStatus.Success;

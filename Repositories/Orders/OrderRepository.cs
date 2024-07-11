@@ -61,7 +61,7 @@ namespace Repositories.Orders
             int totalPrice = 0;
             Order order = new Order();
             order.MemberId = accountId;
-            order.Member =  await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
+            order.Member = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
             order.PaymentMethod = orderRequest.PaymentMethod;
             order.Address = orderRequest.Address;
             order.PurchaseType = PurchaseType.Online;
@@ -141,8 +141,6 @@ namespace Repositories.Orders
 
         public async Task<Order?> GetSingleOrder(Expression<Func<Order, bool>> predicate)
         {
-            try
-            {
                 var result = await _orderDao
                     .GetQueryable()
                     .Include(order => order.Member)
@@ -151,16 +149,9 @@ namespace Repositories.Orders
                     .SingleOrDefaultAsync(predicate);
                 return result;
             }
-            catch (Exception e)
-            {
-                throw new Exception();
-            }
-        }
 
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByAccountId(Guid accountId, OrderRequest request)
         {
-            try
-            {
                 var query = _orderDao.GetQueryable();
                 query = query.Include(c => c.Member).Where(c => c.MemberId == accountId).OrderByDescending(c => c.CreatedDate);
 
@@ -208,11 +199,6 @@ namespace Repositories.Orders
                 };
                 return result;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
         public async Task<Order> UpdateOrder(Order order)
         {
@@ -251,10 +237,10 @@ namespace Repositories.Orders
         public async Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId)
         {
             var listItemNotAvailable = new List<Guid?>();
-            foreach(var itemId in listItemId)
+            foreach (var itemId in listItemId)
             {
                 var item = await _fashionItemDao.GetQueryable().FirstOrDefaultAsync(c => c.ItemId == itemId);
-                if(item is null || !item.Status.Equals(FashionItemStatus.Available))
+                if (item is null || !item.Status.Equals(FashionItemStatus.Available))
                 {
                     listItemNotAvailable.Add(itemId);
                 }
@@ -265,8 +251,6 @@ namespace Repositories.Orders
 
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest request)
         {
-            try
-            {
                 var listItemId = await _fashionItemDao.GetQueryable().Where(c => c.ShopId == shopId)
                     .Select(c => c.ItemId).ToListAsync();
 
@@ -324,16 +308,9 @@ namespace Repositories.Orders
                 };
                 return result;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
         public async Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId)
         {
-            try
-            {
                 var orderResponse = new OrderResponse();
                 var order = await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderId == orderId);
                 var listorderdetailEachShop = await _orderDetailDao.GetQueryable().Include(c => c.FashionItem)
@@ -387,16 +364,9 @@ namespace Repositories.Orders
                 orderResponse.orderDetailResponses = listOrderdetailResponse;
                 return orderResponse;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
         public async Task<List<Order>> GetOrders(Expression<Func<Order, bool>> predicate)
         {
-            try
-            {
                 var result = await _orderDao.GetQueryable()
                     .Where(predicate)
                     .ToListAsync();
@@ -406,21 +376,9 @@ namespace Repositories.Orders
 
             catch (Exception e)
             {
-                throw new Exception(e.Message);
-            }
-        }
 
-        public async Task BulkUpdate(List<Order> ordersToUpdate)
-        {
-            try
-            {
                 await _orderDao.UpdateRange(ordersToUpdate);
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
-        }
 
         public async Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
@@ -474,15 +432,15 @@ namespace Repositories.Orders
 
                 var listShopOrderResponse = new List<ShopOrderResponse>();
 
-                    var shop = await _shopDao.GetQueryable().FirstOrDefaultAsync(c => c.ShopId == shopId);
-                    var shopOrder = new ShopOrderResponse();
-                    shopOrder.ShopId = shopId;
-                    shopOrder.ShopAddress = shop.Address;
-                    shopOrder.Items = listOrderDetailResponse.Where(c => c.FashionItemDetail.ShopId == shopId).ToList();
-                    listShopOrderResponse.Add(shopOrder);
-                
+                var shop = await _shopDao.GetQueryable().FirstOrDefaultAsync(c => c.ShopId == shopId);
+                var shopOrder = new ShopOrderResponse();
+                shopOrder.ShopId = shopId;
+                shopOrder.ShopAddress = shop.Address;
+                shopOrder.Items = listOrderDetailResponse.Where(c => c.FashionItemDetail.ShopId == shopId).ToList();
+                listShopOrderResponse.Add(shopOrder);
 
-                
+
+
                 var orderResponse = _mapper.Map<OrderResponse>(orderresultUpdate);
                 orderResponse.shopOrderResponses = listShopOrderResponse;
                 return orderResponse;
@@ -491,7 +449,7 @@ namespace Repositories.Orders
             {
                 throw new Exception(e.Message);
             }
-            
+
         }
     }
 }

@@ -20,48 +20,36 @@ namespace Services.Shops
 
         public async Task<Result<List<ShopDetailResponse>>> GetAllShop()
         {
-            try
+            var response = new Result<List<ShopDetailResponse>>();
+            var result = await _shopRepository.GetAllShop();
+            if (result.Count != 0)
             {
-                var response = new Result<List<ShopDetailResponse>>();
-                var result = await _shopRepository.GetAllShop();
-                if(result.Count() > 0)
-                {
-                    response.Data = result;
-                    response.Messages = ["Successfully"];
-                    response.ResultStatus = ResultStatus.Success;
-                    return response;
-                }
-                response.Messages = ["There isn't any shop available"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.Data = result;
+                response.Messages = ["Successfully"];
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            response.Messages = ["There isn't any shop available"];
+            response.ResultStatus = ResultStatus.Empty;
+            return response;
         }
 
         public async Task<Result<ShopDetailResponse>> GetShopById(Guid shopid)
         {
-            try
+            var response = new Result<ShopDetailResponse>();
+            var result = await _shopRepository.GetShopById(shopid);
+            if (result != null)
             {
-                var response = new Result<ShopDetailResponse>();
-                var result = await _shopRepository.GetShopById(shopid);
-                if (result != null)
-                {
-                    response.Data = result;
-                    response.Messages = ["Successfully"];
-                    response.ResultStatus = ResultStatus.Success;
-                    return response;
-                }
-                response.Messages = ["There isn't any shop available"];
-                response.ResultStatus = ResultStatus.NotFound;
+                response.Data = result;
+                response.Messages = ["Successfully"];
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            response.Messages = ["There isn't any shop available"];
+            response.ResultStatus = ResultStatus.NotFound;
+            return response;
         }
     }
 }

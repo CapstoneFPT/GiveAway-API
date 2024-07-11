@@ -39,6 +39,7 @@ public enum FashionItemStatus
     Sold,
     Refundable,
     Pending,
+    PendingAuction,
     AwaitingAuction,
     Bidding,
     Won,
@@ -109,7 +110,7 @@ public enum TransactionType
     Withdraw,
     Purchase,
     Refund,
-    Recharge
+    Recharge,
 }
 public enum PurchaseType
 {

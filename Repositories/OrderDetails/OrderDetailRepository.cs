@@ -32,76 +32,54 @@ namespace Repositories.OrderDetails
         public async Task<PaginationResponse<OrderDetailResponse<FashionItem>>> GetAllOrderDetailByOrderId(Guid id,
             OrderDetailRequest request)
         {
-            try
-            {
-                var query = _orderDetailDao.GetQueryable();
-                query = query.Where(c => c.OrderId == id);
+            var query = _orderDetailDao.GetQueryable();
+            query = query.Where(c => c.OrderId == id);
 
-                var count = await query.CountAsync();
-                query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                    .Take(request.PageSize);
+            var count = await query.CountAsync();
+            query = query.Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize);
 
-                var list = await _orderDetailDao.GetQueryable().CountAsync();
 
-                var items = await query
-                    .Select(x => new OrderDetailResponse<FashionItem>
-                    {
-                        FashionItemDetail = x.FashionItem,
-                        OrderId = x.OrderId,
-                        UnitPrice = x.UnitPrice,
-                    })
-                    .AsNoTracking().ToListAsync();
-
-                var result = new PaginationResponse<OrderDetailResponse<FashionItem>>
+            var items = await query
+                .Select(x => new OrderDetailResponse<FashionItem>
                 {
-                    Items = items,
-                    PageSize = request.PageSize,
-                    TotalCount = count,
-                    PageNumber = request.PageNumber,
-                };
-                return result;
-            }
-            catch (Exception ex)
+                    FashionItemDetail = x.FashionItem,
+                    OrderId = x.OrderId,
+                    UnitPrice = x.UnitPrice,
+                })
+                .AsNoTracking().ToListAsync();
+
+            var result = new PaginationResponse<OrderDetailResponse<FashionItem>>
             {
-                throw new Exception(ex.Message);
-            }
+                Items = items,
+                PageSize = request.PageSize,
+                TotalCount = count,
+                PageNumber = request.PageNumber,
+            };
+            return result;
         }
 
         public async Task<List<OrderDetail>> GetOrderDetails(Expression<Func<OrderDetail, bool>> predicate)
         {
-            try
-            {
-                var result = await _orderDetailDao.GetQueryable()
-                    .Include(x => x.FashionItem)
-                    .Where(predicate)
-                    .ToListAsync();
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = await _orderDetailDao.GetQueryable()
+                .Include(x => x.FashionItem)
+                .Where(predicate)
+                .ToListAsync();
+            return result;
         }
 
 
         public async Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id)
         {
-            try
-            {
-                var query = await _orderDetailDao.GetQueryable()
-                    .Where(c => c.OrderId == id)
-                    .Select(x => new OrderDetailResponse<FashionItem>
-                    {
-                        FashionItemDetail = x.FashionItem,
-                        OrderId = x.OrderId,
-                        UnitPrice = x.UnitPrice,
-                    }).FirstOrDefaultAsync();
-                return query;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            var query = await _orderDetailDao.GetQueryable()
+                .Where(c => c.OrderId == id)
+                .Select(x => new OrderDetailResponse<FashionItem>
+                {
+                    FashionItemDetail = x.FashionItem,
+                    OrderId = x.OrderId,
+                    UnitPrice = x.UnitPrice,
+                }).FirstOrDefaultAsync();
+            return query;
         }
     }
 }

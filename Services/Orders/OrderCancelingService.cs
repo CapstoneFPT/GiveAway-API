@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BusinessObjects.Entities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -6,8 +7,8 @@ namespace Services.Orders;
 
 public class OrderCancelingService : BackgroundService
 {
-    private ILogger<OrderCancelingService> _logger;
-    private IServiceProvider _serviceProvider;
+    private readonly ILogger<OrderCancelingService> _logger;
+    private readonly IServiceProvider _serviceProvider;
     private const int CheckInterval = 1000 * 60 * 10;
 
     public OrderCancelingService(IServiceProvider serviceProvider, ILogger<OrderCancelingService> logger)

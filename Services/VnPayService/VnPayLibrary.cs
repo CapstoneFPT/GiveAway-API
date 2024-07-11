@@ -11,7 +11,7 @@ public class VnPayLibrary
 {
     private readonly SortedList<string, string> _requestData = new SortedList<string, string>(new VnPayCompare());
     private readonly SortedList<string, string> _responseData = new SortedList<string, string>(new VnPayCompare());
-    public static string VERSION = "2.1.0";
+    public const string VERSION = "2.1.0";
 
     public void AddRequestData(string key, string value)
     {
@@ -101,7 +101,7 @@ public class VnPayLibrary
     #endregion
 }
 
-public class Utils
+public static class Utils
 {
     public static string HmacSHA512(string key, string inputData)
     {
@@ -132,8 +132,8 @@ public class Utils
             {
                 if (remoteIpAddress.AddressFamily == AddressFamily.InterNetworkV6)
                 {
-                    remoteIpAddress = Dns.GetHostEntry(remoteIpAddress).AddressList
-                        .FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
+                    remoteIpAddress = Array.Find(Dns.GetHostEntry(remoteIpAddress).AddressList,
+                        x => x.AddressFamily == AddressFamily.InterNetwork);
                 }
 
                 if (remoteIpAddress != null) ipAddress = remoteIpAddress.ToString();

@@ -22,7 +22,7 @@ namespace Repositories.ConsignSales
         private static Random random = new Random();
         private const string prefix = "GA-CS-";
 
-        public ConsignSaleRepository(GenericDao<ConsignSale> consignSaleDao, GenericDao<Account> accountDao, GenericDao<FashionItem> fashionItemDao, 
+        public ConsignSaleRepository(GenericDao<ConsignSale> consignSaleDao, GenericDao<Account> accountDao, GenericDao<FashionItem> fashionItemDao,
             GenericDao<Image> imageDao, GenericDao<ConsignSaleDetail> consignSaleDetailDao, IMapper mapper)
         {
             _consignSaleDao = consignSaleDao;
@@ -35,8 +35,6 @@ namespace Repositories.ConsignSales
 
         public async Task<ConsignSaleResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
         {
-            try
-            {
                 //tao moi 1 consign
                 ConsignSale newConsign = new ConsignSale()
                 {
@@ -55,7 +53,7 @@ namespace Repositories.ConsignSales
                 await _consignSaleDao.AddAsync(newConsign);
 
                 //tao nhung~ mon do trong consign moi'
-                foreach(var item in request.fashionItemForConsigns)
+                foreach (var item in request.fashionItemForConsigns)
                 {
                     FashionItem fashionItem = new FashionItem()
                     {
@@ -87,7 +85,7 @@ namespace Repositories.ConsignSales
                     await _fashionItemDao.AddAsync(fashionItem);
 
                     //them image tuong ung voi moi mon do
-                    for(int i = 0; i < item.Image.Count(); i++)
+                    for (int i = 0; i < item.Image.Count(); i++)
                     {
                         Image img = new Image()
                         {
@@ -114,16 +112,10 @@ namespace Repositories.ConsignSales
                     .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
                     .FirstOrDefaultAsync();
                 return consignResponse;
-            }catch(Exception ex)
-            {
-                throw new Exception(ex.Message);
             }
-        }
 
         public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSale(Guid accountId, ConsignSaleRequest request)
         {
-            try
-            {
                 var query = _consignSaleDao.GetQueryable();
 
                 if (!string.IsNullOrWhiteSpace(request.ConsignSaleCode))
@@ -158,11 +150,6 @@ namespace Repositories.ConsignSales
                 };
                 return result;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
         public async Task<ConsignSaleResponse> GetConsignSaleById(Guid consignId)
         {
@@ -172,7 +159,8 @@ namespace Repositories.ConsignSales
                     .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
                 return consignSale;
 
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
@@ -198,8 +186,6 @@ namespace Repositories.ConsignSales
 
         public async Task<ConsignSaleResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
         {
-            try
-            {
                 var consign = await _consignSaleDao.GetQueryable()
                 .Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)
                 .Where(c => c.ConsignSaleId == consignId)
@@ -221,11 +207,6 @@ namespace Repositories.ConsignSales
                 await _consignSaleDao.UpdateAsync(consign);
                 return _mapper.Map<ConsignSaleResponse>(consign);
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message, ex);
-            }
-        }
 
         public async Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId)
         {
@@ -234,8 +215,6 @@ namespace Repositories.ConsignSales
 
         public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
         {
-            try
-            {
                 var consign = await _consignSaleDao.GetQueryable()
                 .Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)
                 .Where(c => c.ConsignSaleId == consignId)
@@ -253,11 +232,6 @@ namespace Repositories.ConsignSales
                 }
                 return _mapper.Map<ConsignSaleResponse>(consign);
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"{ex.Message}");
-            }
-        }
 
         public async Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request)
         {

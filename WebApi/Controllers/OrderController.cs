@@ -1,10 +1,7 @@
-﻿using System.Transactions;
-using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.FashionItems;
+﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.OrderDetails;
-using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
-using Microsoft.AspNetCore.Http;
+using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.OrderDetails;
@@ -65,12 +62,12 @@ namespace WebApi.Controllers
 
             if (order == null)
             {
-                throw new Exception("Order not found");
+                throw new OrderNotFoundException();
             }
 
             if (order.PaymentMethod != PaymentMethod.QRCode)
             {
-                throw new Exception("Order is not paid by QR code");
+                throw new WrongPaymentMethodException("Order is not paid by QRCode");
             }
 
             var paymentUrl = _vnPayService.CreatePaymentUrl(
@@ -93,13 +90,13 @@ namespace WebApi.Controllers
                 {
                     if (order == null)
                     {
-                        _logger.LogWarning($"Order not found for OrderCode: {response.OrderId}");
+                        _logger.LogWarning("Order not found for OrderCode: {OrderId}", response.OrderId);
                         return BadRequest(new { success = false, message = "Order not found" });
                     }
 
                     if (order.Status != OrderStatus.AwaitingPayment)
                     {
-                        _logger.LogWarning($"Order already processed: {response.OrderId}");
+                        _logger.LogWarning("Order already processed: {OrderId}",response.OrderId);
                         return Ok(new
                             { success = true, message = "Order already processed", orderCode = response.OrderId });
                     }
@@ -121,13 +118,13 @@ namespace WebApi.Controllers
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e.Message);
+                    _logger.LogError(e,e.Message);
                     return StatusCode(500, new { success = false, message = "Payment failed" });
                 }
             }
 
             _logger.LogWarning(
-                $"Payment failed. OrderCode: {response.OrderId}, ResponseCode: {response.VnPayResponseCode}");
+                "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId, response.VnPayResponseCode);
             return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
         }
 
@@ -139,12 +136,12 @@ namespace WebApi.Controllers
 
             if (order == null)
             {
-                throw new Exception("Order");
+                throw new OrderNotFoundException();
             }
 
             if (order.PaymentMethod != PaymentMethod.Point)
             {
-                throw new Exception("Order is not paid by points");
+                throw new WrongPaymentMethodException("Order is not paid by Point");
             }
 
             order.PaymentDate = DateTime.UtcNow;
@@ -159,6 +156,7 @@ namespace WebApi.Controllers
                 { success = true, message = "Payment success", orderCode = order.OrderId });
         }
     }
+
 
     public class PurchaseOrderRequest
     {

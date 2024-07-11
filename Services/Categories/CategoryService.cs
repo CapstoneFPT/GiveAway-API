@@ -30,8 +30,9 @@ namespace Services.Categories
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
+
             var listChildren = await _categoryRepository.GetAllChildrenCategory(cate.CategoryId, (cate.Level + 1));
-            
+
             if (!listChildren.Any())
             {
                 response.Messages = new[] { "This is the final category" };
@@ -40,102 +41,81 @@ namespace Services.Categories
             }
 
             response.Data = listChildren;
-            response.Messages = new[] { "List children categories with " + listChildren.Count() };
+            response.Messages = new[] { "List children categories with " + listChildren.Count };
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
 
         public async Task<Result<Category>> CreateCategory(Guid parentId, CategoryRequest request)
         {
-            try
+            var newCategory = new Category();
+            var response = new Result<Category>();
+            var parentCate = await _categoryRepository.GetCategoryById(parentId);
+            switch (parentCate.Level)
             {
-                var newcate = new Category();
-                var response = new Result<Category>();
-                var parentCate = await _categoryRepository.GetCategoryById(parentId);
-                switch (parentCate.Level)
-                {
-                    case 1:
-                        newcate.Name = request.Name;
-                        newcate.Level = 2;
-                        newcate.ParentId = parentId;
-                        newcate.Status = CategoryStatus.Unavailable;
-                        response.Data = await _categoryRepository.AddCategory(newcate);
-                        response.Messages = new[] { "Add successfully! Please continue create until the final" };
-                        response.ResultStatus = ResultStatus.Success;
-                        return response;
-                    case 2:
-                        newcate.Name = request.Name;
-                        newcate.Level = 3;
-                        newcate.ParentId = parentId;
-                        newcate.Status = CategoryStatus.Unavailable;
-                        response.Data = await _categoryRepository.AddCategory(newcate);
-                        response.Messages = new[] { "Add successfully! Please continue create until the final" };
-                        response.ResultStatus = ResultStatus.Success;
-                        return response;
-                    case 3:
-                        newcate.Name = request.Name;
-                        newcate.Level = 4;
-                        newcate.ParentId = parentId;
-                        newcate.Status = CategoryStatus.Available;
+                case 1:
+                    newCategory.Name = request.Name;
+                    newCategory.Level = 2;
+                    newCategory.ParentId = parentId;
+                    newCategory.Status = CategoryStatus.Unavailable;
+                    response.Data = await _categoryRepository.AddCategory(newCategory);
+                    response.Messages = new[] { "Add successfully! Please continue create until the final" };
+                    response.ResultStatus = ResultStatus.Success;
+                    return response;
+                case 2:
+                    newCategory.Name = request.Name;
+                    newCategory.Level = 3;
+                    newCategory.ParentId = parentId;
+                    newCategory.Status = CategoryStatus.Unavailable;
+                    response.Data = await _categoryRepository.AddCategory(newCategory);
+                    response.Messages = new[] { "Add successfully! Please continue create until the final" };
+                    response.ResultStatus = ResultStatus.Success;
+                    return response;
+                case 3:
+                    newCategory.Name = request.Name;
+                    newCategory.Level = 4;
+                    newCategory.ParentId = parentId;
+                    newCategory.Status = CategoryStatus.Available;
 
-                        parentCate.Status = CategoryStatus.Available;
-                        await _categoryRepository.UpdateCategory(parentCate);
+                    parentCate.Status = CategoryStatus.Available;
+                    await _categoryRepository.UpdateCategory(parentCate);
 
-                        var grandCate = await _categoryRepository.GetParentCategoryById(parentCate.ParentId);
-                        grandCate.Status = CategoryStatus.Available;
-                        await _categoryRepository.UpdateCategory(grandCate);
-                        
-                        response.Data = await _categoryRepository.AddCategory(newcate);
-                        response.Messages = new[] { "Add successfully! This is the final one" };
-                        response.ResultStatus = ResultStatus.Success;
-                        return response;
-                }
+                    var grandCate = await _categoryRepository.GetParentCategoryById(parentCate.ParentId);
+                    grandCate.Status = CategoryStatus.Available;
+                    await _categoryRepository.UpdateCategory(grandCate);
 
-                response.ResultStatus = ResultStatus.Error;
-                response.Messages = new[] { "Error" };
-                return response;
+                    response.Data = await _categoryRepository.AddCategory(newCategory);
+                    response.Messages = new[] { "Add successfully! This is the final one" };
+                    response.ResultStatus = ResultStatus.Success;
+                    return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            response.ResultStatus = ResultStatus.Error;
+            response.Messages = new[] { "Error" };
+            return response;
         }
 
         public async Task<List<CategoryTreeNode>> GetTree(Guid? shopId = null)
         {
-            try
-            {
-                var result = await _categoryRepository.GetCategoryTree(shopId);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = await _categoryRepository.GetCategoryTree(shopId);
+            return result;
         }
 
         public async Task<Result<List<Category>>> GetAllParentCategory()
         {
-            try
+            var response = new Result<List<Category>>();
+            var listCate = await _categoryRepository.GetAllParentCategory();
+            if (listCate == null)
             {
-                var response = new Result<List<Category>>();
-                var listCate = await _categoryRepository.GetAllParentCategory();
-                if (listCate == null)
-                {
-                    response.ResultStatus = ResultStatus.Empty;
-                    response.Messages = ["Empty"];
-                    return response;
-                }
-
-                response.Data = listCate;
-                response.ResultStatus = ResultStatus.Success;
-                response.Messages = ["successfully"];
+                response.ResultStatus = ResultStatus.Empty;
+                response.Messages = ["Empty"];
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            response.Data = listCate;
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["successfully"];
+            return response;
         }
     }
 }

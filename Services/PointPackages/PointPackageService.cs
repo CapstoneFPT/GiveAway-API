@@ -6,7 +6,7 @@ namespace Services.PointPackages;
 
 public class PointPackageService : IPointPackageService
 {
-    private IPointPackageRepository _pointPackageRepository;
+    private readonly IPointPackageRepository _pointPackageRepository;
 
     public PointPackageService(IPointPackageRepository pointPackageRepository)
     {
@@ -20,28 +20,13 @@ public class PointPackageService : IPointPackageService
 
     public async Task<PointPackage?> GetPointPackageDetail(Guid pointPackageId)
     {
-        try
-        {
-            var result = await _pointPackageRepository.GetSingle(x => x.PointPackageId == pointPackageId);
+        var result = await _pointPackageRepository.GetSingle(x => x.PointPackageId == pointPackageId);
 
-            return result;
-        }
-        catch (Exception e)
-        {
-            throw new Exception(e.Message);
-        }
+        return result;
     }
 
     public Task AddPointsToBalance(Guid accountId, int amount)
     {
-        try
-        {
-            
-            return _pointPackageRepository.AddPointsToBalance(accountId, amount);
-        }
-        catch (Exception e)
-        {
-            throw new Exception();
-        }
+        return _pointPackageRepository.AddPointsToBalance(accountId, amount);
     }
 }

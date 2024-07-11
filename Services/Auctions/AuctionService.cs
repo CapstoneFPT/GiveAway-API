@@ -9,6 +9,7 @@ using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Repositories.AuctionDeposits;
 using Repositories.AuctionItems;
@@ -29,40 +30,31 @@ namespace Services.Auctions
         private readonly IBidRepository _bidRepository;
         private readonly IAuctionDepositRepository _auctionDepositRepository;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IOrderRepository _orderRepository;
         private readonly IAuctionItemRepository _auctionItemRepository;
         private readonly IAccountService _accountService;
-        private readonly ITransactionService _transactionService;
         private readonly ITransactionRepository _transactionRepository;
+        private readonly IOrderRepository _orderRepository;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
             IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
-            IOrderRepository orderRepository, IAuctionItemRepository auctionItemRepository,
-            IAccountService accountService, ITransactionService transactionService,
-            ITransactionRepository transactionRepository)
+            IAuctionItemRepository auctionItemRepository,
+            IAccountService accountService,
+            ITransactionRepository transactionRepository, IOrderRepository orderRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
             _auctionDepositRepository = auctionDepositRepository;
             _serviceProvider = serviceProvider;
-            _orderRepository = orderRepository;
             _auctionItemRepository = auctionItemRepository;
             _accountService = accountService;
-            _transactionService = transactionService;
             _transactionRepository = transactionRepository;
+            _orderRepository = orderRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
-            try
-            {
-                var result = await _auctionRepository.CreateAuction(request);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = await _auctionRepository.CreateAuction(request);
+            return result;
         }
 
         public async Task<Result<OrderResponse>> EndAuction(Guid id)
@@ -132,106 +124,63 @@ namespace Services.Auctions
 
         public async Task StartAuction(Guid auctionId)
         {
-            try
-            {
-                var auctionUpdateResult =
-                    await _auctionRepository.UpdateAuctionStatus(auctionId, AuctionStatus.OnGoing);
+            var auctionUpdateResult =
+                await _auctionRepository.UpdateAuctionStatus(auctionId, AuctionStatus.OnGoing);
 
-                var auctionFashionItemId = auctionUpdateResult
-                    .AuctionFashionItemId;
+            var auctionFashionItemId = auctionUpdateResult
+                .AuctionFashionItemId;
 
-                var auctionItemUpdateResult = await _auctionItemRepository
-                    .UpdateAuctionItemStatus(auctionFashionItemId, FashionItemStatus.Bidding);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message)
-                    ;
-            }
+            var auctionItemUpdateResult = await _auctionItemRepository
+                .UpdateAuctionItemStatus(auctionFashionItemId, FashionItemStatus.Bidding);
         }
 
         public Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
         {
-            try
-            {
-                var result = _auctionRepository.GetAuctions(request);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = _auctionRepository.GetAuctions(request);
+            return result;
         }
 
         public Task<AuctionDetailResponse?> GetAuction(Guid id)
         {
-            try
-            {
-                var result = _auctionRepository.GetAuction(id);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = _auctionRepository.GetAuction(id);
+            return result;
         }
 
         public Task<AuctionDetailResponse?> DeleteAuction(Guid id)
         {
-            try
-            {
-                var result = _auctionRepository.DeleteAuction(id);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = _auctionRepository.DeleteAuction(id);
+            return result;
         }
 
         public Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request)
         {
-            try
-            {
-                var result = _auctionRepository.UpdateAuction(id, request);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = _auctionRepository.UpdateAuction(id, request);
+            return result;
         }
 
         public async Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId,
             CreateAuctionDepositRequest request)
         {
-            try
+            var auction = await _auctionRepository.GetAuction(auctionId);
+
+            if (auction is null)
             {
-                var auction = await _auctionRepository.GetAuction(auctionId);
-
-                if (auction is null)
-                {
-                    throw new Exception("Auction Not Found");
-                }
-
-                await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
-                var transaction = new Transaction()
-                {
-                    Amount = auction.DepositFee,
-                    Type = TransactionType.AuctionDeposit,
-                    MemberId = request.MemberId,
-                    CreatedDate = DateTime.UtcNow,
-                    VnPayTransactionNumber = "N/A"
-                };
-                await _transactionRepository.CreateTransaction(transaction);
-
-                var result = await _auctionDepositRepository.CreateDeposit(auctionId, request);
-                return result;
+                throw new AuctionNotFoundException();
             }
-            catch (Exception e)
+
+            await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
+            var transaction = new Transaction()
             {
-                throw new Exception(e.Message);
-            }
+                Amount = auction.DepositFee,
+                Type = TransactionType.AuctionDeposit,
+                MemberId = request.MemberId,
+                CreatedDate = DateTime.UtcNow,
+                VnPayTransactionNumber = "N/A"
+            };
+            await _transactionRepository.CreateTransaction(transaction);
+
+            var result = await _auctionDepositRepository.CreateDeposit(auctionId, request);
+            return result;
         }
 
         public Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
@@ -241,47 +190,20 @@ namespace Services.Auctions
 
         public Task<AuctionDetailResponse?> ApproveAuction(Guid id)
         {
-            try
-            {
-                var result = _auctionRepository.ApproveAuction(id);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = _auctionRepository.ApproveAuction(id);
+            return result;
         }
 
         public Task<AuctionDetailResponse?> RejectAuction(Guid id)
         {
-            try
-            {
-                var result = _auctionRepository.RejectAuction(id);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = _auctionRepository.RejectAuction(id);
+            return result;
         }
 
         public async Task<BidDetailResponse?> PlaceBid(Guid id, CreateBidRequest request)
         {
-            try
-            {
-                var result = await _bidRepository.CreateBid(id, request);
-                if (result == null)
-                {
-                    throw new Exception("Bid not created");
-                }
-
-
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = await _bidRepository.CreateBid(id, request);
+            return result;
         }
 
 
@@ -301,15 +223,8 @@ namespace Services.Auctions
 
         public Task<BidDetailResponse?> GetLargestBid(Guid auctionId)
         {
-            try
-            {
-                var result = _bidRepository.GetLargestBid(auctionId);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = _bidRepository.GetLargestBid(auctionId);
+            return result;
         }
     }
 }

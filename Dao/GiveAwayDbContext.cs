@@ -47,7 +47,7 @@ public class GiveAwayDbContext : DbContext
         optionsBuilder.EnableSensitiveDataLogging(true);
     }
 
-    private string? GetConnectionString()
+    private static string? GetConnectionString()
     {
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
