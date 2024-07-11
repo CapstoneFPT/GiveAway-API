@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.Account;
 
 namespace Services.Accounts
 {
@@ -16,5 +17,6 @@ namespace Services.Accounts
         Task<Result<AccountResponse>> BanAccountById(Guid id);
         Task<Result<AccountResponse>> UpdateAccount(Guid id, UpdateAccountRequest request);
         Task DeductPoints(Guid requestMemberId, int orderTotalPrice);
+        Task<PaginationResponse<AccountResponse>> GetAccounts(GetAccountsRequest request);
     }
 }

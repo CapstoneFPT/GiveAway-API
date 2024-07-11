@@ -7,10 +7,13 @@ using Repositories.Accounts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.Account;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace Services.Accounts
 {
@@ -114,7 +117,32 @@ namespace Services.Accounts
             member.Balance -= orderTotalPrice;
             await _account.UpdateAccount(member);
         }
-    }
 
-    
+        public async Task<PaginationResponse<AccountResponse>> GetAccounts(GetAccountsRequest request)
+        {
+           
+            Expression<Func<Account, bool>> predicate = account => request.Status.Length != 0 ?
+                EF.Functions.ILike(account.Fullname, request.SearchTerm) && request.Status.Contains( account.Status) : EF.Functions.ILike(account.Fullname, request.SearchTerm);
+            Expression<Func<Account, AccountResponse>> selector = account => new AccountResponse()
+            {
+                Fullname = account.Fullname,
+                AccountId = account.AccountId,
+                Phone = account.Phone,
+                Email = account.Email,
+                Status = account.Status,
+                Role = account.Role
+            };
+            (List<AccountResponse> Items, int Page, int PageSize, int TotalCount) data = await _account.GetAccounts<AccountResponse>(
+                request.Page, request.PageSize, predicate, selector,isTracking:false
+            );
+
+            return new PaginationResponse<AccountResponse>()
+            {
+                Items = data.Items,
+                PageSize = data.PageSize,
+                PageNumber = data.Page,
+                Filters = [$"Account Status : {request.Status}"]
+            };
+        }
+    }
 }

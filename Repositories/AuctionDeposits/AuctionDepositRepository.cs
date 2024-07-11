@@ -75,5 +75,27 @@ namespace Repositories.AuctionDeposits
                 MemberId = request.MemberId,
             };
         }
+
+        public async Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request)
+        {
+            var data = await _auctionDepositDao.GetQueryable()
+                .Where(x => x.AuctionId == auctionId)
+                .Select(x => new AuctionDepositListResponse()
+                {
+                    MemberId = x.MemberId,
+                    AuctionId = x.AuctionId,
+                    DepositDate = x.CreatedDate,
+                    Id = x.AuctionDepositId
+                })
+                .ToListAsync();
+
+            var result = new PaginationResponse<AuctionDepositListResponse>()
+            {
+                Items = data,
+
+            };
+
+            return result;
+        }
     }
 }

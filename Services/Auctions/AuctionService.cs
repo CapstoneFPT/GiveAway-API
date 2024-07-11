@@ -134,6 +134,12 @@ namespace Services.Auctions
                 .UpdateAuctionItemStatus(auctionFashionItemId, FashionItemStatus.Bidding);
         }
 
+        public Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request)
+        {
+            var result = _auctionDepositRepository.GetAuctionDeposits(auctionId, request);
+            return result;
+        }
+
         public Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
         {
             var result = _auctionRepository.GetAuctions(request);

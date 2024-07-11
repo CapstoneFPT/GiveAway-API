@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Account.Request;
+﻿using BusinessObjects.Dtos.Account;
+using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
@@ -34,9 +35,11 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<AccountResponse>>> GetAllAccounts()
+        public async Task<ActionResult<PaginationResponse<AccountResponse>>> GetAccounts(
+            [FromQuery] GetAccountsRequest request)
         {
-            return await _accountService.GetAllAccounts();
+            var result = await _accountService.GetAccounts(request);
+            return Ok(result);
         }
         [HttpGet("{id}")]
         public async Task<ActionResult<Result<AccountResponse>>> GetAccountById(Guid id)
