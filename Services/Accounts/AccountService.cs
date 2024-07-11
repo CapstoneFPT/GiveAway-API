@@ -141,7 +141,9 @@ namespace Services.Accounts
                 Items = data.Items,
                 PageSize = data.PageSize,
                 PageNumber = data.Page,
-                Filters = [$"Account Status : {request.Status}"]
+                Filters = [$"Account Status : {request.Status}"],
+                TotalCount = data.TotalCount,
+                SearchTerm = request.SearchTerm
             };
         }
     }
