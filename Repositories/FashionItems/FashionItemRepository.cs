@@ -79,8 +79,8 @@ namespace Repositories.FashionItems
         {
             var query = await _fashionitemDao.GetQueryable()
                 .Include(c => c.Shop)
-                .Include(a => a.Category)
-                .Include(b => b.ConsignSaleDetail).ThenInclude(c => c.ConsignSale).ThenInclude(c => c.Member)
+                /*.Include(a => a.Category)
+                .Include(b => b.ConsignSaleDetail).ThenInclude(c => c.ConsignSale).ThenInclude(c => c.Member)*/
                 .AsNoTracking().FirstOrDefaultAsync(x => x.ItemId.Equals(id));
             return query;
         }
