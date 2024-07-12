@@ -11,5 +11,6 @@ namespace Services.ConsignSales
         Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status);
         Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId);
         Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
+        Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(Guid shopId, ConsignSaleRequestForShop request);
     }
 }

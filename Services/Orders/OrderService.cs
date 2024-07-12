@@ -42,131 +42,100 @@ namespace Services.Orders
         public async Task<Result<OrderResponse>> CreateOrder(Guid accountId,
             CreateOrderRequest orderRequest)
         {
-            try
+
+            var response = new Result<OrderResponse>();
+            if (orderRequest.listItemId.Count == 0)
             {
-                var response = new Result<OrderResponse>();
-                if (orderRequest.listItemId.Count == 0)
-                {
-                    response.Messages = ["You have no item for order"];
-                    response.ResultStatus = ResultStatus.Empty;
-                    return response;
-                }
-
-                var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
-                if (checkItemAvailable.Count > 0)
-                {
-                    var orderResponse = new OrderResponse();
-                    orderResponse.listItemNotAvailable = checkItemAvailable;
-                    response.Data = orderResponse;
-                    response.ResultStatus = ResultStatus.Error;
-                    response.Messages = ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
-                    return response;
-                }
-
-                var checkOrderExisted = await _orderRepository.IsOrderExisted(orderRequest.listItemId, accountId);
-                if (checkOrderExisted.Count > 0)
-                {
-                    var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
-                    var orderResponse = new OrderResponse();
-                    orderResponse.listItemNotAvailable = listItemExisted;
-                    response.Data = orderResponse;
-                    response.ResultStatus = ResultStatus.Duplicated;
-                    response.Messages = ["You already order those items. Please remove them"];
-                    return response;
-                }
-
-                response.Data = await _orderRepository.CreateOrderHierarchy(accountId, orderRequest);
-                response.Messages = ["Create Successfully"];
-                response.ResultStatus = ResultStatus.Success;
+                response.Messages = ["You have no item for order"];
+                response.ResultStatus = ResultStatus.Empty;
                 return response;
             }
-            catch (Exception ex)
+
+            var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
+            if (checkItemAvailable.Count > 0)
             {
-                throw new Exception(ex.Message, ex);
+                var orderResponse = new OrderResponse();
+                orderResponse.listItemNotAvailable = checkItemAvailable;
+                response.Data = orderResponse;
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
+                return response;
             }
+
+            var checkOrderExisted = await _orderRepository.IsOrderExisted(orderRequest.listItemId, accountId);
+            if (checkOrderExisted.Count > 0)
+            {
+                var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
+                var orderResponse = new OrderResponse();
+                orderResponse.listItemNotAvailable = listItemExisted;
+                response.Data = orderResponse;
+                response.ResultStatus = ResultStatus.Duplicated;
+                response.Messages = ["You already order those items. Please remove them"];
+                return response;
+            }
+
+            response.Data = await _orderRepository.CreateOrderHierarchy(accountId, orderRequest);
+            response.Messages = ["Create Successfully"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+
         }
 
         public async Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest)
         {
-            try
+            var toBeAdded = new Order()
             {
-                var toBeAdded = new Order()
-                {
-                    BidId = orderRequest.BidId,
-                    OrderCode = orderRequest.OrderCode,
-                    PaymentMethod = orderRequest.PaymentMethod,
-                    MemberId = orderRequest.MemberId,
-                    TotalPrice = orderRequest.TotalPrice,
-                    CreatedDate = DateTime.UtcNow,
-                };
-                var orderResult = await _orderRepository.CreateOrder(toBeAdded);
+                BidId = orderRequest.BidId,
+                OrderCode = orderRequest.OrderCode,
+                PaymentMethod = orderRequest.PaymentMethod,
+                MemberId = orderRequest.MemberId,
+                TotalPrice = orderRequest.TotalPrice,
+                CreatedDate = DateTime.UtcNow,
+            };
+            var orderResult = await _orderRepository.CreateOrder(toBeAdded);
 
-                var orderDetails =
-                        new OrderDetail()
-                        {
-                            OrderId = orderResult.OrderId,
-                            FashionItemId = orderRequest.AuctionFashionItemId,
-                            UnitPrice = orderRequest.TotalPrice,
-                        }
-                    ;
-                var orderDetailResult =
-                    await _orderDetailRepository.CreateOrderDetail(orderDetails);
+            var orderDetails =
+                    new OrderDetail()
+                    {
+                        OrderId = orderResult.OrderId,
+                        FashionItemId = orderRequest.AuctionFashionItemId,
+                        UnitPrice = orderRequest.TotalPrice,
+                    }
+                ;
+            var orderDetailResult =
+                await _orderDetailRepository.CreateOrderDetail(orderDetails);
 
-                orderResult.OrderDetails = new List<OrderDetail>() { orderDetailResult };
-                return new Result<OrderResponse>()
-                {
-                    Data = _mapper.Map<Order, OrderResponse>(orderResult),
-                    ResultStatus = ResultStatus.Success
-                };
-            }
-            catch (Exception e)
+            orderResult.OrderDetails = new List<OrderDetail>() { orderDetailResult };
+            return new Result<OrderResponse>()
             {
-                throw new Exception(e.Message);
-            }
+                Data = _mapper.Map<Order, OrderResponse>(orderResult),
+                ResultStatus = ResultStatus.Success
+            };
         }
 
         public async Task<List<OrderDetail>> GetOrderDetailByOrderId(Guid orderId)
         {
-            try
-            {
-                return await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderId);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            return await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderId);
         }
 
         public async Task<List<Order>> GetOrdersToCancel()
         {
-            try
-            {
-                var oneDayAgo = DateTime.UtcNow.AddDays(-1);
-                var ordersToCancel = await _orderRepository.GetOrders(x =>
-                    x.CreatedDate < oneDayAgo
-                    && x.Status == OrderStatus.AwaitingPayment
-                    && x.PaymentMethod != PaymentMethod.COD);
 
-                return ordersToCancel;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var oneDayAgo = DateTime.UtcNow.AddDays(-1);
+            var ordersToCancel = await _orderRepository.GetOrders(x =>
+                x.CreatedDate < oneDayAgo
+                && x.Status == OrderStatus.AwaitingPayment
+                && x.PaymentMethod != PaymentMethod.COD);
+
+            return ordersToCancel;
+
         }
 
 
         public void CancelOrders(List<Order> ordersToCancel)
         {
-            try
-            {
-                ordersToCancel.ForEach(x => x.Status = OrderStatus.Cancelled);
-                _orderRepository.BulkUpdate(ordersToCancel);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            ordersToCancel.ForEach(x => x.Status = OrderStatus.Cancelled);
+            _orderRepository.BulkUpdate(ordersToCancel);
         }
 
         public async Task UpdateShopBalance(Order order)
@@ -283,27 +252,13 @@ namespace Services.Orders
 
         public async Task<Order?> GetOrderById(Guid orderId)
         {
-            try
-            {
-                var result = await _orderRepository.GetSingleOrder(x => x.OrderId == orderId);
-                return result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            var result = await _orderRepository.GetSingleOrder(x => x.OrderId == orderId);
+            return result;
         }
 
         public async Task UpdateOrder(Order order)
         {
-            try
-            {
-                await _orderRepository.UpdateOrder(order);
-            }
-            catch (Exception e)
-            {
-                throw new Exception();
-            }
+            await _orderRepository.UpdateOrder(order);
         }
 
         public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId,

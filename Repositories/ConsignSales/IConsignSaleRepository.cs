@@ -18,5 +18,6 @@ namespace Repositories.ConsignSales
         Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId);
         Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId);
         Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
+        Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(Guid shopId, ConsignSaleRequestForShop request);
     }
 }

@@ -134,9 +134,9 @@ namespace Repositories.Orders
             return orderResponse;
         }
 
-        public async Task<Order> GetOrderById(Guid id)
+        public async Task<Order?> GetOrderById(Guid id)
         {
-            return await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderId == id);
+            return await _orderDao.GetQueryable().Include(c => c.Member).FirstOrDefaultAsync(c => c.OrderId == id);
         }
 
         public async Task<Order?> GetSingleOrder(Expression<Func<Order, bool>> predicate)

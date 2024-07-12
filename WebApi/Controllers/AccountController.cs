@@ -7,12 +7,14 @@ using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
+using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.ConsignSales;
 using Services.Deliveries;
+using Services.OrderDetails;
 using Services.Orders;
 
 namespace WebApi.Controllers
@@ -25,14 +27,15 @@ namespace WebApi.Controllers
         private readonly IDeliveryService _deliveryService;
         private readonly IOrderService _orderService;
         private readonly IConsignSaleService _consignSaleService;
-
+        private readonly IOrderDetailService _orderDetailService;
         public AccountController(IAccountService accountService, IDeliveryService deliveryService, 
-            IOrderService orderService, IConsignSaleService consignSaleService)
+            IOrderService orderService, IConsignSaleService consignSaleService, IOrderDetailService orderDetailService)
         {
             _accountService = accountService;
             _deliveryService = deliveryService;
             _orderService = orderService;
             _consignSaleService = consignSaleService;
+            _orderDetailService = orderDetailService;
         }
 
         [HttpGet]
@@ -97,6 +100,14 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSale([FromRoute] Guid accountId, [FromBody] CreateConsignSaleRequest request)
         {
             return await _consignSaleService.CreateConsignSale(accountId, request);
+        }
+
+        [HttpPost("{accountId}/orderdetails/{orderdetailId}/refunds")]
+        public async Task<ActionResult<Result<RefundResponse>>> RequestRefundItemToShop([FromRoute] Guid accountId,
+            [FromRoute] Guid orderdetailId,
+            [FromBody] CreateRefundRequest refundRequest)
+        {
+            return await _orderDetailService.RequestRefundToShop(accountId, orderdetailId, refundRequest);
         }
 
         [HttpPost("{accountId}/inquiries")]
