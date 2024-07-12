@@ -63,7 +63,7 @@ namespace Services.FashionItems
 
             response.Data = result;
             response.ResultStatus = ResultStatus.Success;
-            response.Messages = ["Rsult in page: " + result.PageNumber];
+            response.Messages = ["Results in page: " + result.PageNumber];
             return response;
         }
 
