@@ -201,7 +201,8 @@ namespace Services.Auctions
                     AuctionId = deposit.AuctionId,
                     MemberId = deposit.MemberId,
                     Amount = deposit.Auction.DepositFee,
-                    CreatedDate = deposit.CreatedDate
+                    CreatedDate = deposit.CreatedDate,
+                    TransactionId = deposit.TransactionId,
                 };
             var result =
                 await _auctionDepositRepository.GetSingleDeposit<AuctionDepositDetailResponse>(predicate, selector);

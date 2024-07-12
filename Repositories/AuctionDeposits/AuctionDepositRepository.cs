@@ -107,6 +107,8 @@ namespace Repositories.AuctionDeposits
             {
                 query = query.Where(predicate);
             }
+
+            query = query.Include(x => x.Auction);
             
             if(selector != null)
             {
