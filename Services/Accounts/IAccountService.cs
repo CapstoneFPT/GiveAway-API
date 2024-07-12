@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
+using BusinessObjects.Dtos.Inquiries;
 
 namespace Services.Accounts
 {
@@ -18,5 +19,6 @@ namespace Services.Accounts
         Task<Result<AccountResponse>> UpdateAccount(Guid id, UpdateAccountRequest request);
         Task DeductPoints(Guid requestMemberId, int orderTotalPrice);
         Task<PaginationResponse<AccountResponse>> GetAccounts(GetAccountsRequest request);
+        Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request);
     }
 }

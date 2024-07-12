@@ -11,22 +11,26 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
+using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Repositories.Inquiries;
 
 namespace Services.Accounts
 {
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _account;
+        private readonly IInquiryRepository _inquiryRepository;
         private readonly IMapper _mapper;
 
-        public AccountService(IAccountRepository repository, IMapper mapper)
+        public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository)
         {
             _account = repository;
             _mapper = mapper;
+            _inquiryRepository = inquiryRepository;
         }
 
         public async Task<Result<AccountResponse>> BanAccountById(Guid id)
@@ -158,6 +162,34 @@ namespace Services.Accounts
                 Filters = [$"Account Status : {request.Status}"],
                 TotalCount = data.TotalCount,
                 SearchTerm = request.SearchTerm
+            };
+        }
+
+        public async Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request)
+        {
+            var inquiry = new Inquiry()
+            {
+                Fullname = request.Fullname,
+                Email = request.Email,
+                Phone = request.Phone,
+                Message = request.Message,
+                MemberId = accountId,
+                ShopId = request.ShopId,
+                CreatedDate = DateTime.UtcNow
+            };
+            
+            var result = await _inquiryRepository.CreateInquiry(inquiry);
+
+            return new CreateInquiryResponse()
+            {
+                InquiryId = result.InquiryId,
+                MemberId = result.MemberId,
+                ShopId = result.ShopId,
+                Fullname = result.Fullname,
+                Email = result.Email,
+                Phone = result.Phone,
+                Message = result.Message,
+                CreatedDate = result.CreatedDate
             };
         }
     }

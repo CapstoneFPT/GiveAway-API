@@ -5,6 +5,7 @@ using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Deliveries;
+using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
@@ -96,6 +97,14 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSale([FromRoute] Guid accountId, [FromBody] CreateConsignSaleRequest request)
         {
             return await _consignSaleService.CreateConsignSale(accountId, request);
+        }
+
+        [HttpPost("{accountId}/inquiries")]
+        public async Task<ActionResult<CreateInquiryResponse>> CreateInquiry([FromRoute] Guid accountId,
+            [FromBody] CreateInquiryRequest request)
+        {
+            var result = await _accountService.CreateInquiry(accountId, request);
+            return Ok(result);
         }
     }
 }
