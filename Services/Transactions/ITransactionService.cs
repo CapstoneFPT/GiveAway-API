@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Entities;
 
 namespace Services.Transactions
 {
@@ -12,5 +13,7 @@ namespace Services.Transactions
     {
         Task<Result<TransactionDetailResponse>> CreateTransactionFromVnPay(VnPaymentResponse vnPayResponse,
             TransactionType transactionType);
+
+        Task CreateTransactionFromPoints(Order order, Guid requestMemberId, TransactionType transactionType);
     }
 }

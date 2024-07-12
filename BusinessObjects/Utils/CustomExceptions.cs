@@ -46,4 +46,8 @@ public class InsufficientBalanceException : Exception
 {
 }
 
+public class OrderNotFoundException : Exception
+{
+}
+
 public class WrongPaymentMethodException(string message) : Exception(message);
