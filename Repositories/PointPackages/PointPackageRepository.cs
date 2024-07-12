@@ -18,10 +18,22 @@ public class PointPackageRepository : IPointPackageRepository
         _accountDao = accountDao;
     }
 
-    public async Task<PointPackage?> GetSingle(Expression<Func<PointPackage, bool>> predicate)
+    public async Task<T?> GetSingle<T>(Expression<Func<PointPackage, bool>> predicate, Expression<Func<PointPackage, T>>? selector)
     {
-        var result = await _pointPackageDao.GetQueryable().FirstOrDefaultAsync(predicate);
-        return result;
+        var query = _pointPackageDao.GetQueryable();
+
+        if (selector != null)
+        {
+            return await query
+                .Where(predicate)
+                .Select(selector)
+                .FirstOrDefaultAsync();
+        }
+        
+        return await query
+            .Where(predicate)
+            .Cast<T>()
+            .FirstOrDefaultAsync();
     }
 
     public async Task AddPointsToBalance(Guid accountId, int amount)

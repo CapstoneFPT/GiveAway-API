@@ -44,9 +44,15 @@ public class PointPackageService : IPointPackageService
         };
     }
 
-    public async Task<PointPackage?> GetPointPackageDetail(Guid pointPackageId)
+    public async Task<PointPackageDetailResponse?> GetPointPackageDetail(Guid pointPackageId)
     {
-        var result = await _pointPackageRepository.GetSingle(x => x.PointPackageId == pointPackageId);
+        var result = await _pointPackageRepository.GetSingle<PointPackageDetailResponse>(x => x.PointPackageId == pointPackageId, x => new PointPackageDetailResponse()
+        {
+            PointPackageId = x.PointPackageId,
+            Points = x.Points,
+            Status = x.Status,
+            Price = x.Price
+        });
 
         return result;
     }

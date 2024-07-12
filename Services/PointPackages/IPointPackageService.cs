@@ -7,6 +7,6 @@ namespace Services.PointPackages;
 public interface IPointPackageService
 {
     Task<PaginationResponse<PointPackageListResponse>> GetList(GetPointPackagesRequest request);
-    Task<PointPackage?> GetPointPackageDetail(Guid pointPackageId);
+    Task<PointPackageDetailResponse?> GetPointPackageDetail(Guid pointPackageId);
     Task AddPointsToBalance(Guid accountId, int amount);
 }

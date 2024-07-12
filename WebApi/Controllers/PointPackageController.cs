@@ -40,7 +40,7 @@ public class PointPackageController : ControllerBase
     }
 
     [HttpGet("{pointPackageId}")]
-    public async Task<IActionResult> Get(Guid pointPackageId)
+    public async Task<ActionResult<PointPackageDetailResponse>> Get(Guid pointPackageId)
     {
         var result = await _pointPackageService.GetPointPackageDetail(pointPackageId);
         return Ok(result);
