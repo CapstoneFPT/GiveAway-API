@@ -137,5 +137,44 @@ namespace Repositories.Accounts
 
             return null;
         }
+
+        public async Task<(List<TResponse> Items, int Page, int PageSize, int TotalCount)> GetAccounts<TResponse>(
+            int? requestPage,
+            int? requestPageSize,
+            Expression<Func<Account, bool>>? predicate,
+            Expression<Func<Account, TResponse>>? selector,
+            bool isTracking)
+        {
+            var query = _accountDao.GetQueryable();
+
+            if (isTracking) query = query.AsTracking();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var page = requestPage ?? 0;
+            var pageSize = requestPageSize ?? 0;
+
+            if (page != 0 && pageSize != 0)
+            {
+                query = query.Skip((page - 1) * pageSize).Take(pageSize);
+            }
+
+            List<TResponse> result;
+            if (selector != null)
+            {
+                result = await query.Select(selector).ToListAsync();
+            }
+            else
+            {
+                result = await query.Cast<TResponse>().ToListAsync();
+            }
+
+            return (result, page, pageSize, totalCount);
+        }
     }
 }

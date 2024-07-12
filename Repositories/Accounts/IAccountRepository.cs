@@ -27,5 +27,6 @@ namespace Repositories.Accounts
         string CreateRandomToken();
         Task<Account?> FindUserByPhone(string phone);
         string? GetAdminAccount(string email, string password);
+        Task<(List<TResponse> Items, int Page, int PageSize, int TotalCount)> GetAccounts<TResponse>(int? requestPage, int? requestPageSize, Expression<Func<Account, bool>>? predicate, Expression<Func<Account, TResponse>>? selector, bool isTracking);
     }
 }

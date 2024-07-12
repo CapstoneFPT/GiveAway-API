@@ -27,5 +27,6 @@ namespace Services.Auctions
         Task<BidDetailResponse?> GetLargestBid(Guid auctionId);
         Task<Result<OrderResponse>> EndAuction(Guid id);
         Task StartAuction(Guid auctionId);
+        Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request);
     }
 }

@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.AuctionDeposits;
+﻿using System.Linq.Expressions;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
@@ -74,6 +75,49 @@ namespace Repositories.AuctionDeposits
                 Amount = transactionResult.Amount,
                 MemberId = request.MemberId,
             };
+        }
+
+        public async Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId,
+            GetDepositsRequest request)
+        {
+            var data = await _auctionDepositDao.GetQueryable()
+                .Where(x => x.AuctionId == auctionId)
+                .Select(x => new AuctionDepositListResponse()
+                {
+                    MemberId = x.MemberId,
+                    AuctionId = x.AuctionId,
+                    DepositDate = x.CreatedDate,
+                    Id = x.AuctionDepositId
+                })
+                .ToListAsync();
+
+            var result = new PaginationResponse<AuctionDepositListResponse>()
+            {
+                Items = data,
+            };
+
+            return result;
+        }
+
+        public Task<T?> GetSingleDeposit<T>(Expression<Func<AuctionDeposit, bool>>? predicate,
+            Expression<Func<AuctionDeposit, T>>? selector)
+        {
+            var query = _auctionDepositDao.GetQueryable();
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            query = query.Include(x => x.Auction);
+            
+            if(selector != null)
+            {
+                return query
+                    .Select(selector)
+                    .FirstOrDefaultAsync();
+            }
+
+            return query.Cast<T>().SingleOrDefaultAsync();
         }
     }
 }

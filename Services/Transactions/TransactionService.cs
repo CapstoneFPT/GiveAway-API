@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Transactions;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Repositories.Orders;
 using Repositories.Transactions;
 using Transaction = BusinessObjects.Entities.Transaction;
@@ -58,9 +60,20 @@ namespace Services.Transactions
                 throw;
             }
         }
+
+        public Task CreateTransactionFromPoints(Order order, Guid requestMemberId, TransactionType transactionType)
+        {
+            var transaction = new Transaction
+            {
+                OrderId = order.OrderId,
+                CreatedDate = DateTime.UtcNow,
+                Amount = order.TotalPrice,
+                MemberId = requestMemberId,
+                Type = transactionType
+            };
+            return _transactionRepository.CreateTransaction(transaction);
+        }
     }
 
-    public class OrderNotFoundException : Exception
-    {
-    }
+    
 }

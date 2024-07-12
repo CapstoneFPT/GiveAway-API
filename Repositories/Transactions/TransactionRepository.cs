@@ -19,16 +19,8 @@ namespace Repositories.Transactions
 
         public async Task<Transaction?> CreateTransaction(Transaction transaction)
         {
-            try
-            {
-                var result = await _transactionDao.AddAsync(transaction);
-                return result;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            var result = await _transactionDao.AddAsync(transaction);
+            return result;
         }
     }
 }

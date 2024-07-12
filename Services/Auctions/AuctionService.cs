@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.AuctionDeposits;
@@ -134,6 +135,13 @@ namespace Services.Auctions
                 .UpdateAuctionItemStatus(auctionFashionItemId, FashionItemStatus.Bidding);
         }
 
+        public Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId,
+            GetDepositsRequest request)
+        {
+            var result = _auctionDepositRepository.GetAuctionDeposits(auctionId, request);
+            return result;
+        }
+
         public Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
         {
             var result = _auctionRepository.GetAuctions(request);
@@ -183,9 +191,22 @@ namespace Services.Auctions
             return result;
         }
 
-        public Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
+        public async Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
         {
-            throw new NotImplementedException();
+            Expression<Func<AuctionDeposit, bool>> predicate = deposit => deposit.AuctionDepositId == depositId;
+            Expression<Func<AuctionDeposit, AuctionDepositDetailResponse>> selector = deposit =>
+                new AuctionDepositDetailResponse()
+                {
+                    Id = deposit.AuctionDepositId,
+                    AuctionId = deposit.AuctionId,
+                    MemberId = deposit.MemberId,
+                    Amount = deposit.Auction.DepositFee,
+                    CreatedDate = deposit.CreatedDate,
+                    TransactionId = deposit.TransactionId,
+                };
+            var result =
+                await _auctionDepositRepository.GetSingleDeposit<AuctionDepositDetailResponse>(predicate, selector);
+            return result;
         }
 
         public Task<AuctionDetailResponse?> ApproveAuction(Guid id)
@@ -209,16 +230,8 @@ namespace Services.Auctions
 
         public Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
         {
-            try
-            {
-                var result = _bidRepository.GetBids(id, request);
-                return result;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            var result = _bidRepository.GetBids(id, request);
+            return result;
         }
 
         public Task<BidDetailResponse?> GetLargestBid(Guid auctionId)

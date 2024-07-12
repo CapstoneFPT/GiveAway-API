@@ -80,7 +80,7 @@ namespace Repositories.FashionItems
             var query = await _fashionitemDao.GetQueryable()
                 .Include(c => c.Shop)
                 .Include(a => a.Category)
-                .Include(b => b.ConsignSaleDetail).ThenInclude(c => c.ConsignSale).ThenInclude(c => c.Member)
+                /*.Include(b => b.ConsignSaleDetail).ThenInclude(c => c.ConsignSale).ThenInclude(c => c.Member)*/
                 .AsNoTracking().FirstOrDefaultAsync(x => x.ItemId.Equals(id));
             return query;
         }
@@ -144,7 +144,7 @@ namespace Repositories.FashionItems
                         Condition = f.Condition,
                         ShopAddress = f.Shop.Address,
                         ShopId = f.Shop.ShopId,
-                        Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,
+                        /*Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,*/
                         CategoryName = f.Category.Name,
                         Size = f.Size,
                         Color = f.Color,

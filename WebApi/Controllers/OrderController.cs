@@ -55,6 +55,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{orderId}/pay/vnpay")]
+        [Obsolete("Use PurchaseOrderWithPoints instead")]
         public async Task<IActionResult> PurchaseOrder([FromRoute] Guid orderId,
             [FromBody] PurchaseOrderRequest request)
         {
@@ -96,12 +97,13 @@ namespace WebApi.Controllers
 
                     if (order.Status != OrderStatus.AwaitingPayment)
                     {
-                        _logger.LogWarning("Order already processed: {OrderId}",response.OrderId);
+                        _logger.LogWarning("Order already processed: {OrderId}", response.OrderId);
                         return Ok(new
                             { success = true, message = "Order already processed", orderCode = response.OrderId });
                     }
 
-                    var transaction = await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Purchase);
+                    var transaction =
+                        await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Purchase);
 
                     if (transaction.ResultStatus == ResultStatus.Success)
                     {
@@ -118,18 +120,19 @@ namespace WebApi.Controllers
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e,e.Message);
+                    _logger.LogError(e, e.Message);
                     return StatusCode(500, new { success = false, message = "Payment failed" });
                 }
             }
 
             _logger.LogWarning(
-                "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId, response.VnPayResponseCode);
+                "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
+                response.VnPayResponseCode);
             return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
         }
 
         [HttpPost("{orderId}/pay/points")]
-        public async Task<IActionResult> PurchaseOrderWithPoints([FromRoute] Guid orderId,
+        public async Task<ActionResult<PayWithPointsResponse>> PurchaseOrderWithPoints([FromRoute] Guid orderId,
             [FromBody] PurchaseOrderRequest request)
         {
             var order = await _orderService.GetOrderById(orderId);
@@ -148,13 +151,21 @@ namespace WebApi.Controllers
             order.Status = OrderStatus.Completed;
 
             await _accountService.DeductPoints(request.MemberId, order.TotalPrice);
+            await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
             await _orderService.UpdateOrder(order);
             await _orderService.UpdateFashionItemStatus(order.OrderId);
             await _orderService.UpdateShopBalance(order);
-            
-            return Ok(new
-                { success = true, message = "Payment success", orderCode = order.OrderId });
+
+            return Ok(new PayWithPointsResponse()
+                { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
         }
+    }
+
+    public class PayWithPointsResponse
+    {
+        public bool Sucess { get; set; }
+        public string Message { get; set; }
+        public Guid OrderId { get; set; }
     }
 
 

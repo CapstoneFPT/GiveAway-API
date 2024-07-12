@@ -158,10 +158,11 @@ public class AuctionController : ControllerBase
 
     #region AuctionDeposits
 
-    [HttpGet("{id}/deposits")]
-    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits([FromRoute] Guid id)
+    [HttpGet("{auctionId}/deposits")]
+    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits([FromRoute] Guid auctionId, [FromQuery]GetDepositsRequest request)
     {
-        throw new NotImplementedException();
+        var result = await _auctionService.GetAuctionDeposits(auctionId, request);
+        return Ok(result);
     }
 
     [HttpPost("{auctionId}/deposits/place_deposit")]

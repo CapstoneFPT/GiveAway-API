@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Dtos.Account.Response
 {
@@ -13,7 +14,7 @@ namespace BusinessObjects.Dtos.Account.Response
         [EmailAddress] public string Email { get; set; }
         public string Phone { get; set; }
         public string Fullname { get; set; }
-        public string Role { get; set; }
-        public string Status { get; set; }
+        public Roles Role { get; set; }
+        public AccountStatus Status { get; set; }
     }
 }

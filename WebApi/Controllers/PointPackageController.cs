@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
+using BusinessObjects.Dtos.PointPackages;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -32,14 +33,14 @@ public class PointPackageController : ControllerBase
     }
 
     [HttpGet()]
-    public async Task<IActionResult> Get()
+    public async Task<ActionResult<PaginationResponse<PointPackageListResponse>>> GetPointPackages([FromQuery] GetPointPackagesRequest request)
     {
-        var result = await _pointPackageService.GetList();
+        PaginationResponse<PointPackageListResponse> result = await _pointPackageService.GetList(request);
         return Ok(result);
     }
 
     [HttpGet("{pointPackageId}")]
-    public async Task<IActionResult> Get(Guid pointPackageId)
+    public async Task<ActionResult<PointPackageDetailResponse>> Get(Guid pointPackageId)
     {
         var result = await _pointPackageService.GetPointPackageDetail(pointPackageId);
         return Ok(result);
@@ -77,7 +78,8 @@ public class PointPackageController : ControllerBase
                 $"Purchase point package: {pointPackage.Points} points", "pointpackages");
 
             _logger.LogInformation(
-                "Point package purchase initiated. OrderCode: {OrderCode}, MemberId: {MemberId}, Package: {Points} points",orderResult.Data.OrderCode, request.MemberId, pointPackage.Points);
+                "Point package purchase initiated. OrderCode: {OrderCode}, MemberId: {MemberId}, Package: {Points} points",
+                orderResult.Data.OrderCode, request.MemberId, pointPackage.Points);
 
             return Ok(new { paymentUrl, orderCode = order.OrderCode });
         }
@@ -98,7 +100,7 @@ public class PointPackageController : ControllerBase
         {
             try
             {
-                 await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Recharge);
+                await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Recharge);
                 var order = await _orderService.GetOrderById(new Guid(response.OrderId));
                 var orderDetails = await _orderService.GetOrderDetailByOrderId(new Guid(response.OrderId));
                 var pointPackageId = orderDetails[0].PointPackageId.Value;
@@ -124,7 +126,8 @@ public class PointPackageController : ControllerBase
                 await _orderService.UpdateOrder(order);
 
                 _logger.LogInformation(
-                    "Point package purchase successful. OrderCode: {OrderId}, Points: {TotalPrice}", response.OrderId, order.TotalPrice);
+                    "Point package purchase successful. OrderCode: {OrderId}, Points: {TotalPrice}", response.OrderId,
+                    order.TotalPrice);
 
                 return Ok(new
                 {
@@ -141,7 +144,8 @@ public class PointPackageController : ControllerBase
         }
 
         _logger.LogWarning(
-            "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId, response.VnPayResponseCode);
+            "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
+            response.VnPayResponseCode);
         return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
     }
 }
