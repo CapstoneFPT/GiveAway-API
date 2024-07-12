@@ -101,6 +101,23 @@ namespace Services.OrderDetails
             response.Messages = new[] { "Send refund request successfully" };
             response.ResultStatus = ResultStatus.Success;
             return response;
-        }   
+        }
+
+        public async Task ChangeFashionItemsStatus(List<OrderDetail> orderDetails, FashionItemStatus fashionItemStatus)
+        {
+            List<FashionItem> fashionItems = new List<FashionItem>();
+
+            foreach (var orderDetail in orderDetails)
+            {
+                var fashionItem =await _fashionItemRepository.GetFashionItemById(orderDetail.FashionItemId!.Value);
+                fashionItems.Add(fashionItem);
+            }
+            
+            foreach (var fashionItem in fashionItems)
+            {
+                fashionItem.Status = fashionItemStatus;
+                await _fashionItemRepository.UpdateFashionItem(fashionItem);
+            }
+        }
     }
 }

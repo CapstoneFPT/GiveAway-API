@@ -302,7 +302,8 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(x => x.Address).HasColumnType("varchar").HasMaxLength(255);
         modelBuilder.Entity<Order>().Property(x => x.RecipientName).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<Order>().Property(x => x.Phone).HasColumnType("varchar").HasMaxLength(20);
-        modelBuilder.Entity<Order>().Property(x => x.Email).HasColumnType("varchar").HasMaxLength(50);
+        modelBuilder.Entity<Order>().Property(x => x.Email).HasColumnType("varchar").HasMaxLength(50)
+            .IsRequired(false);
         #endregion
 
         #region OrderDetail

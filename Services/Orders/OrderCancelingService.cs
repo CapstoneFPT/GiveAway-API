@@ -1,7 +1,9 @@
-﻿using BusinessObjects.Entities;
+﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Services.OrderDetails;
 
 namespace Services.Orders;
 
@@ -40,14 +42,20 @@ public class OrderCancelingService : BackgroundService
         {
             using var scope = _serviceProvider.CreateScope();
             var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+            var orderDetailService = scope.ServiceProvider.GetRequiredService<IOrderDetailService>();
 
             var ordersToCancel = await orderService.GetOrdersToCancel();
             orderService.CancelOrders(ordersToCancel);
+
+            foreach (var order in ordersToCancel)
+            {
+               var orderDetails = await orderService.GetOrderDetailByOrderId(order!.OrderId); 
+               await orderDetailService.ChangeFashionItemsStatus(orderDetails, FashionItemStatus.Available);
+            } 
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            _logger.LogError(e, "Order canceling service error");
         }
     }
 }

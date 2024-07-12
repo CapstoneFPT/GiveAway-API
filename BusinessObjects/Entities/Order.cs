@@ -5,8 +5,7 @@ namespace BusinessObjects.Entities;
 
 public class Order
 {
-    [Key]
-    public Guid OrderId { get; set; }
+    [Key] public Guid OrderId { get; set; }
     public int TotalPrice { get; set; }
     public string OrderCode { get; set; }
     public DateTime CreatedDate { get; set; }
@@ -18,15 +17,14 @@ public class Order
     public Guid? BidId { get; set; }
     public Bid? Bid { get; set; }
     public OrderStatus Status { get; set; }
-  
+
 
     public PurchaseType PurchaseType { get; set; }
     public Transaction? Transaction { get; set; }
     public string? RecipientName { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
-    [EmailAddress] public string? Email { get; set; }
-    
+    public string? Email { get; set; }
+
     public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();
 }
-
