@@ -159,7 +159,7 @@ public class AuctionController : ControllerBase
     #region AuctionDeposits
 
     [HttpGet("{auctionId}/deposits")]
-    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits([FromRoute] Guid auctionId, GetDepositsRequest request)
+    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits([FromRoute] Guid auctionId, [FromQuery]GetDepositsRequest request)
     {
         var result = await _auctionService.GetAuctionDeposits(auctionId, request);
         return Ok(result);
