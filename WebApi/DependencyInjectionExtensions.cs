@@ -16,6 +16,7 @@ using Repositories.FashionItems;
 using Repositories.OrderDetails;
 using Repositories.Orders;
 using Repositories.PointPackages;
+using Repositories.Refunds;
 using Repositories.Revenues;
 using Repositories.Schedules;
 using Repositories.Shops;
@@ -39,6 +40,7 @@ using Services.Inquiries;
 using Services.OrderDetails;
 using Services.Orders;
 using Services.PointPackages;
+using Services.Refunds;
 using Services.Revenue;
 using Services.Schedules;
 using Services.Shops;
@@ -76,6 +78,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<ITransactionService, TransactionService>();
         serviceCollection.AddScoped<IVnPayService, VnPayService>();
         serviceCollection.AddScoped<IRevenueService, RevenueService>();
+        serviceCollection.AddScoped<IRefundService, RefundService>();
         serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }
@@ -102,6 +105,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<ITimeslotRepository, TimeslotRepository>();
         serviceCollection.AddScoped<ITransactionRepository, TransactionRepository>();
         serviceCollection.AddScoped<IRevenueRepository, RevenueRepository>();
+        serviceCollection.AddScoped<IRefundRepository, RefundRepository>();
         return serviceCollection;
     }
     
@@ -126,6 +130,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<Shop>>();
         serviceCollection.AddScoped<GenericDao<Timeslot>>();
         serviceCollection.AddScoped<GenericDao<Transaction>>();
+        serviceCollection.AddScoped<GenericDao<Refund>>();
         return serviceCollection;
     }
 

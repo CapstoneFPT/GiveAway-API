@@ -154,25 +154,35 @@ namespace Services.ConsignSales
 
         public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSales(Guid accountId, ConsignSaleRequest request)
         {
-            try
+
+            var response = new Result<PaginationResponse<ConsignSaleResponse>>();
+            var listConsign = await _consignSaleRepository.GetAllConsignSale(accountId, request);
+            if (listConsign == null)
             {
-                var response = new Result<PaginationResponse<ConsignSaleResponse>>();
-                var listConsign = await _consignSaleRepository.GetAllConsignSale(accountId, request);
-                if (listConsign == null)
-                {
-                    response.Messages = ["You don't have any consignment"];
-                    response.ResultStatus = ResultStatus.Empty;
-                    return response;
-                }
-                response.Data = listConsign;
-                response.Messages = ["There are " + listConsign.TotalCount + " consignment"];
-                response.ResultStatus = ResultStatus.Success;
+                response.Messages = ["You don't have any consignment"];
+                response.ResultStatus = ResultStatus.Empty;
                 return response;
             }
-            catch (Exception ex)
+            response.Data = listConsign;
+            response.Messages = ["There are " + listConsign.TotalCount + " consignment"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
+
+        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(Guid shopId, ConsignSaleRequestForShop request)
+        {
+            var response = new Result<PaginationResponse<ConsignSaleResponse>>();
+            var listConsign = await _consignSaleRepository.GetAllConsignSaleByShopId(shopId, request);
+            if (listConsign == null)
             {
-                throw new Exception(ex.Message);
+                response.Messages = ["You don't have any consignment"];
+                response.ResultStatus = ResultStatus.Empty;
+                return response;
             }
+            response.Data = listConsign;
+            response.Messages = ["There are " + listConsign.TotalCount + " consignment"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
         }
 
         public async Task<Result<ConsignSaleResponse>> GetConsignSaleById(Guid consignId)

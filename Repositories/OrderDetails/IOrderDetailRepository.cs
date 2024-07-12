@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 
 namespace Repositories.OrderDetails
@@ -16,5 +17,6 @@ namespace Repositories.OrderDetails
         Task<List<OrderDetail>> GetOrderDetails(Expression<Func<OrderDetail, bool>> predicate);
         Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id);
         Task<OrderDetail> CreateOrderDetail(OrderDetail orderDetail);
+        Task<RefundResponse> CreateRefundToShop(Guid accountId, Guid orderdetailId, CreateRefundRequest refundRequest);
     }
 }

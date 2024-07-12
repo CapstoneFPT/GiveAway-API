@@ -2,12 +2,14 @@
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Orders;
+using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Dtos.Shops;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.ConsignSales;
 using Services.FashionItems;
 using Services.Orders;
+using Services.Refunds;
 using Services.Shops;
 
 namespace WebApi.Controllers
@@ -20,13 +22,17 @@ namespace WebApi.Controllers
         private readonly IShopService _shopService;
         private readonly IOrderService _orderService;
         private readonly IConsignSaleService _consignSaleService;
+        private readonly IRefundService _refundService;
 
-        public ShopController(IFashionItemService fashionItemService, IShopService shopService, IOrderService orderService, IConsignSaleService consignSaleService)
+        public ShopController(IFashionItemService fashionItemService, IShopService shopService, 
+            IOrderService orderService, IConsignSaleService consignSaleService,
+            IRefundService refundService)
         {
             _fashionItemService = fashionItemService;
             _shopService = shopService;
             _orderService = orderService;
             _consignSaleService = consignSaleService;
+            _refundService = refundService;
         }
 
         [HttpPost("{shopId}/fashionitems")]
@@ -62,14 +68,21 @@ namespace WebApi.Controllers
             return await _orderService.ConfirmOrderDeliveried(shopId,OrderId);
         }
         [HttpGet("{shopId}/consignsales")]
-        public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId([FromRoute] Guid shopId, [FromQuery] ConsignSaleRequest request)
+        public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId([FromRoute] Guid shopId, [FromQuery] ConsignSaleRequestForShop request)
         {
-            return await _consignSaleService.GetAllConsignSales(shopId, request);
+            return await _consignSaleService.GetAllConsignSalesByShopId(shopId, request);
         }
         [HttpPost("{shopId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId, [FromBody] CreateConsignSaleByShopRequest orderRequest)
         {
             return await _consignSaleService.CreateConsignSaleByShop(shopId, orderRequest);
+        }
+
+        [HttpGet("{shopId}/refunds")]
+        public async Task<ActionResult<Result<PaginationResponse<RefundResponse>>>> GetRefundsByShopId(
+            [FromRoute] Guid shopId, RefundRequest refundRequest)
+        {
+            return await _refundService.GetRefundByShopId(shopId, refundRequest);
         }
     }
 }

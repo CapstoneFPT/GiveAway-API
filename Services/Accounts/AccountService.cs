@@ -37,7 +37,10 @@ namespace Services.Accounts
             }
             else if (user.Status.Equals(AccountStatus.Inactive))
             {
-                response.Messages = ["This account is already inactive"];
+                user.Status = AccountStatus.Active;
+                await _account.UpdateAccount(user);
+                response.Data = _mapper.Map<AccountResponse>(user);
+                response.Messages = ["This account has been changed to active"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }

@@ -1,6 +1,8 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
+using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.OrderDetails;
@@ -9,16 +11,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Repositories.FashionItems;
+using Repositories.Orders;
 
 namespace Services.OrderDetails
 {
     public class OrderDetailService : IOrderDetailService
     {
         private readonly IOrderDetailRepository _orderDetailRepository;
+        private readonly IOrderRepository _orderRepository;
+        private readonly IFashionItemRepository _fashionItemRepository;
 
-        public OrderDetailService(IOrderDetailRepository orderDetailRepository)
+        public OrderDetailService(IOrderDetailRepository orderDetailRepository, 
+            IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository)
         {
             _orderDetailRepository = orderDetailRepository;
+            _orderRepository = orderRepository;
+            _fashionItemRepository = fashionItemRepository;
         }
 
         public async Task<Result<OrderDetailResponse<FashionItem>>> GetOrderDetailById(Guid orderId)
@@ -55,5 +64,43 @@ namespace Services.OrderDetails
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
+
+        public async Task<Result<RefundResponse>> RequestRefundToShop(Guid accountId, Guid orderdetailId, CreateRefundRequest refundRequest)
+        {
+            var response = new Result<RefundResponse>();
+            var orderDetail = await _orderDetailRepository.GetOrderDetailById(orderdetailId);
+            if (orderDetail is null)
+            {
+                response.Messages = ["Can not found the order to refund"];
+                response.ResultStatus = ResultStatus.NotFound;
+                return response;
+            }
+            if (orderDetail.RefundExpirationDate < DateTime.UtcNow)
+            {
+                response.Messages = ["Expired to refund this item"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+
+            var order = await _orderRepository.GetOrderById(orderDetail.OrderId);
+            if (order.MemberId != accountId)
+            {
+                response.Messages = ["You are not allowed to refund this item"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+            var fashionitem = await _fashionItemRepository.GetFashionItemById(orderDetail.FashionItemDetail.ItemId);
+            if (!fashionitem.Status.Equals(FashionItemStatus.Refundable))
+            {
+                response.Messages = ["This item is not allowed to refund"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+
+            response.Data = await _orderDetailRepository.CreateRefundToShop(accountId, orderdetailId, refundRequest);
+            response.Messages = new[] { "Send refund request successfully" };
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }   
     }
 }

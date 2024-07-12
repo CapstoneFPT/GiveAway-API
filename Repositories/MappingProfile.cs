@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
+using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 
@@ -61,6 +62,7 @@ namespace Repositories
                 .ForMember(dest => dest.FashionItem, opt => opt.MapFrom(src => src.FashionItem))
                 .ReverseMap();
             CreateMap<Shop, ShopDetailResponse>() .ReverseMap();
+            CreateMap<Refund, RefundResponse>().ReverseMap();
         }
     }
 }

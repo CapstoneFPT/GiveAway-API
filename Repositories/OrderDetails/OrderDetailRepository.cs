@@ -4,10 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
+using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;
@@ -18,10 +21,17 @@ namespace Repositories.OrderDetails
     public class OrderDetailRepository : IOrderDetailRepository
     {
         private readonly GenericDao<OrderDetail> _orderDetailDao;
+        private readonly GenericDao<FashionItem> _fashionitemDao;
+        private readonly GenericDao<Refund> _refundDao;
+        private readonly IMapper _mapper;
 
-        public OrderDetailRepository(GenericDao<OrderDetail> orderdetailDao)
+        public OrderDetailRepository(GenericDao<OrderDetail> orderDetailDao, 
+            GenericDao<FashionItem> fashionitemDao, GenericDao<Refund> refundDao, IMapper mapper)
         {
-            _orderDetailDao = orderdetailDao;
+            _orderDetailDao = orderDetailDao;
+            _fashionitemDao = fashionitemDao;
+            _refundDao = refundDao;
+            _mapper = mapper;
         }
 
         public async Task<OrderDetail> CreateOrderDetail(OrderDetail orderDetail)
@@ -72,7 +82,7 @@ namespace Repositories.OrderDetails
         public async Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id)
         {
             var query = await _orderDetailDao.GetQueryable()
-                .Where(c => c.OrderId == id)
+                .Where(c => c.OrderDetailId == id)
                 .Select(x => new OrderDetailResponse<FashionItem>
                 {
                     FashionItemDetail = x.FashionItem,
@@ -80,6 +90,25 @@ namespace Repositories.OrderDetails
                     UnitPrice = x.UnitPrice,
                 }).FirstOrDefaultAsync();
             return query;
+        }
+
+        public async Task<RefundResponse> CreateRefundToShop(Guid accountId, Guid orderdetailId, CreateRefundRequest refundRequest)
+        {
+            var orderDetail = await _orderDetailDao.GetQueryable()
+                .FirstOrDefaultAsync(c => c.OrderDetailId == orderdetailId);
+
+            var refund = new Refund()
+            {
+                OrderDetailId = orderdetailId,
+                MemberId = accountId,
+                Description = refundRequest.Description,
+                CreatedDate = DateTime.UtcNow,
+                RefundStatus = RefundStatus.Pending
+            };
+            await _refundDao.AddAsync(refund);
+            return await _refundDao.GetQueryable().Include(c => c.OrderDetail)
+                .ThenInclude(c => c.FashionItem).ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(c => c.RefundId == refund.RefundId);
         }
     }
 }

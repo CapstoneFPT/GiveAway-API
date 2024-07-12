@@ -129,7 +129,7 @@ namespace Repositories.ConsignSales
             {
                 query = query.Where(f => f.ShopId.Equals(request.ShopId));
             }
-            query = query.Where(c => c.MemberId == accountId || c.ShopId == accountId);
+            query = query.Where(c => c.MemberId == accountId);
 
             var count = await query.CountAsync();
             query = query.Skip((request.PageNumber - 1) * request.PageSize)
@@ -324,6 +324,38 @@ namespace Repositories.ConsignSales
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();
             return consignResponse;
+        }
+
+        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(Guid shopId, ConsignSaleRequestForShop request)
+        {
+            var query = _consignSaleDao.GetQueryable();
+
+            if (!string.IsNullOrWhiteSpace(request.ConsignSaleCode))
+                query = query.Where(x => EF.Functions.ILike(x.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
+            if (request.Status != null)
+            {
+                query = query.Where(f => f.Status == request.Status);
+            }
+            query = query.Where(c => c.ShopId == shopId);
+
+            var count = await query.CountAsync();
+            query = query.Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize);
+
+            var items = await query
+                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                .OrderByDescending(c => c.CreatedDate)
+                .AsNoTracking().ToListAsync();
+
+            var result = new PaginationResponse<ConsignSaleResponse>
+            {
+                Items = items,
+                PageSize = request.PageSize,
+                TotalCount = count,
+                SearchTerm = request.ConsignSaleCode,
+                PageNumber = request.PageNumber,
+            };
+            return result;
         }
     }
 }
