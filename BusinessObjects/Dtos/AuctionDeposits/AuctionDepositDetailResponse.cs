@@ -9,6 +9,7 @@ public class AuctionDepositDetailResponse
     public decimal Amount { get; set; }
     public Guid TransactionId { get; set; }
     public TransactionDetailResponse Transaction { get; set; }
+    public DateTime CreatedDate { get; set; }
 }
 
 public class TransactionDetailResponse
