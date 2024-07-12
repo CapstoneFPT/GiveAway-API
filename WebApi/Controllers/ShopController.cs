@@ -1,6 +1,7 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Dtos.Shops;
@@ -83,6 +84,14 @@ namespace WebApi.Controllers
             [FromRoute] Guid shopId, RefundRequest refundRequest)
         {
             return await _refundService.GetRefundByShopId(shopId, refundRequest);
+        }
+        
+        [HttpGet("{shopId}/inquiries")]
+        public async Task<ActionResult<Result<PaginationResponse<InquiryListResponse>>>> GetInquiriesByShopId(
+            [FromRoute] Guid shopId, InquiryListRequest inquiryRequest)
+        {
+            var result= await _shopService.GetInquiriesByShopId(shopId, inquiryRequest);
+            return Ok(result);
         }
     }
 }
