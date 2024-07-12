@@ -1,5 +1,8 @@
 ﻿using System.Linq.Expressions;
+using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.PointPackages;
 using BusinessObjects.Entities;
+using LinqKit;
 using Repositories.PointPackages;
 
 namespace Services.PointPackages;
@@ -13,9 +16,32 @@ public class PointPackageService : IPointPackageService
         _pointPackageRepository = pointPackageRepository;
     }
 
-    public Task<object?> GetList()
+
+    public async Task<PaginationResponse<PointPackageListResponse>> GetList(GetPointPackagesRequest request)
     {
-        throw new NotImplementedException();
+        Expression<Func<PointPackage, bool>> predicate = package => true;
+        
+        if(request.Status.Length > 0)
+        {
+            predicate = predicate.And(x => request.Status.Contains(x.Status));
+        }
+        
+        Expression<Func<PointPackage, PointPackageListResponse>> selector = package => new PointPackageListResponse()
+        {
+            PointPackageId = package.PointPackageId,
+            Points = package.Points, Status = package.Status,
+            Price = package.Price
+        };
+        
+       (List<PointPackageListResponse> Items, int Page, int PageSize, int TotalCount) result = await _pointPackageRepository.GetPointPackages<PointPackageListResponse>(request.Page, request.PageSize, predicate, selector);
+       
+        return new PaginationResponse<PointPackageListResponse>()
+        {
+            Items = result.Items,
+            PageNumber = result.Page,
+            PageSize = result.PageSize,
+            TotalCount = result.TotalCount
+        };
     }
 
     public async Task<PointPackage?> GetPointPackageDetail(Guid pointPackageId)
