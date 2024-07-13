@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿using System.Linq.Expressions;
+using AutoMapper;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
@@ -6,10 +8,13 @@ using Repositories.FashionItems;
 using Repositories.OrderDetails;
 using Repositories.Orders;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.OrderDetails;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Repositories.Accounts;
 using Repositories.AuctionItems;
 using Repositories.PointPackages;
 using Repositories.Shops;
+using Repositories.Transactions;
 
 namespace Services.Orders
 {
@@ -23,11 +28,12 @@ namespace Services.Orders
         private readonly IAccountRepository _accountRepository;
         private readonly IPointPackageRepository _pointPackageRepository;
         private readonly IShopRepository _shopRepository;
+        private readonly ITransactionRepository _transactionRepository;
 
         public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
             IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository,
             IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
-            IShopRepository shopRepository)
+            IShopRepository shopRepository, ITransactionRepository transactionRepository)
         {
             _orderRepository = orderRepository;
             _fashionItemRepository = fashionItemRepository;
@@ -37,12 +43,12 @@ namespace Services.Orders
             _pointPackageRepository = pointPackageRepository;
             _accountRepository = accountRepository;
             _shopRepository = shopRepository;
+            _transactionRepository = transactionRepository;
         }
 
         public async Task<Result<OrderResponse>> CreateOrder(Guid accountId,
             CreateOrderRequest orderRequest)
         {
-
             var response = new Result<OrderResponse>();
             if (orderRequest.listItemId.Count == 0)
             {
@@ -55,10 +61,11 @@ namespace Services.Orders
             if (checkItemAvailable.Count > 0)
             {
                 var orderResponse = new OrderResponse();
-                orderResponse.listItemNotAvailable = checkItemAvailable;
+                orderResponse.ListItemNotAvailable = checkItemAvailable;
                 response.Data = orderResponse;
                 response.ResultStatus = ResultStatus.Error;
-                response.Messages = ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
+                response.Messages =
+                    ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
                 return response;
             }
 
@@ -67,7 +74,7 @@ namespace Services.Orders
             {
                 var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
                 var orderResponse = new OrderResponse();
-                orderResponse.listItemNotAvailable = listItemExisted;
+                orderResponse.ListItemNotAvailable = listItemExisted;
                 response.Data = orderResponse;
                 response.ResultStatus = ResultStatus.Duplicated;
                 response.Messages = ["You already order those items. Please remove them"];
@@ -78,7 +85,6 @@ namespace Services.Orders
             response.Messages = ["Create Successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;
-
         }
 
         public async Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest)
@@ -120,7 +126,6 @@ namespace Services.Orders
 
         public async Task<List<Order>> GetOrdersToCancel()
         {
-
             var oneDayAgo = DateTime.UtcNow.AddDays(-1);
             var ordersToCancel = await _orderRepository.GetOrders(x =>
                 x.CreatedDate < oneDayAgo
@@ -128,7 +133,6 @@ namespace Services.Orders
                 && x.PaymentMethod != PaymentMethod.COD);
 
             return ordersToCancel;
-
         }
 
 
@@ -373,7 +377,6 @@ namespace Services.Orders
 
         public async Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
-
             var response = new Result<OrderResponse>();
             if (orderRequest.listItemId.Count == 0)
             {
@@ -386,20 +389,26 @@ namespace Services.Orders
             if (checkItemAvailable.Count > 0)
             {
                 var orderResponse = new OrderResponse();
-                orderResponse.listItemNotAvailable = checkItemAvailable;
+                orderResponse.ListItemNotAvailable = checkItemAvailable;
                 response.Data = orderResponse;
                 response.ResultStatus = ResultStatus.Error;
-                response.Messages = ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
+                response.Messages =
+                    ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
                 return response;
             }
+
             var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, orderRequest.listItemId);
             if (isitembelongshop.Count > 0)
             {
                 var orderResponse = new OrderResponse();
-                orderResponse.listItemNotAvailable = isitembelongshop;
+                orderResponse.ListItemNotAvailable = isitembelongshop;
                 response.Data = orderResponse;
                 response.ResultStatus = ResultStatus.Error;
-                response.Messages = ["There are " + isitembelongshop.Count + " items not belong to this shop. Please check your order again"];
+                response.Messages =
+                [
+                    "There are " + isitembelongshop.Count +
+                    " items not belong to this shop. Please check your order again"
+                ];
                 return response;
             }
 
@@ -407,7 +416,70 @@ namespace Services.Orders
             response.Messages = ["Create Successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;
+        }
 
+        public async Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId,
+            PayOrderWithCashRequest request)
+        {
+            var order = await _orderRepository.GetOrderById(orderId);
+
+            if (order!.PaymentDate != null)
+            {
+                throw new InvalidOperationException("Order Already Paid");
+            }
+
+            order.Status = OrderStatus.Completed;
+            order.PaymentDate = DateTime.UtcNow;
+            order.CompletedDate = DateTime.UtcNow;
+            await _orderRepository.UpdateOrder(order);
+
+            Expression<Func<OrderDetail, bool>> predicate = x => x.OrderId == orderId;
+            Expression<Func<OrderDetail, OrderDetailsResponse>> selector = x => new OrderDetailsResponse()
+            {
+                OrderDetailId = x.OrderDetailId,
+                ItemName = x.FashionItem!.Name,
+                UnitPrice = x.UnitPrice,
+                RefundExpirationDate = x.RefundExpirationDate
+            };
+            (List<OrderDetailsResponse> Items, int Page, int PageSize, int TotalCount) orderDetailsResponse =
+                await _orderDetailRepository.GetOrderDetailsPaginate<OrderDetailsResponse>(predicate: predicate,
+                    selector: selector, isTracking: false);
+            var orderDetails = orderDetailsResponse.Items;
+
+            var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopId);
+            var shopAccount = await _accountRepository.GetAccountById(shop!.StaffId);
+            shopAccount!.Balance += request.AmountGiven;
+            await _accountRepository.UpdateAccount(shopAccount);
+
+            var transaction = new Transaction()
+            {
+                OrderId = orderId,
+                CreatedDate = DateTime.UtcNow,
+                Type = TransactionType.Purchase,
+                Amount = request.AmountGiven,
+            };
+
+            await _transactionRepository.CreateTransaction(transaction);
+            var response = new PayOrderWithCashResponse
+            {
+                AmountGiven = request.AmountGiven, OrderId = orderId,
+                Order = new OrderResponse()
+                {
+                    OrderId = order.OrderId,
+                    OrderCode = order.OrderCode,
+                    PaymentMethod = order.PaymentMethod,
+                    Status = order.Status,
+                    CreatedDate = order.CreatedDate,
+                    TotalPrice = order.TotalPrice,
+                    PaymentDate = order.PaymentDate,
+                    CompletedDate = order.CompletedDate,
+                    ContactNumber = order.Phone,
+                    CustomerName = order.RecipientName,
+                    PurchaseType = order.PurchaseType,
+                    OrderDetailItems = orderDetails
+                }
+            };
+            return response;
         }
     }
 }

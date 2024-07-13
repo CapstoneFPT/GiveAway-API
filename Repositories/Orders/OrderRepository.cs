@@ -129,7 +129,7 @@ namespace Repositories.Orders
                 ContactNumber = order.Phone,
                 CustomerName = order.Member.Fullname,
                 Status = order.Status,
-                shopOrderResponses = listShopOrderResponse,
+                ShopOrderResponses = listShopOrderResponse,
             };
             return orderResponse;
         }
@@ -279,7 +279,7 @@ namespace Repositories.Orders
                 orderRespponse = await _orderDao.GetQueryable()
                     .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider)
                     .FirstOrDefaultAsync(c => c.OrderId == orderId);
-                orderRespponse.orderDetailResponses = listOrderdetail.Where(c => c.OrderId == orderId).ToList();
+                orderRespponse.OrderDetails = listOrderdetail.Where(c => c.OrderId == orderId).ToList();
                 listOrderResponse.Add(orderRespponse);
             }
 
@@ -361,7 +361,7 @@ namespace Repositories.Orders
 
             orderResponse = await _orderDao.GetQueryable().Where(c => c.OrderId == orderId)
                 .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
-            orderResponse.orderDetailResponses = listOrderdetailResponse;
+            orderResponse.OrderDetails = listOrderdetailResponse;
             return orderResponse;
         }
 
@@ -442,7 +442,7 @@ namespace Repositories.Orders
 
 
             var orderResponse = _mapper.Map<OrderResponse>(orderresultUpdate);
-            orderResponse.shopOrderResponses = listShopOrderResponse;
+            orderResponse.ShopOrderResponses = listShopOrderResponse;
             return orderResponse;
 
 

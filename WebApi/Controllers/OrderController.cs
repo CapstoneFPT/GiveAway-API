@@ -55,7 +55,6 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{orderId}/pay/vnpay")]
-        [Obsolete("Use PurchaseOrderWithPoints instead")]
         public async Task<IActionResult> PurchaseOrder([FromRoute] Guid orderId,
             [FromBody] PurchaseOrderRequest request)
         {
