@@ -31,7 +31,7 @@ namespace Services.ConsignSales
             }
             else if (!consign.Status.Equals(ConsignSaleStatus.Pending))
             {
-                response.Messages = ["This consign is not allowed to aprroval"];
+                response.Messages = ["This consign is not allowed to approval"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }

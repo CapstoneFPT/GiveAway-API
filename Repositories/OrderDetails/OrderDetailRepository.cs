@@ -121,6 +121,7 @@ namespace Repositories.OrderDetails
                     CreatedDate = c.CreatedDate,
                     RefundStatus = c.RefundStatus,
                     MemberId = c.OrderDetail.Order.MemberId,
+                    Member = c.OrderDetail.Order.Member,
                     Description = c.Description,
                     FashionItem = result
                 }).FirstOrDefaultAsync();

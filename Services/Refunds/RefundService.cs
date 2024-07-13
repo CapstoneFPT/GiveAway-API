@@ -20,6 +20,46 @@ namespace Services.Refunds
             _refundRepository = refundRepository;
         }
 
+        public async Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, RefundStatus refundStatus)
+        {
+            var response = new Result<RefundResponse>();
+            var refund = await _refundRepository.GetRefundById(refundId);
+            if (refund is null)
+            {
+                response.ResultStatus = ResultStatus.NotFound;
+                response.Messages = ["Can not found the refund"];
+                return response;
+            }
+            if (refundStatus.Equals(RefundStatus.Pending))
+            {
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = ["This refund is already pending"];
+                return response;
+            }
+
+            response.Data = await _refundRepository.ApprovalRefundFromShop(refundId,refundStatus);
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["Successfully"];
+            return response;
+        }
+
+        public async Task<Result<RefundResponse>> GetRefundById(Guid refundId)
+        {
+            var response = new Result<RefundResponse>();
+            var result = await _refundRepository.GetRefundById(refundId);
+            if (result is null)
+            {
+                response.ResultStatus = ResultStatus.NotFound;
+                response.Messages = ["Can not found the refund"];
+                return response;
+            }
+
+            response.Data = result;
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["Successfully"];
+            return response;
+        }
+
         public async Task<Result<PaginationResponse<RefundResponse>>> GetRefundByShopId(Guid shopId,
             RefundRequest refundRequest)
         {

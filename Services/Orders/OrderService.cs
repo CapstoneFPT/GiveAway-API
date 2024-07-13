@@ -373,46 +373,41 @@ namespace Services.Orders
 
         public async Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
-            try
+
+            var response = new Result<OrderResponse>();
+            if (orderRequest.listItemId.Count == 0)
             {
-                var response = new Result<OrderResponse>();
-                if (orderRequest.listItemId.Count == 0)
-                {
-                    response.Messages = ["You have no item for order"];
-                    response.ResultStatus = ResultStatus.Empty;
-                    return response;
-                }
-
-                var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
-                if (checkItemAvailable.Count > 0)
-                {
-                    var orderResponse = new OrderResponse();
-                    orderResponse.listItemNotAvailable = checkItemAvailable;
-                    response.Data = orderResponse;
-                    response.ResultStatus = ResultStatus.Error;
-                    response.Messages = ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
-                    return response;
-                }
-                var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, orderRequest.listItemId);
-                if (isitembelongshop.Count > 0)
-                {
-                    var orderResponse = new OrderResponse();
-                    orderResponse.listItemNotAvailable = isitembelongshop;
-                    response.Data = orderResponse;
-                    response.ResultStatus = ResultStatus.Error;
-                    response.Messages = ["There are " + isitembelongshop.Count + " items not belong to this shop. Please check your order again"];
-                    return response;
-                }
-
-                response.Data = await _orderRepository.CreateOrderByShop(shopId, orderRequest);
-                response.Messages = ["Create Successfully"];
-                response.ResultStatus = ResultStatus.Success;
+                response.Messages = ["You have no item for order"];
+                response.ResultStatus = ResultStatus.Empty;
                 return response;
             }
-            catch (Exception ex)
+
+            var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
+            if (checkItemAvailable.Count > 0)
             {
-                throw new Exception(ex.Message, ex);
+                var orderResponse = new OrderResponse();
+                orderResponse.listItemNotAvailable = checkItemAvailable;
+                response.Data = orderResponse;
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
+                return response;
             }
+            var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, orderRequest.listItemId);
+            if (isitembelongshop.Count > 0)
+            {
+                var orderResponse = new OrderResponse();
+                orderResponse.listItemNotAvailable = isitembelongshop;
+                response.Data = orderResponse;
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = ["There are " + isitembelongshop.Count + " items not belong to this shop. Please check your order again"];
+                return response;
+            }
+
+            response.Data = await _orderRepository.CreateOrderByShop(shopId, orderRequest);
+            response.Messages = ["Create Successfully"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+
         }
     }
 }
