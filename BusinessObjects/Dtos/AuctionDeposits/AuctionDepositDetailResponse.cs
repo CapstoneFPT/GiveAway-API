@@ -38,7 +38,6 @@ public class OrderDetailResponse
 {
     public Guid OrderId { get; set; }
     public decimal TotalPrice { get; set; }
-    public DateTime CreatedDate { get; set; }
     public string PaymentMethod { get; set; }
     public DateTime PayementDate { get; set; }
     public Guid MemberId { get; set; }

@@ -156,10 +156,10 @@ namespace Repositories.Accounts
 
             var totalCount = await query.CountAsync();
 
-            var page = requestPage ?? 0;
-            var pageSize = requestPageSize ?? 0;
+            var page = requestPage ?? -1;
+            var pageSize = requestPageSize ?? -1;
 
-            if (page != 0 && pageSize != 0)
+            if (page > 0 && pageSize >= 0)
             {
                 query = query.Skip((page - 1) * pageSize).Take(pageSize);
             }

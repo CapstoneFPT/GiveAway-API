@@ -8,10 +8,12 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Inquiries;
+using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Entities;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Inquiries;
+using Repositories.Transactions;
 
 namespace Services.Shops
 {
@@ -20,10 +22,15 @@ namespace Services.Shops
         private readonly IShopRepository _shopRepository;
         private readonly IInquiryRepository _inquiryRepository;
 
-        public ShopService(IShopRepository shopRepository, IInquiryRepository inquiryRepository)
+        private readonly ITransactionRepository _transactionRepository;
+            
+
+        public ShopService(IShopRepository shopRepository, IInquiryRepository inquiryRepository,
+            ITransactionRepository transactionRepository)
         {
             _shopRepository = shopRepository;
             _inquiryRepository = inquiryRepository;
+            _transactionRepository = transactionRepository;
         }
 
         public async Task<Result<List<ShopDetailResponse>>> GetAllShop()
@@ -67,7 +74,8 @@ namespace Services.Shops
 
             if (!string.IsNullOrEmpty(inquiryRequest.Fullname))
             {
-                predicate = predicate.And(inquiry => EF.Functions.ILike(inquiry.Fullname, $"%{inquiryRequest.Fullname}%"));
+                predicate = predicate.And(inquiry =>
+                    EF.Functions.ILike(inquiry.Fullname, $"%{inquiryRequest.Fullname}%"));
             }
 
             Expression<Func<Inquiry, InquiryListResponse>> selector = inquiry => new InquiryListResponse()
@@ -89,6 +97,36 @@ namespace Services.Shops
                 PageNumber = result.Page,
                 PageSize = result.PageSize,
                 TotalCount = result.TotalCount
+            };
+        }
+
+        public async Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(Guid shopId,
+            TransactionRequest transactionRequest)
+        {
+            Expression<Func<Transaction, bool>> predicate = transaction =>
+                transaction.Order!.PurchaseType == PurchaseType.Offline &&
+                transaction.Order!.OrderDetails.FirstOrDefault()!.FashionItem!.ShopId == shopId;
+
+            Expression<Func<Transaction, TransactionResponse>> selector = transaction => new TransactionResponse()
+            {
+                TransactionId = transaction.TransactionId,
+                OrderId = transaction.OrderId,
+                Amount = transaction.Amount,
+                CreatedDate = transaction.CreatedDate,
+                CustomerName = transaction.Order!.RecipientName,
+                CustomerPhone = transaction.Order.Phone
+            };
+
+            (List<TransactionResponse> Items, int Page, int PageSize, int Total) result =
+                await _transactionRepository.GetTransactions<TransactionResponse>(transactionRequest.Page,
+                    transactionRequest.PageSize, predicate, selector, isTracking: false);
+
+            return new PaginationResponse<TransactionResponse>()
+            {
+                Items = result.Items,
+                PageNumber = result.Page,
+                PageSize = result.PageSize,
+                TotalCount = result.Total
             };
         }
     }

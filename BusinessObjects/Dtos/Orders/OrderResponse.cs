@@ -26,8 +26,10 @@ namespace BusinessObjects.Dtos.Orders
         public string? Address { get; set; }
         public PurchaseType PurchaseType { get; set; }
         public OrderStatus Status { get; set; }
-        public List<ShopOrderResponse>? shopOrderResponses { get; set; }
-        public List<Guid?>? listItemNotAvailable { get; set; }
-        public List<OrderDetailResponse<FashionItem>>? orderDetailResponses { get; set;}
+        public List<ShopOrderResponse>? ShopOrderResponses { get; set; }
+        public List<Guid?>? ListItemNotAvailable { get; set; }
+        public List<OrderDetailResponse<FashionItem>>? OrderDetails { get; set;}
+        public DateTime? CompletedDate { get; set; }
+        public List<OrderDetailsResponse>? OrderDetailItems { get; set; }
     }
 }

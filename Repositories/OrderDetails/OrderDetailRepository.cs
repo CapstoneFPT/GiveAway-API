@@ -25,7 +25,7 @@ namespace Repositories.OrderDetails
         private readonly GenericDao<Refund> _refundDao;
         private readonly IMapper _mapper;
 
-        public OrderDetailRepository(GenericDao<OrderDetail> orderDetailDao, 
+        public OrderDetailRepository(GenericDao<OrderDetail> orderDetailDao,
             GenericDao<FashionItem> fashionitemDao, GenericDao<Refund> refundDao, IMapper mapper)
         {
             _orderDetailDao = orderDetailDao;
@@ -92,7 +92,8 @@ namespace Repositories.OrderDetails
             return query;
         }
 
-        public async Task<RefundResponse> CreateRefundToShop(Guid accountId, Guid orderdetailId, CreateRefundRequest refundRequest)
+        public async Task<RefundResponse> CreateRefundToShop(Guid accountId, Guid orderdetailId,
+            CreateRefundRequest refundRequest)
         {
             var orderDetail = await _orderDetailDao.GetQueryable()
                 .FirstOrDefaultAsync(c => c.OrderDetailId == orderdetailId);
@@ -108,6 +109,40 @@ namespace Repositories.OrderDetails
             return await _refundDao.GetQueryable().Include(c => c.OrderDetail)
                 .ThenInclude(c => c.FashionItem).ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(c => c.RefundId == refund.RefundId);
+        }
+
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)>
+            GetOrderDetailsPaginate<T>(Expression<Func<OrderDetail, bool>>? predicate,
+                Expression<Func<OrderDetail, T>>? selector, bool isTracking, int page = -1, int pageSize = -1)
+        {
+            var query = _orderDetailDao.GetQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            var count = await query.CountAsync();
+
+            if (pageSize >= 0 && page > 0)
+            {
+                query = query.Skip((page - 1) * pageSize).Take(pageSize);
+            }
+
+            List<T> items;
+
+            if (selector != null)
+            {
+                items = await query.Select(selector).ToListAsync();
+            }
+
+            else
+            {
+                items = await query.Cast<T>().ToListAsync();
+            }
+
+
+            return (items, page, pageSize, count);
         }
     }
 }
