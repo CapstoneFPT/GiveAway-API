@@ -111,10 +111,7 @@ public class GiveAwayDbContext : DbContext
 
         #region Member
 
-        modelBuilder.Entity<Member>()
-            .HasMany(x => x.Refunds)
-            .WithOne(x => x.Member)
-            .HasForeignKey(x => x.MemberId);
+      
 
         modelBuilder.Entity<Member>()
             .HasMany(x => x.Bids)

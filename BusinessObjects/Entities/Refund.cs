@@ -12,8 +12,7 @@ public class Refund
     public DateTime CreatedDate { get; set; } 
     public Guid OrderDetailId { get; set; }
     public OrderDetail OrderDetail { get; set; }
-    public Member Member { get; set; }
-    public Guid MemberId { get; set; }
+    
     public RefundStatus RefundStatus { get; set; }
     public Transaction Transaction { get; set; }
 }

@@ -100,7 +100,6 @@ namespace Repositories.OrderDetails
             var refund = new Refund()
             {
                 OrderDetailId = orderdetailId,
-                MemberId = accountId,
                 Description = refundRequest.Description,
                 CreatedDate = DateTime.UtcNow,
                 RefundStatus = RefundStatus.Pending
