@@ -75,13 +75,6 @@ namespace Services.OrderDetails
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
-            if (orderDetail.RefundExpirationDate < DateTime.UtcNow)
-            {
-                response.Messages = ["Expired to refund this item"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
-            }
-
             var order = await _orderRepository.GetOrderById(orderDetail.OrderId);
             if (order.MemberId != accountId)
             {
@@ -89,6 +82,14 @@ namespace Services.OrderDetails
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+            if (orderDetail.RefundExpirationDate < DateTime.UtcNow)
+            {
+                response.Messages = ["Expired to refund this item"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+
+            
             var fashionitem = await _fashionItemRepository.GetFashionItemById(orderDetail.FashionItemDetail.ItemId);
             if (!fashionitem.Status.Equals(FashionItemStatus.Refundable))
             {

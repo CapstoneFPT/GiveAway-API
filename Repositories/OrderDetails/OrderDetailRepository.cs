@@ -95,7 +95,15 @@ namespace Repositories.OrderDetails
         public async Task<RefundResponse> CreateRefundToShop(Guid accountId, Guid orderdetailId, CreateRefundRequest refundRequest)
         {
             var orderDetail = await _orderDetailDao.GetQueryable()
+                .Include(c => c.FashionItem)
                 .FirstOrDefaultAsync(c => c.OrderDetailId == orderdetailId);
+            var result = new OrderDetailResponse<FashionItemDetailResponse>()
+            {
+                OrderId = orderDetail.OrderId,
+                RefundExpirationDate = orderDetail.RefundExpirationDate,
+                UnitPrice = orderDetail.UnitPrice,
+                FashionItemDetail = _mapper.Map<FashionItemDetailResponse>(orderDetail.FashionItem)
+            };
 
             var refund = new Refund()
             {
@@ -105,9 +113,18 @@ namespace Repositories.OrderDetails
                 RefundStatus = RefundStatus.Pending
             };
             await _refundDao.AddAsync(refund);
-            return await _refundDao.GetQueryable().Include(c => c.OrderDetail)
-                .ThenInclude(c => c.FashionItem).ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync(c => c.RefundId == refund.RefundId);
+            var refundResponse = await _refundDao.GetQueryable().Where(c => c.RefundId == refund.RefundId)
+                .Select(c => new RefundResponse()
+                {
+                    RefundId = c.RefundId,
+                    OrderDetailId = c.OrderDetailId,
+                    CreatedDate = c.CreatedDate,
+                    RefundStatus = c.RefundStatus,
+                    MemberId = c.OrderDetail.Order.MemberId,
+                    Description = c.Description,
+                    FashionItem = result
+                }).FirstOrDefaultAsync();
+            return refundResponse;
         }
     }
 }

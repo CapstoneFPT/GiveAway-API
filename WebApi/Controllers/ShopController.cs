@@ -74,9 +74,9 @@ namespace WebApi.Controllers
             return await _consignSaleService.GetAllConsignSalesByShopId(shopId, request);
         }
         [HttpPost("{shopId}/consignsales")]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId, [FromBody] CreateConsignSaleByShopRequest orderRequest)
+        public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId, [FromBody] CreateConsignSaleByShopRequest consignRequest)
         {
-            return await _consignSaleService.CreateConsignSaleByShop(shopId, orderRequest);
+            return await _consignSaleService.CreateConsignSaleByShop(shopId, consignRequest);
         }
 
         [HttpGet("{shopId}/refunds")]
