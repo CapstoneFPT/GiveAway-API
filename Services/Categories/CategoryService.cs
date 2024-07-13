@@ -46,7 +46,7 @@ namespace Services.Categories
             return response;
         }
 
-        public async Task<Result<Category>> CreateCategory(Guid parentId, CategoryRequest request)
+        public async Task<Result<Category>> CreateCategory(Guid parentId, CreateCategoryRequest request)
         {
             var newCategory = new Category();
             var response = new Result<Category>();
@@ -105,7 +105,7 @@ namespace Services.Categories
         {
             var response = new Result<List<Category>>();
             var listCate = await _categoryRepository.GetAllParentCategory();
-            if (listCate == null)
+            if (listCate.Count == 0)
             {
                 response.ResultStatus = ResultStatus.Empty;
                 response.Messages = ["Empty"];
@@ -115,6 +115,28 @@ namespace Services.Categories
             response.Data = listCate;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["successfully"];
+            return response;
+        }
+
+        public async Task<Result<List<Category>>> GetCategoryWithCondition(CategoryRequest categoryRequest)
+        {
+            var response = new Result<List<Category>>();
+            var listCate = await _categoryRepository.GetCategoryWithCondition(categoryRequest);
+            if (categoryRequest.Level > 4 || categoryRequest.Level < 1)
+            {
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = ["Level is only from 1 to 4"];
+                return response;
+            }
+            if (listCate.Count == 0)
+            {
+                response.ResultStatus = ResultStatus.Empty;
+                response.Messages = ["Empty"];
+                return response;
+            }
+            response.Data = listCate;
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["Result with " + listCate.Count + " categories"];
             return response;
         }
     }

@@ -53,9 +53,16 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{categoryId}")]
-        public async Task<ActionResult<Result<Category>>> CreateCategory([FromRoute] Guid categoryId, [FromBody] CategoryRequest request)
+        public async Task<ActionResult<Result<Category>>> CreateCategory([FromRoute] Guid categoryId, [FromBody] CreateCategoryRequest request)
         {
             return await _categoryService.CreateCategory(categoryId, request);
+        }
+
+        [HttpGet("condition")]
+        public async Task<ActionResult<Result<List<Category>>>> GetCategoryWithCondition(
+            [FromQuery] CategoryRequest categoryRequest)
+        {
+            return await _categoryService.GetCategoryWithCondition(categoryRequest);
         }
     }
 

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Category;
 using BusinessObjects.Dtos.Commons;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace Repositories.Categories
 {
@@ -99,6 +100,27 @@ namespace Repositories.Categories
         public async Task<Category> GetParentCategoryById(Guid? id)
         {
             return await _categoryDao.GetQueryable().FirstOrDefaultAsync(c => c.ParentId == id);
+        }
+
+        public async Task<List<Category>> GetCategoryWithCondition(CategoryRequest categoryRequest)
+        {
+            var query = _categoryDao.GetQueryable();
+            if (!string.IsNullOrWhiteSpace(categoryRequest.SearchName))
+                query = query.Where(x => EF.Functions.ILike(x.Name, $"%{categoryRequest.SearchName}%"));
+            if (categoryRequest.Level != null)
+            {
+                query = query.Where(f => f.Level.Equals(categoryRequest.Level));
+            }
+            if (categoryRequest.CategoryId != null)
+            {
+                query = query.Where(f => f.CategoryId.Equals(categoryRequest.CategoryId));
+            }
+            if (categoryRequest.Status != null)
+            {
+                query = query.Where(f => f.Status.Equals(categoryRequest.Status));
+            }
+            var items = await query.AsNoTracking().ToListAsync();
+            return items;
         }
     }
 }
