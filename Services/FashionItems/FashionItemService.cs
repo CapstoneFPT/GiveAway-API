@@ -5,6 +5,7 @@ using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using Repositories.Categories;
 using Repositories.FashionItems;
 using Repositories.Images;
 
@@ -14,13 +15,16 @@ namespace Services.FashionItems
     {
         private readonly IFashionItemRepository _fashionitemRepository;
         private readonly IImageRepository _imageRepository;
+        private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
 
         public FashionItemService(IFashionItemRepository fashionitemRepository, IImageRepository imageRepository,
+            ICategoryRepository categoryRepository,
             IMapper mapper)
         {
             _fashionitemRepository = fashionitemRepository;
             _imageRepository = imageRepository;
+            _categoryRepository = categoryRepository;
             _mapper = mapper;
         }
 
@@ -31,6 +35,8 @@ namespace Services.FashionItems
             var item = new FashionItem();
             var newdata = _mapper.Map(request, item);
             newdata.ShopId = shopId;
+            newdata.Category = await _categoryRepository.GetCategoryById(request.CategoryId);
+            newdata.Type = FashionItemType.ItemBase;
             newdata.Status = FashionItemStatus.Available;
             var newItem = await _fashionitemRepository.AddFashionItem(newdata);
             foreach (string img in request.Images)

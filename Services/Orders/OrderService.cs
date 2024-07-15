@@ -15,6 +15,10 @@ using Repositories.AuctionItems;
 using Repositories.PointPackages;
 using Repositories.Shops;
 using Repositories.Transactions;
+using BusinessObjects.Dtos.Email;
+using Microsoft.Extensions.Configuration;
+using Services.Emails;
+using AutoMapper.Execution;
 
 namespace Services.Orders
 {
@@ -29,11 +33,14 @@ namespace Services.Orders
         private readonly IPointPackageRepository _pointPackageRepository;
         private readonly IShopRepository _shopRepository;
         private readonly ITransactionRepository _transactionRepository;
+        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
         public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
             IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository,
             IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
-            IShopRepository shopRepository, ITransactionRepository transactionRepository)
+            IShopRepository shopRepository, ITransactionRepository transactionRepository,
+            IConfiguration configuration, IEmailService emailService)
         {
             _orderRepository = orderRepository;
             _fashionItemRepository = fashionItemRepository;
@@ -44,6 +51,8 @@ namespace Services.Orders
             _accountRepository = accountRepository;
             _shopRepository = shopRepository;
             _transactionRepository = transactionRepository;
+            _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<Result<OrderResponse>> CreateOrder(Guid accountId,
@@ -358,12 +367,12 @@ namespace Services.Orders
                 if (orderResponse.Status.Equals(OrderStatus.Completed))
                 {
                     response.Messages =
-                        ["This order of your shop is finally deliveried! The order status has changed to completed"];
+                        ["This order of your shop is finally delivered! The order status has changed to completed"];
                 }
                 else
                 {
                     response.Messages =
-                        ["The order of your shop is deliveried! The item status has changed to refundable"];
+                        ["The order of your shop is delivered! The item status has changed to refundable"];
                 }
 
                 response.ResultStatus = ResultStatus.Success;
@@ -393,7 +402,7 @@ namespace Services.Orders
                 response.Data = orderResponse;
                 response.ResultStatus = ResultStatus.Error;
                 response.Messages =
-                    ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
+                    ["There are " + checkItemAvailable.Count + " unavailable items. Please check your order again"];
                 return response;
             }
 
@@ -460,26 +469,76 @@ namespace Services.Orders
             };
 
             await _transactionRepository.CreateTransaction(transaction);
+            await SendEmailOrder(order);
             var response = new PayOrderWithCashResponse
             {
                 AmountGiven = request.AmountGiven, OrderId = orderId,
                 Order = new OrderResponse()
                 {
                     OrderId = order.OrderId,
+                    Quantity = orderDetails.Count,
                     OrderCode = order.OrderCode,
                     PaymentMethod = order.PaymentMethod,
                     Status = order.Status,
                     CreatedDate = order.CreatedDate,
+                    Address = order.Address,
                     TotalPrice = order.TotalPrice,
                     PaymentDate = order.PaymentDate,
                     CompletedDate = order.CompletedDate,
                     ContactNumber = order.Phone,
-                    CustomerName = order.RecipientName,
+                    RecipientName = order.RecipientName,
                     PurchaseType = order.PurchaseType,
                     OrderDetailItems = orderDetails
                 }
             };
             return response;
+        }
+
+        public async Task<Result<string>> SendEmailOrder(Order order)
+        {
+            var response = new Result<string>();
+            if (order.MemberId != null)
+            {
+                var member = await _accountRepository.GetAccountById(order.MemberId.Value);
+                
+                SendEmailRequest content = new SendEmailRequest
+                {
+                    To = member.Email,
+                    Subject = $"[GIVEAWAY] Invoice from GiveAway {order.OrderCode}",
+                    Body = $@"<h3>Dear customer,<h3>
+                        <h5>Thank you for purchase at GiveAway<h5><br>
+                        <h5>Here is your invoice detail<h5>
+                        <p>Order Code: {order.OrderCode}<p>
+                        <p>Total Price: {order.TotalPrice}<p>
+                        <p>Purchase Date: {order.CreatedDate}<p>
+                        <p>Payment Method: {order.PaymentMethod}<p>
+                        <p>Payment Date: {order.PaymentDate}<p>
+                        
+                    ",
+                };
+                await _emailService.SendEmail(content);
+                response.Messages = ["The invoice has been send to customer mail"];
+                response.ResultStatus = ResultStatus.Success;
+                return response;
+            }
+            else
+            {
+                SendEmailRequest content = new SendEmailRequest
+                {
+                    To = order.Email,
+                    Subject = $"[GIVEAWAY] Invoice from GiveAway {order.OrderCode}",
+                    Body = $@"<h3>Dear customer,<h3><br>
+                        <h4>Thank you for your buying at GiveAway<h4><br>
+                        <h4>Here is your invoice detail<h4><br>
+                        
+                        
+                    ",
+                };
+                await _emailService.SendEmail(content);
+                response.Messages = ["The invoice has been send to customer mail"];
+                response.ResultStatus = ResultStatus.Success;
+                return response;
+            }
         }
     }
 }
