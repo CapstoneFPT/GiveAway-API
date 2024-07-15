@@ -55,7 +55,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{orderId}/pay/vnpay")]
-        public async Task<IActionResult> PurchaseOrder([FromRoute] Guid orderId,
+        public async Task<ActionResult<VnPayPurchaseResponse>> PurchaseOrder([FromRoute] Guid orderId,
             [FromBody] PurchaseOrderRequest request)
         {
             var order = await _orderService.GetOrderById(orderId);
@@ -70,12 +70,17 @@ namespace WebApi.Controllers
                 throw new WrongPaymentMethodException("Order is not paid by QRCode");
             }
 
+            if (order.MemberId != request.MemberId)
+            {
+                throw new NotAuthorizedToPayOrderException();
+            }
+
             var paymentUrl = _vnPayService.CreatePaymentUrl(
                 order.OrderId,
                 order.TotalPrice,
                 $"{orderId}", "orders");
 
-            return Ok(new { paymentUrl });
+            return Ok(new VnPayPurchaseResponse { PaymentUrl = paymentUrl });
         }
 
         [HttpGet("payment-return")]
@@ -147,6 +152,11 @@ namespace WebApi.Controllers
                 throw new WrongPaymentMethodException("Order is not paid by Point");
             }
 
+            if (order.MemberId != request.MemberId)
+            {
+                throw new NotAuthorizedToPayOrderException();
+            }
+
             order.PaymentDate = DateTime.UtcNow;
             order.Status = OrderStatus.Completed;
 
@@ -155,11 +165,16 @@ namespace WebApi.Controllers
             await _orderService.UpdateOrder(order);
             await _orderService.UpdateFashionItemStatus(order.OrderId);
             await _orderService.UpdateShopBalance(order);
-            await _orderService.SendEmailOrder(order);  
+            await _orderService.SendEmailOrder(order);
 
             return Ok(new PayWithPointsResponse()
                 { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
         }
+    }
+
+    public class VnPayPurchaseResponse
+    {
+        public string PaymentUrl { get; set; }
     }
 
     public class PayWithPointsResponse
