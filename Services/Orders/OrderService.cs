@@ -19,6 +19,7 @@ using BusinessObjects.Dtos.Email;
 using Microsoft.Extensions.Configuration;
 using Services.Emails;
 using AutoMapper.Execution;
+using BusinessObjects.Utils;
 
 namespace Services.Orders
 {
@@ -555,6 +556,11 @@ namespace Services.Orders
         {
             //This is the admin account, we will have only ONE admin account
             var account = await _accountRepository.GetAccountById(new Guid("a8a95941-cb06-6967-5eb5-26cd1f562b6b"));
+
+            if (account == null)
+            {
+                throw new AccountNotFoundException();
+            }
 
             account!.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(account);

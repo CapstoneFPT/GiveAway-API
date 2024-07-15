@@ -1,6 +1,7 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Dtos.Feedbacks;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
@@ -73,9 +74,10 @@ namespace WebApi.Controllers
 
         [HttpPost("{shopId}/orders/{orderId}/pay-with-cash")]
         public async Task<
-            ActionResult<PayOrderWithCashResponse>> PayWithCash([FromRoute] Guid shopId, [FromRoute] Guid orderId, [FromBody] PayOrderWithCashRequest request)
+            ActionResult<PayOrderWithCashResponse>> PayWithCash([FromRoute] Guid shopId, [FromRoute] Guid orderId,
+            [FromBody] PayOrderWithCashRequest request)
         {
-            PayOrderWithCashResponse result = await _orderService.PayWithCash(shopId, orderId,request);
+            PayOrderWithCashResponse result = await _orderService.PayWithCash(shopId, orderId, request);
             return Ok(result);
         }
 
@@ -94,7 +96,8 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{shopId}/consignsales")]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId, [FromBody] CreateConsignSaleByShopRequest consignRequest)
+        public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,
+            [FromBody] CreateConsignSaleByShopRequest consignRequest)
         {
             return await _consignSaleService.CreateConsignSaleByShop(shopId, consignRequest);
         }
@@ -120,6 +123,13 @@ namespace WebApi.Controllers
         {
             var result = await _shopService.GetOfflineTransactionsByShopId(shopId, transactionRequest);
             return Ok(result);
+        }
+
+        [HttpPost("{shopId}/feedbacks")]
+        public async Task<ActionResult<FeedbackResponse>> CreateFeedbackByShop([FromRoute] Guid shopId,
+            [FromBody] CreateFeedbackRequest feedbackRequest)
+        {
+            return await _shopService.CreateFeedbackForShop(shopId, feedbackRequest);
         }
     }
 }
