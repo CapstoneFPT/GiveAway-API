@@ -428,6 +428,16 @@ namespace Services.Orders
                 throw new InvalidOperationException("Order Already Paid");
             }
 
+            if (request.AmountGiven < order.TotalPrice)
+            {
+                throw new InvalidOperationException("Not enough money");
+            }
+
+            if (order.PaymentMethod != PaymentMethod.Cash)
+            {
+                throw new InvalidOperationException("This order can only be paid with cash");
+            }
+
             order.Status = OrderStatus.Completed;
             order.PaymentDate = DateTime.UtcNow;
             order.CompletedDate = DateTime.UtcNow;
@@ -480,6 +490,15 @@ namespace Services.Orders
                 }
             };
             return response;
+        }
+
+        public async Task UpdateAdminBalance(Order order)
+        {
+            //This is the admin account, we will have only ONE admin account
+            var account = await _accountRepository.GetAccountById(new Guid("a8a95941-cb06-6967-5eb5-26cd1f562b6b"));
+            
+            account!.Balance += order.TotalPrice;
+            await _accountRepository.UpdateAccount(account);
         }
     }
 }

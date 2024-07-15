@@ -111,7 +111,8 @@ namespace WebApi.Controllers
 
                         await _orderService.UpdateOrder(order);
                         await _orderService.UpdateFashionItemStatus(order.OrderId);
-                        await _orderService.UpdateShopBalance(order);
+                        // await _orderService.UpdateShopBalance(order);
+                        await _orderService.UpdateAdminBalance(order);
 
                         return Ok(new
                             { success = true, message = "Payment success", orderCode = response.OrderId });
