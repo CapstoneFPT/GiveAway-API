@@ -396,6 +396,7 @@ namespace Repositories.Orders
             order.Address = orderRequest.Address;
             order.RecipientName = orderRequest.RecipientName;
             order.Phone = orderRequest.Phone;
+            order.Email = orderRequest.Email;
             order.Status = OrderStatus.AwaitingPayment;
 
 
@@ -441,8 +442,21 @@ namespace Repositories.Orders
 
 
 
-            var orderResponse = _mapper.Map<OrderResponse>(orderresultUpdate);
-            orderResponse.ShopOrderResponses = listShopOrderResponse;
+            var orderResponse = new OrderResponse()
+            {
+                OrderId = orderresultUpdate.OrderId,
+                Quantity = listOrderDetailResponse.Count,
+                TotalPrice = listOrderDetailResponse.Sum(c => c.UnitPrice),
+                CreatedDate = orderresultUpdate.CreatedDate,
+                Address = orderresultUpdate.Address,
+                ContactNumber = orderresultUpdate.Phone,
+                RecipientName = orderresultUpdate.RecipientName,
+                PaymentMethod = orderresultUpdate.PaymentMethod,
+                PurchaseType = orderresultUpdate.PurchaseType,
+                OrderCode = orderresultUpdate.OrderCode,
+                Status = orderresultUpdate.Status,
+                ShopOrderResponses = listShopOrderResponse
+            };
             return orderResponse;
 
 

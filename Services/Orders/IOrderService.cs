@@ -30,6 +30,7 @@ namespace Services.Orders
         Task PayWithPoints(Guid orderId, Guid requestMemberId);
         Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest request);
         Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId, PayOrderWithCashRequest request);
+        Task<Result<string>> SendEmailOrder (Order order);
         Task UpdateAdminBalance(Order order);
     }
 }
