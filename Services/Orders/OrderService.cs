@@ -153,60 +153,58 @@ namespace Services.Orders
 
         public async Task UpdateShopBalance(Order order)
         {
-            try
+
+            if (order.Status != OrderStatus.Completed)
             {
-                if (order.Status != OrderStatus.Completed)
-                {
-                    throw new Exception("Can not update balance if order is not completed");
-                }
-
-                var shopTotals = order.OrderDetails
-                    .GroupBy(item => item.FashionItem!.ShopId)
-                    .Select(group =>
-                        new
-                        {
-                            ShopId = group.Key,
-                            Total = group.Sum(item => item.UnitPrice)
-                        });
-
-                foreach (var shopTotal in shopTotals)
-                {
-                    var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopTotal.ShopId);
-                    var staff = await _accountRepository.GetAccountById(shop!.StaffId);
-                    staff.Balance += shopTotal.Total;
-                    await _accountRepository.UpdateAccount(staff);
-                }
+                throw new Exception("Can not update balance if order is not completed");
             }
+
+            var shopTotals = order.OrderDetails
+                .GroupBy(item => item.FashionItem!.ShopId)
+                .Select(group =>
+                    new
+                    {
+                        ShopId = group.Key,
+                        Total = group.Sum(item => item.UnitPrice)
+                    });
+
+            foreach (var shopTotal in shopTotals)
+            {
+                var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopTotal.ShopId);
+                var staff = await _accountRepository.GetAccountById(shop!.StaffId);
+                staff.Balance += shopTotal.Total;
+                await _accountRepository.UpdateAccount(staff);
+            }
+        }
 
         public async Task UpdateFashionItemStatus(Guid orderOrderId)
         {
-            try
-            {
-                var orderDetails = await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderOrderId);
-                orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.Unavailable);
-                var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
-                await _fashionItemRepository.BulkUpdate(fashionItems!);
-            }
+
+            var orderDetails = await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderOrderId);
+            orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.Unavailable);
+            var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
+            await _fashionItemRepository.BulkUpdate(fashionItems!);
+        }
 
         public async Task PayWithPoints(Guid orderId, Guid requestMemberId)
         {
-            try
+
+            var order = await _orderRepository.GetOrderById(orderId);
+
+            if (order == null)
             {
-                var order = await _orderRepository.GetOrderById(orderId);
-
-                if (order == null)
-                {
-                    throw new Exception("Order not found");
-                }
-
-                if (order.MemberId != requestMemberId)
-                {
-                    throw new Exception("Not authorized");
-                }
-
-                order.Status = OrderStatus.OnDelivery;
-                await _orderRepository.UpdateOrder(order);
+                throw new Exception("Order not found");
             }
+
+            if (order.MemberId != requestMemberId)
+            {
+                throw new Exception("Not authorized");
+            }
+
+            order.Status = OrderStatus.OnDelivery;
+            await _orderRepository.UpdateOrder(order);
+
+        }
 
         private async void CancelOrder(Order x)
         {
@@ -216,31 +214,30 @@ namespace Services.Orders
 
         public async Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order)
         {
-            try
+
+            var orderResult = await _orderRepository.CreateOrder(new Order()
             {
-                var orderResult = await _orderRepository.CreateOrder(new Order()
-                {
-                    OrderCode = _orderRepository.GenerateUniqueString(),
-                    CreatedDate = DateTime.UtcNow,
-                    MemberId = order.MemberId,
-                    TotalPrice = order.TotalPrice,
-                    PaymentMethod = order.PaymentMethod,
-                    Status = OrderStatus.AwaitingPayment,
-                });
+                OrderCode = _orderRepository.GenerateUniqueString(),
+                CreatedDate = DateTime.UtcNow,
+                MemberId = order.MemberId,
+                TotalPrice = order.TotalPrice,
+                PaymentMethod = order.PaymentMethod,
+                Status = OrderStatus.AwaitingPayment,
+            });
 
-                var orderDetailResult = await _orderDetailRepository.CreateOrderDetail(new OrderDetail()
-                {
-                    OrderId = orderResult.OrderId,
-                    UnitPrice = order.TotalPrice,
-                    PointPackageId = order.PointPackageId,
-                });
+            var orderDetailResult = await _orderDetailRepository.CreateOrderDetail(new OrderDetail()
+            {
+                OrderId = orderResult.OrderId,
+                UnitPrice = order.TotalPrice,
+                PointPackageId = order.PointPackageId,
+            });
 
-                return new Result<OrderResponse>()
-                {
-                    Data = _mapper.Map<Order, OrderResponse>(orderResult),
-                    ResultStatus = ResultStatus.Success
-                };
-            }
+            return new Result<OrderResponse>()
+            {
+                Data = _mapper.Map<Order, OrderResponse>(orderResult),
+                ResultStatus = ResultStatus.Success
+            };
+        }
 
 
         public async Task<Order?> GetOrderById(Guid orderId)
@@ -257,105 +254,90 @@ namespace Services.Orders
         public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId,
             OrderRequest request)
         {
-            try
-            {
-                var response = new Result<PaginationResponse<OrderResponse>>();
-                var listOrder = await _orderRepository.GetOrdersByAccountId(accountId, request);
-                if (listOrder.TotalCount == 0)
-                {
-                    response.Messages = ["You don't have any order"];
-                    response.ResultStatus = ResultStatus.Empty;
-                    return response;
-                }
 
-                response.Data = listOrder;
-                response.Messages = ["There are " + listOrder.TotalCount + " in total"];
-                response.ResultStatus = ResultStatus.Success;
+            var response = new Result<PaginationResponse<OrderResponse>>();
+            var listOrder = await _orderRepository.GetOrdersByAccountId(accountId, request);
+            if (listOrder.TotalCount == 0)
+            {
+                response.Messages = ["You don't have any order"];
+                response.ResultStatus = ResultStatus.Empty;
                 return response;
             }
+
+            response.Data = listOrder;
+            response.Messages = ["There are " + listOrder.TotalCount + " in total"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
 
         public async Task<Result<string>> CancelOrder(Guid orderId)
         {
-            try
-            {
-                var response = new Result<string>();
-                var order = await _orderRepository.GetOrderById(orderId);
-                if (order == null || order.Status != OrderStatus.AwaitingPayment)
-                {
-                    response.Messages = ["Cound not find your order"];
-                    response.ResultStatus = ResultStatus.NotFound;
-                    return response;
-                }
 
-                order.Status = OrderStatus.Cancelled;
-                await _orderRepository.UpdateOrder(order);
-                response.Messages = ["Your order is cancelled"];
-                response.ResultStatus = ResultStatus.Success;
+            var response = new Result<string>();
+            var order = await _orderRepository.GetOrderById(orderId);
+            if (order == null || order.Status != OrderStatus.AwaitingPayment)
+            {
+                response.Messages = ["Cound not find your order"];
+                response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            order.Status = OrderStatus.Cancelled;
+            await _orderRepository.UpdateOrder(order);
+            response.Messages = ["Your order is cancelled"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
         }
+
 
         public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId,
             OrderRequest orderRequest)
         {
-            try
-            {
-                var response = new Result<PaginationResponse<OrderResponse>>();
-                var order = await _orderRepository.GetOrdersByShopId(shopId, orderRequest);
-                if (order.TotalCount == 0)
-                {
-                    response.Messages = ["Cound not find your order"];
-                    response.ResultStatus = ResultStatus.NotFound;
-                    return response;
-                }
 
-                response.Data = order;
-                response.Messages = ["Your list contains " + order.TotalCount + " orders"];
-                response.ResultStatus = ResultStatus.Success;
+            var response = new Result<PaginationResponse<OrderResponse>>();
+            var order = await _orderRepository.GetOrdersByShopId(shopId, orderRequest);
+            if (order.TotalCount == 0)
+            {
+                response.Messages = ["Cound not find your order"];
+                response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            response.Data = order;
+            response.Messages = ["Your list contains " + order.TotalCount + " orders"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+
+        }
 
         public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId, Guid orderId)
         {
-            try
+
+            var response = new Result<OrderResponse>();
+            var order = await _orderRepository.GetOrderById(orderId);
+            if (order == null || order.Status != OrderStatus.OnDelivery)
             {
-                var response = new Result<OrderResponse>();
-                var order = await _orderRepository.GetOrderById(orderId);
-                if (order == null || order.Status != OrderStatus.OnDelivery)
-                {
-                    response.Messages = ["Cound not find your order"];
-                    response.ResultStatus = ResultStatus.NotFound;
-                    return response;
-                }
-
-                var orderResponse = await _orderRepository.ConfirmOrderDelivered(shopId, orderId);
-                response.Data = orderResponse;
-                if (orderResponse.Status.Equals(OrderStatus.Completed))
-                {
-                    response.Messages =
-                        ["This order of your shop is finally delivered! The order status has changed to completed"];
-                }
-                else
-                {
-                    response.Messages =
-                        ["The order of your shop is delivered! The item status has changed to refundable"];
-                }
-
-                response.ResultStatus = ResultStatus.Success;
+                response.Messages = ["Cound not find your order"];
+                response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
-            catch (Exception ex)
+
+            var orderResponse = await _orderRepository.ConfirmOrderDelivered(shopId, orderId);
+            response.Data = orderResponse;
+            if (orderResponse.Status.Equals(OrderStatus.Completed))
             {
-                throw new Exception(ex.Message);
+                response.Messages =
+                    ["This order of your shop is finally delivered! The order status has changed to completed"];
             }
+            else
+            {
+                response.Messages =
+                    ["The order of your shop is delivered! The item status has changed to refundable"];
+            }
+
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+
         }
 
         public async Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)

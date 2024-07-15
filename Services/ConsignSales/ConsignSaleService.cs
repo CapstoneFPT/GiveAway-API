@@ -49,87 +49,87 @@ namespace Services.ConsignSales
 
         public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId)
         {
-                var response = new Result<ConsignSaleResponse>();
-                var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
-                if (consign == null)
-                {
-                    response.Messages = ["Consign is not found"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
-                }
-                else if (!consign.Status.Equals(ConsignSaleStatus.AwaitDelivery))
-                {
-                    response.Messages = ["This consign is not allowed to confirm"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
-                }
-                response.Data = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
-                response.Messages = ["Confirm received successfully"];
-                response.ResultStatus = ResultStatus.Success;
+            var response = new Result<ConsignSaleResponse>();
+            var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
+            if (consign == null)
+            {
+                response.Messages = ["Consign is not found"];
+                response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+            else if (!consign.Status.Equals(ConsignSaleStatus.AwaitDelivery))
+            {
+                response.Messages = ["This consign is not allowed to confirm"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+            response.Data = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
+            response.Messages = ["Confirm received successfully"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
 
         public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
         {
-                var response = new Result<ConsignSaleResponse>();
-                //check account co' active hay ko
-                var account = await _accountRepository.GetAccountById(accountId);
+            var response = new Result<ConsignSaleResponse>();
+            //check account co' active hay ko
+            var account = await _accountRepository.GetAccountById(accountId);
+            if (account == null || account.Status.Equals(AccountStatus.Inactive) || account.Status.Equals(AccountStatus.NotVerified))
+            {
+                response.Messages = ["This account is not available to consign"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+            //check list consign status pending co' dat gioi han. = 5 chua
+            var listconsignpending = await _consignSaleRepository.GetAllConsignPendingByAccountId(accountId);
+            if (listconsignpending.Count() >= 5)
+            {
+                response.Messages = ["You have reached the consignment limit"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+            //tao moi' 1 consign form
+            var consign = await _consignSaleRepository.CreateConsignSale(accountId, request);
+            if (consign == null)
+            {
+                response.Messages = ["There is an error. Can not find consign"];
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
+            response.Data = consign;
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["Create successfully"];
+            return response;
+        }
+
+        public async Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request)
+        {
+            var response = new Result<ConsignSaleResponse>();
+            var isMemberExisted = await _accountRepository.FindUserByPhone(request.Phone);
+            if (isMemberExisted != null)
+            {
+                var account = await _accountRepository.GetAccountById(isMemberExisted.AccountId);
                 if (account == null || account.Status.Equals(AccountStatus.Inactive) || account.Status.Equals(AccountStatus.NotVerified))
                 {
                     response.Messages = ["This account is not available to consign"];
                     response.ResultStatus = ResultStatus.Error;
                     return response;
                 }
-                //check list consign status pending co' dat gioi han. = 5 chua
-                var listconsignpending = await _consignSaleRepository.GetAllConsignPendingByAccountId(accountId);
-                if (listconsignpending.Count() >= 5)
-                {
-                    response.Messages = ["You have reached the consignment limit"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
-                }
-                //tao moi' 1 consign form
-                var consign = await _consignSaleRepository.CreateConsignSale(accountId, request);
-                if (consign == null)
-                {
-                    response.Messages = ["There is an error. Can not find consign"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
-                }
-                response.Data = consign;
-                response.ResultStatus = ResultStatus.Success;
-                response.Messages = ["Create successfully"];
-                return response;
             }
 
-        public async Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request)
-        {
-                var response = new Result<ConsignSaleResponse>();
-                var isMemberExisted = await _accountRepository.FindUserByPhone(request.Phone);
-                if (isMemberExisted != null)
-                {
-                    var account = await _accountRepository.GetAccountById(isMemberExisted.AccountId);
-                    if (account == null || account.Status.Equals(AccountStatus.Inactive) || account.Status.Equals(AccountStatus.NotVerified))
-                    {
-                        response.Messages = ["This account is not available to consign"];
-                        response.ResultStatus = ResultStatus.Error;
-                        return response;
-                    }
-                }
-
-                //tao moi' 1 consign form
-                var consign = await _consignSaleRepository.CreateConsignSaleByShop(shopId, request);
-                if (consign == null)
-                {
-                    response.Messages = ["There is an error. Can not find consign"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
-                }
-                response.Data = consign;
-                response.ResultStatus = ResultStatus.Success;
-                response.Messages = ["Create successfully"];
+            //tao moi' 1 consign form
+            var consign = await _consignSaleRepository.CreateConsignSaleByShop(shopId, request);
+            if (consign == null)
+            {
+                response.Messages = ["There is an error. Can not find consign"];
+                response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+            response.Data = consign;
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = ["Create successfully"];
+            return response;
+        }
 
         public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSales(Guid accountId, ConsignSaleRequest request)
         {
@@ -166,19 +166,19 @@ namespace Services.ConsignSales
 
         public async Task<Result<ConsignSaleResponse>> GetConsignSaleById(Guid consignId)
         {
-                var response = new Result<ConsignSaleResponse>();
-                var Consign = await _consignSaleRepository.GetConsignSaleById(consignId);
-                if (Consign == null)
-                {
-                    response.Messages = ["Consignment is not found"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
-                }
-                response.Data = Consign;
-                response.Messages = ["Successfully"];
-                response.ResultStatus = ResultStatus.Success;
+            var response = new Result<ConsignSaleResponse>();
+            var Consign = await _consignSaleRepository.GetConsignSaleById(consignId);
+            if (Consign == null)
+            {
+                response.Messages = ["Consignment is not found"];
+                response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+            response.Data = Consign;
+            response.Messages = ["Successfully"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
 
     }
 }
