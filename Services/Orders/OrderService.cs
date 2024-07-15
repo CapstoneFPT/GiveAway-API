@@ -207,12 +207,12 @@ namespace Services.Orders
 
                 if (order == null)
                 {
-                    throw new Exception("Order not found");
+                    throw new OrderNotFoundException();
                 }
 
                 if (order.MemberId != requestMemberId)
                 {
-                    throw new Exception("Not authorized");
+                    throw new NotAuthorizedToPayOrderException();
                 }
 
                 order.Status = OrderStatus.OnDelivery;
@@ -224,11 +224,6 @@ namespace Services.Orders
             }
         }
 
-        private async void CancelOrder(Order x)
-        {
-            x.Status = OrderStatus.Cancelled;
-            await _orderRepository.UpdateOrder(x);
-        }
 
         public async Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order)
         {
@@ -306,10 +301,17 @@ namespace Services.Orders
             {
                 var response = new Result<string>();
                 var order = await _orderRepository.GetOrderById(orderId);
-                if (order == null || order.Status != OrderStatus.AwaitingPayment)
+                if (order == null) 
                 {
-                    response.Messages = ["Cound not find your order"];
+                    response.Messages = ["Could not find your order"];
                     response.ResultStatus = ResultStatus.NotFound;
+                    return response;
+                }
+
+                if (order.Status != OrderStatus.AwaitingPayment)
+                {
+                    response.Messages = ["You cannot cancel an order that is not awaiting for payment"];
+                    response.ResultStatus = ResultStatus.Error;
                     return response;
                 }
 
