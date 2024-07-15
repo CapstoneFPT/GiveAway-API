@@ -17,5 +17,6 @@ namespace Services.Categories
         Task<Result<Category>> CreateCategory(Guid parentId, CreateCategoryRequest request);
         Task<List<CategoryTreeNode>> GetTree(Guid? shopId = null);
         Task<Result<List<Category>>> GetCategoryWithCondition(CategoryRequest categoryRequest);
+        Task<CategoryLeavesResponse> GetLeaves(Guid? shopId);
     }
 }

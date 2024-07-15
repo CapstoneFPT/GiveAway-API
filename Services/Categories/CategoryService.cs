@@ -5,9 +5,11 @@ using Repositories.Categories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Category;
+using LinqKit;
 
 namespace Services.Categories
 {
@@ -138,6 +140,11 @@ namespace Services.Categories
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Result with " + listCate.Count + " categories"];
             return response;
+        }
+
+        public Task<CategoryLeavesResponse> GetLeaves(Guid? shopId)
+        {
+            return  _categoryRepository.GetLeaves(shopId);
         }
     }
 }

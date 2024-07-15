@@ -111,16 +111,50 @@ namespace Repositories.Categories
             {
                 query = query.Where(f => f.Level.Equals(categoryRequest.Level));
             }
+
             if (categoryRequest.CategoryId != null)
             {
                 query = query.Where(f => f.CategoryId.Equals(categoryRequest.CategoryId));
             }
+
             if (categoryRequest.Status != null)
             {
                 query = query.Where(f => f.Status.Equals(categoryRequest.Status));
             }
+
             var items = await query.AsNoTracking().ToListAsync();
             return items;
+        }
+
+        public async Task<CategoryLeavesResponse> GetLeaves(Guid? shopId)
+        {
+            IQueryable<Category> relevantCategories;
+            if (shopId.HasValue)
+            {
+                relevantCategories = _fashionItemDao.GetQueryable()
+                    .Where(x => x.ShopId == shopId.Value)
+                    .Select(x => x.Category).Where(x => x.Level == 4 && x.Status.Equals(CategoryStatus.Available))
+                    .Distinct();
+            }
+            else
+            {
+                relevantCategories = _categoryDao.GetQueryable()
+                    .Where(x => x.Level == 4 && x.Status.Equals(CategoryStatus.Available)).Distinct();
+            }
+
+            var items = await relevantCategories.Select(x => new CategoryTreeNode()
+            {
+                CategoryId = x.CategoryId,
+                ParentId = x.ParentId,
+                Level = x.Level,
+                Name = x.Name
+            }).ToListAsync();
+
+            return new CategoryLeavesResponse()
+            {
+                ShopId = shopId,
+                CategoryLeaves = items
+            };
         }
     }
 }
