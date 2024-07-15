@@ -177,11 +177,6 @@ namespace Services.Orders
                     await _accountRepository.UpdateAccount(staff);
                 }
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
-        }
 
         public async Task UpdateFashionItemStatus(Guid orderOrderId)
         {
@@ -192,11 +187,6 @@ namespace Services.Orders
                 var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
                 await _fashionItemRepository.BulkUpdate(fashionItems!);
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
-        }
 
         public async Task PayWithPoints(Guid orderId, Guid requestMemberId)
         {
@@ -217,11 +207,6 @@ namespace Services.Orders
                 order.Status = OrderStatus.OnDelivery;
                 await _orderRepository.UpdateOrder(order);
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
-        }
 
         private async void CancelOrder(Order x)
         {
@@ -256,11 +241,6 @@ namespace Services.Orders
                     ResultStatus = ResultStatus.Success
                 };
             }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
-        }
 
 
         public async Task<Order?> GetOrderById(Guid orderId)
@@ -293,11 +273,6 @@ namespace Services.Orders
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
         public async Task<Result<string>> CancelOrder(Guid orderId)
         {
@@ -347,7 +322,6 @@ namespace Services.Orders
             {
                 throw new Exception(ex.Message);
             }
-        }
 
         public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId, Guid orderId)
         {

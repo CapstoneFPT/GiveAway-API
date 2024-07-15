@@ -49,8 +49,6 @@ namespace Services.ConsignSales
 
         public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId)
         {
-            try
-            {
                 var response = new Result<ConsignSaleResponse>();
                 var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
                 if (consign == null)
@@ -70,16 +68,9 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
         public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
         {
-            try
-            {
                 var response = new Result<ConsignSaleResponse>();
                 //check account co' active hay ko
                 var account = await _accountRepository.GetAccountById(accountId);
@@ -110,16 +101,9 @@ namespace Services.ConsignSales
                 response.Messages = ["Create successfully"];
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
         public async Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request)
         {
-            try
-            {
                 var response = new Result<ConsignSaleResponse>();
                 var isMemberExisted = await _accountRepository.FindUserByPhone(request.Phone);
                 if (isMemberExisted != null)
@@ -146,11 +130,6 @@ namespace Services.ConsignSales
                 response.Messages = ["Create successfully"];
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
         public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSales(Guid accountId, ConsignSaleRequest request)
         {
@@ -187,8 +166,6 @@ namespace Services.ConsignSales
 
         public async Task<Result<ConsignSaleResponse>> GetConsignSaleById(Guid consignId)
         {
-            try
-            {
                 var response = new Result<ConsignSaleResponse>();
                 var Consign = await _consignSaleRepository.GetConsignSaleById(consignId);
                 if (Consign == null)
@@ -202,11 +179,6 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
     }
 }
