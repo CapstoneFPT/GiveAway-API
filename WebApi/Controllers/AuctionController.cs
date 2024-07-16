@@ -5,6 +5,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Services.AuctionDeposits;
 using Services.Auctions;
 
 namespace WebApi.Controllers;
@@ -14,10 +15,12 @@ namespace WebApi.Controllers;
 public class AuctionController : ControllerBase
 {
     private readonly IAuctionService _auctionService;
+    private readonly IAuctionDepositService _auctionDepositService;
 
-    public AuctionController(IAuctionService auctionService)
+    public AuctionController(IAuctionService auctionService, IAuctionDepositService auctionDepositService)
     {
         _auctionService = auctionService;
+        _auctionDepositService = auctionDepositService;
     }
 
     #region Auctions
@@ -179,6 +182,18 @@ public class AuctionController : ControllerBase
         var result = await _auctionService.PlaceDeposit(auctionId, request);
         return CreatedAtAction(nameof(GetDeposit), new { auctionId = result.AuctionId, depositId = result.Id }, result);
     }
+    
+    [HttpGet("{auctionId}/deposits/has-deposit")]
+    public async Task<ActionResult<HasMemberPlacedDepositResult>> HasDeposit([FromRoute] Guid auctionId, [FromQuery] CheckDepositRequest request)
+    {
+        bool result = await _auctionDepositService.CheckDepositAvailable(auctionId, request.MemberId);
+        return Ok(new HasMemberPlacedDepositResult()
+        {
+            AuctionId = auctionId,
+            MemberId = request.MemberId,
+            HasDeposit = result
+        });
+    }
 
     [HttpDelete("{auctionId}/deposits/{depositId}")]
     public async Task<ActionResult> DeleteDeposit([FromRoute] Guid auctionId, [FromRoute] Guid depositId)
@@ -198,6 +213,7 @@ public class AuctionController : ControllerBase
 
         throw new NotImplementedException();
     }
+    
 
     [HttpGet("{auctionId}/deposits/{depositId}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDepositDetailResponse))]
@@ -210,9 +226,22 @@ public class AuctionController : ControllerBase
 
     #endregion
     
+    
     [HttpGet("current-time")]
     public IActionResult  GetCurrentTime()
     {
         return Ok(new {currentTime = DateTime.UtcNow});
     }
+}
+
+public class CheckDepositRequest
+{
+    public Guid MemberId { get; set; }
+}
+
+public class HasMemberPlacedDepositResult
+{
+    public bool HasDeposit { get; set; }
+    public Guid AuctionId { get; set; }
+    public Guid MemberId { get; set; }
 }
