@@ -21,6 +21,7 @@ namespace BusinessObjects.Dtos.Orders
         public PaymentMethod PaymentMethod { get; set; }
         public DateTime? PaymentDate { get; set; }
         public DateTime? CompletedDate { get; set; }
+        public Guid? MemberId { get; set; }
         public string? CustomerName { get; set; }
         public string? RecipientName { get; set; }
         public string? ContactNumber { get; set; }

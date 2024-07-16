@@ -472,54 +472,37 @@ namespace Services.Orders
         public async Task<Result<string>> SendEmailOrder(Order order)
         {
             var response = new Result<string>();
+            SendEmailRequest content = new SendEmailRequest();
             if (order.MemberId != null)
             {
                 var member = await _accountRepository.GetAccountById(order.MemberId.Value);
-
-                SendEmailRequest content = new SendEmailRequest
-                {
-                    To = member.Email,
-                    Subject = $"[GIVEAWAY] Invoice from GiveAway {order.OrderCode}",
-                    Body = $@"<h3>Dear customer,<h3>
-                        <h5>Thank you for purchase at GiveAway<h5><br>
-                        <h5>Here is your invoice detail<h5>
-                        <p>Order Code: {order.OrderCode}<p>
-                        <p>Total Price: {order.TotalPrice}<p>
-                        <p>Purchase Date: {order.CreatedDate}<p>
-                        <p>Payment Method: {order.PaymentMethod}<p>
-                        <p>Payment Date: {order.PaymentDate}<p>
-                        
-                    ",
-                };
-                await _emailService.SendEmail(content);
-                response.Messages = ["The invoice has been send to customer mail"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
+                content.To = member.Email;
             }
             else
             {
-                SendEmailRequest content = new SendEmailRequest
-                {
-                    To = order.Email,
-                    Subject = $"[GIVEAWAY] Invoice from GiveAway {order.OrderCode}",
-                    Body = $@"<h3>Dear customer,<h3><br>
-                        <h4>Thank you for your buying at GiveAway<h4><br>
-                        <h4>Here is your invoice detail<h4><br>
-                        
-                        
-                    ",
-                };
-                await _emailService.SendEmail(content);
-                response.Messages = ["The invoice has been send to customer mail"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
+                content.To = order.Email;
+                
             }
+            content.Subject = $"[GIVEAWAY] Invoice from GiveAway {order.OrderCode}";
+            content.Body = $@"<h3>Dear customer,<h3>
+                         <h5>Thank you for purchase at GiveAway<h5><br>
+                         <h5>Here is your invoice detail<h5>
+                         <p>Order Code: {order.OrderCode}<p>
+                         <p>Total Price: {order.TotalPrice}<p>
+                         <p>Purchase Date: {order.CreatedDate}<p>
+                         <p>Payment Method: {order.PaymentMethod}<p>
+                         <p>Payment Date: {order.PaymentDate}<p>";
+            await _emailService.SendEmail(content);
+            response.Messages = ["The invoice has been send to customer mail"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+
         }
 
         public async Task UpdateAdminBalance(Order order)
         {
             //This is the admin account, we will have only ONE admin account
-            var account = await _accountRepository.GetAccountById(new Guid("a8a95941-cb06-6967-5eb5-26cd1f562b6b"));
+            var account = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
 
             if (account == null)
             {
