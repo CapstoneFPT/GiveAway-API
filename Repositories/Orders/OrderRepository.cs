@@ -249,6 +249,7 @@ namespace Repositories.Orders
             return listItemNotAvailable;
         }
 
+        //TODO: Trả kiểu dữ liệu đơn giản hơn 
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest request)
         {
             var listItemId = await _fashionItemDao.GetQueryable().Where(c => c.ShopId == shopId)
