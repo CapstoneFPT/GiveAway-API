@@ -21,7 +21,7 @@ namespace Repositories.Auctions
         Task<AuctionDetailResponse?> ApproveAuction(Guid id);
         Task<AuctionDetailResponse?> RejectAuction(Guid id);
         Task<Auction> UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus);
-        Task<List<Auction>> GetAuctionEndingNow();
-        Task<List<Auction>> GetAuctionStartingNow();
+        Task<List<Guid>> GetAuctionEndingNow();
+        Task<List<Guid>> GetAuctionStartingNow();
     }
 }

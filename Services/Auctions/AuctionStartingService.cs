@@ -28,12 +28,12 @@ public class AuctionStartingService : BackgroundService
             {
                 try
                 {
-                    await auctionService.StartAuction(auction.AuctionId);
-                    _logger.LogInformation("Auction {AuctionId} has been started", auction.AuctionId);
+                    await auctionService.StartAuction(auction);
+                    _logger.LogInformation("Auction {AuctionId} has been started", auction);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Failed to start auction {AuctionId}", auction.AuctionId);
+                    _logger.LogError(e, "Failed to start auction {AuctionId}", auction);
                 }
             }
             await Task.Delay(CheckInterval, stoppingToken);
