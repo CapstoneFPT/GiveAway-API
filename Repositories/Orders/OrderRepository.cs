@@ -275,12 +275,28 @@ namespace Repositories.Orders
 
             foreach (var orderId in listOrderdetail.Select(c => c.OrderId).Distinct())
             {
-                var orderRespponse = new OrderResponse();
-                orderRespponse = await _orderDao.GetQueryable()
-                    .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider)
-                    .FirstOrDefaultAsync(c => c.OrderId == orderId);
-                orderRespponse.OrderDetails = listOrderdetail.Where(c => c.OrderId == orderId).ToList();
-                listOrderResponse.Add(orderRespponse);
+                var order = await _orderDao.GetQueryable().Include(c => c.Member).Include(c => c.OrderDetails).FirstOrDefaultAsync(c => c.OrderId == orderId);
+                var orderResponse = new OrderResponse()
+                {
+                    OrderId = order.OrderId,
+                    Quantity = order.OrderDetails.Count,
+                    TotalPrice = order.TotalPrice,
+                    RecipientName = order.RecipientName,
+                    OrderCode = order.OrderCode,
+                    Address = order.Address,
+                    ContactNumber = order.Phone,
+                    CreatedDate = order.CreatedDate,
+                    PaymentDate = order.PaymentDate,
+                    PaymentMethod = order.PaymentMethod,
+                    PurchaseType = order.PurchaseType,
+                    Email = order.Email
+                };
+                if (order.MemberId != null)
+                {
+                    orderResponse.CustomerName = order.Member.Fullname;
+                }
+                /*orderResponse.OrderDetails = listOrderdetail.Where(c => c.OrderId == orderId).ToList();*/
+                listOrderResponse.Add(orderResponse);
             }
 
             if (request.Status != null)

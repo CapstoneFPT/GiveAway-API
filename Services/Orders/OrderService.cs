@@ -298,7 +298,7 @@ namespace Services.Orders
             var order = await _orderRepository.GetOrdersByShopId(shopId, orderRequest);
             if (order.TotalCount == 0)
             {
-                response.Messages = ["Cound not find your order"];
+                response.Messages = ["Could not find your order"];
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }

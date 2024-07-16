@@ -20,16 +20,18 @@ namespace BusinessObjects.Dtos.Orders
         public DateTime CreatedDate { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
         public DateTime? PaymentDate { get; set; }
+        public DateTime? CompletedDate { get; set; }
         public string? CustomerName { get; set; }
         public string? RecipientName { get; set; }
         public string? ContactNumber { get; set; }
         public string? Address { get; set; }
+        public string? Email { get; set; }
         public PurchaseType PurchaseType { get; set; }
         public OrderStatus Status { get; set; }
         public List<ShopOrderResponse>? ShopOrderResponses { get; set; }
         public List<Guid?>? ListItemNotAvailable { get; set; }
         public List<OrderDetailResponse<FashionItem>>? OrderDetails { get; set;}
-        public DateTime? CompletedDate { get; set; }
+
         public List<OrderDetailsResponse>? OrderDetailItems { get; set; }
     }
 }

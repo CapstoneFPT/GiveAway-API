@@ -32,13 +32,22 @@ namespace Repositories
                 .ForMember(a => a.ShopAddress, opt => opt.MapFrom(a => a.Shop.Address))
                 .ReverseMap();
             CreateMap<PaginationResponse<FashionItem>, PaginationResponse<FashionItemDetailResponse>>();
-            CreateMap<Order, OrderResponse>() 
+            CreateMap<Order, OrderResponse>()
                 .ForMember(a => a.CustomerName, opt => opt.MapFrom(a => a.Member.Fullname))
                 .ForMember(a => a.RecipientName, opt => opt.MapFrom(a => a.RecipientName))
                 .ForMember(a => a.ContactNumber, opt => opt.MapFrom(a => a.Phone))
                 .ForMember(a => a.Address, opt => opt.MapFrom(a => a.Address))
                 .ForMember(a => a.Quantity, opt => opt.MapFrom(a => a.OrderDetails.Count))
-                .ReverseMap();
+                .ForMember(a => a.OrderDetails, opt => opt.MapFrom(a => a.OrderDetails))
+                .ForMember(a => a.Email, opt => opt.MapFrom(a => a.Email))
+                .ForMember(a => a.RecipientName, opt => opt.MapFrom(a => a.RecipientName))
+                .ForMember(a => a.PaymentMethod, opt => opt.MapFrom(a => a.PaymentMethod))
+                .ForMember(a => a.PaymentDate, opt => opt.MapFrom(a => a.PaymentDate))
+                .ForMember(a => a.CompletedDate, opt => opt.MapFrom(a => a.CompletedDate))
+                .ForMember(a => a.PurchaseType, opt => opt.MapFrom(a => a.PurchaseType))
+                .ForMember(a => a.OrderCode, opt => opt.MapFrom(a => a.OrderCode))
+                .ForMember(a => a.Status, opt => opt.MapFrom(a => a.Status))
+                .ForMember(a => a.TotalPrice, opt => opt.MapFrom(a => a.TotalPrice));
             CreateMap<OrderDetail, OrderDetailResponse<FashionItemDetailResponse>>()
                 .ForPath(a => a.FashionItemDetail.ShopId, opt => opt.MapFrom(a => a.FashionItem.ShopId))
                 .ForPath(a => a.FashionItemDetail.ItemId, opt => opt.MapFrom(a => a.FashionItem.ItemId))
@@ -54,6 +63,8 @@ namespace Repositories
                 .ForPath(a => a.FashionItemDetail.CategoryName, opt => opt.MapFrom(a => a.FashionItem.Category.Name))
                 .ForPath(a => a.FashionItemDetail.Color, opt => opt.MapFrom(a => a.FashionItem.Color))
                 .ForPath(a => a.FashionItemDetail.Brand, opt => opt.MapFrom(a => a.FashionItem.Brand))
+                .ForPath(a => a.FashionItemDetail.Gender, opt => opt.MapFrom(a => a.FashionItem.Gender))
+                .ForPath(a => a.FashionItemDetail.Size, opt => opt.MapFrom(a => a.FashionItem.Size))
                 .ReverseMap();
             CreateMap<ConsignSale, ConsignSaleResponse>()
                 .ForMember(a => a.ConsignSaleDetails, opt => opt.MapFrom(a => a.ConsignSaleDetails))

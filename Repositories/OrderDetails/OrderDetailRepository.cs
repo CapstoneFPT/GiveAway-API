@@ -53,6 +53,7 @@ namespace Repositories.OrderDetails
             var items = await query
                 .Select(x => new OrderDetailResponse<FashionItem>
                 {
+                    OrderDetailId = x.OrderDetailId,
                     FashionItemDetail = x.FashionItem,
                     OrderId = x.OrderId,
                     UnitPrice = x.UnitPrice,
