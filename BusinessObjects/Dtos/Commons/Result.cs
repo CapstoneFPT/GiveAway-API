@@ -155,5 +155,8 @@ public enum SizeType
     S,
     M,
     L,
-    XL
+    XL,
+    XXL,
+    XXXL,
+    XXXXL,
 }

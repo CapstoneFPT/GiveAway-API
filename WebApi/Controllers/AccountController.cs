@@ -117,5 +117,6 @@ namespace WebApi.Controllers
             var result = await _accountService.CreateInquiry(accountId, request);
             return Ok(result);
         }
+        
     }
 }

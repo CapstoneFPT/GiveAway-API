@@ -19,6 +19,7 @@ using BusinessObjects.Dtos.Email;
 using Microsoft.Extensions.Configuration;
 using Services.Emails;
 using AutoMapper.Execution;
+using BusinessObjects.Utils;
 
 namespace Services.Orders
 {
@@ -191,26 +192,21 @@ namespace Services.Orders
 
             var order = await _orderRepository.GetOrderById(orderId);
 
-            if (order == null)
-            {
-                throw new Exception("Order not found");
-            }
+                if (order == null)
+                {
+                    throw new OrderNotFoundException();
+                }
 
-            if (order.MemberId != requestMemberId)
-            {
-                throw new Exception("Not authorized");
-            }
+                if (order.MemberId != requestMemberId)
+                {
+                    throw new NotAuthorizedToPayOrderException();
+                }
 
             order.Status = OrderStatus.OnDelivery;
             await _orderRepository.UpdateOrder(order);
 
         }
 
-        private async void CancelOrder(Order x)
-        {
-            x.Status = OrderStatus.Cancelled;
-            await _orderRepository.UpdateOrder(x);
-        }
 
         public async Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order)
         {
@@ -287,6 +283,19 @@ namespace Services.Orders
             response.Messages = ["Your order is cancelled"];
             response.ResultStatus = ResultStatus.Success;
             return response;
+        
+                if (order.Status != OrderStatus.AwaitingPayment)
+                {
+                    response.Messages = ["You cannot cancel an order that is not awaiting for payment"];
+                    response.ResultStatus = ResultStatus.Error;
+                    return response;
+                }
+
+                order.Status = OrderStatus.Cancelled;
+                await _orderRepository.UpdateOrder(order);
+                response.Messages = ["Your order is cancelled"];
+                response.ResultStatus = ResultStatus.Success;
+                return response;
         }
 
 
@@ -511,6 +520,11 @@ namespace Services.Orders
         {
             //This is the admin account, we will have only ONE admin account
             var account = await _accountRepository.GetAccountById(new Guid("a8a95941-cb06-6967-5eb5-26cd1f562b6b"));
+
+            if (account == null)
+            {
+                throw new AccountNotFoundException();
+            }
 
             account!.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(account);

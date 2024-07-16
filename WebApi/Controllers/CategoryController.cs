@@ -46,6 +46,13 @@ namespace WebApi.Controllers
                 Categories = result
             });
         }
+
+        [HttpGet("leaves")]
+        public async Task<ActionResult<CategoryLeavesResponse>> GetLeaves([FromQuery] Guid? shopId)
+        {
+           var result = await _categoryService.GetLeaves(shopId);
+           return Ok(result);
+        }
         [HttpGet("{categoryId}")]
         public async Task<ActionResult<Result<List<Category>>>> GetAllChildrenCategory([FromRoute] Guid categoryId)
         {

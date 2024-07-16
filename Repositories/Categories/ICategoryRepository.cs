@@ -18,5 +18,6 @@ namespace Repositories.Categories
         Task<Category> GetParentCategoryById(Guid? id);
         Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null);
         Task<List<Category>> GetCategoryWithCondition(CategoryRequest categoryRequest);
+        Task<CategoryLeavesResponse> GetLeaves(Guid? shopId);
     }
 }
