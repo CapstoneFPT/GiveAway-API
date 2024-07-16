@@ -14,7 +14,7 @@ public class RevenueService : IRevenueService
 
     public async Task<ShopRevenueDto> GetShopRevenue(Guid shopId,DateTime startDate, DateTime endDate)
     {
-       var directSalesRevenue = await _revenueRepository.GetDirectSaleRevenue(shopId, startDate, endDate);
+       var directSalesRevenue = await _revenueRepository.GetTotalRevenue(shopId, startDate, endDate);
        var consignorPayouts = await _revenueRepository.GetConsignorPayouts(shopId, startDate, endDate);
        
        return new ShopRevenueDto
@@ -30,7 +30,7 @@ public class RevenueService : IRevenueService
     
     public async Task<SystemRevenueDto> GetSystemRevenue(DateTime startDate, DateTime endDate)
     {
-        var revenue = await _revenueRepository.GetDirectSaleRevenue(null, startDate, endDate);
+        var revenue = await _revenueRepository.GetTotalRevenue(null, startDate, endDate);
 
         return new SystemRevenueDto
         {
