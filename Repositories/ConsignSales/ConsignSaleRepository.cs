@@ -352,6 +352,7 @@ namespace Repositories.ConsignSales
                 Items = items,
                 PageSize = request.PageSize,
                 TotalCount = count,
+                Filters = new []{request.Status.ToString()},
                 SearchTerm = request.ConsignSaleCode,
                 PageNumber = request.PageNumber,
             };

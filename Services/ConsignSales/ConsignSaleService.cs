@@ -1,10 +1,12 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
+using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
 using Repositories.ConsignSales;
+using Services.Emails;
 
 namespace Services.ConsignSales
 {
@@ -12,11 +14,14 @@ namespace Services.ConsignSales
     {
         private readonly IConsignSaleRepository _consignSaleRepository;
         private readonly IAccountRepository _accountRepository;
+        private readonly IEmailService _emailService;
 
-        public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository)
+        public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
+            IEmailService emailService)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
+            _emailService = emailService;
         }
 
         public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
@@ -63,7 +68,9 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-            response.Data = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
+            var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
+            await SendEmailConsignSale(consignId);
+            response.Data = result;
             response.Messages = ["Confirm received successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;
@@ -125,6 +132,8 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
+            await SendEmailConsignSale(consign.ConsignSaleId);
             response.Data = consign;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
@@ -180,5 +189,39 @@ namespace Services.ConsignSales
             return response;
         }
 
+        public async Task<Result<string>> SendEmailConsignSale(Guid consignSaleId)
+        {
+            var consignSale = await _consignSaleRepository.GetConsignSaleById(consignSaleId);
+            var response = new Result<string>();
+            SendEmailRequest content = new SendEmailRequest();
+            if (consignSale.MemberId != null)
+            {
+                var member = await _accountRepository.GetAccountById(consignSale.MemberId);
+                content.To = member.Email;
+            }
+            else
+            {
+                content.To = consignSale.Email;
+            }
+            content.Subject = $"[GIVEAWAY] Invoice from GiveAway {consignSale.ConsignSaleCode}";
+            content.Body = $@"<h1>Dear customer,<h1>
+                         <h2>Thank you for purchase at GiveAway<h2>
+                         <h4>Here is the detail of your consign<h4>  <p>ConsignSale Code: {consignSale.ConsignSaleCode}<p>
+                         <p>ConsignSale Type: {consignSale.Type}<p>
+                         <p>Created Date: {consignSale.CreatedDate}<p>
+                         <p>Total Price: {consignSale.TotalPrice}<p>
+                         <p>Consign Status: {consignSale.Status}<p>";
+            if (!consignSale.Type.Equals(ConsignSaleType.ForSale))
+            {
+                content.Body += $"<p>Consign Duration: {consignSale.ConsignDuration}<p>" +
+                                $"<p>Start Date: {consignSale.StartDate}<p>" + 
+                                $"<p>End Date: {consignSale.EndDate}<p>" +
+                                $"<p>Consign Method: {consignSale.ConsignSaleMethod}";
+            }
+            await _emailService.SendEmail(content);
+            response.Messages = ["The invoice has been send to customer mail"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
     }
 }

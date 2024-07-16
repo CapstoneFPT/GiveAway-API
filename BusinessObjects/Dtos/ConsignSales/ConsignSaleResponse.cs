@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,10 @@ namespace BusinessObjects.Dtos.ConsignSales
         public int TotalPrice { get; set; }
         public int SoldPrice { get; set; }
         public int MemberReceivedAmount { get; set; }
+        public string? RecipientName { get; set; }
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        [EmailAddress] public string? Email { get; set; }
         public ICollection<ConsignSaleDetailResponse>? ConsignSaleDetails { get; set; } = new List<ConsignSaleDetailResponse>();
     }
 }

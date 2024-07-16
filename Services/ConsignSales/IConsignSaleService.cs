@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
+using BusinessObjects.Entities;
 
 namespace Services.ConsignSales
 {
@@ -12,5 +13,6 @@ namespace Services.ConsignSales
         Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId);
         Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
         Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(Guid shopId, ConsignSaleRequestForShop request);
+        Task<Result<string>> SendEmailConsignSale(Guid consignSaleId);
     }
 }
