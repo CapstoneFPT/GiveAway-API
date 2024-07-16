@@ -24,16 +24,21 @@ public class RevenueRepository : IRevenueRepository
     {
         var query = _orderDetailDao
                 .GetQueryable()
+                .Include(x=>x.Order)
                 .Where(detail =>
                     detail.Order.CreatedDate >= startDate &&
                     detail.Order.CreatedDate <= endDate &&
                     detail.Order.Status == OrderStatus.Completed)
             ;
+        
+        
 
         if (shopId.HasValue)
         {
-            query = query.Where(detail => detail.FashionItem.ShopId == shopId.Value);
+            query = query.Where(detail => detail.FashionItem.ShopId == shopId.Value && detail.Order.PurchaseType == PurchaseType.Offline);
         }
+
+        var list = await query.ToListAsync();
 
         var result = await query
             .SumAsync(detail => detail.UnitPrice);
