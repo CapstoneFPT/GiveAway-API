@@ -139,7 +139,7 @@ public class PointPackageController : ControllerBase
         _logger.LogWarning(
             "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
             response.VnPayResponseCode);
-        return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
+        return Ok(new  { success = false, message = "Payment failed", orderCode = response.OrderId });
     }
 }
 
