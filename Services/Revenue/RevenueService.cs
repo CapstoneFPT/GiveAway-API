@@ -14,18 +14,14 @@ public class RevenueService : IRevenueService
 
     public async Task<ShopRevenueDto> GetShopRevenue(Guid shopId,DateTime startDate, DateTime endDate)
     {
-       var directSalesRevenue = await _revenueRepository.GetDirectSaleRevenue(shopId, startDate, endDate);
-
-       var consignmentSalesRevenue = await _revenueRepository.GetConsignSaleRevenue(shopId, startDate, endDate);
-
+       var directSalesRevenue = await _revenueRepository.GetTotalRevenue(shopId, startDate, endDate);
        var consignorPayouts = await _revenueRepository.GetConsignorPayouts(shopId, startDate, endDate);
        
        return new ShopRevenueDto
        {
            ShopId = shopId,
-           TotalRevenue = directSalesRevenue + consignmentSalesRevenue,
+           TotalRevenue = directSalesRevenue,
            DirectSalesRevenue = directSalesRevenue,
-           ConsignmentSalesRevenue = consignmentSalesRevenue,
            ConsignorPayouts = consignorPayouts,
            StartDate = startDate,
            EndDate = endDate
@@ -34,16 +30,11 @@ public class RevenueService : IRevenueService
     
     public async Task<SystemRevenueDto> GetSystemRevenue(DateTime startDate, DateTime endDate)
     {
-        var directSalesRevenue = await _revenueRepository.GetDirectSaleRevenue(null, startDate, endDate);
-        var consignmentSalesRevenue = await _revenueRepository.GetConsignSaleRevenue(null, startDate, endDate);
-        var consignorPayouts = await _revenueRepository.GetConsignorPayouts(null, startDate, endDate);
+        var revenue = await _revenueRepository.GetTotalRevenue(null, startDate, endDate);
 
         return new SystemRevenueDto
         {
-            TotalRevenue = directSalesRevenue + consignmentSalesRevenue,
-            DirectSalesRevenue = directSalesRevenue,
-            ConsignmentSalesRevenue = consignmentSalesRevenue,
-            ConsignorPayouts = consignorPayouts,
+            TotalRevenue = revenue,
             StartDate = startDate,
             EndDate = endDate
         };
@@ -103,9 +94,6 @@ public class MonthlyRevenueDto
 public class SystemRevenueDto
 {
     public decimal TotalRevenue { get; set; }
-    public decimal DirectSalesRevenue { get; set; }
-    public decimal ConsignmentSalesRevenue { get; set; }
-    public decimal ConsignorPayouts { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
 }
@@ -115,7 +103,6 @@ public class ShopRevenueDto
     public Guid ShopId { get; set; }
     public decimal TotalRevenue { get; set; }
     public decimal DirectSalesRevenue { get; set; }
-    public decimal ConsignmentSalesRevenue { get; set; }
     public decimal ConsignorPayouts { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }

@@ -8,5 +8,6 @@ namespace Services.AuctionDeposits
 {
     public interface IAuctionDepositService
     {
+        Task<bool> CheckDepositAvailable(Guid auctionId, Guid requestMemberId);
     }
 }

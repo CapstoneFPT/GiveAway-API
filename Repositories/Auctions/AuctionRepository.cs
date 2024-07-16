@@ -360,20 +360,22 @@ namespace Repositories.Auctions
         return _auctionDao.UpdateAsync(toBeUpdated);
     }
 
-    public async Task<List<Auction>> GetAuctionEndingNow()
+    public async Task<List<Guid>> GetAuctionEndingNow()
     {
         var now = DateTime.UtcNow;
         var result = await _auctionDao.GetQueryable()
             .Where(a => a.EndDate <= now && a.Status == AuctionStatus.OnGoing)
+            .Select(x=>x.AuctionId)
             .ToListAsync();
 
         return result;
     }
 
-    public async Task<List<Auction>> GetAuctionStartingNow()
+    public async Task<List<Guid>> GetAuctionStartingNow()
     {
         var result = await _auctionDao.GetQueryable()
             .Where(a => a.StartDate <= DateTime.UtcNow && a.Status == AuctionStatus.Approved)
+            .Select(x=>x.AuctionId)
             .ToListAsync();
 
         return result;

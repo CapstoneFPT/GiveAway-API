@@ -20,25 +20,7 @@ public class RevenueRepository : IRevenueRepository
         _consignSaleDao = consignSaleDao;
     }
 
-    public async Task<decimal> GetDirectSaleRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
-    {
-        var query = _orderDetailDao
-                .GetQueryable()
-                .Where(detail =>
-                    detail.Order.CreatedDate >= startDate &&
-                    detail.Order.CreatedDate <= endDate &&
-                    detail.Order.Status == OrderStatus.Completed)
-            ;
-
-        if (shopId.HasValue)
-        {
-            query = query.Where(detail => detail.FashionItem.ShopId == shopId.Value);
-        }
-
-        var result = await query
-            .SumAsync(detail => detail.UnitPrice);
-        return result;
-    }
+  
 
     public async Task<decimal> GetTotalRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
     {
