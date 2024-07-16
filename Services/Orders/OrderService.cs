@@ -294,19 +294,6 @@ namespace Services.Orders
             response.Messages = ["Your order is cancelled"];
             response.ResultStatus = ResultStatus.Success;
             return response;
-
-            if (order.Status != OrderStatus.AwaitingPayment)
-            {
-                response.Messages = ["You cannot cancel an order that is not awaiting for payment"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
-            }
-
-            order.Status = OrderStatus.Cancelled;
-            await _orderRepository.UpdateOrder(order);
-            response.Messages = ["Your order is cancelled"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
         }
 
 
