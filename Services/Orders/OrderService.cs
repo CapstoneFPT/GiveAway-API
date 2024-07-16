@@ -154,7 +154,6 @@ namespace Services.Orders
 
         public async Task UpdateShopBalance(Order order)
         {
-
             if (order.Status != OrderStatus.Completed)
             {
                 throw new Exception("Can not update balance if order is not completed");
@@ -180,7 +179,6 @@ namespace Services.Orders
 
         public async Task UpdateFashionItemStatus(Guid orderOrderId)
         {
-
             var orderDetails = await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderOrderId);
             orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.Unavailable);
             var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
@@ -189,28 +187,25 @@ namespace Services.Orders
 
         public async Task PayWithPoints(Guid orderId, Guid requestMemberId)
         {
-
             var order = await _orderRepository.GetOrderById(orderId);
 
-                if (order == null)
-                {
-                    throw new OrderNotFoundException();
-                }
+            if (order == null)
+            {
+                throw new OrderNotFoundException();
+            }
 
-                if (order.MemberId != requestMemberId)
-                {
-                    throw new NotAuthorizedToPayOrderException();
-                }
+            if (order.MemberId != requestMemberId)
+            {
+                throw new NotAuthorizedToPayOrderException();
+            }
 
             order.Status = OrderStatus.OnDelivery;
             await _orderRepository.UpdateOrder(order);
-
         }
 
 
         public async Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order)
         {
-
             var orderResult = await _orderRepository.CreateOrder(new Order()
             {
                 OrderCode = _orderRepository.GenerateUniqueString(),
@@ -230,7 +225,25 @@ namespace Services.Orders
 
             return new Result<OrderResponse>()
             {
-                Data = _mapper.Map<Order, OrderResponse>(orderResult),
+                Data = new OrderResponse()
+                {
+                    OrderId = orderResult.OrderId,
+                    OrderCode = orderResult.OrderCode,
+                    TotalPrice = orderResult.TotalPrice,
+                    OrderDetailItems = new List<OrderDetailsResponse>()
+                    {
+                       new OrderDetailsResponse()
+                       {
+                           OrderDetailId = orderDetailResult.OrderDetailId,
+                           UnitPrice = orderDetailResult.UnitPrice,
+                           RefundExpirationDate = null,
+                           PointPackageId = orderDetailResult.PointPackageId
+                       }
+                    },
+                    CreatedDate = orderResult.CreatedDate,
+                    PaymentDate = orderResult.PaymentDate,
+                    
+                },
                 ResultStatus = ResultStatus.Success
             };
         }
@@ -250,7 +263,6 @@ namespace Services.Orders
         public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId,
             OrderRequest request)
         {
-
             var response = new Result<PaginationResponse<OrderResponse>>();
             var listOrder = await _orderRepository.GetOrdersByAccountId(accountId, request);
             if (listOrder.TotalCount == 0)
@@ -268,7 +280,6 @@ namespace Services.Orders
 
         public async Task<Result<string>> CancelOrder(Guid orderId)
         {
-
             var response = new Result<string>();
             var order = await _orderRepository.GetOrderById(orderId);
             if (order == null || order.Status != OrderStatus.AwaitingPayment)
@@ -283,26 +294,25 @@ namespace Services.Orders
             response.Messages = ["Your order is cancelled"];
             response.ResultStatus = ResultStatus.Success;
             return response;
-        
-                if (order.Status != OrderStatus.AwaitingPayment)
-                {
-                    response.Messages = ["You cannot cancel an order that is not awaiting for payment"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
-                }
 
-                order.Status = OrderStatus.Cancelled;
-                await _orderRepository.UpdateOrder(order);
-                response.Messages = ["Your order is cancelled"];
-                response.ResultStatus = ResultStatus.Success;
+            if (order.Status != OrderStatus.AwaitingPayment)
+            {
+                response.Messages = ["You cannot cancel an order that is not awaiting for payment"];
+                response.ResultStatus = ResultStatus.Error;
                 return response;
+            }
+
+            order.Status = OrderStatus.Cancelled;
+            await _orderRepository.UpdateOrder(order);
+            response.Messages = ["Your order is cancelled"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
         }
 
 
         public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId,
             OrderRequest orderRequest)
         {
-
             var response = new Result<PaginationResponse<OrderResponse>>();
             var order = await _orderRepository.GetOrdersByShopId(shopId, orderRequest);
             if (order.TotalCount == 0)
@@ -316,12 +326,10 @@ namespace Services.Orders
             response.Messages = ["Your list contains " + order.TotalCount + " orders"];
             response.ResultStatus = ResultStatus.Success;
             return response;
-
         }
 
         public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId, Guid orderId)
         {
-
             var response = new Result<OrderResponse>();
             var order = await _orderRepository.GetOrderById(orderId);
             if (order == null || order.Status != OrderStatus.OnDelivery)
@@ -346,7 +354,6 @@ namespace Services.Orders
 
             response.ResultStatus = ResultStatus.Success;
             return response;
-
         }
 
         public async Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
@@ -481,8 +488,8 @@ namespace Services.Orders
             else
             {
                 content.To = order.Email;
-                
             }
+
             content.Subject = $"[GIVEAWAY] Invoice from GiveAway {order.OrderCode}";
             content.Body = $@"<h2>Dear customer,<h2>
                          <h3>Thank you for purchase at GiveAway<h3><br>
@@ -496,7 +503,6 @@ namespace Services.Orders
             response.Messages = ["The invoice has been send to customer mail"];
             response.ResultStatus = ResultStatus.Success;
             return response;
-
         }
 
         public async Task UpdateAdminBalance(Order order)

@@ -33,7 +33,8 @@ public class PointPackageController : ControllerBase
     }
 
     [HttpGet()]
-    public async Task<ActionResult<PaginationResponse<PointPackageListResponse>>> GetPointPackages([FromQuery] GetPointPackagesRequest request)
+    public async Task<ActionResult<PaginationResponse<PointPackageListResponse>>> GetPointPackages(
+        [FromQuery] GetPointPackagesRequest request)
     {
         PaginationResponse<PointPackageListResponse> result = await _pointPackageService.GetList(request);
         return Ok(result);
@@ -50,44 +51,36 @@ public class PointPackageController : ControllerBase
     public async Task<IActionResult> Purchase([FromRoute] Guid pointPackageId,
         [FromBody] PurchasePointPackageRequest request)
     {
-        try
+        var pointPackage = await _pointPackageService.GetPointPackageDetail(pointPackageId);
+        if (pointPackage == null)
         {
-            var pointPackage = await _pointPackageService.GetPointPackageDetail(pointPackageId);
-            if (pointPackage == null)
-            {
-                return NotFound("Point package not found");
-            }
-
-            var order = new PointPackageOrder()
-            {
-                MemberId = request.MemberId,
-                TotalPrice = pointPackage.Price,
-                Status = OrderStatus.AwaitingPayment,
-                CreatedDate = DateTime.UtcNow,
-                PaymentMethod = PaymentMethod.QRCode,
-                PointPackageId = pointPackageId
-            };
-
-            var orderResult = await _orderService.CreatePointPackageOrder(order);
-
-            var paymentUrl = _vnPayService.CreatePaymentUrl(
-                orderResult.Data
-                    .OrderId,
-                orderResult.Data
-                    .TotalPrice,
-                $"Purchase point package: {pointPackage.Points} points", "pointpackages");
-
-            _logger.LogInformation(
-                "Point package purchase initiated. OrderCode: {OrderCode}, MemberId: {MemberId}, Package: {Points} points",
-                orderResult.Data.OrderCode, request.MemberId, pointPackage.Points);
-
-            return Ok(new { paymentUrl, orderCode = order.OrderCode });
+            return NotFound("Point package not found");
         }
-        catch (Exception ex)
+
+        var order = new PointPackageOrder()
         {
-            _logger.LogError(ex, "Error initiating point package purchase");
-            return StatusCode(500, "An error occurred while processing your request.");
-        }
+            MemberId = request.MemberId,
+            TotalPrice = pointPackage.Price,
+            Status = OrderStatus.AwaitingPayment,
+            CreatedDate = DateTime.UtcNow,
+            PaymentMethod = PaymentMethod.QRCode,
+            PointPackageId = pointPackageId
+        };
+
+        var orderResult = await _orderService.CreatePointPackageOrder(order);
+
+        var paymentUrl = _vnPayService.CreatePaymentUrl(
+            orderResult.Data
+                .OrderId,
+            orderResult.Data
+                .TotalPrice,
+            $"Purchase point package: {pointPackage.Points} points", "pointpackages");
+
+        _logger.LogInformation(
+            "Point package purchase initiated. OrderCode: {OrderCode}, MemberId: {MemberId}, Package: {Points} points",
+            orderResult.Data.OrderCode, request.MemberId, pointPackage.Points);
+
+        return Ok(new { paymentUrl, orderCode = orderResult.Data.OrderCode });
     }
 
     [HttpGet("payment-return")]
