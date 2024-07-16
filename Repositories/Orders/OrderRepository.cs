@@ -52,22 +52,22 @@ namespace Repositories.Orders
         }
 
         public async Task<OrderResponse> CreateOrderHierarchy(Guid accountId,
-            CreateOrderRequest orderRequest)
+            CartRequest cart)
         {
             var listItem = await _fashionItemDao.GetQueryable().Include(c => c.Shop)
-                .Where(c => orderRequest.listItemId.Contains(c.ItemId)).ToListAsync();
+                .Where(c => cart.listItemId.Contains(c.ItemId)).ToListAsync();
             var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
 
             int totalPrice = 0;
             Order order = new Order();
             order.MemberId = accountId;
             order.Member = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
-            order.PaymentMethod = orderRequest.PaymentMethod;
-            order.Address = orderRequest.Address;
+            order.PaymentMethod = cart.PaymentMethod;
+            order.Address = cart.Address;
             order.PurchaseType = PurchaseType.Online;
-            order.RecipientName = orderRequest.RecipientName;
-            order.Phone = orderRequest.Phone;
-            if (orderRequest.PaymentMethod.Equals(PaymentMethod.COD))
+            order.RecipientName = cart.RecipientName;
+            order.Phone = cart.Phone;
+            if (cart.PaymentMethod.Equals(PaymentMethod.COD))
             {
                 order.Status = OrderStatus.OnDelivery;
             }
@@ -84,7 +84,7 @@ namespace Repositories.Orders
 
             var listOrderDetailResponse = new List<OrderDetailResponse<FashionItemDetailResponse>>();
 
-            foreach (var id in orderRequest.listItemId)
+            foreach (var id in cart.listItemId)
             {
                 var item = await _fashionItemDao.GetQueryable().Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);

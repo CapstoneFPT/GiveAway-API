@@ -86,9 +86,9 @@ namespace WebApi.Controllers
             return await _orderService.GetOrdersByAccountId(accountId, request);
         }
         [HttpPost("{accountId}/orders")]
-        public async Task<ActionResult<Result<OrderResponse>>> CreateOrder([FromRoute] Guid accountId, [FromBody] CreateOrderRequest order)
+        public async Task<ActionResult<Result<OrderResponse>>> CreateOrder([FromRoute] Guid accountId, [FromBody] CartRequest cart)
         {
-            return await _orderService.CreateOrder(accountId, order);
+            return await _orderService.CreateOrder(accountId, cart);
         }
         [HttpGet("{accountId}/consignsales")]
         public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSale([FromRoute] Guid accountId, [FromQuery] ConsignSaleRequest request)

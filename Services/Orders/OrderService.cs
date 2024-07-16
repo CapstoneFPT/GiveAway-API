@@ -57,17 +57,17 @@ namespace Services.Orders
         }
 
         public async Task<Result<OrderResponse>> CreateOrder(Guid accountId,
-            CreateOrderRequest orderRequest)
+            CartRequest cart)
         {
             var response = new Result<OrderResponse>();
-            if (orderRequest.listItemId.Count == 0)
+            if (cart.listItemId.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
                 response.ResultStatus = ResultStatus.Empty;
                 return response;
             }
 
-            var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
+            var checkItemAvailable = await _orderRepository.IsOrderAvailable(cart.listItemId);
             if (checkItemAvailable.Count > 0)
             {
                 var orderResponse = new OrderResponse();
@@ -79,7 +79,7 @@ namespace Services.Orders
                 return response;
             }
 
-            var checkOrderExisted = await _orderRepository.IsOrderExisted(orderRequest.listItemId, accountId);
+            var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.listItemId, accountId);
             if (checkOrderExisted.Count > 0)
             {
                 var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
@@ -91,7 +91,7 @@ namespace Services.Orders
                 return response;
             }
 
-            response.Data = await _orderRepository.CreateOrderHierarchy(accountId, orderRequest);
+            response.Data = await _orderRepository.CreateOrderHierarchy(accountId, cart);
             response.Messages = ["Create Successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;
