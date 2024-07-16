@@ -484,9 +484,9 @@ namespace Services.Orders
                 
             }
             content.Subject = $"[GIVEAWAY] Invoice from GiveAway {order.OrderCode}";
-            content.Body = $@"<h3>Dear customer,<h3>
-                         <h5>Thank you for purchase at GiveAway<h5><br>
-                         <h5>Here is your invoice detail<h5>
+            content.Body = $@"<h2>Dear customer,<h2>
+                         <h3>Thank you for purchase at GiveAway<h3><br>
+                         <h4>Here is your invoice detail<h4>
                          <p>Order Code: {order.OrderCode}<p>
                          <p>Total Price: {order.TotalPrice}<p>
                          <p>Purchase Date: {order.CreatedDate}<p>
