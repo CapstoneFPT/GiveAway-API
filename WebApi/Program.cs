@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using Services.Auctions;
 using Services.Orders;
 using Services.VnPayService;
@@ -36,6 +37,7 @@ builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
 });
+builder.Services.UseHttpClientMetrics();
 builder.Services.AddProblemDetails(options =>
 {
     options.IncludeExceptionDetails =
@@ -179,6 +181,8 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseMetricServer();
+app.UseHttpMetrics();
 
 app.UseProblemDetails();
 app.MapControllers();
