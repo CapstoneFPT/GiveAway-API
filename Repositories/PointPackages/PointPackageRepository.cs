@@ -61,7 +61,7 @@ public class PointPackageRepository : IPointPackageRepository
             query = query.Where(predicate);
         }
         
-        var total = query.Count();
+        var total = await query.CountAsync();
        
         if(page != 0 && pageSize != 0)
         {

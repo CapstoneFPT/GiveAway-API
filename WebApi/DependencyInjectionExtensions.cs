@@ -139,6 +139,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddHostedService<AuctionEndingService>();
         serviceCollection.AddHostedService<AuctionStartingService>();
         serviceCollection.AddHostedService<OrderCancelingService>();
+        serviceCollection.AddHostedService<CompleteRefundableItemsService>();
         return serviceCollection;
     }
 }
