@@ -74,6 +74,8 @@ namespace WebApi.Controllers
             {
                 throw new NotAuthorizedToPayOrderException();
             }
+            
+            //check
 
             var paymentUrl = _vnPayService.CreatePaymentUrl(
                 order.OrderId,
@@ -87,6 +89,7 @@ namespace WebApi.Controllers
         public async Task<IActionResult> PaymentReturn()
         {
             var requestParams = Request.Query;
+            //check
             var response = _vnPayService.ProcessPayment(requestParams);
             var order = await _orderService.GetOrderById(new Guid(response.OrderId));
             if (response.Success)

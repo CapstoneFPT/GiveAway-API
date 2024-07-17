@@ -8,17 +8,10 @@ namespace Dao;
 public class GenericDao<T> where T : class
 {
     private readonly GiveAwayDbContext _dbContext;
-    private readonly IServiceProvider _serviceProvider;
 
-    public GenericDao()
-    {
-        _dbContext = new GiveAwayDbContext();
-    }
-
-    public GenericDao(GiveAwayDbContext dbContext, IServiceProvider serviceProvider)
+    public GenericDao(GiveAwayDbContext dbContext)
     {
         _dbContext = dbContext;
-        _serviceProvider = serviceProvider;
     }
 
     public IQueryable<T> GetQueryable()
@@ -40,7 +33,7 @@ public class GenericDao<T> where T : class
         }
         catch (Exception e)
         {
-            throw new DbCustomException(e.Message,e.InnerException?.Message);
+            throw new DbCustomException(e.Message, e.InnerException?.Message);
         }
 
         return entity;
@@ -51,7 +44,7 @@ public class GenericDao<T> where T : class
         try
         {
             _dbContext.Set<T>().Update(entity);
-            
+
             await _dbContext.SaveChangesAsync();
             return entity;
         }
@@ -65,10 +58,8 @@ public class GenericDao<T> where T : class
     {
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
-            dbContext.Set<T>().UpdateRange(entities);
-            await dbContext.SaveChangesAsync();
+            _dbContext.Set<T>().UpdateRange(entities);
+            await _dbContext.SaveChangesAsync();
             return entities;
         }
         catch (Exception e)
@@ -76,7 +67,7 @@ public class GenericDao<T> where T : class
             throw new DbCustomException(instance: e.Message, e.InnerException?.Message);
         }
     }
-   
+
 
     public async Task<T> DeleteAsync(T entity)
     {
@@ -88,8 +79,7 @@ public class GenericDao<T> where T : class
         }
         catch (Exception e)
         {
-            throw new DbCustomException(instance: e.Message,e.InnerException?.Message);
+            throw new DbCustomException(instance: e.Message, e.InnerException?.Message);
         }
     }
-
 }

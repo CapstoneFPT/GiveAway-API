@@ -37,7 +37,7 @@ builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
 });
-//builder.Services.UseHttpClientMetrics();
+builder.Services.UseHttpClientMetrics();
 builder.Services.AddProblemDetails(options =>
 {
     options.IncludeExceptionDetails =
@@ -57,7 +57,7 @@ builder.Services.AddDbContext<GiveAwayDbContext>(optionsAction: optionsBuilder =
 {
     optionsBuilder.UseNpgsql(builder.Configuration.GetConnectionString("DefaultDB"));
     
-}, ServiceLifetime.Transient);
+});
 builder.Services.AddMemoryCache();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -182,8 +182,8 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-// app.UseMetricServer();
-// app.UseHttpMetrics();
+app.UseMetricServer();
+app.UseHttpMetrics();
 
 app.UseProblemDetails();
 app.MapControllers();

@@ -1,5 +1,7 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
+using Dao;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -37,17 +39,24 @@ public class CompleteRefundableItemsService : BackgroundService
         }
     }
 
-    private  async Task CheckAndChangeToSoldRefundableItems()
+    private async Task CheckAndChangeToSoldRefundableItems()
     {
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var fashionItemService = scope.ServiceProvider.GetRequiredService<IFashionItemService>();
-            
-            List<FashionItem> refundableItems = await fashionItemService.GetRefundableItems();
-            await fashionItemService.ChangeToSoldItems(refundableItems);
+            await using var scope = _serviceProvider.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
+
+            List<FashionItem> refundableItems = await dbContext.FashionItems
+                .Where(x => x.Status == FashionItemStatus.Refundable).ToListAsync();
+
+            foreach (var refundableItem in refundableItems)
+            {
+                refundableItem.Status = FashionItemStatus.Sold;
+                dbContext.FashionItems.Update(refundableItem);
+                await dbContext.SaveChangesAsync();
+            }
         }
-        
+
         catch (Exception e)
         {
             Console.WriteLine(e);

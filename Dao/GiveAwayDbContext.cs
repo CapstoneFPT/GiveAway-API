@@ -32,9 +32,7 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Refund> Refunds { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }
 
-    public GiveAwayDbContext()
-    {
-    }
+
 
     public GiveAwayDbContext(DbContextOptions<GiveAwayDbContext> options) : base(options)
     {
@@ -44,7 +42,7 @@ public class GiveAwayDbContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(GetConnectionString());
-        optionsBuilder.EnableSensitiveDataLogging(true);
+        optionsBuilder.EnableSensitiveDataLogging();
     }
 
     private static string? GetConnectionString()
