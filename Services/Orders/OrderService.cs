@@ -356,6 +356,13 @@ namespace Services.Orders
                 return response;
             }
 
+            if (orderRequest.PaymentMethod.Equals(PaymentMethod.COD) ||
+                orderRequest.PaymentMethod.Equals(PaymentMethod.Point))
+            {
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = ["Not allow COD or Point"];
+                return response;
+            }
             var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
             if (checkItemAvailable.Count > 0)
             {

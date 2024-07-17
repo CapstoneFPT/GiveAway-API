@@ -196,7 +196,7 @@ namespace Services.ConsignSales
             SendEmailRequest content = new SendEmailRequest();
             if (consignSale.MemberId != null)
             {
-                var member = await _accountRepository.GetAccountById(consignSale.MemberId);
+                var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
                 content.To = member.Email;
             }
             else

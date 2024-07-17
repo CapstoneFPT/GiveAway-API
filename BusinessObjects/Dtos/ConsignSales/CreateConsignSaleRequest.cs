@@ -17,7 +17,7 @@ namespace BusinessObjects.Dtos.ConsignSales
     public class CreateConsignSaleByShopRequest
     {
         public ConsignSaleType Type { get; set; }
-        public string? RecipientName { get; set; }
+        public string? Consigner { get; set; }
         public required string Phone {  get; set; }
         public string? Address { get; set; }
         [EmailAddress] public string? Email { get; set; }
