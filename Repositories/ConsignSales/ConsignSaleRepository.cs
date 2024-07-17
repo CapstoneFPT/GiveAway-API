@@ -53,7 +53,7 @@ namespace Repositories.ConsignSales
             };
             await _consignSaleDao.AddAsync(newConsign);
 
-            var listConsignSaleDetail = new List<ConsignSaleDetailResponse2>();
+            
             //tao nhung~ mon do trong consign moi'
             foreach (var item in request.fashionItemForConsigns)
             {
@@ -108,29 +108,13 @@ namespace Repositories.ConsignSales
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
                 await _consignSaleDetailDao.AddAsync(consignDetail);
-                //tra du lieu
-                var result = new ConsignSaleDetailResponse2()
-                {
-                    ConsignSaleDetailId = consignDetail.ConsignSaleDetailId,
-                    ConfirmedPrice = consignDetail.ConfirmedPrice,
-                    DealPrice = consignDetail.DealPrice,
-                    ItemName = item.Name,
-                };
-                listConsignSaleDetail.Add(result);
+                
             }
 
-            var consignResponse = new ConsignSaleResponse()
-            {
-                ConsignSaleId = newConsign.ConsignSaleId,
-                MemberId = newConsign.MemberId,
-                ConsignSaleCode = newConsign.ConsignSaleCode,
-                ConsignDuration = newConsign.ConsignDuration,
-                CreatedDate = newConsign.CreatedDate,
-                ConsignSaleMethod = newConsign.ConsignSaleMethod,
-                Status = newConsign.Status,
-                TotalPrice = newConsign.TotalPrice,
-                ConsignSaleDetailResponse2 = listConsignSaleDetail
-            };
+            var consignResponse = await _consignSaleDao.GetQueryable()
+                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                .Where(c => c.ConsignSaleId == newConsign.ConsignSaleId)
+                .FirstOrDefaultAsync();
             return consignResponse;
         }
 
@@ -285,7 +269,7 @@ namespace Repositories.ConsignSales
             }
             await _consignSaleDao.AddAsync(newConsign);
             //tao nhung~ mon do trong consign moi'
-            var listConsignSaleDetail = new List<ConsignSaleDetailResponse2>();
+            
             foreach (var item in request.fashionItemForConsigns)
             {
                 FashionItem fashionItem = new FashionItem()
@@ -335,40 +319,19 @@ namespace Repositories.ConsignSales
                     ConfirmedPrice = item.ConfirmedPrice,
                     DealPrice = item.DealPrice,
                     FashionItemId = fashionItem.ItemId,
-                    /*FashionItem = fashionItem,*/
+                    
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
                 await _consignSaleDetailDao.AddAsync(consignDetail);
-                //tra du lieu
-                var result = new ConsignSaleDetailResponse2()
-                {
-                    ConsignSaleDetailId = consignDetail.ConsignSaleDetailId,
-                    ConfirmedPrice = consignDetail.ConfirmedPrice,
-                    DealPrice = consignDetail.DealPrice,
-                    ItemName = item.Name,
-                };
-                listConsignSaleDetail.Add(result);
+                
             }
 
-            var consignResponse = new ConsignSaleResponse()
-            {
-                ConsignSaleId = newConsign.ConsignSaleId,
-                MemberId = newConsign.MemberId,
-                CreatedDate = newConsign.CreatedDate,
-                Email = newConsign.Email,
-                Address = newConsign.Address,
-                Phone = newConsign.Phone,
-                ShopId = shopId,
-                Consginer = newConsign.RecipientName,
-                ConsignSaleMethod = newConsign.ConsignSaleMethod,
-                ConsignDuration = newConsign.ConsignDuration,
-                ConsignSaleCode = newConsign.ConsignSaleCode,
-                StartDate = newConsign.StartDate,
-                EndDate = newConsign.EndDate,
-                Status = newConsign.Status,
-                ConsignSaleDetailResponse2 = listConsignSaleDetail
-            };
+            
 
+            var consignResponse = await _consignSaleDao.GetQueryable()
+                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                .Where(c => c.ConsignSaleId == newConsign.ConsignSaleId)
+                .FirstOrDefaultAsync();
             return consignResponse;
         }
 
@@ -389,9 +352,30 @@ namespace Repositories.ConsignSales
                 .Take(request.PageSize);
 
             var items = await query
+                /*.Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)*/
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
                 .OrderByDescending(c => c.CreatedDate)
                 .AsNoTracking().ToListAsync();
+            /*var listConsignResponse = new List<ConsignSaleResponse>();
+            foreach (var consignSale in items)
+            {
+                foreach (var consignSaleDetail in consignSale.ConsignSaleDetails)
+                {
+                    ConsignSaleDetailResponse2 consignSaleDetailResponse = new ConsignSaleDetailResponse2()
+                    {
+                        ConsignSaleDetailId = consignSaleDetail.ConsignSaleDetailId,
+                        ConfirmedPrice = consignSaleDetail.ConfirmedPrice,
+                        DealPrice = consignSaleDetail.DealPrice,
+                        ItemName = consignSaleDetail.FashionItem.Name,
+                    };
+                }
+
+                ConsignSaleResponse consignSaleResponse = new ConsignSaleResponse()
+                {
+                    ConsignSaleId = consignSale.ConsignSaleId,
+                    MemberId = 
+                };
+            }*/
 
             var result = new PaginationResponse<ConsignSaleResponse>
             {
