@@ -45,7 +45,7 @@ public class OrderCancelingService : BackgroundService
             var orderDetailService = scope.ServiceProvider.GetRequiredService<IOrderDetailService>();
 
             var ordersToCancel = await orderService.GetOrdersToCancel();
-            orderService.CancelOrders(ordersToCancel);
+            await orderService.CancelOrders(ordersToCancel);
 
             foreach (var order in ordersToCancel)
             {

@@ -9,7 +9,7 @@ public class AuctionStartingService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<AuctionStartingService> _logger;
-    private const int CheckInterval = 10000;
+    private const int CheckInterval = 1000 * 60 * 5;
     
     public AuctionStartingService(IServiceProvider serviceProvider, ILogger<AuctionStartingService> logger)
     {

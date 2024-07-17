@@ -24,7 +24,7 @@ namespace Services.Orders
         Task UpdateOrder(Order? order);
         Task<List<OrderDetail>> GetOrderDetailByOrderId(Guid orderId);
         Task<List<Order?>> GetOrdersToCancel();
-        void CancelOrders(List<Order?> ordersToCancel);
+        Task CancelOrders(List<Order?> ordersToCancel);
         Task UpdateShopBalance(Order order);
         Task UpdateFashionItemStatus(Guid orderOrderId);
         Task PayWithPoints(Guid orderId, Guid requestMemberId);

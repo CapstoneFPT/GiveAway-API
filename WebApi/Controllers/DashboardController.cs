@@ -19,7 +19,7 @@ public class DashboardController : ControllerBase
         _revenueService = revenueService;
     }
 
-    [HttpGet("shop/{shopId}/revenue")]
+    [HttpGet("shop/{shopId}/offline-revenue")]
     public async Task<ActionResult<ShopRevenueDto>> GetShopRevenue(
         Guid shopId,
         [FromQuery] DateTime startDate,
@@ -45,29 +45,17 @@ public class DashboardController : ControllerBase
         [FromQuery] DateTime startDate,
         [FromQuery] DateTime endDate)
     {
-        try
-        {
-            var revenue = await _revenueService.GetSystemRevenue(startDate, endDate);
-            return Ok(revenue);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new Result<SystemRevenueDto>
-            {
-                ResultStatus = ResultStatus.Error,
-                Messages = new[] { $"Error retrieving system revenue: {ex.Message}" }
-            });
-        }
+        var revenue = await _revenueService.GetSystemRevenue(startDate, endDate);
+        return Ok(revenue);
     }
-    
-    [HttpGet("/monthly-revenue")]
+
+    [HttpGet("/system/monthly-revenue")]
     public async Task<ActionResult<MonthlyRevenueDto>> GetMonthlyRevenue(
-        [FromQuery] int year,
-        [FromQuery] Guid? shopId)
+        [FromQuery] int year)
     {
         try
         {
-            var revenue = await _revenueService.GetMonthlyRevenue(year, shopId);
+            var revenue = await _revenueService.GetSystemMonthlyRevenue(year);
             return Ok(revenue);
         }
         catch (Exception ex)
@@ -79,7 +67,16 @@ public class DashboardController : ControllerBase
             });
         }
     }
-    
+
+    [HttpGet("/shop/{shopId}/monthly-offline-revenue")]
+    public async Task<ActionResult<MonthlyRevenueDto>> GetShopMonthlyRevenue(
+        Guid shopId,
+        [FromQuery] int year)
+    {
+        var revenue = await _revenueService.GetShopMonthlyOfflineRevenue(shopId, year);
+        return Ok(revenue);
+    }
+
     [HttpGet("/monthly-payouts")]
     public async Task<ActionResult<MonthlyPayoutsResponse>> GetMonthlyPayouts(
         [FromQuery] int year,

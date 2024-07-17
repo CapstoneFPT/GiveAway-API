@@ -96,7 +96,7 @@ public class PointPackageController : ControllerBase
                 await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Recharge);
                 var order = await _orderService.GetOrderById(new Guid(response.OrderId));
                 var orderDetails = await _orderService.GetOrderDetailByOrderId(new Guid(response.OrderId));
-                var pointPackageId = orderDetails[0].PointPackageId.Value;
+                var pointPackageId = orderDetails[0].PointPackageId!.Value;
                 var pointPackage = await _pointPackageService.GetPointPackageDetail(pointPackageId);
 
                 if (order == null)

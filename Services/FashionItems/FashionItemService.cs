@@ -167,7 +167,10 @@ namespace Services.FashionItems
 
         public Task ChangeToSoldItems(List<FashionItem> refundableItems)
         {
-            refundableItems.ForEach(x => x.Status = FashionItemStatus.Sold);
+            foreach (var item in refundableItems)
+            {
+                item.Status = FashionItemStatus.Sold;
+            }
             return _fashionitemRepository.UpdateFashionItems(refundableItems);
         }
     }

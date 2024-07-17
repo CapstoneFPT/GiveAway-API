@@ -131,7 +131,7 @@ namespace Services.Auctions
             var auctionFashionItemId = auctionUpdateResult
                 .AuctionFashionItemId;
 
-            var auctionItemUpdateResult = await _auctionItemRepository
+            await _auctionItemRepository
                 .UpdateAuctionItemStatus(auctionFashionItemId, FashionItemStatus.Bidding);
         }
 

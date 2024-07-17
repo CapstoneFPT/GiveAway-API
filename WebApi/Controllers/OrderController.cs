@@ -111,7 +111,7 @@ namespace WebApi.Controllers
 
                     if (transaction.ResultStatus == ResultStatus.Success)
                     {
-                        order.Status = OrderStatus.Completed;
+                        order.Status = OrderStatus.OnDelivery;
                         order.PaymentDate = DateTime.UtcNow;
 
                         await _orderService.UpdateOrder(order);
@@ -158,7 +158,7 @@ namespace WebApi.Controllers
             }
 
             order.PaymentDate = DateTime.UtcNow;
-            order.Status = OrderStatus.Completed;
+            order.Status = OrderStatus.OnDelivery;
 
             await _accountService.DeductPoints(request.MemberId, order.TotalPrice);
             await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);

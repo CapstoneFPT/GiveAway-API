@@ -7,6 +7,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Dao;
+using Microsoft.EntityFrameworkCore;
 
 namespace Repositories.AuctionItems
 {
@@ -19,18 +20,18 @@ namespace Repositories.AuctionItems
             _auctionFashionItemDao = auctionFashionItemDao;
         }
 
-        public Task<AuctionFashionItem> UpdateAuctionItemStatus(Guid auctionFashionItemId,
+        public async Task<AuctionFashionItem> UpdateAuctionItemStatus(Guid auctionFashionItemId,
             FashionItemStatus fashionItemStatus)
         {
-            var auctionItem = _auctionFashionItemDao.GetQueryable()
-                .FirstOrDefault(x => x.ItemId == auctionFashionItemId);
+            var auctionItem = await _auctionFashionItemDao.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ItemId == auctionFashionItemId);
             if (auctionItem is null)
             {
                 throw new AuctionItemNotFoundException();
             }
 
             auctionItem.Status = fashionItemStatus;
-            return _auctionFashionItemDao.UpdateAsync(auctionItem);
+            return await _auctionFashionItemDao.UpdateAsync(auctionItem);
         }
     }
 }

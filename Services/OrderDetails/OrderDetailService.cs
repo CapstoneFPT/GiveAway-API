@@ -22,7 +22,7 @@ namespace Services.OrderDetails
         private readonly IOrderRepository _orderRepository;
         private readonly IFashionItemRepository _fashionItemRepository;
 
-        public OrderDetailService(IOrderDetailRepository orderDetailRepository, 
+        public OrderDetailService(IOrderDetailRepository orderDetailRepository,
             IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository)
         {
             _orderDetailRepository = orderDetailRepository;
@@ -65,7 +65,8 @@ namespace Services.OrderDetails
             return response;
         }
 
-        public async Task<Result<RefundResponse>> RequestRefundToShop(Guid accountId, Guid orderdetailId, CreateRefundRequest refundRequest)
+        public async Task<Result<RefundResponse>> RequestRefundToShop(Guid accountId, Guid orderdetailId,
+            CreateRefundRequest refundRequest)
         {
             var response = new Result<RefundResponse>();
             var orderDetail = await _orderDetailRepository.GetOrderDetailById(orderdetailId);
@@ -75,6 +76,7 @@ namespace Services.OrderDetails
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
+
             var order = await _orderRepository.GetOrderById(orderDetail.OrderId);
             if (order.MemberId != accountId)
             {
@@ -82,6 +84,7 @@ namespace Services.OrderDetails
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
             if (orderDetail.RefundExpirationDate < DateTime.UtcNow)
             {
                 response.Messages = ["Expired to refund this item"];
@@ -89,7 +92,7 @@ namespace Services.OrderDetails
                 return response;
             }
 
-            
+
             var fashionitem = await _fashionItemRepository.GetFashionItemById(orderDetail.FashionItemDetail.ItemId);
             if (!fashionitem.Status.Equals(FashionItemStatus.Refundable))
             {
@@ -110,10 +113,10 @@ namespace Services.OrderDetails
 
             foreach (var orderDetail in orderDetails)
             {
-                var fashionItem =await _fashionItemRepository.GetFashionItemById(orderDetail.FashionItemId!.Value);
+                var fashionItem = await _fashionItemRepository.GetFashionItemById(orderDetail.FashionItemId!.Value);
                 fashionItems.Add(fashionItem);
             }
-            
+
             foreach (var fashionItem in fashionItems)
             {
                 fashionItem.Status = fashionItemStatus;

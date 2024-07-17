@@ -146,10 +146,13 @@ namespace Services.Orders
         }
 
 
-        public void CancelOrders(List<Order> ordersToCancel)
+        public async Task CancelOrders(List<Order?> ordersToCancel)
         {
-            ordersToCancel.ForEach(x => x.Status = OrderStatus.Cancelled);
-            _orderRepository.BulkUpdate(ordersToCancel);
+            foreach (var order in ordersToCancel)
+            {
+                order!.Status = OrderStatus.Cancelled;
+            }
+            await _orderRepository.BulkUpdate(ordersToCancel!);
         }
 
         public async Task UpdateShopBalance(Order order)

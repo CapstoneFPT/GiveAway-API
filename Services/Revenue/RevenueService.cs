@@ -59,7 +59,26 @@ public class RevenueService : IRevenueService
         };
     }
 
-    public async Task<MonthlyRevenueDto> GetMonthlyRevenue(int year, Guid? shopId)
+    public async Task<MonthlyRevenueDto> GetSystemMonthlyRevenue(int year)
+    {
+        var monthlyRevenue = new List<MonthRevenue>();
+        for (int month = 1; month <= 12; month++)
+        {
+            var startDate = new DateTime(year, month, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+                
+            var revenue = await _revenueRepository.GetTotalRevenue(null, startDate, endDate);
+            monthlyRevenue.Add(new MonthRevenue { Month = month, Revenue = revenue });
+        }
+
+        return new MonthlyRevenueDto
+        {
+            Year = year,
+            MonthlyRevenue = monthlyRevenue
+        };
+    }
+
+    public async Task<MonthlyRevenueDto> GetShopMonthlyOfflineRevenue(Guid shopId, int year)
     {
         var monthlyRevenue = new List<MonthRevenue>();
         for (int month = 1; month <= 12; month++)
@@ -70,7 +89,7 @@ public class RevenueService : IRevenueService
             var revenue = await _revenueRepository.GetTotalRevenue(shopId, startDate, endDate);
             monthlyRevenue.Add(new MonthRevenue { Month = month, Revenue = revenue });
         }
-
+        
         return new MonthlyRevenueDto
         {
             Year = year,
