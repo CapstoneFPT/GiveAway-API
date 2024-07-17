@@ -183,7 +183,7 @@ namespace Services.Orders
         public async Task UpdateFashionItemStatus(Guid orderOrderId)
         {
             var orderDetails = await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderOrderId);
-            orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.Unavailable);
+            orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.OnDelivery);
             var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
             await _fashionItemRepository.BulkUpdate(fashionItems!);
         }

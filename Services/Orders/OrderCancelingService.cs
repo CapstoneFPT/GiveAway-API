@@ -1,5 +1,7 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
+using Dao;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -40,18 +42,30 @@ public class OrderCancelingService : BackgroundService
     {
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
-            var orderDetailService = scope.ServiceProvider.GetRequiredService<IOrderDetailService>();
+            await using var scope = _serviceProvider.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
 
-            var ordersToCancel = await orderService.GetOrdersToCancel();
-            await orderService.CancelOrders(ordersToCancel);
+            var ordersToCancel = await dbContext.Orders.Where(x =>
+                x.CreatedDate < DateTime.UtcNow.AddDays(-1)
+                && x.Status == OrderStatus.AwaitingPayment
+                && x.PaymentMethod != PaymentMethod.COD).ToListAsync();
 
             foreach (var order in ordersToCancel)
             {
-               var orderDetails = await orderService.GetOrderDetailByOrderId(order!.OrderId); 
-               await orderDetailService.ChangeFashionItemsStatus(orderDetails, FashionItemStatus.Available);
-            } 
+                order.Status = OrderStatus.Cancelled;
+                dbContext.Orders.Update(order);
+                await dbContext.SaveChangesAsync();
+                
+                var orderDetails = await dbContext.OrderDetails.Include(x=>x.FashionItem)
+                    .Where(x=>x.OrderId == order.OrderId).ToListAsync();
+
+                foreach (var orderDetail in orderDetails)
+                {
+                    orderDetail.FashionItem.Status = FashionItemStatus.Available;
+                    dbContext.OrderDetails.Update(orderDetail);
+                    await dbContext.SaveChangesAsync();
+                }
+            }
         }
         catch (Exception e)
         {
