@@ -20,16 +20,17 @@ namespace BusinessObjects.Dtos.ConsignSales
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public Guid ShopId { get; set; }
-        public Guid MemberId { get; set; }
+        public Guid? MemberId { get; set; }
         public ConsignSaleStatus Status { get; set; }
         public ConsignSaleMethod ConsignSaleMethod { get; set; }
         public int TotalPrice { get; set; }
         public int SoldPrice { get; set; }
         public int MemberReceivedAmount { get; set; }
-        public string? RecipientName { get; set; }
+        public string? Consginer { get; set; }
         public string? Phone { get; set; }
         public string? Address { get; set; }
         [EmailAddress] public string? Email { get; set; }
         public ICollection<ConsignSaleDetailResponse>? ConsignSaleDetails { get; set; } = new List<ConsignSaleDetailResponse>();
+        public List<ConsignSaleDetailResponse2>? ConsignSaleDetailResponse2 { get; set; }
     }
 }

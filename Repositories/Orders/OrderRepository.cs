@@ -82,8 +82,7 @@ namespace Repositories.Orders
             order.OrderCode = GenerateUniqueString();
 
             var result = await _orderDao.AddAsync(order);
-
-            var listOrderDetailResponse = new List<OrderDetailResponse<FashionItemDetailResponse>>();
+            var listOrderDetailResponse = new List<OrderDetailsResponse>();
 
             foreach (var id in cart.listItemId)
             {
@@ -93,28 +92,30 @@ namespace Repositories.Orders
                 orderDetail.OrderId = order.OrderId;
                 orderDetail.UnitPrice = item.SellingPrice;
                 orderDetail.FashionItemId = id;
-                /*orderDetail.FashionItem = item;*/
-                await _orderDetailDao.AddAsync(orderDetail);
-                totalPrice += item.SellingPrice;
 
-                var mapresult = _mapper.Map<OrderDetailResponse<FashionItemDetailResponse>>(orderDetail);
-                listOrderDetailResponse.Add(mapresult);
+                await _orderDetailDao.AddAsync(orderDetail);
+                if (cart.PaymentMethod.Equals(PaymentMethod.COD))
+                {
+                    item.Status = FashionItemStatus.OnDelivery;
+                    await _fashionItemDao.UpdateAsync(item);
+                }
+                var orderDetailResponse = new OrderDetailsResponse()
+                {
+                    OrderDetailId = orderDetail.OrderDetailId,
+                    ItemName = item.Name,
+                    UnitPrice = orderDetail.UnitPrice,
+                };
+                totalPrice += orderDetail.UnitPrice;
+
+
+                listOrderDetailResponse.Add(orderDetailResponse);
             }
 
             order.TotalPrice = totalPrice;
             var resultUpdate = await _orderDao.UpdateAsync(result);
 
 
-            var listShopOrderResponse = new List<ShopOrderResponse>();
-            foreach (var id in shopIds)
-            {
-                var shop = await _shopDao.GetQueryable().FirstOrDefaultAsync(c => c.ShopId == id);
-                var shopOrder = new ShopOrderResponse();
-                shopOrder.ShopId = id;
-                shopOrder.ShopAddress = shop.Address;
-                shopOrder.Items = listOrderDetailResponse.Where(c => c.FashionItemDetail.ShopId == id).ToList();
-                listShopOrderResponse.Add(shopOrder);
-            }
+            
 
             var orderResponse = new OrderResponse()
             {
@@ -131,7 +132,7 @@ namespace Repositories.Orders
                 ContactNumber = resultUpdate.Phone,
                 CustomerName = memberAccount.Fullname,
                 Status = resultUpdate.Status,
-                ShopOrderResponses = listShopOrderResponse,
+                OrderDetailItems = listOrderDetailResponse,
             };
             return orderResponse;
         }
@@ -425,40 +426,36 @@ namespace Repositories.Orders
 
             var orderresult = await CreateOrder(order);
 
-            var listOrderDetailResponse = new List<OrderDetailResponse<FashionItemDetailResponse>>();
+            var listOrderDetailResponse = new List<OrderDetailsResponse>();
 
             foreach (var id in orderRequest.listItemId)
             {
                 var item = await _fashionItemDao.GetQueryable().Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);
-                item.Status = FashionItemStatus.Refundable;
-                item = await _fashionItemDao.UpdateAsync(item);
-                OrderDetail orderDetail = new OrderDetail();
-                orderDetail.OrderId = order.OrderId;
-                orderDetail.UnitPrice = item.SellingPrice;
-                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
-                orderDetail.FashionItemId = id;
-                orderDetail.FashionItem = item;
-                orderDetail = await _orderDetailDao.AddAsync(orderDetail);
-                totalPrice += item.SellingPrice;
 
-                var mapresult = _mapper.Map<OrderDetailResponse<FashionItemDetailResponse>>(orderDetail);
-                listOrderDetailResponse.Add(mapresult);
+                OrderDetail orderDetail = new OrderDetail();
+                orderDetail.OrderId = orderresult.OrderId;
+                orderDetail.UnitPrice = item.SellingPrice;
+
+                orderDetail.FashionItemId = id;
+
+                await _orderDetailDao.AddAsync(orderDetail); 
+                item.Status = FashionItemStatus.OnDelivery; 
+                await _fashionItemDao.UpdateAsync(item);
+
+                var orderDetailResponse = new OrderDetailsResponse()
+                {
+                    OrderDetailId = orderDetail.OrderDetailId,
+                    ItemName = item.Name,
+                    UnitPrice = orderDetail.UnitPrice,
+                };
+
+                
+                listOrderDetailResponse.Add(orderDetailResponse);
             }
 
             orderresult.TotalPrice = totalPrice;
             var orderresultUpdate = await _orderDao.UpdateAsync(orderresult);
-
-
-            var listShopOrderResponse = new List<ShopOrderResponse>();
-
-            var shop = await _shopDao.GetQueryable().FirstOrDefaultAsync(c => c.ShopId == shopId);
-            var shopOrder = new ShopOrderResponse();
-            shopOrder.ShopId = shopId;
-            shopOrder.ShopAddress = shop.Address;
-            shopOrder.Items = listOrderDetailResponse.Where(c => c.FashionItemDetail.ShopId == shopId).ToList();
-            listShopOrderResponse.Add(shopOrder);
-
 
 
             var orderResponse = new OrderResponse()
@@ -475,7 +472,7 @@ namespace Repositories.Orders
                 PurchaseType = orderresultUpdate.PurchaseType,
                 OrderCode = orderresultUpdate.OrderCode,
                 Status = orderresultUpdate.Status,
-                ShopOrderResponses = listShopOrderResponse
+                OrderDetailItems = listOrderDetailResponse
             };
             return orderResponse;
 
