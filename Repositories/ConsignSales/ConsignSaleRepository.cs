@@ -356,26 +356,8 @@ namespace Repositories.ConsignSales
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
                 .OrderByDescending(c => c.CreatedDate)
                 .AsNoTracking().ToListAsync();
-            /*var listConsignResponse = new List<ConsignSaleResponse>();
-            foreach (var consignSale in items)
-            {
-                foreach (var consignSaleDetail in consignSale.ConsignSaleDetails)
-                {
-                    ConsignSaleDetailResponse2 consignSaleDetailResponse = new ConsignSaleDetailResponse2()
-                    {
-                        ConsignSaleDetailId = consignSaleDetail.ConsignSaleDetailId,
-                        ConfirmedPrice = consignSaleDetail.ConfirmedPrice,
-                        DealPrice = consignSaleDetail.DealPrice,
-                        ItemName = consignSaleDetail.FashionItem.Name,
-                    };
-                }
+            
 
-                ConsignSaleResponse consignSaleResponse = new ConsignSaleResponse()
-                {
-                    ConsignSaleId = consignSale.ConsignSaleId,
-                    MemberId = 
-                };
-            }*/
 
             var result = new PaginationResponse<ConsignSaleResponse>
             {
