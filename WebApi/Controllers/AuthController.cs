@@ -99,10 +99,10 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.VerifyEmail(id, token);
         if (result.ResultStatus == ResultStatus.Success)
-            return Redirect("https://localhost:3000/");
+            return Redirect("http://localhost:3000/");
 
         //Todo: Do something when validation failed
-        return Redirect("https://localhost:3000/");
+        return Redirect("http://localhost:3000/");
     }
 
     [HttpGet("resend-verify-email")]
