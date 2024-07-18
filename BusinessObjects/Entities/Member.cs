@@ -2,6 +2,9 @@
 
 public class Member : Account
 {
+    public string? Bank { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public string? BankAccountName { get; set; }
     
     public ICollection<ConsignSale> Requests = new List<ConsignSale>();
     public ICollection<Address> Deliveries = new List<Address>();

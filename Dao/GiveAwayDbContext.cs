@@ -13,6 +13,7 @@ public class GiveAwayDbContext : DbContext
     public DbSet<ConsignSale> ConsignSales { get; set; }
     public DbSet<ConsignSaleDetail> ConsignSaleDetails { get; set; }
     public DbSet<Shop> Shops { get; set; }
+    public DbSet<Withdraw> Withdraws { get; set; }
     public DbSet<FashionItem> FashionItems { get; set; }
     public DbSet<Image> Images { get; set; }
     public DbSet<Auction> Auctions { get; set; }
