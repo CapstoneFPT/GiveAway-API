@@ -132,6 +132,21 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.AuctionDeposits)
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
+
+        modelBuilder.Entity<Member>()
+            .Property(x => x.Bank)
+            .HasColumnType("varchar").HasMaxLength(20)
+            .IsRequired(false);
+
+        modelBuilder.Entity<Member>()
+            .Property(x => x.BankAccountName)
+            .HasColumnType("varchar").HasMaxLength(30)
+            .IsRequired(false);
+        
+        modelBuilder.Entity<Member>()
+            .Property(x => x.BankAccountNumber)
+            .HasColumnType("varchar").HasMaxLength(16)
+            .IsRequired(false);
         
 
         #endregion
