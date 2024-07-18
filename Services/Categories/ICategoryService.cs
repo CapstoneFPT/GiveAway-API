@@ -15,7 +15,7 @@ namespace Services.Categories
         Task<Result<List<Category>>> GetAllParentCategory();
         Task<Result<List<Category>>> GetAllChildrenCategory(Guid categoryId);
         Task<Result<Category>> CreateCategory(Guid parentId, CreateCategoryRequest request);
-        Task<List<CategoryTreeNode>> GetTree(Guid? shopId = null);
+        Task<List<CategoryTreeNode>> GetTree(Guid? shopId = null, Guid? rootCategoryId = null);
         Task<Result<List<Category>>> GetCategoryWithCondition(CategoryRequest categoryRequest);
         Task<CategoryLeavesResponse> GetLeaves(Guid? shopId);
     }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Category;
@@ -47,7 +48,7 @@ namespace Repositories.Categories
             return await _categoryDao.AddAsync(category);
         }
 
-        public async Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null)
+        public async Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null, Guid? rootCategoryId = null)
         {
             IQueryable<Guid> relevantCategoryIds;
 
@@ -74,7 +75,19 @@ namespace Repositories.Categories
                 })
                 .ToListAsync();
 
-            var rootCategories = allCategories.Where(c => c.ParentId == null).ToList();
+            List<CategoryTreeNode> rootCategories;
+
+            if (rootCategoryId.HasValue)
+            {
+                rootCategories = allCategories.Where(c => c.CategoryId == rootCategoryId.Value).ToList();
+                if (!rootCategories.Any())
+                    return new List<CategoryTreeNode>();
+            }
+            else
+            {
+                rootCategories = allCategories.Where(c => c.ParentId == null).ToList();
+            }
+
             foreach (var rootCategory in rootCategories)
             {
                 BuildCategoryTree(rootCategory, allCategories);
