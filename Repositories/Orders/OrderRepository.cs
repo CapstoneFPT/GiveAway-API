@@ -293,7 +293,8 @@ namespace Repositories.Orders
                     PaymentDate = order.PaymentDate,
                     PaymentMethod = order.PaymentMethod,
                     PurchaseType = order.PurchaseType,
-                    Email = order.Email
+                    Email = order.Email,
+                    Status = order.Status
                 };
                 if (order.MemberId != null)
                 {
