@@ -349,7 +349,7 @@ namespace Repositories.Orders
                 }
                 else
                 {   
-                    throw new FashionItemNotFoundException("Can not found fashion item");
+                    throw new FashionItemNotFoundException();
                 }
                 
             }

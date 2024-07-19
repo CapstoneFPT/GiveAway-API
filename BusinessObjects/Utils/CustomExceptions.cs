@@ -65,4 +65,4 @@ public class OrderNotFoundException : Exception
 
 public class WrongPaymentMethodException(string message) : Exception(message);
 public class RefundExpiredException(string message) : Exception(message);
-public class FashionItemNotFoundException(string message) : Exception(message);
+/*public class FashionItemNotFoundException(string message) : Exception(message);*/
