@@ -57,7 +57,6 @@ public class AuctionEndingService : BackgroundService
                     .OrderByDescending(x => x.Amount).FirstOrDefaultAsync();
                 auction.Status = AuctionStatus.Finished;
                 dbContext.Auctions.Update(auction);
-                await dbContext.SaveChangesAsync();
 
                 var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
 
@@ -82,7 +81,6 @@ public class AuctionEndingService : BackgroundService
                 };
                 dbContext.Orders.Add(newOrder);
 
-                await dbContext.SaveChangesAsync();
 
                 var orderDetail = new OrderDetail()
                 {
@@ -92,12 +90,13 @@ public class AuctionEndingService : BackgroundService
                 };
 
                 dbContext.OrderDetails.Add(orderDetail);
-                await dbContext.SaveChangesAsync();
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to end auction {AuctionId}", auction);
             }
         }
+
+        await dbContext.SaveChangesAsync();
     }
 }

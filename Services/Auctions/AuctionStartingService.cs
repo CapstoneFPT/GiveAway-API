@@ -37,8 +37,6 @@ public class AuctionStartingService : BackgroundService
                 {
                     auction.Status = AuctionStatus.OnGoing;
                     auction.AuctionFashionItem.Status = FashionItemStatus.Bidding;
-                    dbContext.Auctions.Update(auction);
-                    await dbContext.SaveChangesAsync(stoppingToken);
 
 
                     _logger.LogInformation("Auction {AuctionId} has been started", auction);
@@ -48,6 +46,10 @@ public class AuctionStartingService : BackgroundService
                     _logger.LogError(e, "Failed to start auction {AuctionId}", auction);
                 }
             }
+
+            dbContext.Auctions.UpdateRange(auctionToStart);
+
+            await dbContext.SaveChangesAsync(stoppingToken);
 
             await Task.Delay(CheckInterval, stoppingToken);
         }

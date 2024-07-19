@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,18 +55,22 @@ public class OrderCancelingService : BackgroundService
             {
                 order.Status = OrderStatus.Cancelled;
                 dbContext.Orders.Update(order);
-                await dbContext.SaveChangesAsync();
-                
-                var orderDetails = await dbContext.OrderDetails.Include(x=>x.FashionItem)
-                    .Where(x=>x.OrderId == order.OrderId).ToListAsync();
+
+                var orderDetails = await dbContext.OrderDetails.Include(x => x.FashionItem)
+                    .Where(x => x.OrderId == order.OrderId).ToListAsync();
 
                 foreach (var orderDetail in orderDetails)
                 {
+                    if (orderDetail.FashionItem == null)
+                    {
+                        throw new FashionItemNotFoundException();
+                    }
                     orderDetail.FashionItem.Status = FashionItemStatus.Available;
                     dbContext.OrderDetails.Update(orderDetail);
-                    await dbContext.SaveChangesAsync();
                 }
             }
+
+            await dbContext.SaveChangesAsync();
         }
         catch (Exception e)
         {
