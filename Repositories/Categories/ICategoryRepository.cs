@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Category;
+using BusinessObjects.Dtos.Commons;
 
 namespace Repositories.Categories
 {
@@ -16,7 +17,7 @@ namespace Repositories.Categories
         Task<Category> AddCategory(Category category);
         Task<Category> UpdateCategory(Category category);
         Task<Category> GetParentCategoryById(Guid? id);
-        Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null);
+        Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null, Guid? rootCategoryId = null);
         Task<List<Category>> GetCategoryWithCondition(CategoryRequest categoryRequest);
         Task<CategoryLeavesResponse> GetLeaves(Guid? shopId);
     }

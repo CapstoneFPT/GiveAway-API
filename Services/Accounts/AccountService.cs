@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Inquiries;
+using BusinessObjects.Dtos.Withdraws;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using LinqKit;
@@ -194,6 +195,11 @@ namespace Services.Accounts
                 Message = result.Message,
                 CreatedDate = result.CreatedDate
             };
+        }
+
+        public Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

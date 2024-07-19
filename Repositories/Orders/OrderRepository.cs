@@ -293,7 +293,8 @@ namespace Repositories.Orders
                     PaymentDate = order.PaymentDate,
                     PaymentMethod = order.PaymentMethod,
                     PurchaseType = order.PurchaseType,
-                    Email = order.Email
+                    Email = order.Email,
+                    Status = order.Status
                 };
                 if (order.MemberId != null)
                 {
@@ -314,7 +315,7 @@ namespace Repositories.Orders
                     .Where(f => f.OrderCode.ToUpper().Equals(f.OrderCode.ToUpper())).ToList();
             }
 
-            var count = listOrderResponse.Count();
+            var count = listOrderResponse.Count;
             listOrderResponse = listOrderResponse.Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize).ToList();
 

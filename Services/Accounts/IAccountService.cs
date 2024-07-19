@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Inquiries;
+using BusinessObjects.Dtos.Withdraws;
 
 namespace Services.Accounts
 {
@@ -20,5 +21,6 @@ namespace Services.Accounts
         Task DeductPoints(Guid requestMemberId, int orderTotalPrice);
         Task<PaginationResponse<AccountResponse>> GetAccounts(GetAccountsRequest request);
         Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request);
+        Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request);
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240718071758_EnsureBankAttributesExistsOnAccount")]
+    partial class EnsureBankAttributesExistsOnAccount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -804,9 +807,6 @@ namespace Dao.Migrations
                     b.Property<string>("VnPayTransactionNumber")
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("WithdrawId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("TransactionId");
 
                     b.HasIndex("ConsignSaleId")
@@ -818,9 +818,6 @@ namespace Dao.Migrations
                         .IsUnique();
 
                     b.HasIndex("RefundId")
-                        .IsUnique();
-
-                    b.HasIndex("WithdrawId")
                         .IsUnique();
 
                     b.ToTable("Transaction", (string)null);
@@ -1194,10 +1191,6 @@ namespace Dao.Migrations
                         .WithOne("Transaction")
                         .HasForeignKey("BusinessObjects.Entities.Transaction", "RefundId");
 
-                    b.HasOne("BusinessObjects.Entities.Withdraw", "Withdraw")
-                        .WithOne("Transaction")
-                        .HasForeignKey("BusinessObjects.Entities.Transaction", "WithdrawId");
-
                     b.Navigation("ConsignSale");
 
                     b.Navigation("Member");
@@ -1205,8 +1198,6 @@ namespace Dao.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("Refund");
-
-                    b.Navigation("Withdraw");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Withdraw", b =>
@@ -1278,12 +1269,6 @@ namespace Dao.Migrations
             modelBuilder.Entity("BusinessObjects.Entities.Transaction", b =>
                 {
                     b.Navigation("AuctionDeposit");
-                });
-
-            modelBuilder.Entity("BusinessObjects.Entities.Withdraw", b =>
-                {
-                    b.Navigation("Transaction")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Member", b =>

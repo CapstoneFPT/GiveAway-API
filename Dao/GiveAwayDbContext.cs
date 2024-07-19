@@ -13,6 +13,7 @@ public class GiveAwayDbContext : DbContext
     public DbSet<ConsignSale> ConsignSales { get; set; }
     public DbSet<ConsignSaleDetail> ConsignSaleDetails { get; set; }
     public DbSet<Shop> Shops { get; set; }
+    public DbSet<Withdraw> Withdraws { get; set; }
     public DbSet<FashionItem> FashionItems { get; set; }
     public DbSet<Image> Images { get; set; }
     public DbSet<Auction> Auctions { get; set; }
@@ -31,7 +32,6 @@ public class GiveAwayDbContext : DbContext
     public DbSet<AuctionDeposit> AuctionDeposits { get; set; }
     public DbSet<Refund> Refunds { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }
-
 
 
     public GiveAwayDbContext(DbContextOptions<GiveAwayDbContext> options) : base(options)
@@ -53,7 +53,7 @@ public class GiveAwayDbContext : DbContext
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        return configuration.GetConnectionString("DefaultDB");
+        return configuration.GetConnectionString("DeployDB");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -107,31 +107,52 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
-        #region Member
+        #region Withdraw
 
-      
+        modelBuilder.Entity<Withdraw>()
+            .HasOne(x => x.Transaction)
+            .WithOne(x => x.Withdraw)
+            .HasForeignKey<Transaction>(x => x.WithdrawId);
+
+        #endregion
+
+        #region Member
 
         modelBuilder.Entity<Member>()
             .HasMany(x => x.Bids)
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
-        
+
         modelBuilder.Entity<Member>()
             .HasMany(x => x.Feedbacks)
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
-        
+
         modelBuilder.Entity<Member>()
             .HasMany(x => x.Transactions)
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
-        
-        
+
+
         modelBuilder.Entity<Member>()
             .HasMany(x => x.AuctionDeposits)
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
-        
+
+        modelBuilder.Entity<Member>()
+            .Property(x => x.Bank)
+            .HasColumnType("varchar").HasMaxLength(20)
+            .IsRequired(false);
+
+        modelBuilder.Entity<Member>()
+            .Property(x => x.BankAccountName)
+            .HasColumnType("varchar").HasMaxLength(30)
+            .IsRequired(false);
+
+        modelBuilder.Entity<Member>()
+            .Property(x => x.BankAccountNumber)
+            .HasColumnType("varchar").HasMaxLength(16)
+            .IsRequired(false);
 
         #endregion
 
@@ -277,7 +298,7 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.OrderDetails)
             .WithOne(x => x.Order)
             .HasForeignKey(x => x.OrderId);
-        
+
         modelBuilder.Entity<Order>().Property(e => e.PurchaseType)
             .HasConversion(prop => prop.ToString(), s => (PurchaseType)Enum.Parse(typeof(PurchaseType), s))
             .HasColumnType("varchar").HasMaxLength(20);
@@ -299,6 +320,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(x => x.Phone).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Order>().Property(x => x.Email).HasColumnType("varchar").HasMaxLength(50)
             .IsRequired(false);
+
         #endregion
 
         #region OrderDetail
@@ -344,6 +366,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<ConsignSale>().Property(e => e.ConsignSaleMethod)
             .HasConversion(prop => prop.ToString(), s => (ConsignSaleMethod)Enum.Parse(typeof(ConsignSaleMethod), s))
             .HasColumnType("varchar").HasMaxLength(20);
+
         #endregion
 
         #region ConsignedSaleDetail
@@ -387,7 +410,6 @@ public class GiveAwayDbContext : DbContext
         #endregion
 
         #region Shop
-
 
         #endregion
 

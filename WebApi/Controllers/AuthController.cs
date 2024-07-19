@@ -95,9 +95,14 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("confirm-email")]
-    public async Task<Result<string>> VerifyEmail(Guid id, string token)
+    public async Task<IActionResult> VerifyEmail(Guid id, string token)
     {
-        return await _authService.VerifyEmail(id, token);
+        var result = await _authService.VerifyEmail(id, token);
+        if (result.ResultStatus == ResultStatus.Success)
+            return Redirect("http://localhost:3000/");
+
+        //Todo: Do something when validation failed
+        return Redirect("http://localhost:3000/");
     }
 
     [HttpGet("resend-verify-email")]

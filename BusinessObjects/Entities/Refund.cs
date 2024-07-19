@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Net.Mime;
 using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Entities;
@@ -15,5 +16,7 @@ public class Refund
     
     public RefundStatus RefundStatus { get; set; }
     public Transaction Transaction { get; set; }
+    public ICollection<Image> Images { get; set; } = new List<Image>();
+
 }
 

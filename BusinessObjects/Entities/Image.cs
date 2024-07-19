@@ -9,4 +9,6 @@ public class Image
     public string Url { get; set; }
     public FashionItem FashionItem { get; set; }
     public Guid FashionItemId { get; set; }
+    public Refund Refund { get; set; }
+    public Guid? RefundId { get; set; }
 }
