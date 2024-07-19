@@ -1,4 +1,6 @@
-﻿namespace BusinessObjects.Entities;
+﻿using BusinessObjects.Dtos.Commons;
+
+namespace BusinessObjects.Entities;
 
 public class Withdraw
 {
@@ -7,5 +9,7 @@ public class Withdraw
     public Guid MemberId { get; set; }
     public Member Member { get; set; }
     public Transaction Transaction { get; set; }
+    public WithdrawStatus Status { get; set; }
     public DateTime CreatedDate { get; set; }
 }
+

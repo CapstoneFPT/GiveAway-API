@@ -18,6 +18,7 @@ using BusinessObjects.Utils;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Inquiries;
+using Repositories.Withdraws;
 
 namespace Services.Accounts
 {
@@ -25,13 +26,15 @@ namespace Services.Accounts
     {
         private readonly IAccountRepository _account;
         private readonly IInquiryRepository _inquiryRepository;
+        private readonly IWithdrawRepository _withdrawRepository;
         private readonly IMapper _mapper;
 
-        public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository)
+        public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,IWithdrawRepository withdrawRepository)
         {
             _account = repository;
             _mapper = mapper;
             _inquiryRepository = inquiryRepository;
+            _withdrawRepository = withdrawRepository;
         }
 
         public async Task<Result<AccountResponse>> BanAccountById(Guid id)
@@ -197,9 +200,36 @@ namespace Services.Accounts
             };
         }
 
-        public Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request)
+        public async Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request)
         {
-            throw new System.NotImplementedException();
+            var account = await _account.GetAccountById(accountId);
+
+            if (account == null)
+            {
+                throw new AccountNotFoundException();
+            }
+
+            if (account.Balance < request.Amount)
+            {
+                throw new InsufficientBalanceException();
+            }
+            
+            var newWithdraw = new Withdraw()
+            {
+               Amount = request.Amount,
+               MemberId = accountId,
+               CreatedDate = DateTime.UtcNow,
+            };
+
+            var result = await _withdrawRepository.CreateWithdraw(newWithdraw);
+            
+            return new CreateWithdrawResponse()
+            {
+                WithdrawId = result.WithdrawId,
+                Amount = result.Amount,
+                MemberId = result.MemberId,
+                CreatedDate = result.CreatedDate
+            };
         }
     }
 }

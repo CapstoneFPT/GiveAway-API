@@ -53,7 +53,7 @@ public class GiveAwayDbContext : DbContext
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        return configuration.GetConnectionString("DefaultDB");
+        return configuration.GetConnectionString("DeployDB");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -113,6 +113,11 @@ public class GiveAwayDbContext : DbContext
             .HasOne(x => x.Transaction)
             .WithOne(x => x.Withdraw)
             .HasForeignKey<Transaction>(x => x.WithdrawId);
+        
+        modelBuilder.Entity<Withdraw>()
+            .Property(x=>x.Status)
+            .HasConversion(prop => prop.ToString(), s => (WithdrawStatus)Enum.Parse(typeof(WithdrawStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
 
         #endregion
 

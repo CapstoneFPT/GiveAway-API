@@ -83,12 +83,14 @@ public enum OrderStatus
     Completed,
     Cancelled
 }
+
 public enum RefundStatus
 {
     Pending,
     Approved,
     Rejected
 }
+
 public enum PointPackageStatus
 {
     Active,
@@ -112,11 +114,20 @@ public enum TransactionType
     Refund,
     Recharge,
 }
+
+public enum WithdrawStatus
+{
+    Pending,
+    Approved,
+    Rejected
+}
+
 public enum PurchaseType
 {
     Online,
     Offline
 }
+
 public enum ConsignSaleType
 {
     ConsignedForSale,
@@ -129,6 +140,7 @@ public enum ConsignSaleMethod
     Online,
     Offline
 }
+
 public enum AddressType
 {
     Home,
@@ -149,6 +161,7 @@ public enum PaymentMethod
     QRCode,
     Cash
 }
+
 public enum SizeType
 {
     XS,

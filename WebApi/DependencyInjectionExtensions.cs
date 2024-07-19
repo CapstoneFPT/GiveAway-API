@@ -22,6 +22,7 @@ using Repositories.Schedules;
 using Repositories.Shops;
 using Repositories.Timeslots;
 using Repositories.Transactions;
+using Repositories.Withdraws;
 using Services;
 using Services.Accounts;
 using Services.AuctionDeposits;
@@ -106,6 +107,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<ITransactionRepository, TransactionRepository>();
         serviceCollection.AddScoped<IRevenueRepository, RevenueRepository>();
         serviceCollection.AddScoped<IRefundRepository, RefundRepository>();
+        serviceCollection.AddScoped<IWithdrawRepository, WithdrawRepository>();
         return serviceCollection;
     }
     
@@ -131,6 +133,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<Timeslot>>();
         serviceCollection.AddScoped<GenericDao<Transaction>>();
         serviceCollection.AddScoped<GenericDao<Refund>>();
+        serviceCollection.AddScoped<GenericDao<Withdraw>>();
         return serviceCollection;
     }
 
