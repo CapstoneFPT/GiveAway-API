@@ -86,19 +86,21 @@ namespace Repositories.OrderDetails
                 .Where(c => c.OrderDetailId == id)
                 .Select(x => new OrderDetailResponse<FashionItem>
                 {
+                    OrderDetailId = id,
                     FashionItemDetail = x.FashionItem,
                     OrderId = x.OrderId,
                     UnitPrice = x.UnitPrice,
+                    RefundExpirationDate = x.RefundExpirationDate,
                 }).FirstOrDefaultAsync();
             return query;
         }
 
-        public async Task<RefundResponse> CreateRefundToShop(Guid accountId, Guid orderdetailId,
-            CreateRefundRequest refundRequest)
+        public async Task<RefundResponse> CreateRefundToShop(Guid accountId,
+            List<CreateRefundRequest> refundRequest)
         {
-            var orderDetail = await _orderDetailDao.GetQueryable()
+            /*var orderDetail = await _orderDetailDao.GetQueryable()
                 .Include(c => c.FashionItem)
-                .FirstOrDefaultAsync(c => c.OrderDetailId == orderdetailId);
+                .FirstOrDefaultAsync(c => c.OrderDetailId == refundRequest.Contains(c.OrderDetailId));
             var result = new OrderDetailResponse<FashionItemDetailResponse>()
             {
                 OrderId = orderDetail.OrderId,
@@ -126,8 +128,8 @@ namespace Repositories.OrderDetails
                     Member = c.OrderDetail.Order.Member,
                     Description = c.Description,
                     FashionItem = result
-                }).FirstOrDefaultAsync();
-            return refundResponse;
+                }).FirstOrDefaultAsync();*/
+            throw new NotImplementedException();
         }
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)>

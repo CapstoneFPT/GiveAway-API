@@ -102,12 +102,12 @@ namespace WebApi.Controllers
             return await _consignSaleService.CreateConsignSale(accountId, request);
         }
 
-        [HttpPost("{accountId}/orderdetails/{orderdetailId}/refunds")]
+        [HttpPost("{accountId}/refunds")]
         public async Task<ActionResult<Result<RefundResponse>>> RequestRefundItemToShop([FromRoute] Guid accountId,
-            [FromRoute] Guid orderdetailId,
-            [FromBody] CreateRefundRequest refundRequest)
+
+            [FromBody] List<CreateRefundRequest> refundRequest)
         {
-            return await _orderDetailService.RequestRefundToShop(accountId, orderdetailId, refundRequest);
+            return await _orderDetailService.RequestRefundToShop(accountId, refundRequest);
         }
 
         [HttpPost("{accountId}/inquiries")]

@@ -65,11 +65,11 @@ namespace Services.OrderDetails
             return response;
         }
 
-        public async Task<Result<RefundResponse>> RequestRefundToShop(Guid accountId, Guid orderdetailId,
-            CreateRefundRequest refundRequest)
+        public async Task<Result<RefundResponse>> RequestRefundToShop(Guid accountId,
+            List<CreateRefundRequest> refundRequest)
         {
             var response = new Result<RefundResponse>();
-            var orderDetail = await _orderDetailRepository.GetOrderDetailById(orderdetailId);
+            var orderDetail = await _orderDetailRepository.GetOrderDetailById(accountId);
             if (orderDetail is null)
             {
                 response.Messages = ["Can not found the order to refund"];
@@ -101,7 +101,7 @@ namespace Services.OrderDetails
                 return response;
             }
 
-            response.Data = await _orderDetailRepository.CreateRefundToShop(accountId, orderdetailId, refundRequest);
+            response.Data = await _orderDetailRepository.CreateRefundToShop(accountId,refundRequest);
             response.Messages = new[] { "Send refund request successfully" };
             response.ResultStatus = ResultStatus.Success;
             return response;

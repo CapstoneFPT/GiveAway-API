@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace BusinessObjects.Dtos.Refunds
 {
-    public class CreateRefundRequest
-    {
+    public class CreateRefundRequest{
+        public Guid OrderDetailIds { get; set; }
         public required string Description { get; set; }
+        public required string[] Images { get; set; }
     }
 }
