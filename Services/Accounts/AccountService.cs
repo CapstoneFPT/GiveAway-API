@@ -197,9 +197,9 @@ namespace Services.Accounts
             };
         }
 
-        public Task<object?> RequestWithdraw(Guid accountId, CreateWithdrawRequest request)
+        public Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request)
         {
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
     }
 }

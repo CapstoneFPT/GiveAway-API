@@ -21,6 +21,6 @@ namespace Services.Accounts
         Task DeductPoints(Guid requestMemberId, int orderTotalPrice);
         Task<PaginationResponse<AccountResponse>> GetAccounts(GetAccountsRequest request);
         Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request);
-        Task<object?> RequestWithdraw(Guid accountId, CreateWithdrawRequest request);
+        Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request);
     }
 }

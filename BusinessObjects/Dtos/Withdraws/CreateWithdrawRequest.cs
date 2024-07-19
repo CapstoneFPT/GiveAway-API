@@ -2,4 +2,5 @@
 
 public class CreateWithdrawRequest
 {
+    public int Amount { get; set; }
 }

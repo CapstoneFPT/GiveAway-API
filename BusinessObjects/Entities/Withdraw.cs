@@ -6,5 +6,6 @@ public class Withdraw
     public int Amount { get; set; }
     public Guid MemberId { get; set; }
     public Member Member { get; set; }
+    public Transaction Transaction { get; set; }
     public DateTime CreatedDate { get; set; }
 }
