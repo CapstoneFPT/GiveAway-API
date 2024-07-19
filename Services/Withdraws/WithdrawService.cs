@@ -14,7 +14,8 @@ public class WithdrawService : IWithdrawService
     private readonly ITransactionRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
 
-    public WithdrawService(IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository, IAccountRepository accountRepository)
+    public WithdrawService(IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository,
+        IAccountRepository accountRepository)
     {
         _withdrawRepository = withdrawRepository;
         _transactionRepository = transactionRepository;
@@ -36,10 +37,6 @@ public class WithdrawService : IWithdrawService
             throw new AnomalousWithdrawStatusException("Withdraw status is not Pending");
         }
 
-        withdraw.Status = WithdrawStatus.Approved;
-
-        await _withdrawRepository.UpdateWithdraw(withdraw);
-
         var member = await _accountRepository.GetMemberById(withdraw.MemberId);
 
         if (member == null)
@@ -47,10 +44,20 @@ public class WithdrawService : IWithdrawService
             throw new AccountNotFoundException();
         }
 
+        if (member.Balance < withdraw.Amount)
+        {
+           throw new InsufficientBalanceException(); 
+        }
+
         member.Balance -= withdraw.Amount;
-        
+
         await _accountRepository.UpdateMemberAccount(member);
-        
+
+        withdraw.Status = WithdrawStatus.Approved;
+
+        await _withdrawRepository.UpdateWithdraw(withdraw);
+
+
         var transaction = new Transaction
         {
             Amount = withdraw.Amount,
@@ -58,9 +65,9 @@ public class WithdrawService : IWithdrawService
             MemberId = withdraw.MemberId,
             Type = TransactionType.Withdraw,
         };
-        
+
         await _transactionRepository.CreateTransaction(transaction);
-        
+
 
         return new ApproveWithdrawResponse()
         {

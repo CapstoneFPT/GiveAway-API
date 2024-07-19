@@ -49,6 +49,7 @@ using Services.Shops;
 using Services.Timeslots;
 using Services.Transactions;
 using Services.VnPayService;
+using Services.Withdraws;
 using Member = AutoMapper.Execution.Member;
 
 namespace WebApi;
@@ -82,6 +83,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IVnPayService, VnPayService>();
         serviceCollection.AddScoped<IRevenueService, RevenueService>();
         serviceCollection.AddScoped<IRefundService, RefundService>();
+        serviceCollection.AddScoped<IWithdrawService, WithdrawService>();
         serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }

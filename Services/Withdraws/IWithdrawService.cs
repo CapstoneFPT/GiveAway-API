@@ -2,4 +2,5 @@
 
 public interface IWithdrawService
 {
+    Task<ApproveWithdrawResponse> ApproveWithdraw(Guid withdrawId);
 }
