@@ -3,4 +3,4 @@
 scrape_configs:
   - job_name: 'WebApi-read-prometheus'
     static_configs:
-      - targets: ['WebApi:8080']
+      - targets: ['localhost:8080']
