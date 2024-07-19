@@ -17,7 +17,7 @@ namespace Repositories.OrderDetails
         Task<List<OrderDetail>> GetOrderDetails(Expression<Func<OrderDetail, bool>> predicate);
         Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id);
         Task<OrderDetail> CreateOrderDetail(OrderDetail orderDetail);
-        Task<RefundResponse> CreateRefundToShop(Guid accountId, List<CreateRefundRequest> refundRequest);
+        Task<List<RefundResponse>> CreateRefundToShop( List<CreateRefundRequest> refundRequest);
       
 
         Task<(List<T> Items, int Page, int PageSize, int TotalCount)>

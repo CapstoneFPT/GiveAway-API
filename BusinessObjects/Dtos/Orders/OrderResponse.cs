@@ -31,7 +31,7 @@ namespace BusinessObjects.Dtos.Orders
         public OrderStatus Status { get; set; }
         public List<ShopOrderResponse>? ShopOrderResponses { get; set; }
         public List<Guid?>? ListItemNotAvailable { get; set; }
-        public List<OrderDetailResponse<FashionItem>>? OrderDetails { get; set;}
+        /*public List<OrderDetailResponse<FashionItem>>? OrderDetails { get; set;}*/
 
         public List<OrderDetailsResponse>? OrderDetailItems { get; set; }
     }

@@ -75,7 +75,7 @@ namespace Services.Orders
                 response.Data = orderResponse;
                 response.ResultStatus = ResultStatus.Error;
                 response.Messages =
-                    ["There are " + checkItemAvailable.Count + " unvailable items. Please check your order again"];
+                    ["There are " + checkItemAvailable.Count + " unavailable items. Please check your order again"];
                 return response;
             }
 
@@ -287,9 +287,7 @@ namespace Services.Orders
             var order = await _orderRepository.GetOrderById(orderId);
             if (order == null || order.Status != OrderStatus.AwaitingPayment)
             {
-                response.Messages = ["Cound not find your order"];
-                response.ResultStatus = ResultStatus.NotFound;
-                return response;
+                throw new OrderNotFoundException();
             }
 
             order.Status = OrderStatus.Cancelled;
@@ -307,8 +305,8 @@ namespace Services.Orders
             var order = await _orderRepository.GetOrdersByShopId(shopId, orderRequest);
             if (order.TotalCount == 0)
             {
-                response.Messages = ["Could not find your order"];
-                response.ResultStatus = ResultStatus.NotFound;
+                response.Messages = ["Your order list is empty"];
+                response.ResultStatus = ResultStatus.Empty;
                 return response;
             }
 
@@ -318,18 +316,16 @@ namespace Services.Orders
             return response;
         }
 
-        public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId, Guid orderId)
+        public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId)
         {
             var response = new Result<OrderResponse>();
             var order = await _orderRepository.GetOrderById(orderId);
             if (order == null || order.Status != OrderStatus.OnDelivery)
             {
-                response.Messages = ["Cound not find your order"];
-                response.ResultStatus = ResultStatus.NotFound;
-                return response;
+                throw new OrderNotFoundException();
             }
 
-            var orderResponse = await _orderRepository.ConfirmOrderDelivered(shopId, orderId);
+            var orderResponse = await _orderRepository.ConfirmOrderDelivered(orderId);
             response.Data = orderResponse;
             if (orderResponse.Status.Equals(OrderStatus.Completed))
             {
@@ -359,9 +355,7 @@ namespace Services.Orders
             if (orderRequest.PaymentMethod.Equals(PaymentMethod.COD) ||
                 orderRequest.PaymentMethod.Equals(PaymentMethod.Point))
             {
-                response.ResultStatus = ResultStatus.Error;
-                response.Messages = ["Not allow COD or Point"];
-                return response;
+                throw new WrongPaymentMethodException("Not allow COD or Point");
             }
             var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
             if (checkItemAvailable.Count > 0)
