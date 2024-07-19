@@ -122,8 +122,7 @@ namespace WebApi.Controllers
                         await _orderService.UpdateAdminBalance(order);
                         await _orderService.SendEmailOrder(order);
 
-                        return Ok(new
-                            { success = true, message = "Payment success", orderCode = response.OrderId });
+                        return Redirect("http://localhost:3000");
                     }
                 }
                 catch (Exception e)

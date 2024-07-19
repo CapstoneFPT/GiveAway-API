@@ -108,8 +108,8 @@ public class PointPackageController : ControllerBase
                 if (order.Status != OrderStatus.AwaitingPayment)
                 {
                     _logger.LogWarning("Order already processed: {OrderId}", response.OrderId);
-                    return Ok(new
-                        { success = true, message = "Order already processed", orderCode = response.OrderId });
+                 
+                    return Redirect("http://localhost:3000");
                 }
 
                 await _pointPackageService.AddPointsToBalance(order.MemberId!.Value, amount: pointPackage!.Points);
@@ -122,11 +122,7 @@ public class PointPackageController : ControllerBase
                     "Point package purchase successful. OrderCode: {OrderId}, Points: {TotalPrice}", response.OrderId,
                     order.TotalPrice);
 
-                return Ok(new
-                {
-                    success = true, message = "Payment successful", orderCode = response.OrderId,
-                    TotalPrice = order.TotalPrice
-                });
+                return Redirect("http://localhost:3000");
             }
             catch (Exception ex)
             {
