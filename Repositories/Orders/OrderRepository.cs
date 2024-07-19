@@ -16,6 +16,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Utils;
 using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 using Member = BusinessObjects.Entities.Member;
 
@@ -232,7 +233,8 @@ namespace Repositories.Orders
         }
         public async Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberId)
         {
-            var listorderdetail = await _orderDetailDao.GetQueryable().Where(c => c.Order.MemberId == memberId)
+            var listorderdetail = await _orderDetailDao.GetQueryable()
+                .Where(c => c.Order.MemberId == memberId && c.Order.Status.Equals(OrderStatus.AwaitingPayment))
                 .Where(c => listItemId.Contains(c.FashionItemId)).ToListAsync();
             return listorderdetail;
         }
@@ -330,59 +332,36 @@ namespace Repositories.Orders
             return result;
         }
 
-        public async Task<OrderResponse> ConfirmOrderDelivered(Guid shopId, Guid orderId)
+        public async Task<OrderResponse> ConfirmOrderDelivered(Guid orderId)
         {
-            var orderResponse = new OrderResponse();
-            var order = await _orderDao.GetQueryable().FirstOrDefaultAsync(c => c.OrderId == orderId);
-            var listorderdetailEachShop = await _orderDetailDao.GetQueryable().Include(c => c.FashionItem)
-                .Where(c => c.OrderId == orderId && c.FashionItem.ShopId == shopId)
-                .AsNoTracking().ToListAsync();
-            var listItemEachshop = listorderdetailEachShop.Select(c => c.FashionItem).ToList();
-
-
-            foreach (var item in listItemEachshop)
-            {
-                item.Status = FashionItemStatus.Refundable;
-                await _fashionItemDao.UpdateAsync(item);
-            }
-
+            
             var listorderdetail = await _orderDetailDao.GetQueryable().Include(c => c.FashionItem)
                 .Where(c => c.OrderId == orderId)
                 .AsNoTracking().ToListAsync();
-
-
-            var listOrderdetailResponse = new List<OrderDetailResponse<FashionItem>>();
-            foreach (var item in listItemEachshop)
+            
+            foreach (var orderDetail in listorderdetail)
             {
-                var orderDetail = await _orderDetailDao.GetQueryable()
-                    .FirstOrDefaultAsync(c => c.FashionItemId.Equals(item.ItemId));
-                if (orderDetail != null)
+                var fashionItem = orderDetail.FashionItem;
+                if (fashionItem != null && fashionItem.Status.Equals(FashionItemStatus.OnDelivery))
                 {
-                    orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
-                    await _orderDetailDao.UpdateAsync(orderDetail);
-
-                    var newOrderDetail = new OrderDetailResponse<FashionItem>();
-                    newOrderDetail.OrderId = orderDetail.OrderId;
-                    newOrderDetail.UnitPrice = orderDetail.UnitPrice;
-                    newOrderDetail.RefundExpirationDate = orderDetail.RefundExpirationDate;
-                    newOrderDetail.FashionItemDetail = item;
-
-                    listOrderdetailResponse.Add(newOrderDetail);
+                    fashionItem.Status = FashionItemStatus.Refundable;
+                    orderDetail.RefundExpirationDate = DateTime.UtcNow;
                 }
                 else
-                    throw new Exception();
+                {   
+                    throw new FashionItemNotFoundException("Can not found fashion item");
+                }
+                
             }
-
-            var listItem = listorderdetail.Select(c => c.FashionItem).ToList();
-            if (!listItem.Any(c => c.Status.Equals(FashionItemStatus.OnDelivery)))
-            {
-                order.Status = OrderStatus.Completed;
-                await _orderDao.UpdateAsync(order);
-            }
-
-            orderResponse = await _orderDao.GetQueryable().Where(c => c.OrderId == orderId)
-                .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
-            orderResponse.OrderDetails = listOrderdetailResponse;
+            await _orderDetailDao.UpdateRange(listorderdetail);
+            var order = await _orderDao.GetQueryable().Where(c => c.OrderId == orderId)
+                .FirstOrDefaultAsync();
+            order.Status = OrderStatus.Completed;
+            await _orderDao.UpdateAsync(order);
+            var orderResponse = await _orderDao.GetQueryable().Include(c => c.OrderDetails)
+                .Where(c => c.OrderId == orderId)
+                .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
             return orderResponse;
         }
 

@@ -23,14 +23,15 @@ namespace Repositories.OrderDetails
         private readonly GenericDao<OrderDetail> _orderDetailDao;
         private readonly GenericDao<FashionItem> _fashionitemDao;
         private readonly GenericDao<Refund> _refundDao;
+        private readonly GenericDao<Image> _imageDao;
         private readonly IMapper _mapper;
 
-        public OrderDetailRepository(GenericDao<OrderDetail> orderDetailDao,
-            GenericDao<FashionItem> fashionitemDao, GenericDao<Refund> refundDao, IMapper mapper)
+        public OrderDetailRepository(GenericDao<OrderDetail> orderDetailDao, GenericDao<FashionItem> fashionitemDao, GenericDao<Refund> refundDao, GenericDao<Image> imageDao, IMapper mapper)
         {
             _orderDetailDao = orderDetailDao;
             _fashionitemDao = fashionitemDao;
             _refundDao = refundDao;
+            _imageDao = imageDao;
             _mapper = mapper;
         }
 
@@ -86,47 +87,54 @@ namespace Repositories.OrderDetails
                 .Where(c => c.OrderDetailId == id)
                 .Select(x => new OrderDetailResponse<FashionItem>
                 {
+                    OrderDetailId = id,
                     FashionItemDetail = x.FashionItem,
                     OrderId = x.OrderId,
                     UnitPrice = x.UnitPrice,
+                    RefundExpirationDate = x.RefundExpirationDate,
                 }).FirstOrDefaultAsync();
             return query;
         }
 
-        public async Task<RefundResponse> CreateRefundToShop(Guid accountId, Guid orderdetailId,
-            CreateRefundRequest refundRequest)
+        public async Task<List<RefundResponse>> CreateRefundToShop(
+            List<CreateRefundRequest> refundRequest)
         {
-            var orderDetail = await _orderDetailDao.GetQueryable()
-                .Include(c => c.FashionItem)
-                .FirstOrDefaultAsync(c => c.OrderDetailId == orderdetailId);
-            var result = new OrderDetailResponse<FashionItemDetailResponse>()
-            {
-                OrderId = orderDetail.OrderId,
-                RefundExpirationDate = orderDetail.RefundExpirationDate,
-                UnitPrice = orderDetail.UnitPrice,
-                FashionItemDetail = _mapper.Map<FashionItemDetailResponse>(orderDetail.FashionItem)
-            };
+            var orderDetailIds = refundRequest.Select(r => r.OrderDetailIds).ToList();
 
-            var refund = new Refund()
+            foreach (var item in refundRequest)
             {
-                OrderDetailId = orderdetailId,
-                Description = refundRequest.Description,
-                CreatedDate = DateTime.UtcNow,
-                RefundStatus = RefundStatus.Pending
-            };
-            await _refundDao.AddAsync(refund);
-            var refundResponse = await _refundDao.GetQueryable().Where(c => c.RefundId == refund.RefundId)
-                .Select(c => new RefundResponse()
+                var fashionItem = await _orderDetailDao.GetQueryable()
+                    .Include(c => c.FashionItem)
+                    .Where(c => c.OrderDetailId == item.OrderDetailIds)
+                    .Select(c => c.FashionItem)
+                    .FirstOrDefaultAsync();
+                var refund = new Refund()
                 {
-                    RefundId = c.RefundId,
-                    OrderDetailId = c.OrderDetailId,
-                    CreatedDate = c.CreatedDate,
-                    RefundStatus = c.RefundStatus,
-                    MemberId = c.OrderDetail.Order.MemberId,
-                    Member = c.OrderDetail.Order.Member,
-                    Description = c.Description,
-                    FashionItem = result
-                }).FirstOrDefaultAsync();
+                    OrderDetailId = item.OrderDetailIds,
+                    Description = item.Description,
+                    CreatedDate = DateTime.UtcNow,
+                    RefundStatus = RefundStatus.Pending
+                };
+                await _refundDao.AddAsync(refund);
+                
+                for (int i = 0; i < item.Images.Count(); i++)
+                {
+                    Image img = new Image()
+                    {
+                        FashionItemId = fashionItem.ItemId,
+                        Url = item.Images[i],
+                        RefundId = refund.RefundId
+                    };
+                    await _imageDao.AddAsync(img);
+                }
+            }
+
+
+            var refundResponse = await _refundDao.GetQueryable()
+                .Include(c => c.OrderDetail)
+                .Where(c => orderDetailIds.Contains(c.OrderDetailId))
+                .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
+                .ToListAsync();
             return refundResponse;
         }
 

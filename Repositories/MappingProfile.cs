@@ -38,7 +38,7 @@ namespace Repositories
                 .ForMember(a => a.ContactNumber, opt => opt.MapFrom(a => a.Phone))
                 .ForMember(a => a.Address, opt => opt.MapFrom(a => a.Address))
                 .ForMember(a => a.Quantity, opt => opt.MapFrom(a => a.OrderDetails.Count))
-                .ForMember(a => a.OrderDetails, opt => opt.MapFrom(a => a.OrderDetails))
+                .ForMember(a => a.OrderDetailItems, opt => opt.MapFrom(a => a.OrderDetails))
                 .ForMember(a => a.Email, opt => opt.MapFrom(a => a.Email))
                 .ForMember(a => a.RecipientName, opt => opt.MapFrom(a => a.RecipientName))
                 .ForMember(a => a.PaymentMethod, opt => opt.MapFrom(a => a.PaymentMethod))
@@ -74,8 +74,14 @@ namespace Repositories
                 .ForMember(dest => dest.FashionItem, opt => opt.MapFrom(src => src.FashionItem))
                 .ReverseMap();*/
             CreateMap<Shop, ShopDetailResponse>() .ReverseMap();
-            CreateMap<Refund, RefundResponse>().ReverseMap();
+            CreateMap<Refund, RefundResponse>()
+                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images))
+                .ForMember(dest => dest.OrderDetailsResponse, opt => opt.MapFrom(src => src.OrderDetail))
+                .ReverseMap();
             CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse2>()
+                .ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))
+                .ReverseMap();
+            CreateMap<OrderDetail, OrderDetailsResponse>()
                 .ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))
                 .ReverseMap();
         }

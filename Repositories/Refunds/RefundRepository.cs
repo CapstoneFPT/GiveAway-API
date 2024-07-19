@@ -51,20 +51,13 @@ namespace Repositories.Refunds
 
         public async Task<RefundResponse> GetRefundById(Guid refundId)
         {
-            var refund = await _refundDao.GetQueryable().Include(c => c.OrderDetail)
+            var refund = await _refundDao.GetQueryable()
+                .Include(c => c.OrderDetail)
                 .Where(c => c.RefundId == refundId)
-                .Select(c => new RefundResponse()
-                {
-                    RefundId = c.RefundId,
-                    CreatedDate = c.CreatedDate,
-                    Description = c.Description,
-                    MemberId = c.OrderDetail.Order.MemberId,
-                    Member = c.OrderDetail.Order.Member,
-                    OrderDetailId = c.OrderDetailId,
-                    RefundStatus = c.RefundStatus,
-                }).FirstOrDefaultAsync();
+                .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
 
-            var orderDetail = await _orderDetailDao.GetQueryable()
+            /*var orderDetail = await _orderDetailDao.GetQueryable()
                 .Include(c => c.FashionItem)
                 .FirstOrDefaultAsync(c => c.OrderDetailId == refund.OrderDetailId);
             var orderDetailResponse = new OrderDetailResponse<FashionItemDetailResponse>()
@@ -74,7 +67,7 @@ namespace Repositories.Refunds
                 UnitPrice = orderDetail.UnitPrice,
                 FashionItemDetail = _mapper.Map<FashionItemDetailResponse>(orderDetail.FashionItem)
             };
-            refund.FashionItem = orderDetailResponse;
+            refund.FashionItem = orderDetailResponse;*/
             return refund;
         }
 

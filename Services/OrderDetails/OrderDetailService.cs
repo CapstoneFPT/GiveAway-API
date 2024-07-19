@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Utils;
 using Repositories.FashionItems;
 using Repositories.Orders;
 
@@ -65,43 +66,42 @@ namespace Services.OrderDetails
             return response;
         }
 
-        public async Task<Result<RefundResponse>> RequestRefundToShop(Guid accountId, Guid orderdetailId,
-            CreateRefundRequest refundRequest)
+        public async Task<Result<List<RefundResponse>>> RequestRefundToShop(
+            List<CreateRefundRequest> refundRequest)
         {
-            var response = new Result<RefundResponse>();
-            var orderDetail = await _orderDetailRepository.GetOrderDetailById(orderdetailId);
-            if (orderDetail is null)
+            var response = new Result<List<RefundResponse>>();
+            var orderDetailIds = refundRequest.Select(r => r.OrderDetailIds).ToList();
+            var orderDetail = await _orderDetailRepository.GetOrderDetails(c => orderDetailIds.Contains(c.OrderDetailId));
+            if (orderDetail.Count == 0)
             {
                 response.Messages = ["Can not found the order to refund"];
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
 
-            var order = await _orderRepository.GetOrderById(orderDetail.OrderId);
+            /*var order = await _orderRepository.GetOrderById(orderDetail.OrderId);
             if (order.MemberId != accountId)
             {
                 response.Messages = ["You are not allowed to refund this item"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
-            }
+            }*/
 
-            if (orderDetail.RefundExpirationDate < DateTime.UtcNow)
+            if (orderDetail.Any(c => c.RefundExpirationDate < DateTime.UtcNow))
             {
-                response.Messages = ["Expired to refund this item"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new RefundExpiredException("There are items that ran out refund expiration");
             }
 
-
-            var fashionitem = await _fashionItemRepository.GetFashionItemById(orderDetail.FashionItemDetail.ItemId);
-            if (!fashionitem.Status.Equals(FashionItemStatus.Refundable))
+            var fashionitemIds = orderDetail.Select(c => c.FashionItemId).ToList();
+            var fashionitems = await _fashionItemRepository.GetFashionItems(c => fashionitemIds.Contains(c.ItemId));
+            if (!fashionitems.Any(c => c.Status.Equals(FashionItemStatus.Refundable)))
             {
                 response.Messages = ["This item is not allowed to refund"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
 
-            response.Data = await _orderDetailRepository.CreateRefundToShop(accountId, orderdetailId, refundRequest);
+            response.Data = await _orderDetailRepository.CreateRefundToShop(refundRequest);
             response.Messages = new[] { "Send refund request successfully" };
             response.ResultStatus = ResultStatus.Success;
             return response;

@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -41,7 +42,7 @@ namespace WebApi.Controllers
             return await _orderDetailService.GetOrderDetailsByOrderId(OrderId, request);
         }
 
-        [HttpGet("{OrderId}/orderdetails/{OrderdetailId}")]
+        [HttpGet("orderdetails/{OrderdetailId}")]
         public async Task<ActionResult<Result<OrderDetailResponse<FashionItem>>>> GetOrderDetailById(
             [FromRoute] Guid OrderdetailId)
         {
@@ -52,6 +53,13 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid OrderId)
         {
             return await _orderService.CancelOrder(OrderId);
+        }
+
+        [HttpPut("{OrderId}/confirm-deliveried")]
+        public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrderDelivered(
+            [FromRoute] Guid OrderId)
+        {
+            return await _orderService.ConfirmOrderDeliveried(OrderId);
         }
 
         [HttpPost("{orderId}/pay/vnpay")]

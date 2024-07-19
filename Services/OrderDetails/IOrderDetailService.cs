@@ -16,8 +16,7 @@ namespace Services.OrderDetails
         Task<Result<PaginationResponse<OrderDetailResponse<FashionItem>>>> GetOrderDetailsByOrderId(Guid orderId, OrderDetailRequest request);
         Task<Result<OrderDetailResponse<FashionItem>>> GetOrderDetailById(Guid orderId);
 
-        Task<Result<RefundResponse>> RequestRefundToShop(Guid accountId,
-            Guid orderdetailId, CreateRefundRequest refundRequest);
+        Task<Result<List<RefundResponse>>> RequestRefundToShop(List<CreateRefundRequest> refundRequest);
 
         Task ChangeFashionItemsStatus(List<OrderDetail> orderDetails, FashionItemStatus fashionItemStatus);
     }
