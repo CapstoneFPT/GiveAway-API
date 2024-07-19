@@ -52,22 +52,12 @@ namespace Repositories.Refunds
         public async Task<RefundResponse> GetRefundById(Guid refundId)
         {
             var refund = await _refundDao.GetQueryable()
-                .Include(c => c.OrderDetail)
+                
                 .Where(c => c.RefundId == refundId)
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();
 
-            /*var orderDetail = await _orderDetailDao.GetQueryable()
-                .Include(c => c.FashionItem)
-                .FirstOrDefaultAsync(c => c.OrderDetailId == refund.OrderDetailId);
-            var orderDetailResponse = new OrderDetailResponse<FashionItemDetailResponse>()
-            {
-                OrderId = orderDetail.OrderId,
-                RefundExpirationDate = orderDetail.RefundExpirationDate,
-                UnitPrice = orderDetail.UnitPrice,
-                FashionItemDetail = _mapper.Map<FashionItemDetailResponse>(orderDetail.FashionItem)
-            };
-            refund.FashionItem = orderDetailResponse;*/
+            
             return refund;
         }
 
@@ -98,7 +88,7 @@ namespace Repositories.Refunds
                 Items = items,
                 PageSize = request.PageSize,
                 TotalCount = count,
-                Filters = ["Filter created date by ascending"],
+                /*Filters = ["Filter created date by ascending"],*/
                 PageNumber = request.PageNumber,
             };
             return result;

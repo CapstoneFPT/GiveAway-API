@@ -131,7 +131,7 @@ namespace Repositories.OrderDetails
 
 
             var refundResponse = await _refundDao.GetQueryable()
-                .Include(c => c.OrderDetail)
+                
                 .Where(c => orderDetailIds.Contains(c.OrderDetailId))
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
                 .ToListAsync();

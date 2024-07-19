@@ -345,7 +345,7 @@ namespace Repositories.Orders
                 if (fashionItem != null && fashionItem.Status.Equals(FashionItemStatus.OnDelivery))
                 {
                     fashionItem.Status = FashionItemStatus.Refundable;
-                    orderDetail.RefundExpirationDate = DateTime.UtcNow;
+                    orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
                 }
                 else
                 {   
@@ -357,6 +357,7 @@ namespace Repositories.Orders
             var order = await _orderDao.GetQueryable().Where(c => c.OrderId == orderId)
                 .FirstOrDefaultAsync();
             order.Status = OrderStatus.Completed;
+            order.CompletedDate = DateTime.UtcNow;
             await _orderDao.UpdateAsync(order);
             var orderResponse = await _orderDao.GetQueryable().Include(c => c.OrderDetails)
                 .Where(c => c.OrderId == orderId)
@@ -429,8 +430,8 @@ namespace Repositories.Orders
                     ItemName = item.Name,
                     UnitPrice = orderDetail.UnitPrice,
                 };
+                totalPrice += orderDetail.UnitPrice;
 
-                
                 listOrderDetailResponse.Add(orderDetailResponse);
             }
 
@@ -442,7 +443,7 @@ namespace Repositories.Orders
             {
                 OrderId = orderresultUpdate.OrderId,
                 Quantity = listOrderDetailResponse.Count,
-                TotalPrice = listOrderDetailResponse.Sum(c => c.UnitPrice),
+                TotalPrice = orderresultUpdate.TotalPrice,
                 CreatedDate = orderresultUpdate.CreatedDate,
                 Address = orderresultUpdate.Address,
                 ContactNumber = orderresultUpdate.Phone,
