@@ -65,8 +65,9 @@ public class CompleteRefundableItemsService : BackgroundService
 
 
                 dbContext.FashionItems.Update(refundableItem);
-                await dbContext.SaveChangesAsync();
             }
+
+            await dbContext.SaveChangesAsync();
         }
 
         catch (Exception e)
