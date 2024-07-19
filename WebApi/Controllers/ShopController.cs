@@ -99,7 +99,7 @@ namespace WebApi.Controllers
 
         [HttpGet("{shopId}/refunds")]
         public async Task<ActionResult<Result<PaginationResponse<RefundResponse>>>> GetRefundsByShopId(
-            [FromRoute] Guid shopId, RefundRequest refundRequest)
+            [FromRoute] Guid shopId,[FromQuery] RefundRequest refundRequest)
         {
             return await _refundService.GetRefundByShopId(shopId, refundRequest);
         }

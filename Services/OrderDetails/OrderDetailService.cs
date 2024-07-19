@@ -74,9 +74,7 @@ namespace Services.OrderDetails
             var orderDetail = await _orderDetailRepository.GetOrderDetails(c => orderDetailIds.Contains(c.OrderDetailId));
             if (orderDetail.Count == 0)
             {
-                response.Messages = ["Can not found the order to refund"];
-                response.ResultStatus = ResultStatus.NotFound;
-                return response;
+                throw new OrderNotFoundException();
             }
 
             /*var order = await _orderRepository.GetOrderById(orderDetail.OrderId);

@@ -18,7 +18,7 @@ namespace BusinessObjects.Dtos.Refunds
         public DateTime CreatedDate { get; set; }
         public Guid OrderDetailId { get; set; }
         
-        public List<Image> Images { get; set; }
+        public string[] Images { get; set; }
         public RefundStatus RefundStatus { get; set; }
         public OrderDetailsResponse OrderDetailsResponse { get; set; }
     }
