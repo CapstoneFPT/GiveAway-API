@@ -4,6 +4,19 @@ public class AuctionNotFoundException : Exception
 {
 }
 
+public class BankAccountNotSetException(string message)
+    : Exception(message);
+
+public class WithdrawNotFoundException : Exception
+{
+}
+
+public class AnomalousWithdrawStatusException(string message) : Exception(message);
+
+public class FashionItemNotFoundException : Exception
+{
+}
+
 public class AuctionAlreadyApprovedException : Exception
 {
 }

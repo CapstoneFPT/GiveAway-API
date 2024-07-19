@@ -1,5 +1,6 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,12 +47,23 @@ public class CompleteRefundableItemsService : BackgroundService
             await using var scope = _serviceProvider.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
 
-            List<FashionItem> refundableItems = await dbContext.FashionItems
-                .Where(x => x.Status == FashionItemStatus.Refundable).ToListAsync();
+
+            var refundableItems = await dbContext.OrderDetails.Include(x => x.FashionItem).Where(x =>
+                    x.FashionItem != null && x.FashionItem.Status == FashionItemStatus.Refundable &&
+                    x.RefundExpirationDate < DateTime.UtcNow)
+                .Select(x => x.FashionItem)
+                .ToListAsync();
 
             foreach (var refundableItem in refundableItems)
             {
+                if (refundableItem == null)
+                {
+                    throw new FashionItemNotFoundException();
+                }
+
                 refundableItem.Status = FashionItemStatus.Sold;
+
+
                 dbContext.FashionItems.Update(refundableItem);
                 await dbContext.SaveChangesAsync();
             }

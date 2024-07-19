@@ -17,11 +17,13 @@ namespace Repositories.Accounts
 {
     public class AccountRepository : IAccountRepository
     {
-        private readonly GenericDao<Account?> _accountDao;
+        private readonly GenericDao<Account> _accountDao;
+        private readonly GenericDao<Member> _memberDao;
 
-        public AccountRepository(GenericDao<Account?> genericDao)
+        public AccountRepository(GenericDao<Account> genericDao, GenericDao<Member> memberDao)
         {
             _accountDao = genericDao;
+            _memberDao = memberDao;
         }
 
         public Task<List<Account?>> FindMany(
@@ -52,6 +54,7 @@ namespace Repositories.Accounts
             return user;
         }
 
+
         public async Task<Account> FindUserByPasswordResetToken(string token)
         {
             var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.PasswordResetToken == token);
@@ -62,6 +65,17 @@ namespace Repositories.Accounts
         {
             var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
             return user;
+        }
+
+        public async Task<Member?> GetMemberById(Guid id)
+        {
+            var user = await _memberDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
+            return user;
+        }
+
+        public async Task UpdateMemberAccount(Member member)
+        {
+            await _memberDao.UpdateAsync(member);
         }
 
         public async Task<List<Account?>> GetAllAccounts()

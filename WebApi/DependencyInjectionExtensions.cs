@@ -23,6 +23,7 @@ using Repositories.Shops;
 using Repositories.Timeslots;
 using Repositories.Transactions;
 using Repositories.Withdraws;
+
 using Services;
 using Services.Accounts;
 using Services.AuctionDeposits;
@@ -48,6 +49,7 @@ using Services.Shops;
 using Services.Timeslots;
 using Services.Transactions;
 using Services.VnPayService;
+using Member = AutoMapper.Execution.Member;
 
 namespace WebApi;
 
@@ -134,6 +136,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<Transaction>>();
         serviceCollection.AddScoped<GenericDao<Refund>>();
         serviceCollection.AddScoped<GenericDao<Withdraw>>();
+        serviceCollection.AddScoped<GenericDao<BusinessObjects.Entities.Member>>();
         return serviceCollection;
     }
 

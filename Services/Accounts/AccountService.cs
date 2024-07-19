@@ -29,7 +29,8 @@ namespace Services.Accounts
         private readonly IWithdrawRepository _withdrawRepository;
         private readonly IMapper _mapper;
 
-        public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,IWithdrawRepository withdrawRepository)
+        public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
+            IWithdrawRepository withdrawRepository)
         {
             _account = repository;
             _mapper = mapper;
@@ -184,7 +185,7 @@ namespace Services.Accounts
                 ShopId = request.ShopId,
                 CreatedDate = DateTime.UtcNow
             };
-            
+
             var result = await _inquiryRepository.CreateInquiry(inquiry);
 
             return new CreateInquiryResponse()
@@ -202,7 +203,7 @@ namespace Services.Accounts
 
         public async Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request)
         {
-            var account = await _account.GetAccountById(accountId);
+            var account = await _account.GetMemberById(accountId);
 
             if (account == null)
             {
@@ -213,23 +214,33 @@ namespace Services.Accounts
             {
                 throw new InsufficientBalanceException();
             }
-            
+
+            if (account.Bank == null || account.BankAccountName == null || account.BankAccountNumber == null)
+            {
+                throw new BankAccountNotSetException("Please set your bank account first");
+            }
+
+
             var newWithdraw = new Withdraw()
             {
-               Amount = request.Amount,
-               MemberId = accountId,
-               CreatedDate = DateTime.UtcNow,
+                Amount = request.Amount,
+                MemberId = accountId,
+                CreatedDate = DateTime.UtcNow,
+                Status = WithdrawStatus.Pending
             };
 
             var result = await _withdrawRepository.CreateWithdraw(newWithdraw);
-            
+
             return new CreateWithdrawResponse()
             {
                 WithdrawId = result.WithdrawId,
                 Amount = result.Amount,
                 MemberId = result.MemberId,
+                Status = result.Status,
                 CreatedDate = result.CreatedDate
             };
         }
     }
+
+    
 }

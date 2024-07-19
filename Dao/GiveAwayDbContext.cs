@@ -53,7 +53,7 @@ public class GiveAwayDbContext : DbContext
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        return configuration.GetConnectionString("DefaultDB");
+        return configuration.GetConnectionString("DeployDB");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
