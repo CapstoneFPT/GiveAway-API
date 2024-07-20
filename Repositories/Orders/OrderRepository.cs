@@ -24,15 +24,17 @@ namespace Repositories.Orders
 {
     public class OrderRepository : IOrderRepository
     {
-      
+
+        private readonly GiveAwayDbContext _giveAwayDbContext;
         private readonly IMapper _mapper;
         private static HashSet<string> generatedStrings = new HashSet<string>();
         private static Random random = new Random();
         private const string prefix = "GA-OD-";
 
-        public OrderRepository(IMapper mapper)
+        public OrderRepository(IMapper mapper, GiveAwayDbContext giveAwayDbContext)
         {
             _mapper = mapper;
+            _giveAwayDbContext = giveAwayDbContext;
         }
 
         public async Task<Order?> CreateOrder(Order? order)
@@ -145,7 +147,7 @@ namespace Repositories.Orders
 
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByAccountId(Guid accountId, OrderRequest request)
         {
-            var query = GenericDao<Order>.Instance.GetQueryable();
+            var query = _giveAwayDbContext.Orders.AsQueryable();
             query = query.Include(c => c.Member).Where(c => c.MemberId == accountId).OrderByDescending(c => c.CreatedDate);
 
             if (request.Status != null)
@@ -162,14 +164,14 @@ namespace Repositories.Orders
             query = query.Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize);
 
-            var list = await GenericDao<OrderDetail>.Instance.GetQueryable().CountAsync();
+            var list = await _giveAwayDbContext.OrderDetails.CountAsync();
 
             var items = await query
                 .Select(x => new OrderResponse
                 {
                     OrderId = x.OrderId,
-                    Quantity = GenericDao<OrderDetail>.Instance.GetQueryable().Count(c => c.OrderId.Equals(x.OrderId)),
-                    TotalPrice = GenericDao<OrderDetail>.Instance.GetQueryable().Sum(c => c.UnitPrice),
+                    Quantity = x.OrderDetails.Count,
+                    TotalPrice = x.TotalPrice,
                     CreatedDate = x.CreatedDate,
                     OrderCode = x.OrderCode,
                     PaymentMethod = x.PaymentMethod,
