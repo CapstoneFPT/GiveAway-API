@@ -7,19 +7,10 @@ namespace Repositories.Revenues;
 
 public class RevenueRepository : IRevenueRepository
 {
-    private readonly GenericDao<OrderDetail> _orderDetailDao;
-    private readonly GenericDao<ConsignSaleDetail> _consignSaleDetailDao;
-    private readonly GenericDao<ConsignSale> _consignSaleDao;
+   
     private const decimal ConsignPayoutPercentage = 0.9m;
 
-    public RevenueRepository(GenericDao<OrderDetail> orderDetailDao, GenericDao<ConsignSaleDetail> consignSaleDetailDao,
-        GenericDao<ConsignSale> consignSaleDao)
-    {
-        _orderDetailDao = orderDetailDao;
-        _consignSaleDetailDao = consignSaleDetailDao;
-        _consignSaleDao = consignSaleDao;
-    }
-
+  
   
 
     public async Task<decimal> GetTotalRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
@@ -30,7 +21,7 @@ public class RevenueRepository : IRevenueRepository
 
     private async Task<decimal> GetOrderRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
     {
-        var query = _orderDetailDao.GetQueryable()
+        var query = GenericDao<OrderDetail>.Instance.GetQueryable()
             .Where(od => od.Order.CreatedDate >= startDate &&
                          od.Order.CreatedDate <= endDate &&
                          od.Order.Status == OrderStatus.Completed);
@@ -46,7 +37,7 @@ public class RevenueRepository : IRevenueRepository
 
     public async Task<decimal> GetConsignSaleRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
     {
-        var query = _consignSaleDetailDao
+        var query = GenericDao<ConsignSaleDetail>.Instance
                 .GetQueryable()
                 .Where(detail =>
                     detail.ConsignSale.CreatedDate >= startDate &&
@@ -66,7 +57,7 @@ public class RevenueRepository : IRevenueRepository
 
     public Task<decimal> GetTotalPayout(Guid? shopId, DateTime startDate, DateTime endDate)
     {
-        var query = _orderDetailDao.GetQueryable()
+        var query = GenericDao<OrderDetail>.Instance.GetQueryable()
             .Where(od => od.Order.CreatedDate >= startDate &&
                          od.Order.CreatedDate <= endDate &&
                          od.Order.Status == OrderStatus.Completed &&
@@ -82,7 +73,7 @@ public class RevenueRepository : IRevenueRepository
 
     public async Task<decimal> GetConsignorPayouts(Guid? shopId, DateTime startDate, DateTime endDate)
     {
-        var query = _consignSaleDao.GetQueryable()
+        var query = GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Where(consignSale => consignSale.ShopId == shopId &&
                                       consignSale.CreatedDate >= startDate &&
                                       consignSale.CreatedDate <= endDate &&

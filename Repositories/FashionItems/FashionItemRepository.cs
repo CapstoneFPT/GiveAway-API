@@ -13,27 +13,23 @@ namespace Repositories.FashionItems
 {
     public class FashionItemRepository : IFashionItemRepository
     {
-        private readonly GenericDao<FashionItem> _fashionitemDao;
-        private readonly GenericDao<Category> _categoryDao;
         private readonly IMapper _mapper;
 
-        public FashionItemRepository(GenericDao<FashionItem> fashionitemDao, GenericDao<Category> categoryDao,
+        public FashionItemRepository(
             IMapper mapper)
         {
-            _fashionitemDao = fashionitemDao;
-            _categoryDao = categoryDao;
             _mapper = mapper;
         }
 
         public async Task<FashionItem> AddFashionItem(FashionItem request)
         {
-            return await _fashionitemDao.AddAsync(request);
+            return await GenericDao<FashionItem>.Instance.AddAsync(request);
         }
 
         public async Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
             AuctionFashionItemRequest request)
         {
-            var query = _fashionitemDao.GetQueryable();
+            var query = GenericDao<FashionItem>.Instance.GetQueryable();
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
                 query = query.Where(x => EF.Functions.ILike(x.Name, $"%{request.SearchTerm}%"));
             if (request.Status != null)
@@ -77,7 +73,7 @@ namespace Repositories.FashionItems
 
         public async Task<FashionItem> GetFashionItemById(Guid id)
         {
-            var query = await _fashionitemDao.GetQueryable()
+            var query = await GenericDao<FashionItem>.Instance.GetQueryable()
                 .Include(c => c.Shop)
                 .Include(a => a.Category)
                 /*.Include(b => b.ConsignSaleDetail).ThenInclude(c => c.ConsignSale).ThenInclude(c => c.Member)*/
@@ -102,7 +98,7 @@ namespace Repositories.FashionItems
                 };
             }
 
-            var query = _categoryDao.GetQueryable()
+            var query = GenericDao<Category>.Instance.GetQueryable()
                 .Where(c => listCate.Contains(c.CategoryId))
                 .SelectMany(c => c.FashionItems)
                 .AsNoTracking();
@@ -170,12 +166,12 @@ namespace Repositories.FashionItems
 
         public async Task BulkUpdate(List<FashionItem> fashionItems)
         {
-            await _fashionitemDao.UpdateRange(fashionItems);
+            await GenericDao<FashionItem>.Instance.UpdateRange(fashionItems);
         }
 
         public Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem, bool>> predicate)
         {
-            var queryable = _fashionitemDao
+            var queryable = GenericDao<FashionItem>.Instance
                 .GetQueryable()
                 .Where(predicate);
 
@@ -186,19 +182,19 @@ namespace Repositories.FashionItems
 
         public async Task UpdateFashionItems(List<FashionItem> fashionItems)
         {
-            await _fashionitemDao.UpdateRange(fashionItems);
+            await GenericDao<FashionItem>.Instance.UpdateRange(fashionItems);
         }
 
         public async Task<FashionItem> UpdateFashionItem(FashionItem fashionItem)
         {
-            return await _fashionitemDao.UpdateAsync(fashionItem);
+            return await GenericDao<FashionItem>.Instance.UpdateAsync(fashionItem);
         }
 
         private async Task GetCategoryIdsRecursive(Guid? id, HashSet<Guid> categoryIds)
         {
             if (!categoryIds.Add(id.Value)) return;
 
-            var childCategories = await _categoryDao.GetQueryable()
+            var childCategories = await GenericDao<Category>.Instance.GetQueryable()
                 .Where(c => c.ParentId == id && c.Status == CategoryStatus.Available)
                 .Select(c => c.CategoryId)
                 .ToListAsync();
@@ -212,7 +208,7 @@ namespace Repositories.FashionItems
         public async Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> listItemId)
         {
             var listItemNotbelongshop = new List<Guid?>();
-            var listItem = await _fashionitemDao.GetQueryable().Include(c => c.Shop)
+            var listItem = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                 .Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
             foreach (FashionItem item in listItem)
             {
@@ -221,6 +217,7 @@ namespace Repositories.FashionItems
                     listItemNotbelongshop.Add(item.ItemId);
                 }
             }
+
             return listItemNotbelongshop;
         }
     }

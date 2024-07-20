@@ -29,7 +29,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddServices();
 builder.Services.AddRepositories();
-builder.Services.AddDao();
+// builder.Services.AddDao();
 builder.Services.AddLongRunningServices();
 builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPay"));
 builder.Services.AddHttpContextAccessor();
@@ -57,7 +57,7 @@ builder.Services.AddDbContext<GiveAwayDbContext>(optionsAction: optionsBuilder =
 {
     optionsBuilder.UseNpgsql(builder.Configuration.GetConnectionString("DefaultDB"));
     
-});
+},ServiceLifetime.Scoped);
 builder.Services.AddMemoryCache();
 builder.Services.AddSwaggerGen(options =>
 {

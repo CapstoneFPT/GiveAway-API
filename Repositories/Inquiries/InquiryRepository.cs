@@ -13,16 +13,10 @@ namespace Repositories.Inquiries
 {
     public class InquiryRepository : IInquiryRepository
     {
-        private readonly GenericDao<Inquiry> _inquiryDao;
-
-        public InquiryRepository(GenericDao<Inquiry> inquiryDao)
-        {
-            _inquiryDao = inquiryDao;
-        }
-
+      
         public async Task<Inquiry> CreateInquiry(Inquiry inquiry)
         {
-            var result = await _inquiryDao.AddAsync(inquiry);
+            var result = await GenericDao<Inquiry>.Instance.AddAsync(inquiry);
             return result;
         }
 
@@ -30,7 +24,7 @@ namespace Repositories.Inquiries
             int inquiryRequestPage, int inquiryRequestPageSize, Expression<Func<Inquiry, bool>>? predicate,
             Expression<Func<Inquiry, T>>? selector)
         {
-            var query = _inquiryDao.GetQueryable();
+            var query = GenericDao<Inquiry>.Instance.GetQueryable();
 
             if (predicate != null)
             {

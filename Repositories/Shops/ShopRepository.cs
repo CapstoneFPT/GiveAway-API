@@ -17,24 +17,22 @@ namespace Repositories.Shops
 {
     public class ShopRepository : IShopRepository
     {
-        private readonly GenericDao<Shop> _shopDao;
         private readonly IMapper _mapper;
 
-        public ShopRepository(GenericDao<Shop> shopDao, IMapper mapper)
+        public ShopRepository(IMapper mapper)
         {
-            _shopDao = shopDao;
             _mapper = mapper;
         }
 
         public async Task<Shop> CreateShop(Shop shop)
         {
-            var result = await _shopDao.AddAsync(shop);
+            var result = await GenericDao<Shop>.Instance.AddAsync(shop);
             return result;
         }
 
         public async Task<List<ShopDetailResponse>> GetAllShop()
         {
-            var listshop = await _shopDao.GetQueryable().Where(c => c.Staff.Status.Equals(AccountStatus.Active))
+            var listshop = await GenericDao<Shop>.Instance.GetQueryable().Where(c => c.Staff.Status.Equals(AccountStatus.Active))
                 .ProjectTo<ShopDetailResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().ToListAsync();
             return listshop;
@@ -42,7 +40,7 @@ namespace Repositories.Shops
 
         public async Task<ShopDetailResponse> GetShopByAccountId(Guid id)
         {
-            var shop = await _shopDao.GetQueryable()
+            var shop = await GenericDao<Shop>.Instance.GetQueryable()
                 .Where(c => c.StaffId == id && c.Staff.Status.Equals(AccountStatus.Active))
                 .ProjectTo<ShopDetailResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().FirstOrDefaultAsync();
@@ -51,7 +49,7 @@ namespace Repositories.Shops
 
         public async Task<ShopDetailResponse> GetShopById(Guid id)
         {
-            var shop = await _shopDao.GetQueryable()
+            var shop = await GenericDao<Shop>.Instance.GetQueryable()
                 .Where(c => c.ShopId == id && c.Staff.Status.Equals(AccountStatus.Active))
                 .ProjectTo<ShopDetailResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().FirstOrDefaultAsync();
@@ -61,7 +59,7 @@ namespace Repositories.Shops
 
         public async Task<Shop?> GetSingleShop(Expression<Func<Shop, bool>> predicate)
         {
-            var result = await _shopDao
+            var result = await GenericDao<Shop>.Instance
                 .GetQueryable()
                 .SingleOrDefaultAsync(predicate);
             return result;

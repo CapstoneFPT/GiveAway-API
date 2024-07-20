@@ -7,21 +7,14 @@ namespace Repositories.Withdraws;
 
 public class WithdrawRepository : IWithdrawRepository
 {
-    private readonly GenericDao<Withdraw> _withdrawDao;
-
-    public WithdrawRepository(GenericDao<Withdraw> withdrawDao)
-    {
-        _withdrawDao = withdrawDao;
-    }
-
     public async Task<Withdraw> CreateWithdraw(Withdraw withdraw)
     {
-        return await _withdrawDao.AddAsync(withdraw);
+        return await GenericDao<Withdraw>.Instance.AddAsync(withdraw);
     }
 
     public async Task<Withdraw?> GetSingleWithdraw(Expression<Func<Withdraw, bool>> predicate)
     {
-        var result = await _withdrawDao.GetQueryable()
+        var result = await GenericDao<Withdraw>.Instance.GetQueryable()
             .FirstOrDefaultAsync(predicate);
 
         return result;
@@ -29,6 +22,6 @@ public class WithdrawRepository : IWithdrawRepository
 
     public async Task UpdateWithdraw(Withdraw withdraw)
     {
-        await _withdrawDao.UpdateAsync(withdraw);
+        await GenericDao<Withdraw>.Instance.UpdateAsync(withdraw);
     }
 }

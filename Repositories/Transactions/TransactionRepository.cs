@@ -12,16 +12,11 @@ namespace Repositories.Transactions
 {
     public class TransactionRepository : ITransactionRepository
     {
-        private readonly GenericDao<Transaction> _transactionDao;
-
-        public TransactionRepository(GenericDao<Transaction> transactionDao)
-        {
-            _transactionDao = transactionDao;
-        }
+     
 
         public async Task<Transaction?> CreateTransaction(Transaction transaction)
         {
-            var result = await _transactionDao.AddAsync(transaction);
+            var result = await GenericDao<Transaction>.Instance.AddAsync(transaction);
             return result;
         }
 
@@ -30,7 +25,7 @@ namespace Repositories.Transactions
             int? transactionRequestPageSize, Expression<Func<Transaction, bool>>? predicate,
             Expression<Func<Transaction, T>>? selector, bool isTracking = false)
         {
-            var query = _transactionDao.GetQueryable();
+            var query = GenericDao<Transaction>.Instance.GetQueryable();
 
             if (predicate != null)
             {

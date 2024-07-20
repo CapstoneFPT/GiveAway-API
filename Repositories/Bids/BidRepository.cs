@@ -14,21 +14,10 @@ namespace Repositories.Bids
 {
     public class BidRepository : IBidRepository
     {
-        private readonly GenericDao<Auction> _auctionDao;
-        private readonly GenericDao<Bid> _bidDao;
-        private readonly GenericDao<AuctionDeposit> _auctionDepositDao;
-
-        public BidRepository(GenericDao<Auction> auctionDao, GenericDao<Bid> bidDao,
-            GenericDao<AuctionDeposit> auctionDepositDao)
-        {
-            _auctionDao = auctionDao;
-            _bidDao = bidDao;
-            _auctionDepositDao = auctionDepositDao;
-        }
-
+     
         public async Task<BidDetailResponse?> CreateBid(Guid id, CreateBidRequest request)
         {
-            var auction = await _auctionDao.GetQueryable().Include(x => x.AuctionFashionItem)
+            var auction = await GenericDao<Auction>.Instance.GetQueryable().Include(x => x.AuctionFashionItem)
                 .FirstOrDefaultAsync(x => x.AuctionId == id);
 
             if (auction == null)
@@ -46,7 +35,7 @@ namespace Repositories.Bids
                 throw new InvalidOperationException("Auction has not started yet");
             }
 
-            var auctionDeposit = await _auctionDepositDao.GetQueryable()
+            var auctionDeposit = await GenericDao<AuctionDeposit>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.AuctionId == id && x.MemberId == request.MemberId);
 
             if (auctionDeposit == null)
@@ -54,7 +43,7 @@ namespace Repositories.Bids
                 throw new AuctionDepositNotFoundException();
             }
 
-            var latestBid = await _bidDao.GetQueryable()
+            var latestBid = await GenericDao<Bid>.Instance.GetQueryable()
                 .OrderByDescending(x => x.CreatedDate)
                 .FirstOrDefaultAsync(x => x.AuctionId == id);
 
@@ -81,12 +70,12 @@ namespace Repositories.Bids
                 CreatedDate = DateTime.UtcNow
             };
 
-            var result = await _bidDao.AddAsync(newBid);
+            var result = await GenericDao<Bid>.Instance.AddAsync(newBid);
 
             if (latestBid != null)
             {
                 latestBid.IsWinning = false;
-                await _bidDao.UpdateAsync(latestBid);
+                await GenericDao<Bid>.Instance.UpdateAsync(latestBid);
             }
 
             return new BidDetailResponse
@@ -103,7 +92,7 @@ namespace Repositories.Bids
 
         public async Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
         {
-            var items = await _bidDao.GetQueryable()
+            var items = await GenericDao<Bid>.Instance.GetQueryable()
                 .Where(x => x.AuctionId == id)
                 .Take(request.PageSize)
                 .Skip((request.PageNumber - 1) * request.PageSize)
@@ -119,7 +108,7 @@ namespace Repositories.Bids
                 })
                 .ToListAsync();
 
-            var count = await _bidDao.GetQueryable().Where(x => x.AuctionId == id).CountAsync();
+            var count = await GenericDao<Bid>.Instance.GetQueryable().Where(x => x.AuctionId == id).CountAsync();
 
             return new PaginationResponse<BidListResponse>
             {
@@ -134,7 +123,7 @@ namespace Repositories.Bids
 
         public async Task<BidDetailResponse?> GetLargestBid(Guid auctionId)
         {
-            var result = await _bidDao.GetQueryable()
+            var result = await GenericDao<Bid>.Instance.GetQueryable()
                     .OrderByDescending(x => x.Amount)
                     .Select(x => new BidDetailResponse()
                     {

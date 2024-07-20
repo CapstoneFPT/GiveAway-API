@@ -13,24 +13,13 @@ namespace Repositories.ConsignSales
 {
     public class ConsignSaleRepository : IConsignSaleRepository
     {
-        private readonly GenericDao<ConsignSale> _consignSaleDao;
-        private readonly GenericDao<Account> _accountDao;
-        private readonly GenericDao<FashionItem> _fashionItemDao;
-        private readonly GenericDao<Image> _imageDao;
-        private readonly GenericDao<ConsignSaleDetail> _consignSaleDetailDao;
         private readonly IMapper _mapper;
         private static HashSet<string> generatedStrings = new HashSet<string>();
         private static Random random = new Random();
         private const string prefix = "GA-CS-";
 
-        public ConsignSaleRepository(GenericDao<ConsignSale> consignSaleDao, GenericDao<Account> accountDao, GenericDao<FashionItem> fashionItemDao,
-            GenericDao<Image> imageDao, GenericDao<ConsignSaleDetail> consignSaleDetailDao, IMapper mapper)
+        public ConsignSaleRepository(IMapper mapper)
         {
-            _consignSaleDao = consignSaleDao;
-            _accountDao = accountDao;
-            _fashionItemDao = fashionItemDao;
-            _imageDao = imageDao;
-            _consignSaleDetailDao = consignSaleDetailDao;
             _mapper = mapper;
         }
 
@@ -51,9 +40,9 @@ namespace Repositories.ConsignSales
                 MemberReceivedAmount = 0,
                 ConsignSaleCode = await GenerateUniqueString(),
             };
-            await _consignSaleDao.AddAsync(newConsign);
+            await GenericDao<ConsignSale>.Instance.AddAsync(newConsign);
 
-            
+
             //tao nhung~ mon do trong consign moi'
             foreach (var item in request.fashionItemForConsigns)
             {
@@ -84,7 +73,8 @@ namespace Repositories.ConsignSales
                         fashionItem.Type = FashionItemType.ItemBase;
                         break;
                 }
-                await _fashionItemDao.AddAsync(fashionItem);
+
+                await GenericDao<FashionItem>.Instance.AddAsync(fashionItem);
 
                 //them image tuong ung voi moi mon do
                 for (int i = 0; i < item.Image.Count(); i++)
@@ -94,7 +84,7 @@ namespace Repositories.ConsignSales
                         FashionItemId = fashionItem.ItemId,
                         Url = item.Image[i]
                     };
-                    await _imageDao.AddAsync(img);
+                    await GenericDao<Image>.Instance.AddAsync(img);
                 }
 
 
@@ -107,20 +97,20 @@ namespace Repositories.ConsignSales
                     /*FashionItem = fashionItem,*/
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
-                await _consignSaleDetailDao.AddAsync(consignDetail);
-                
+                await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);
             }
 
-            var consignResponse = await _consignSaleDao.GetQueryable()
+            var consignResponse = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
                 .Where(c => c.ConsignSaleId == newConsign.ConsignSaleId)
                 .FirstOrDefaultAsync();
             return consignResponse;
         }
 
-        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSale(Guid accountId, ConsignSaleRequest request)
+        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSale(Guid accountId,
+            ConsignSaleRequest request)
         {
-            var query = _consignSaleDao.GetQueryable();
+            var query = GenericDao<ConsignSale>.Instance.GetQueryable();
 
             if (!string.IsNullOrWhiteSpace(request.ConsignSaleCode))
                 query = query.Where(x => EF.Functions.ILike(x.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
@@ -133,6 +123,7 @@ namespace Repositories.ConsignSales
             {
                 query = query.Where(f => f.ShopId.Equals(request.ShopId));
             }
+
             query = query.Where(c => c.MemberId == accountId);
 
             var count = await query.CountAsync();
@@ -159,23 +150,24 @@ namespace Repositories.ConsignSales
         {
             try
             {
-                var consignSale = await _consignSaleDao.GetQueryable().Where(c => c.ConsignSaleId == consignId)
+                var consignSale = await GenericDao<ConsignSale>.Instance.GetQueryable().Where(c => c.ConsignSaleId == consignId)
                     .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
                 return consignSale;
-
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
+
         public async Task<string> GenerateUniqueString()
         {
             string newString;
             do
             {
                 newString = GenerateRandomString();
-                var isCodeExisted = await _consignSaleDao.GetQueryable().FirstOrDefaultAsync(c => c.ConsignSaleCode.Equals(newString));
+                var isCodeExisted = await GenericDao<ConsignSale>.Instance.GetQueryable()
+                    .FirstOrDefaultAsync(c => c.ConsignSaleCode.Equals(newString));
             } while (generatedStrings.Contains(newString));
 
             generatedStrings.Add(newString);
@@ -190,7 +182,7 @@ namespace Repositories.ConsignSales
 
         public async Task<ConsignSaleResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
         {
-            var consign = await _consignSaleDao.GetQueryable()
+            var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)
                 .Where(c => c.ConsignSaleId == consignId)
                 .FirstOrDefaultAsync();
@@ -199,27 +191,29 @@ namespace Repositories.ConsignSales
                 consign.Status = ConsignSaleStatus.Rejected;
                 foreach (var consigndetail in consign.ConsignSaleDetails)
                 {
-                    var item = await _fashionItemDao.GetQueryable().FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
+                    var item = await GenericDao<FashionItem>.Instance.GetQueryable()
+                        .FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
                     item.Status = FashionItemStatus.Rejected;
-                    await _fashionItemDao.UpdateAsync(item);
+                    await GenericDao<FashionItem>.Instance.UpdateAsync(item);
                 }
             }
             else
             {
                 consign.Status = ConsignSaleStatus.AwaitDelivery;
             }
-            await _consignSaleDao.UpdateAsync(consign);
+
+            await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
             return _mapper.Map<ConsignSaleResponse>(consign);
         }
 
         public async Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId)
         {
-            return await _consignSaleDao.GetQueryable().Where(c => c.MemberId == accountId).ToListAsync();
+            return await GenericDao<ConsignSale>.Instance.GetQueryable().Where(c => c.MemberId == accountId).ToListAsync();
         }
 
         public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
         {
-            var consign = await _consignSaleDao.GetQueryable()
+            var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)
                 .Where(c => c.ConsignSaleId == consignId)
                 .FirstOrDefaultAsync();
@@ -227,20 +221,24 @@ namespace Repositories.ConsignSales
             consign.Status = ConsignSaleStatus.Received;
             consign.StartDate = DateTime.UtcNow;
             consign.EndDate = DateTime.UtcNow.AddDays(60);
-            await _consignSaleDao.UpdateAsync(consign);
+            await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
             foreach (var consigndetail in consign.ConsignSaleDetails)
             {
-                var item = await _fashionItemDao.GetQueryable().FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
+                var item = await GenericDao<FashionItem>.Instance.GetQueryable()
+                    .FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
                 item.Status = FashionItemStatus.Unavailable;
-                await _fashionItemDao.UpdateAsync(item);
+                await GenericDao<FashionItem>.Instance.UpdateAsync(item);
             }
+
             return _mapper.Map<ConsignSaleResponse>(consign);
         }
 
-        public async Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request)
+        public async Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId,
+            CreateConsignSaleByShopRequest request)
         {
             //tao moi 1 consign
-            var isMemberExisted = await _accountDao.GetQueryable().Where(c => c.Phone.Equals(request.Phone)).FirstOrDefaultAsync();
+            var isMemberExisted = await GenericDao<Account>.Instance.GetQueryable().Where(c => c.Phone.Equals(request.Phone))
+                .FirstOrDefaultAsync();
             ConsignSale newConsign = new ConsignSale()
             {
                 Type = request.Type,
@@ -267,9 +265,10 @@ namespace Repositories.ConsignSales
                 newConsign.Phone = request.Phone;
                 newConsign.Email = request.Email;
             }
-            await _consignSaleDao.AddAsync(newConsign);
+
+            await GenericDao<ConsignSale>.Instance.AddAsync(newConsign);
             //tao nhung~ mon do trong consign moi'
-            
+
             foreach (var item in request.fashionItemForConsigns)
             {
                 FashionItem fashionItem = new FashionItem()
@@ -299,7 +298,8 @@ namespace Repositories.ConsignSales
                         fashionItem.Type = FashionItemType.ItemBase;
                         break;
                 }
-                await _fashionItemDao.AddAsync(fashionItem);
+
+                await GenericDao<FashionItem>.Instance.AddAsync(fashionItem);
 
                 //them image tuong ung voi moi mon do
                 for (int i = 0; i < item.Image.Count(); i++)
@@ -309,35 +309,34 @@ namespace Repositories.ConsignSales
                         FashionItemId = fashionItem.ItemId,
                         Url = item.Image[i]
                     };
-                    await _imageDao.AddAsync(img);
+                    await GenericDao<Image>.Instance.AddAsync(img);
                 }
 
-                
+
                 //tao moi consigndetail tuong ung voi mon do
                 ConsignSaleDetail consignDetail = new ConsignSaleDetail()
                 {
                     ConfirmedPrice = item.ConfirmedPrice,
                     DealPrice = item.DealPrice,
                     FashionItemId = fashionItem.ItemId,
-                    
+
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
-                await _consignSaleDetailDao.AddAsync(consignDetail);
-                
+                await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);
             }
 
-            
 
-            var consignResponse = await _consignSaleDao.GetQueryable()
+            var consignResponse = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
                 .Where(c => c.ConsignSaleId == newConsign.ConsignSaleId)
                 .FirstOrDefaultAsync();
             return consignResponse;
         }
 
-        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(Guid shopId, ConsignSaleRequestForShop request)
+        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(Guid shopId,
+            ConsignSaleRequestForShop request)
         {
-            var query = _consignSaleDao.GetQueryable();
+            var query = GenericDao<ConsignSale>.Instance.GetQueryable();
 
             if (!string.IsNullOrWhiteSpace(request.ConsignSaleCode))
                 query = query.Where(x => EF.Functions.ILike(x.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
@@ -345,6 +344,7 @@ namespace Repositories.ConsignSales
             {
                 query = query.Where(f => f.Status == request.Status);
             }
+
             query = query.Where(c => c.ShopId == shopId);
 
             var count = await query.CountAsync();
@@ -356,7 +356,6 @@ namespace Repositories.ConsignSales
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
                 .OrderByDescending(c => c.CreatedDate)
                 .AsNoTracking().ToListAsync();
-            
 
 
             var result = new PaginationResponse<ConsignSaleResponse>
@@ -364,7 +363,7 @@ namespace Repositories.ConsignSales
                 Items = items,
                 PageSize = request.PageSize,
                 TotalCount = count,
-                Filters = new []{request.Status.ToString()},
+                Filters = new[] { request.Status.ToString() },
                 SearchTerm = request.ConsignSaleCode,
                 PageNumber = request.PageNumber,
             };

@@ -17,22 +17,13 @@ namespace Repositories.Accounts
 {
     public class AccountRepository : IAccountRepository
     {
-        private readonly GenericDao<Account> _accountDao;
-        private readonly GenericDao<Member> _memberDao;
-
-        public AccountRepository(GenericDao<Account> genericDao, GenericDao<Member> memberDao)
-        {
-            _accountDao = genericDao;
-            _memberDao = memberDao;
-        }
-
-        public Task<List<Account?>> FindMany(
+        public async Task<List<Account?>> FindMany(
             Expression<Func<Account?, bool>> predicate,
             int page,
             int pageSize
         )
         {
-            var result = _accountDao.GetQueryable()
+            var result = await GenericDao<Account>.Instance.GetQueryable()
                 .Where(predicate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -41,58 +32,58 @@ namespace Repositories.Accounts
             return result;
         }
 
-        public Task<Account?> FindOne(Expression<Func<Account?, bool>> predicate)
+        public async Task<Account?> FindOne(Expression<Func<Account?, bool>> predicate)
         {
-            var result = _accountDao.GetQueryable().FirstOrDefaultAsync(predicate);
+            var result = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(predicate);
 
             return result;
         }
 
         public async Task<Account?> FindUserByEmail(string email)
         {
-            var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.Email == email);
+            var user = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.Email == email);
             return user;
         }
 
 
         public async Task<Account> FindUserByPasswordResetToken(string token)
         {
-            var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.PasswordResetToken == token);
+            var user = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.PasswordResetToken == token);
             return user;
         }
 
         public async Task<Account?> GetAccountById(Guid id)
         {
-            var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
+            var user = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
             return user;
         }
 
         public async Task<Member?> GetMemberById(Guid id)
         {
-            var user = await _memberDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
+            var user = await GenericDao<Member>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
             return user;
         }
 
         public async Task UpdateMemberAccount(Member member)
         {
-            await _memberDao.UpdateAsync(member);
+            await GenericDao<Member>.Instance.UpdateAsync(member);
         }
 
         public async Task<List<Account?>> GetAllAccounts()
         {
-            var list = await _accountDao.GetQueryable().ToListAsync();
+            var list = await GenericDao<Account>.Instance.GetQueryable().ToListAsync();
             return list;
         }
 
         public async Task<Account?> Register(Account? account)
         {
-            var result = await _accountDao.AddAsync(account);
+            var result = await GenericDao<Account>.Instance.AddAsync(account);
             return result;
         }
 
         public async Task ResetPassword(Guid uid, string password)
         {
-            var user = await _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == uid);
+            var user = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == uid);
             if (user == null)
             {
                 throw new AccountNotFoundException();
@@ -103,13 +94,13 @@ namespace Repositories.Accounts
         {
             user.PasswordResetToken = CreateRandomToken();
             user.ResetTokenExpires = DateTime.UtcNow.AddMinutes(3);
-            await _accountDao.UpdateAsync(user);
+            await GenericDao<Account>.Instance.UpdateAsync(user);
             return await Task.FromResult(user);
         }
 
         public async Task<Account?> UpdateAccount(Account? account)
         {
-            await _accountDao.UpdateAsync(account);
+            await GenericDao<Account>.Instance.UpdateAsync(account);
             return await Task.FromResult<Account>(account);
         }
 
@@ -124,7 +115,7 @@ namespace Repositories.Accounts
 
         public Task<Account?> FindUserByPhone(string phone)
         {
-            var user = _accountDao.GetQueryable().FirstOrDefaultAsync(c => c.Phone == phone);
+            var user = GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.Phone == phone);
 
             return user;
         }
@@ -159,7 +150,7 @@ namespace Repositories.Accounts
             Expression<Func<Account, TResponse>>? selector,
             bool isTracking)
         {
-            var query = _accountDao.GetQueryable();
+            var query = GenericDao<Account>.Instance.GetQueryable();
 
             if (isTracking) query = query.AsTracking();
 

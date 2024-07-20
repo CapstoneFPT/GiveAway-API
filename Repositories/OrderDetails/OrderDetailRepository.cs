@@ -20,30 +20,23 @@ namespace Repositories.OrderDetails
 {
     public class OrderDetailRepository : IOrderDetailRepository
     {
-        private readonly GenericDao<OrderDetail> _orderDetailDao;
-        private readonly GenericDao<FashionItem> _fashionitemDao;
-        private readonly GenericDao<Refund> _refundDao;
-        private readonly GenericDao<Image> _imageDao;
+      
         private readonly IMapper _mapper;
 
-        public OrderDetailRepository(GenericDao<OrderDetail> orderDetailDao, GenericDao<FashionItem> fashionitemDao, GenericDao<Refund> refundDao, GenericDao<Image> imageDao, IMapper mapper)
+        public OrderDetailRepository(IMapper mapper)
         {
-            _orderDetailDao = orderDetailDao;
-            _fashionitemDao = fashionitemDao;
-            _refundDao = refundDao;
-            _imageDao = imageDao;
             _mapper = mapper;
         }
 
         public async Task<OrderDetail> CreateOrderDetail(OrderDetail orderDetail)
         {
-            return await _orderDetailDao.AddAsync(orderDetail);
+            return await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
         }
 
         public async Task<PaginationResponse<OrderDetailResponse<FashionItem>>> GetAllOrderDetailByOrderId(Guid id,
             OrderDetailRequest request)
         {
-            var query = _orderDetailDao.GetQueryable();
+            var query = GenericDao<OrderDetail>.Instance.GetQueryable();
             query = query.Where(c => c.OrderId == id);
 
             var count = await query.CountAsync();
@@ -73,7 +66,7 @@ namespace Repositories.OrderDetails
 
         public async Task<List<OrderDetail>> GetOrderDetails(Expression<Func<OrderDetail, bool>> predicate)
         {
-            var result = await _orderDetailDao.GetQueryable()
+            var result = await GenericDao<OrderDetail>.Instance.GetQueryable()
                 .Include(x => x.FashionItem)
                 .Where(predicate)
                 .ToListAsync();
@@ -83,7 +76,7 @@ namespace Repositories.OrderDetails
 
         public async Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id)
         {
-            var query = await _orderDetailDao.GetQueryable()
+            var query = await GenericDao<OrderDetail>.Instance.GetQueryable()
                 .Where(c => c.OrderDetailId == id)
                 .Select(x => new OrderDetailResponse<FashionItem>
                 {
@@ -103,7 +96,7 @@ namespace Repositories.OrderDetails
 
             foreach (var item in refundRequest)
             {
-                var fashionItem = await _orderDetailDao.GetQueryable()
+                var fashionItem = await GenericDao<OrderDetail>.Instance.GetQueryable()
                     .Include(c => c.FashionItem)
                     .Where(c => c.OrderDetailId == item.OrderDetailIds)
                     .Select(c => c.FashionItem)
@@ -115,7 +108,7 @@ namespace Repositories.OrderDetails
                     CreatedDate = DateTime.UtcNow,
                     RefundStatus = RefundStatus.Pending
                 };
-                await _refundDao.AddAsync(refund);
+                await GenericDao<Refund>.Instance.AddAsync(refund);
                 
                 for (int i = 0; i < item.Images.Count(); i++)
                 {
@@ -125,12 +118,12 @@ namespace Repositories.OrderDetails
                         Url = item.Images[i],
                         RefundId = refund.RefundId
                     };
-                    await _imageDao.AddAsync(img);
+                    await GenericDao<Image>.Instance.AddAsync(img);
                 }
             }
 
 
-            var refundResponse = await _refundDao.GetQueryable()
+            var refundResponse = await GenericDao<Refund>.Instance.GetQueryable()
                 
                 .Where(c => orderDetailIds.Contains(c.OrderDetailId))
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
@@ -142,7 +135,7 @@ namespace Repositories.OrderDetails
             GetOrderDetailsPaginate<T>(Expression<Func<OrderDetail, bool>>? predicate,
                 Expression<Func<OrderDetail, T>>? selector, bool isTracking, int page = -1, int pageSize = -1)
         {
-            var query = _orderDetailDao.GetQueryable();
+            var query = GenericDao<OrderDetail>.Instance.GetQueryable();
 
             if (predicate != null)
             {

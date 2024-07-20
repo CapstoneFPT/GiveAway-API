@@ -17,23 +17,17 @@ namespace Repositories.Refunds
 {
     public class RefundRepository : IRefundRepository
     {
-        private readonly GenericDao<Refund> _refundDao;
-        private readonly GenericDao<OrderDetail> _orderDetailDao;
-        private readonly GenericDao<FashionItem> _fashionitemDao;
+      
         private readonly IMapper _mapper;
 
-        public RefundRepository(GenericDao<Refund> refundDao, GenericDao<OrderDetail> orderDetailDao, 
-            GenericDao<FashionItem> fashionitemDao, IMapper mapper)
+        public RefundRepository(IMapper mapper)
         {
-            _refundDao = refundDao;
-            _orderDetailDao = orderDetailDao;
-            _fashionitemDao = fashionitemDao;
             _mapper = mapper;
         }
 
         public async Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, RefundStatus refundStatus)
         {
-            var refund = await _refundDao.GetQueryable().Include(c => c.OrderDetail)
+            var refund = await GenericDao<Refund>.Instance.GetQueryable().Include(c => c.OrderDetail)
                 .ThenInclude(c => c.FashionItem)
                 .FirstOrDefaultAsync(c => c.RefundId == refundId);
             if (refundStatus.Equals(RefundStatus.Approved))
@@ -45,13 +39,13 @@ namespace Repositories.Refunds
                 refund.RefundStatus = RefundStatus.Rejected;        
             }
 
-            await _refundDao.UpdateAsync(refund);
+            await GenericDao<Refund>.Instance.UpdateAsync(refund);
             return await GetRefundById(refundId);
         }
 
         public async Task<RefundResponse> GetRefundById(Guid refundId)
         {
-            var refund = await _refundDao.GetQueryable()
+            var refund = await GenericDao<Refund>.Instance.GetQueryable()
                 
                 .Where(c => c.RefundId == refundId)
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
@@ -63,7 +57,7 @@ namespace Repositories.Refunds
 
         public async Task<PaginationResponse<RefundResponse>> GetRefundsByShopId(Guid shopId, RefundRequest request)
         {
-            var query = _refundDao.GetQueryable();
+            var query = GenericDao<Refund>.Instance.GetQueryable();
             if (request.Status != null)
             {
                 query = query.Where(f => request.Status.Contains(f.RefundStatus));

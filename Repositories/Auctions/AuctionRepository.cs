@@ -11,27 +11,12 @@ namespace Repositories.Auctions
 {
     public class AuctionRepository : IAuctionRepository
     {
-        private readonly GenericDao<Auction> _auctionDao;
-        private readonly GenericDao<Schedule> _scheduleDao;
-        private readonly GenericDao<AuctionFashionItem> _auctionFashionItemDao;
-        private readonly GenericDao<Shop> _shopDao;
-        private readonly GenericDao<Timeslot> _timeslotDao;
+     
 
-
-        public AuctionRepository(GenericDao<Auction> auctionDao, GenericDao<Schedule> scheduleDao,
-            GenericDao<AuctionFashionItem> auctionFashionItemDao, GenericDao<Shop> shopDao,
-            GenericDao<Timeslot> timeslotDao)
-        {
-            _auctionDao = auctionDao;
-            _scheduleDao = scheduleDao;
-            _auctionFashionItemDao = auctionFashionItemDao;
-            _shopDao = shopDao;
-            _timeslotDao = timeslotDao;
-        }
-
+    
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
-            var auctionItem = await _auctionFashionItemDao.GetQueryable()
+            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
 
             if (auctionItem == null)
@@ -44,7 +29,7 @@ namespace Repositories.Auctions
                 throw new AuctionItemNotAvailableForAuctioningException();
             }
 
-            var shop = await _shopDao.GetQueryable()
+            var shop = await GenericDao<Shop>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
 
             if (shop == null)
@@ -52,7 +37,7 @@ namespace Repositories.Auctions
                 throw new ShopNotFoundException();
             }
 
-            var timeslot = await _timeslotDao.GetQueryable()
+            var timeslot = await GenericDao<Timeslot>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.TimeslotId == request.TimeslotId);
 
             if (timeslot == null)
@@ -71,10 +56,10 @@ namespace Repositories.Auctions
                 EndDate = request.ScheduleDate.ToDateTime(timeslot.EndTime),
                 Status = AuctionStatus.Pending
             };
-            var auctionDetail = await _auctionDao.AddAsync(newAuction);
+            var auctionDetail = await GenericDao<Auction>.Instance.AddAsync(newAuction);
 
             auctionItem.Status = FashionItemStatus.PendingAuction;
-            await _auctionFashionItemDao.UpdateAsync(auctionItem);
+            await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
 
             var newSchedule = new Schedule()
             {
@@ -82,7 +67,7 @@ namespace Repositories.Auctions
                 Date = request.ScheduleDate,
                 TimeslotId = request.TimeslotId
             };
-            await _scheduleDao.AddAsync(newSchedule);
+            await GenericDao<Schedule>.Instance.AddAsync(newSchedule);
 
             auctionItem.Status = FashionItemStatus.AwaitingAuction;
 
@@ -126,7 +111,7 @@ namespace Repositories.Auctions
 
     public async Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
     {
-        var query = _auctionDao.GetQueryable();
+        var query = GenericDao<Auction>.Instance.GetQueryable();
 
         query = query.Include(x => x.Shop);
 
@@ -173,7 +158,7 @@ namespace Repositories.Auctions
 
     public Task<AuctionDetailResponse?> GetAuction(Guid id)
     {
-        var result = _auctionDao
+        var result = GenericDao<Auction>.Instance
             .GetQueryable()
             .Include(x => x.Shop)
             .Include(x => x.AuctionFashionItem)
@@ -215,7 +200,7 @@ namespace Repositories.Auctions
 
     public async Task<AuctionDetailResponse?> DeleteAuction(Guid id)
     {
-        var toBeDeleted = await _auctionDao.GetQueryable()
+        var toBeDeleted = await GenericDao<Auction>.Instance.GetQueryable()
             .FirstOrDefaultAsync(x => x.AuctionId == id);
 
         if (toBeDeleted is null)
@@ -223,7 +208,7 @@ namespace Repositories.Auctions
             throw new AuctionNotFoundException();
         }
 
-        await _auctionDao.DeleteAsync(toBeDeleted);
+        await GenericDao<Auction>.Instance.DeleteAsync(toBeDeleted);
         return new AuctionDetailResponse
         {
             AuctionId = toBeDeleted.AuctionId
@@ -232,7 +217,7 @@ namespace Repositories.Auctions
 
     public async Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request)
     {
-        var toBeUpdated = await _auctionDao.GetQueryable()
+        var toBeUpdated = await GenericDao<Auction>.Instance.GetQueryable()
             .Include(x => x.AuctionFashionItem)
             .Include(x => x.Shop)
             .FirstOrDefaultAsync(x => x.AuctionId == id);
@@ -251,7 +236,7 @@ namespace Repositories.Auctions
 
         if (request.ShopId.HasValue)
         {
-            var shop = await _shopDao.GetQueryable()
+            var shop = await GenericDao<Shop>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
 
             if (shop is null)
@@ -264,7 +249,7 @@ namespace Repositories.Auctions
 
         if (request.AuctionItemId.HasValue)
         {
-            var auctionFashionItem = await _auctionFashionItemDao.GetQueryable()
+            var auctionFashionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId.Value);
 
             if (auctionFashionItem is null)
@@ -275,7 +260,7 @@ namespace Repositories.Auctions
             toBeUpdated.AuctionFashionItemId = request.AuctionItemId.Value;
         }
 
-        await _auctionDao.UpdateAsync(toBeUpdated);
+        await GenericDao<Auction>.Instance.UpdateAsync(toBeUpdated);
         return new AuctionDetailResponse
         {
             AuctionId = toBeUpdated.AuctionId
@@ -284,7 +269,7 @@ namespace Repositories.Auctions
 
     public async Task<AuctionDetailResponse?> ApproveAuction(Guid id)
     {
-        var toBeApproved = await _auctionDao.GetQueryable()
+        var toBeApproved = await GenericDao<Auction>.Instance.GetQueryable()
             .FirstOrDefaultAsync(x => x.AuctionId == id);
 
         if (toBeApproved == null)
@@ -298,7 +283,7 @@ namespace Repositories.Auctions
         }
 
         toBeApproved.Status = AuctionStatus.Approved;
-        await _auctionDao.UpdateAsync(toBeApproved);
+        await GenericDao<Auction>.Instance.UpdateAsync(toBeApproved);
 
         return new AuctionDetailResponse()
         {
@@ -310,7 +295,7 @@ namespace Repositories.Auctions
 
     public async Task<AuctionDetailResponse?> RejectAuction(Guid id)
     {
-        var toBeRejected = await _auctionDao.GetQueryable()
+        var toBeRejected = await GenericDao<Auction>.Instance.GetQueryable()
             .FirstOrDefaultAsync(x => x.AuctionId == id);
 
 
@@ -325,7 +310,7 @@ namespace Repositories.Auctions
         }
 
         toBeRejected.Status = AuctionStatus.Rejected;
-        var auctionItem = await _auctionFashionItemDao.GetQueryable()
+        var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable()
             .FirstOrDefaultAsync(x => x.ItemId == toBeRejected.AuctionFashionItemId);
 
         if (auctionItem == null)
@@ -335,7 +320,7 @@ namespace Repositories.Auctions
 
         auctionItem.Status = FashionItemStatus.Available;
 
-        var result = await _auctionDao.UpdateAsync(toBeRejected);
+        var result = await GenericDao<Auction>.Instance.UpdateAsync(toBeRejected);
         return new AuctionDetailResponse()
         {
             AuctionId = result.AuctionId,
@@ -349,7 +334,7 @@ namespace Repositories.Auctions
 
     public Task<Auction> UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus)
     {
-        var toBeUpdated = _auctionDao.GetQueryable()
+        var toBeUpdated = GenericDao<Auction>.Instance.GetQueryable()
             .FirstOrDefault(x => x.AuctionId == auctionId);
         if (toBeUpdated == null)
         {
@@ -357,13 +342,13 @@ namespace Repositories.Auctions
         }
 
         toBeUpdated.Status = auctionStatus;
-        return _auctionDao.UpdateAsync(toBeUpdated);
+        return GenericDao<Auction>.Instance.UpdateAsync(toBeUpdated);
     }
 
     public async Task<List<Guid>> GetAuctionEndingNow()
     {
         var now = DateTime.UtcNow;
-        var result = await _auctionDao.GetQueryable()
+        var result = await GenericDao<Auction>.Instance.GetQueryable()
             .Where(a => a.EndDate <= now && a.Status == AuctionStatus.OnGoing)
             .Select(x=>x.AuctionId)
             .ToListAsync();
@@ -373,7 +358,7 @@ namespace Repositories.Auctions
 
     public async Task<List<Guid>> GetAuctionStartingNow()
     {
-        var result = await _auctionDao.GetQueryable()
+        var result = await GenericDao<Auction>.Instance.GetQueryable()
             .Where(a => a.StartDate <= DateTime.UtcNow && a.Status == AuctionStatus.Approved)
             .Select(x=>x.AuctionId)
             .ToListAsync();

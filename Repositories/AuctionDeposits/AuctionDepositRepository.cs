@@ -11,25 +11,16 @@ namespace Repositories.AuctionDeposits
 {
     public class AuctionDepositRepository : IAuctionDepositRepository
     {
-        private readonly GenericDao<AuctionDeposit> _auctionDepositDao;
-        private readonly GenericDao<Transaction> _transactionDao;
-        private readonly GenericDao<Auction> _auctionDao;
+     
 
-        public AuctionDepositRepository(GenericDao<AuctionDeposit> auctionDepositDao,
-            GenericDao<Transaction> transactionDao, GenericDao<Auction> auctionDao)
-        {
-            _auctionDepositDao = auctionDepositDao;
-            _transactionDao = transactionDao;
-            _auctionDao = auctionDao;
-        }
-
+    
         public async Task<AuctionDepositDetailResponse> CreateDeposit(Guid auctionId,
             CreateAuctionDepositRequest request)
         {
-            var existingDeposit = await _auctionDepositDao.GetQueryable()
+            var existingDeposit = await GenericDao<AuctionDeposit>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.AuctionId == auctionId && x.MemberId == request.MemberId);
 
-            var auction = await _auctionDao.GetQueryable()
+            var auction = await GenericDao<Auction>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.AuctionId == auctionId);
 
             if (auction == null)
@@ -56,7 +47,7 @@ namespace Repositories.AuctionDeposits
                 CreatedDate = DateTime.UtcNow
             };
 
-            var transactionResult = await _transactionDao.AddAsync(transaction);
+            var transactionResult = await GenericDao<Transaction>.Instance.AddAsync(transaction);
 
             var deposit = new AuctionDeposit()
             {
@@ -66,7 +57,7 @@ namespace Repositories.AuctionDeposits
                 CreatedDate = DateTime.UtcNow
             };
 
-            var result = await _auctionDepositDao.AddAsync(deposit);
+            var result = await GenericDao<AuctionDeposit>.Instance.AddAsync(deposit);
             return new AuctionDepositDetailResponse
             {
                 Id = result.AuctionDepositId,
@@ -80,7 +71,7 @@ namespace Repositories.AuctionDeposits
         public async Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId,
             GetDepositsRequest request)
         {
-            var data = await _auctionDepositDao.GetQueryable()
+            var data = await GenericDao<AuctionDeposit>.Instance.GetQueryable()
                 .Where(x => x.AuctionId == auctionId)
                 .Select(x => new AuctionDepositListResponse()
                 {
@@ -102,7 +93,7 @@ namespace Repositories.AuctionDeposits
         public Task<T?> GetSingleDeposit<T>(Expression<Func<AuctionDeposit, bool>>? predicate,
             Expression<Func<AuctionDeposit, T>>? selector)
         {
-            var query = _auctionDepositDao.GetQueryable();
+            var query = GenericDao<AuctionDeposit>.Instance.GetQueryable();
             if (predicate != null)
             {
                 query = query.Where(predicate);

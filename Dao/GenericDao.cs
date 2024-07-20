@@ -7,45 +7,71 @@ namespace Dao;
 
 public class GenericDao<T> where T : class
 {
-    private readonly GiveAwayDbContext _dbContext;
+    private static readonly object _lock = new object();
+    private static GenericDao<T>? _instance = null;
 
-    public GenericDao(GiveAwayDbContext dbContext)
+    private GenericDao()
     {
-        _dbContext = dbContext;
     }
+
+    public static GenericDao<T> Instance
+    {
+        get
+        {
+            lock (_lock)
+            {
+                if (_instance == null)
+                {
+                    _instance = new GenericDao<T>();
+                }
+
+                return _instance;
+            }
+        }
+    }
+
+    // public GenericDao(GiveAwayDbContext dbContext)
+    // {
+    //     _dbContext = dbContext;
+    // }
 
     public IQueryable<T> GetQueryable()
     {
-        return _dbContext.Set<T>().AsQueryable();
+        var dbContext = new GiveAwayDbContext();
+        return dbContext.Set<T>();
     }
 
     public DbSet<T> GetDbSet()
     {
-        return _dbContext.Set<T>();
+        var dbContext = new GiveAwayDbContext();
+        return dbContext.Set<T>();
     }
 
     public async Task<T> AddAsync(T entity)
     {
         try
         {
-            _dbContext.Set<T>().Add(entity);
-            await _dbContext.SaveChangesAsync();
+            var dbContext = new GiveAwayDbContext();
+
+            await dbContext.Set<T>().AddAsync(entity);
+            await dbContext.SaveChangesAsync();
+
+            return entity;
         }
         catch (Exception e)
         {
             throw new DbCustomException(e.Message, e.InnerException?.Message);
         }
-
-        return entity;
     }
 
     public async Task<T> UpdateAsync(T entity)
     {
         try
         {
-            _dbContext.Set<T>().Update(entity);
+            var dbContext = new GiveAwayDbContext();
 
-            await _dbContext.SaveChangesAsync();
+            dbContext.Set<T>().Update(entity);
+            await dbContext.SaveChangesAsync();
             return entity;
         }
         catch (Exception e)
@@ -58,8 +84,9 @@ public class GenericDao<T> where T : class
     {
         try
         {
-            _dbContext.Set<T>().UpdateRange(entities);
-            await _dbContext.SaveChangesAsync();
+            var dbContext = new GiveAwayDbContext();
+            dbContext.Set<T>().UpdateRange(entities);
+            await dbContext.SaveChangesAsync();
             return entities;
         }
         catch (Exception e)
@@ -73,8 +100,9 @@ public class GenericDao<T> where T : class
     {
         try
         {
-            _dbContext.Set<T>().Remove(entity);
-            await _dbContext.SaveChangesAsync();
+            var dbContext = new GiveAwayDbContext();
+            dbContext.Set<T>().Remove(entity);
+            await dbContext.SaveChangesAsync();
             return entity;
         }
         catch (Exception e)

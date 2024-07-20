@@ -15,37 +15,28 @@ namespace Repositories.Categories
 {
     public class CategoryRepository : ICategoryRepository
     {
-        private readonly GenericDao<Category> _categoryDao;
-        private readonly GenericDao<FashionItem> _fashionItemDao;
-
-        public CategoryRepository(GenericDao<Category> categoryDao, GenericDao<FashionItem> fashionItemDao)
-        {
-            _categoryDao = categoryDao;
-            _fashionItemDao = fashionItemDao;
-        }
-
         public async Task<List<Category>> GetAllParentCategory()
         {
-            var listcate = await _categoryDao.GetQueryable().Where(c => c.Level == 1).ToListAsync();
+            var listcate = await GenericDao<Category>.Instance.GetQueryable().Where(c => c.Level == 1).ToListAsync();
             return listcate;
         }
 
         public async Task<Category> GetCategoryById(Guid id)
         {
-            var cate = await _categoryDao.GetQueryable().FirstOrDefaultAsync(c => c.CategoryId == id);
+            var cate = await GenericDao<Category>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.CategoryId == id);
             return cate;
         }
 
         public async Task<List<Category>> GetAllChildrenCategory(Guid id, int level)
         {
-            return await _categoryDao.GetQueryable()
+            return await GenericDao<Category>.Instance.GetQueryable()
                 .Where(c => c.ParentId == id && c.Level == level && c.Status.Equals(CategoryStatus.Available))
                 .ToListAsync();
         }
 
         public async Task<Category> AddCategory(Category category)
         {
-            return await _categoryDao.AddAsync(category);
+            return await GenericDao<Category>.Instance.AddAsync(category);
         }
 
         public async Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null, Guid? rootCategoryId = null)
@@ -54,17 +45,17 @@ namespace Repositories.Categories
 
             if (shopId.HasValue)
             {
-                relevantCategoryIds = _fashionItemDao.GetQueryable()
+                relevantCategoryIds = GenericDao<FashionItem>.Instance.GetQueryable()
                     .Where(fi => fi.ShopId == shopId.Value)
                     .Select(fi => fi.CategoryId)
                     .Distinct();
             }
             else
             {
-                relevantCategoryIds = _categoryDao.GetQueryable().Select(c => c.CategoryId);
+                relevantCategoryIds = GenericDao<Category>.Instance.GetQueryable().Select(c => c.CategoryId);
             }
 
-            var allCategories = await _categoryDao.GetQueryable()
+            var allCategories = await GenericDao<Category>.Instance.GetQueryable()
                 .Where(c => relevantCategoryIds.Contains(c.CategoryId))
                 .Select(c => new CategoryTreeNode
                 {
@@ -107,17 +98,17 @@ namespace Repositories.Categories
 
         public async Task<Category> UpdateCategory(Category category)
         {
-            return await _categoryDao.UpdateAsync(category);
+            return await GenericDao<Category>.Instance.UpdateAsync(category);
         }
 
         public async Task<Category> GetParentCategoryById(Guid? id)
         {
-            return await _categoryDao.GetQueryable().FirstOrDefaultAsync(c => c.ParentId == id);
+            return await GenericDao<Category>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.ParentId == id);
         }
 
         public async Task<List<Category>> GetCategoryWithCondition(CategoryRequest categoryRequest)
         {
-            var query = _categoryDao.GetQueryable();
+            var query = GenericDao<Category>.Instance.GetQueryable();
             if (!string.IsNullOrWhiteSpace(categoryRequest.SearchName))
                 query = query.Where(x => EF.Functions.ILike(x.Name, $"%{categoryRequest.SearchName}%"));
             if (categoryRequest.Level != null)
@@ -144,14 +135,14 @@ namespace Repositories.Categories
             IQueryable<Category> relevantCategories;
             if (shopId.HasValue)
             {
-                relevantCategories = _fashionItemDao.GetQueryable()
+                relevantCategories = GenericDao<FashionItem>.Instance.GetQueryable()
                     .Where(x => x.ShopId == shopId.Value)
                     .Select(x => x.Category).Where(x => x.Level == 4 && x.Status.Equals(CategoryStatus.Available))
                     .Distinct();
             }
             else
             {
-                relevantCategories = _categoryDao.GetQueryable()
+                relevantCategories = GenericDao<Category>.Instance.GetQueryable()
                     .Where(x => x.Level == 4 && x.Status.Equals(CategoryStatus.Available)).Distinct();
             }
 
