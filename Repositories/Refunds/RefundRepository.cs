@@ -10,6 +10,7 @@ using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,9 +31,14 @@ namespace Repositories.Refunds
             var refund = await GenericDao<Refund>.Instance.GetQueryable().Include(c => c.OrderDetail)
                 .ThenInclude(c => c.FashionItem)
                 .FirstOrDefaultAsync(c => c.RefundId == refundId);
+            if (refund == null)
+            {
+                throw new RefundNoFoundException();
+            }
             if (refundStatus.Equals(RefundStatus.Approved))
             {
                 refund.RefundStatus = RefundStatus.Approved;
+                refund.OrderDetail.FashionItem.Status = FashionItemStatus.Returned;
             }
             if (refundStatus.Equals(RefundStatus.Rejected))
             {
@@ -46,7 +52,7 @@ namespace Repositories.Refunds
         public async Task<RefundResponse> GetRefundById(Guid refundId)
         {
             var refund = await GenericDao<Refund>.Instance.GetQueryable()
-                
+                .Include(c => c.OrderDetail).ThenInclude(c => c.Order)
                 .Where(c => c.RefundId == refundId)
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();

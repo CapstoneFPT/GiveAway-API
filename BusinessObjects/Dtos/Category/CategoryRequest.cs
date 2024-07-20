@@ -11,6 +11,7 @@ namespace BusinessObjects.Dtos.Category
     {
         public Guid? CategoryId { get; set; }
         public string? SearchName { get; set; }
+        public Guid? ParentId { get; set; }
         public int? Level { get; set; }
         public CategoryStatus? Status { get; set; }
     }
