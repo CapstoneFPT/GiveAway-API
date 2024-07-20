@@ -12,6 +12,7 @@ using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Quartz;
 using Repositories.AuctionDeposits;
 using Repositories.AuctionItems;
 using Repositories.Auctions;
@@ -35,12 +36,14 @@ namespace Services.Auctions
         private readonly IAccountService _accountService;
         private readonly ITransactionRepository _transactionRepository;
         private readonly IOrderRepository _orderRepository;
+        private readonly ISchedulerFactory _schedulerFactory;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
             IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
             IAuctionItemRepository auctionItemRepository,
             IAccountService accountService,
-            ITransactionRepository transactionRepository, IOrderRepository orderRepository)
+            ITransactionRepository transactionRepository, IOrderRepository orderRepository,
+            ISchedulerFactory schedulerFactory)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
@@ -50,6 +53,7 @@ namespace Services.Auctions
             _accountService = accountService;
             _transactionRepository = transactionRepository;
             _orderRepository = orderRepository;
+            _schedulerFactory = schedulerFactory;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -209,10 +213,50 @@ namespace Services.Auctions
             return result;
         }
 
-        public Task<AuctionDetailResponse?> ApproveAuction(Guid id)
+        public async Task<AuctionDetailResponse?> ApproveAuction(Guid id)
         {
-            var result = _auctionRepository.ApproveAuction(id);
+            var result = await _auctionRepository.ApproveAuction(id);
+
+            if (result == null)
+            {
+                throw new AuctionNotFoundException();
+            }
+
+            await ScheduleAuctionStartAndEnd(result);
             return result;
+        }
+
+        private async Task ScheduleAuctionStartAndEnd(AuctionDetailResponse auction)
+        {
+            var scheduler = await _schedulerFactory.GetScheduler();
+            var jobDataMap = new JobDataMap()
+            {
+                { "AuctionId", auction.AuctionId }
+            };
+
+            var startJob = JobBuilder.Create<AuctionStartingJob>()
+                .WithIdentity($"StartAuction_{auction.AuctionId}")
+                .SetJobData(jobDataMap)
+                .Build();
+
+            var startTrigger = TriggerBuilder.Create()
+                .WithIdentity($"StartAuctionTrigger_{auction.AuctionId}")
+                .StartAt(auction.StartDate)
+                .Build();
+
+            await scheduler.ScheduleJob(startJob, startTrigger);
+
+            var endJob = JobBuilder.Create<AuctionEndingJob>()
+                .WithIdentity($"EndAuction_{auction.AuctionId}")
+                .SetJobData(jobDataMap)
+                .Build();
+
+            var endTrigger = TriggerBuilder.Create()
+                .WithIdentity($"EndAuctionTrigger_{auction.AuctionId}")
+                .StartAt(auction.EndDate)
+                .Build();
+
+            await scheduler.ScheduleJob(endJob, endTrigger);
         }
 
         public Task<AuctionDetailResponse?> RejectAuction(Guid id)
