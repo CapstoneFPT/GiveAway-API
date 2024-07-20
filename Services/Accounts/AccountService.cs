@@ -224,7 +224,7 @@ namespace Services.Accounts
                 throw new InsufficientBalanceException();
             }
 
-            if (account.Bank == null || account.BankAccountName == null || account.BankAccountNumber == null)
+            if (request.Bank == null || request.BankAccountName == null || request.BankAccountNumber == null)
             {
                 throw new BankAccountNotSetException("Please set your bank account first");
             }

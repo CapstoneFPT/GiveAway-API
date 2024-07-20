@@ -14,6 +14,7 @@ public class GiveAwayDbContext : DbContext
     public DbSet<ConsignSaleDetail> ConsignSaleDetails { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<Withdraw> Withdraws { get; set; }
+    public DbSet<BankAccount> BankAccounts { get; set; }
     public DbSet<FashionItem> FashionItems { get; set; }
     public DbSet<Image> Images { get; set; }
     public DbSet<Auction> Auctions { get; set; }
@@ -47,6 +48,7 @@ public class GiveAwayDbContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseNpgsql(GetConnectionString());
+        optionsBuilder.LogTo(Console.WriteLine);
         optionsBuilder.EnableSensitiveDataLogging();
     }
 
@@ -148,21 +150,11 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.AuctionDeposits)
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
-
+        
         modelBuilder.Entity<Member>()
-            .Property(x => x.Bank)
-            .HasColumnType("varchar").HasMaxLength(20)
-            .IsRequired(false);
-
-        modelBuilder.Entity<Member>()
-            .Property(x => x.BankAccountName)
-            .HasColumnType("varchar").HasMaxLength(30)
-            .IsRequired(false);
-
-        modelBuilder.Entity<Member>()
-            .Property(x => x.BankAccountNumber)
-            .HasColumnType("varchar").HasMaxLength(16)
-            .IsRequired(false);
+            .HasMany(x=>x.BankAccounts)
+            .WithOne(x=>x.Member)
+            .HasForeignKey(x=>x.MemberId);
 
         #endregion
 
