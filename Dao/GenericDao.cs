@@ -41,12 +41,6 @@ public class GenericDao<T> where T : class
         return dbContext.Set<T>();
     }
 
-    public DbSet<T> GetDbSet()
-    {
-        var dbContext = new GiveAwayDbContext();
-        return dbContext.Set<T>();
-    }
-
     public async Task<T> AddAsync(T entity)
     {
         try

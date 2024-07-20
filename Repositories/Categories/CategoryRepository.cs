@@ -15,6 +15,12 @@ namespace Repositories.Categories
 {
     public class CategoryRepository : ICategoryRepository
     {
+        private readonly GiveAwayDbContext _giveAwayDbContext;
+
+        public CategoryRepository(GiveAwayDbContext giveAwayDbContext)
+        {
+            _giveAwayDbContext = giveAwayDbContext;
+        }
         public async Task<List<Category>> GetAllParentCategory()
         {
             var listcate = await GenericDao<Category>.Instance.GetQueryable().Where(c => c.Level == 1).ToListAsync();
@@ -42,20 +48,22 @@ namespace Repositories.Categories
         public async Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null, Guid? rootCategoryId = null)
         {
             IQueryable<Guid> relevantCategoryIds;
+            var categoryDao = _giveAwayDbContext.Set<Category>();
+            var fashionItemDao = _giveAwayDbContext.Set<FashionItem>();
 
             if (shopId.HasValue)
             {
-                relevantCategoryIds = GenericDao<FashionItem>.Instance.GetQueryable()
+                relevantCategoryIds = fashionItemDao
                     .Where(fi => fi.ShopId == shopId.Value)
                     .Select(fi => fi.CategoryId)
                     .Distinct();
             }
             else
             {
-                relevantCategoryIds = GenericDao<Category>.Instance.GetQueryable().Select(c => c.CategoryId);
+                relevantCategoryIds = categoryDao.Select(c => c.CategoryId);
             }
 
-            var allCategories = await GenericDao<Category>.Instance.GetQueryable()
+            var allCategories = await categoryDao
                 .Where(c => relevantCategoryIds.Contains(c.CategoryId))
                 .Select(c => new CategoryTreeNode
                 {
