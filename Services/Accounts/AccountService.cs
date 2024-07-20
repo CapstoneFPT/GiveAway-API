@@ -142,6 +142,11 @@ namespace Services.Accounts
                 }%");
             }
 
+            if (!string.IsNullOrWhiteSpace(request.Phone))
+            {
+                predicate = account => EF.Functions.ILike(account.Phone, $"%{request.Phone}%");
+            }
+
             if (request.Status != null && request.Status.Length != 0)
             {
                 predicate = predicate.And(account => request.Status.Contains(account.Status));
