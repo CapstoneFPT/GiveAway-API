@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Email;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Refunds;
+using BusinessObjects.Utils;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Refunds;
 
@@ -24,20 +26,14 @@ namespace Services.Refunds
         {
             var response = new Result<RefundResponse>();
             var refund = await _refundRepository.GetRefundById(refundId);
-            if (refund is null)
+            
+            if (refundStatus.Equals(RefundStatus.Pending) || refund.RefundStatus.Equals(RefundStatus.Pending))
             {
-                response.ResultStatus = ResultStatus.NotFound;
-                response.Messages = ["Can not found the refund"];
-                return response;
+                throw new StatusNotAvailableException();
             }
-            if (refundStatus.Equals(RefundStatus.Pending))
-            {
-                response.ResultStatus = ResultStatus.Error;
-                response.Messages = ["This refund is already pending"];
-                return response;
-            }
+            var data = await _refundRepository.ApprovalRefundFromShop(refundId, refundStatus);
 
-            response.Data = await _refundRepository.ApprovalRefundFromShop(refundId,refundStatus);
+            response.Data = data;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Successfully"];
             return response;
@@ -61,7 +57,7 @@ namespace Services.Refunds
         }
 
         public async Task<Result<PaginationResponse<RefundResponse>>> GetRefundByShopId(Guid shopId,
-            RefundRequest refundRequest)
+            RefundRequest refundRequest) 
         {
             var response = new Result<PaginationResponse<RefundResponse>>();
             var result = await _refundRepository.GetRefundsByShopId(shopId, refundRequest);
@@ -76,6 +72,13 @@ namespace Services.Refunds
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Results in page: " + result.PageNumber];
             return response;
+        }
+
+        private async Task<bool> SendEmailRefund(Guid refundId)
+        {
+            SendEmailRequest content = new SendEmailRequest();
+            var refund = _refundRepository.GetRefundById(refundId);
+            return false;
         }
     }
 }
