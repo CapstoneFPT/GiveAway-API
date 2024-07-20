@@ -2,5 +2,8 @@
   scrape_interval: 10s
 scrape_configs:
   - job_name: 'WebApi-read-prometheus'
+    scheme: http
+    metrics_path: /metrics
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets:
+        - host.docker.internal:5039

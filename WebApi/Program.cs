@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Prometheus;
+using Quartz;
 using Services.Auctions;
 using Services.Orders;
 using Services.VnPayService;
@@ -30,7 +31,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddServices();
 builder.Services.AddRepositories();
 // builder.Services.AddDao();
-builder.Services.AddLongRunningServices();
+builder.Services.AddQuartz(configurator =>
+{
+});
+builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+// builder.Services.AddLongRunningServices();
 builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPay"));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR(options =>
@@ -103,7 +108,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials().SetIsOriginAllowedToAllowWildcardSubdomains();
+            policy.WithOrigins("http://localhost:5173", "http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials().SetIsOriginAllowedToAllowWildcardSubdomains();
         });
 });
 
