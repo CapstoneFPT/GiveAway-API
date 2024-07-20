@@ -39,6 +39,10 @@ namespace Repositories.OrderDetails
             var query = GenericDao<OrderDetail>.Instance.GetQueryable();
             query = query.Where(c => c.OrderId == id);
 
+            if (request.ShopId != null)
+            {
+                query = query.Where(c => c.FashionItem.ShopId == request.ShopId);
+            }
             var count = await query.CountAsync();
             query = query.Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize);
