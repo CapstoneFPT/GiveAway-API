@@ -8,4 +8,7 @@ public interface IWithdrawRepository
     Task<Withdraw> CreateWithdraw(Withdraw withdraw);
     Task<Withdraw?> GetSingleWithdraw(Expression<Func<Withdraw, bool>> predicate);
     Task UpdateWithdraw(Withdraw withdraw);
+    Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetWithdraws<T>(int? requestPage,
+        int? requestPageSize, Expression<Func<Withdraw, bool>> predicate, Expression<Func<Withdraw, T>> selector,
+        bool isTracking);
 }

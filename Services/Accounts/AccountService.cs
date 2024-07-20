@@ -282,5 +282,37 @@ namespace Services.Accounts
                 TotalCount = data.TotalCount
             };
         }
+
+        public async Task<PaginationResponse<GetWithdrawsResponse>> GetWithdraws(Guid accountId, GetWithdrawsRequest request)
+        {
+            Expression<Func<Withdraw,bool>> predicate = withdraw => withdraw.MemberId == accountId;
+
+            if (request.Status != null)
+            {
+                predicate = predicate.And(x => x.Status == request.Status);
+            }
+            
+
+            Expression<Func<Withdraw, GetWithdrawsResponse>> selector = withdraw => new GetWithdrawsResponse()
+            {
+                WithdrawId = withdraw.WithdrawId,
+                MemberId = withdraw.MemberId,
+                Amount = withdraw.Amount,
+                Status = withdraw.Status,
+                CreatedDate = withdraw.CreatedDate
+            };
+            
+            (List<GetWithdrawsResponse> Items, int Page, int PageSize, int TotalCount) data = await
+                _withdrawRepository.GetWithdraws(request.Page, request.PageSize,
+                    predicate, selector, isTracking: false);
+
+            return new PaginationResponse<GetWithdrawsResponse>()
+            {
+                Items = data.Items,
+                PageSize = data.PageSize,
+                PageNumber = data.Page,
+                TotalCount = data.TotalCount
+            };
+        }
     }
 }

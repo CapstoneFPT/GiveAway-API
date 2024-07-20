@@ -119,6 +119,14 @@ namespace WebApi.Controllers
             var result = await _accountService.RequestWithdraw(accountId, request);
             return Ok(result);
         }
+        
+        [HttpGet("{accountId}/withdraws")]
+        public async Task<ActionResult<PaginationResponse<GetWithdrawsResponse>>> GetWithdraws([FromRoute] Guid accountId,
+            [FromQuery] GetWithdrawsRequest request)
+        {
+            var result = await _accountService.GetWithdraws(accountId, request);
+            return Ok(result);
+        }
 
         [HttpGet("{accountId}/transactions")]
         public async Task<ActionResult<GetTransactionsResponse>> GetTransactions([FromRoute] Guid accountId,

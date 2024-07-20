@@ -24,5 +24,6 @@ namespace Services.Accounts
         Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request);
         Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request);
         Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId, GetTransactionsRequest request);
+        Task<PaginationResponse<GetWithdrawsResponse>> GetWithdraws(Guid accountId, GetWithdrawsRequest request);
     }
 }
