@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Inquiries;
+using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
 
 namespace Services.Accounts
@@ -22,5 +23,6 @@ namespace Services.Accounts
         Task<PaginationResponse<AccountResponse>> GetAccounts(GetAccountsRequest request);
         Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request);
         Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request);
+        Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId, GetTransactionsRequest request);
     }
 }

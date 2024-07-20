@@ -12,12 +12,14 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Inquiries;
+using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Inquiries;
+using Repositories.Transactions;
 using Repositories.Withdraws;
 
 namespace Services.Accounts
@@ -27,15 +29,17 @@ namespace Services.Accounts
         private readonly IAccountRepository _account;
         private readonly IInquiryRepository _inquiryRepository;
         private readonly IWithdrawRepository _withdrawRepository;
+        private readonly ITransactionRepository _transactionRepository;
         private readonly IMapper _mapper;
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
-            IWithdrawRepository withdrawRepository)
+            IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository)
         {
             _account = repository;
             _mapper = mapper;
             _inquiryRepository = inquiryRepository;
             _withdrawRepository = withdrawRepository;
+            _transactionRepository = transactionRepository;
         }
 
         public async Task<Result<AccountResponse>> BanAccountById(Guid id)
@@ -245,7 +249,38 @@ namespace Services.Accounts
                 CreatedDate = result.CreatedDate
             };
         }
-    }
 
-    
+        public async Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId,
+            GetTransactionsRequest request)
+        {
+            Expression<Func<Transaction, bool>> predicate = transaction => transaction.MemberId == accountId;
+
+            if (request.Type != null)
+            {
+                predicate = predicate.And(x => x.Type == request.Type);
+            }
+
+            Expression<Func<Transaction, GetTransactionsResponse>> selector = transaction =>
+                new GetTransactionsResponse()
+                {
+                    TransactionId = transaction.TransactionId,
+                    MemberId = transaction.MemberId,
+                    Amount = transaction.Amount,
+                    Type = transaction.Type,
+                    CreatedDate = transaction.CreatedDate
+                };
+
+            (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await
+                _transactionRepository.GetTransactions<GetTransactionsResponse>(request.Page, request.PageSize,
+                    predicate, selector, isTracking: false);
+
+            return new PaginationResponse<GetTransactionsResponse>()
+            {
+                Items = data.Items,
+                PageSize = data.PageSize,
+                PageNumber = data.Page,
+                TotalCount = data.TotalCount
+            };
+        }
+    }
 }

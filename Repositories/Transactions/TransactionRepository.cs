@@ -12,7 +12,12 @@ namespace Repositories.Transactions
 {
     public class TransactionRepository : ITransactionRepository
     {
-     
+        private readonly GiveAwayDbContext _giveAwayDbContext;
+
+        public TransactionRepository(GiveAwayDbContext giveAwayDbContext)
+        {
+            _giveAwayDbContext = giveAwayDbContext;
+        }
 
         public async Task<Transaction?> CreateTransaction(Transaction transaction)
         {
@@ -25,7 +30,7 @@ namespace Repositories.Transactions
             int? transactionRequestPageSize, Expression<Func<Transaction, bool>>? predicate,
             Expression<Func<Transaction, T>>? selector, bool isTracking = false)
         {
-            var query = GenericDao<Transaction>.Instance.GetQueryable();
+            var query = _giveAwayDbContext.Transactions.AsQueryable(); 
 
             if (predicate != null)
             {

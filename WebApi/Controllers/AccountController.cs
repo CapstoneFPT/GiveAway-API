@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
+using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http;
@@ -116,6 +117,14 @@ namespace WebApi.Controllers
             [FromBody] CreateWithdrawRequest request)
         {
             var result = await _accountService.RequestWithdraw(accountId, request);
+            return Ok(result);
+        }
+
+        [HttpGet("{accountId}/transactions")]
+        public async Task<ActionResult<GetTransactionsResponse>> GetTransactions([FromRoute] Guid accountId,
+            [FromQuery] GetTransactionsRequest request)
+        {
+            var result = await _accountService.GetTransactions(accountId, request);
             return Ok(result);
         }
         
