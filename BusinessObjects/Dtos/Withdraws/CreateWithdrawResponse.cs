@@ -9,4 +9,7 @@ public class CreateWithdrawResponse
     public Guid MemberId { get; set; }
     public DateTime CreatedDate { get; set; }
     public WithdrawStatus Status { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public string? BankAccountName { get; set; }
+    public string? Bank { get; set; }
 }

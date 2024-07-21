@@ -235,7 +235,10 @@ namespace Services.Accounts
                 Amount = request.Amount,
                 MemberId = accountId,
                 CreatedDate = DateTime.UtcNow,
-                Status = WithdrawStatus.Pending
+                Status = WithdrawStatus.Pending, 
+                Bank = request.Bank,
+                BankAccountName = request.BankAccountName,
+                BankAccountNumber = request.BankAccountNumber
             };
 
             var result = await _withdrawRepository.CreateWithdraw(newWithdraw);
@@ -244,6 +247,9 @@ namespace Services.Accounts
             {
                 WithdrawId = result.WithdrawId,
                 Amount = result.Amount,
+                Bank = result.Bank,
+                BankAccountName = result.BankAccountName,
+                BankAccountNumber = result.BankAccountNumber,
                 MemberId = result.MemberId,
                 Status = result.Status,
                 CreatedDate = result.CreatedDate
@@ -283,15 +289,16 @@ namespace Services.Accounts
             };
         }
 
-        public async Task<PaginationResponse<GetWithdrawsResponse>> GetWithdraws(Guid accountId, GetWithdrawsRequest request)
+        public async Task<PaginationResponse<GetWithdrawsResponse>> GetWithdraws(Guid accountId,
+            GetWithdrawsRequest request)
         {
-            Expression<Func<Withdraw,bool>> predicate = withdraw => withdraw.MemberId == accountId;
+            Expression<Func<Withdraw, bool>> predicate = withdraw => withdraw.MemberId == accountId;
 
             if (request.Status != null)
             {
                 predicate = predicate.And(x => x.Status == request.Status);
             }
-            
+
 
             Expression<Func<Withdraw, GetWithdrawsResponse>> selector = withdraw => new GetWithdrawsResponse()
             {
@@ -304,7 +311,7 @@ namespace Services.Accounts
                 BankAccountNumber = withdraw.BankAccountNumber,
                 CreatedDate = withdraw.CreatedDate
             };
-            
+
             (List<GetWithdrawsResponse> Items, int Page, int PageSize, int TotalCount) data = await
                 _withdrawRepository.GetWithdraws(request.Page, request.PageSize,
                     predicate, selector, isTracking: false);
