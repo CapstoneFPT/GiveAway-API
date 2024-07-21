@@ -299,6 +299,9 @@ namespace Services.Accounts
                 MemberId = withdraw.MemberId,
                 Amount = withdraw.Amount,
                 Status = withdraw.Status,
+                Bank = withdraw.Bank,
+                BankAccountName = withdraw.BankAccountName,
+                BankAccountNumber = withdraw.BankAccountNumber,
                 CreatedDate = withdraw.CreatedDate
             };
             
