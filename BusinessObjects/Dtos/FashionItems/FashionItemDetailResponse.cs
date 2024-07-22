@@ -27,6 +27,7 @@ namespace BusinessObjects.Dtos.FashionItems
         public SizeType Size { get; set; }
         public string Color { get; set; }
         public string? Brand { get; set; } 
+        public bool IsOrderedYet { get; set; }
         public GenderType Gender { get; set; }
     }
 }

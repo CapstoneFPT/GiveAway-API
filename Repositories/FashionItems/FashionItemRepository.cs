@@ -14,11 +14,13 @@ namespace Repositories.FashionItems
     public class FashionItemRepository : IFashionItemRepository
     {
         private readonly IMapper _mapper;
+        private readonly GiveAwayDbContext _giveAwayDbContext;
 
         public FashionItemRepository(
-            IMapper mapper)
+            IMapper mapper, GiveAwayDbContext dbContext)
         {
             _mapper = mapper;
+            _giveAwayDbContext = dbContext;
         }
 
         public async Task<FashionItem> AddFashionItem(FashionItem request)
@@ -29,27 +31,35 @@ namespace Repositories.FashionItems
         public async Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
             AuctionFashionItemRequest request)
         {
-            var query = GenericDao<FashionItem>.Instance.GetQueryable();
+            var query = _giveAwayDbContext.FashionItems.AsQueryable()
+                .Select(x => new
+                {
+                    FashionItem = x,
+                    IsOrderedYet = _giveAwayDbContext.OrderDetails.Any(orderDetail =>
+                        orderDetail.FashionItemId == x.ItemId && orderDetail.Order.MemberId == request.MemberId &&
+                        orderDetail.Order.Status == OrderStatus.AwaitingPayment)
+                });
+
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-                query = query.Where(x => EF.Functions.ILike(x.Name, $"%{request.SearchTerm}%"));
+                query = query.Where(x => EF.Functions.ILike(x.FashionItem.Name, $"%{request.SearchTerm}%"));
             if (request.Status != null)
             {
-                query = query.Where(f => request.Status.Contains(f.Status));
+                query = query.Where(f => request.Status.Contains(f.FashionItem.Status));
             }
 
             if (request.Type != null)
             {
-                query = query.Where(f => request.Type.Contains(f.Type));
+                query = query.Where(f => request.Type.Contains(f.FashionItem.Type));
             }
 
             if (request.ShopId != null)
             {
-                query = query.Where(f => f.ShopId.Equals(request.ShopId));
+                query = query.Where(f => f.FashionItem.ShopId.Equals(request.ShopId));
             }
 
             if (request.GenderType != null)
             {
-                query = query.Where(f => f.Gender.Equals(request.GenderType));
+                query = query.Where(f => f.FashionItem.Gender.Equals(request.GenderType));
             }
 
             var count = await query.CountAsync();
@@ -70,6 +80,7 @@ namespace Repositories.FashionItems
             };
             return result;
         }
+
 
         public async Task<FashionItem> GetFashionItemById(Guid id)
         {
