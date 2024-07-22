@@ -98,7 +98,7 @@ namespace Repositories.Auctions
                     Note = auctionItem.Note,
                     Value = auctionItem.Value,
                     ShopId = auctionItem.ShopId,
-                    CategoryId = auctionItem.CategoryId
+                    CategoryId = auctionItem.CategoryId.Value
                 },
                 DepositFee = auctionDetail.DepositFee,
                 ShopId = auctionDetail.ShopId,
@@ -191,7 +191,7 @@ namespace Repositories.Auctions
                     Note = x.AuctionFashionItem.Note,
                     Value = x.AuctionFashionItem.Value,
                     ShopId = x.AuctionFashionItem.ShopId,
-                    CategoryId = x.AuctionFashionItem.CategoryId
+                    CategoryId = x.AuctionFashionItem.CategoryId.Value
                 }
             }).AsNoTracking().FirstOrDefaultAsync();
 

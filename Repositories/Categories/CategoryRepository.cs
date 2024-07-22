@@ -55,7 +55,7 @@ namespace Repositories.Categories
             {
                 relevantCategoryIds = fashionItemDao
                     .Where(fi => fi.ShopId == shopId.Value)
-                    .Select(fi => fi.CategoryId)
+                    .Select(fi => fi.CategoryId.Value)
                     .Distinct();
             }
             else
