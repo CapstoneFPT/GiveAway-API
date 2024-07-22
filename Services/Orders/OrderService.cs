@@ -352,10 +352,7 @@ namespace Services.Orders
                 return response;
             }
 
-            if (!orderRequest.PaymentMethod.Equals(PaymentMethod.Cash))
-            {
-                throw new WrongPaymentMethodException("Not allow COD or Point or QRCode");
-            }
+            
             var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
             if (checkItemAvailable.Count > 0)
             {
