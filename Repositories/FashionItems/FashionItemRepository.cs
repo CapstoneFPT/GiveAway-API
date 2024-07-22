@@ -35,9 +35,12 @@ namespace Repositories.FashionItems
                 .Select(x => new
                 {
                     FashionItem = x,
-                    IsOrderedYet = _giveAwayDbContext.OrderDetails.Any(orderDetail =>
-                        orderDetail.FashionItemId == x.ItemId && orderDetail.Order.MemberId == request.MemberId &&
-                        orderDetail.Order.Status == OrderStatus.AwaitingPayment)
+                    IsOrderedYet = _giveAwayDbContext.OrderDetails
+                        .Include(orderDetail => orderDetail.FashionItem)
+                        .Include(orderDetail => orderDetail.Order)
+                        .Any(orderDetail =>
+                            orderDetail.FashionItemId == x.ItemId && orderDetail.Order.MemberId == request.MemberId &&
+                            orderDetail.Order.Status == OrderStatus.AwaitingPayment)
                 });
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -66,8 +69,18 @@ namespace Repositories.FashionItems
             query = query.Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize);
 
-            var items = await query
-                .ProjectTo<FashionItemDetailResponse>(_mapper.ConfigurationProvider)
+            var items = await query.Select(x => new FashionItemDetailResponse()
+                {
+                    ItemId = x.FashionItem.ItemId,
+                    Name = x.FashionItem.Name,
+                    Status = x.FashionItem.Status,
+                    Type = x.FashionItem.Type,
+                    IsOrderedYet = x.IsOrderedYet,
+                    SellingPrice = x.FashionItem.SellingPrice,
+                    ShopId = x.FashionItem.ShopId,
+                    CategoryName = x.FashionItem.Category != null ? x.FashionItem.Category.Name : "N/A",
+                    Gender = x.FashionItem.Gender
+                })
                 .AsNoTracking().ToListAsync();
 
             var result = new PaginationResponse<FashionItemDetailResponse>
