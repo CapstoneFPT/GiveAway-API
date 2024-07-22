@@ -11,7 +11,7 @@ namespace BusinessObjects.Dtos.Orders
     public class CreateOrderRequest
     {
 
-        public PaymentMethod PaymentMethod { get; set; }
+        /*public PaymentMethod PaymentMethod { get; set; }*/
         public string Address { get; set; }
         public string? RecipientName { get; set; }
         public string? Phone {  get; set; }

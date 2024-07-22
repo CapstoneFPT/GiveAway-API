@@ -384,7 +384,7 @@ namespace Repositories.Orders
 
             Order order = new Order();
             order.PurchaseType = PurchaseType.Offline;
-            order.PaymentMethod = orderRequest.PaymentMethod;
+            order.PaymentMethod = PaymentMethod.Cash;
             order.Address = orderRequest.Address;
             order.RecipientName = orderRequest.RecipientName;
             order.Phone = orderRequest.Phone;

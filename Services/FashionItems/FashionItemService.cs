@@ -35,7 +35,7 @@ namespace Services.FashionItems
             var item = new FashionItem();
             var newdata = _mapper.Map(request, item);
             newdata.ShopId = shopId;
-            newdata.Category = await _categoryRepository.GetCategoryById(request.CategoryId);
+            /*newdata.Category = await _categoryRepository.GetCategoryById(request.CategoryId);*/
             newdata.Type = FashionItemType.ItemBase;
             newdata.Status = FashionItemStatus.Available;
             var newItem = await _fashionitemRepository.AddFashionItem(newdata);
@@ -50,7 +50,7 @@ namespace Services.FashionItems
             }
 
             response.Data = _mapper.Map<FashionItemDetailResponse>(newItem);
-            response.Messages = ["Add successfully"];
+            response.Messages = ["Add successfully"];   
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
