@@ -6,5 +6,5 @@ public class GetWithdrawsRequest
 {
     public int Page { get; set; }
     public int PageSize { get; set; }
-    public WithdrawStatus Status { get; set; }
+    public WithdrawStatus? Status { get; set; }
 }
