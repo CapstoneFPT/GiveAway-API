@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.AuctionDeposits;
+﻿using System.Net;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
@@ -21,22 +22,42 @@ namespace WebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<Result<PaginationResponse<FashionItemDetailResponse>>>> GetAllFashionItemsPagination([FromQuery] AuctionFashionItemRequest request)
         {
-            return await _fashionItemService.GetAllFashionItemPagination(request);
+            var result = await _fashionItemService.GetAllFashionItemPagination(request);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
         [HttpGet("{id}")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> GetFashionItemById([FromRoute] Guid id)
         {
-            return await _fashionItemService.GetFashionItemById(id);
+            var result = await _fashionItemService.GetFashionItemById(id);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
         [HttpPut("{itemid}/check-availability")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> CheckFashionItemAvailability([FromRoute] Guid itemid)
         {
-            return await _fashionItemService.CheckFashionItemAvailability(itemid);
+            var result = await _fashionItemService.CheckFashionItemAvailability(itemid);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
         [HttpPut("{itemId}")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> UpdateFashionItem([FromRoute] Guid itemId, [FromBody] FashionItemDetailRequest request)
         {
-            return await _fashionItemService.UpdateFashionItem(itemId, request);
+            var result = await _fashionItemService.UpdateFashionItem(itemId, request);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Account;
+﻿using System.Net;
+using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Auth;
@@ -50,58 +51,124 @@ namespace WebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Result<AccountResponse>>> GetAccountById(Guid id)
         {
-            return await _accountService.GetAccountById(id);
+            var result = await _accountService.GetAccountById(id);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpPut("{id}/ban")]
         public async Task<ActionResult<Result<AccountResponse>>> BanAccount([FromRoute]Guid id)
         {
-            return await _accountService.BanAccountById(id);
+            var result = await _accountService.BanAccountById(id);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpPut("{accountId}")]
         public async Task<ActionResult<Result<AccountResponse>>> UpdateAccount([FromRoute]Guid accountId, [FromBody]UpdateAccountRequest request)
         {
-            return await _accountService.UpdateAccount(accountId, request);
+            var result = await _accountService.UpdateAccount(accountId, request);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpGet("{accountId}/deliveries")]
         public async Task<ActionResult<Result<List<DeliveryResponse>>>> GetAllDeliveriesByMemberId([FromRoute] Guid accountId)
         {
-            return await _deliveryService.GetAllDeliveriesByMemberId(accountId);
+            var result = await _deliveryService.GetAllDeliveriesByMemberId(accountId);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpPost("{accountId}/deliveries")]
         public async Task<ActionResult<Result<DeliveryResponse>>> CreateDelivery([FromRoute] Guid accountId, [FromBody] DeliveryRequest deliveryRequest)
         {
-            return await _deliveryService.CreateDelivery(accountId, deliveryRequest);
+            var result = await _deliveryService.CreateDelivery(accountId, deliveryRequest);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpPut("{accountId}/deliveries/{deliveryId}")]
         public async Task<ActionResult<Result<DeliveryResponse>>> UpdateDelivery([FromRoute] Guid deliveryId, [FromBody] DeliveryRequest deliveryRequest)
         {
-            return await _deliveryService.UpdateDelivery(deliveryId, deliveryRequest);
+            var result = await _deliveryService.UpdateDelivery(deliveryId, deliveryRequest);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpDelete("{accountId}/deliveries/{deliveryId}")]
         public async Task<ActionResult<Result<string>>> DeleteDelivery([FromRoute] Guid deliveryId)
         {
-            return await _deliveryService.DeleteDelivery(deliveryId);
+            var result = await _deliveryService.DeleteDelivery(deliveryId);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpGet("{accountId}/orders")]
         public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByAccountId([FromRoute] Guid accountId, [FromQuery] OrderRequest request)
         {
-            return await _orderService.GetOrdersByAccountId(accountId, request);
+            var result = await _orderService.GetOrdersByAccountId(accountId, request);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpPost("{accountId}/orders")]
         public async Task<ActionResult<Result<OrderResponse>>> CreateOrder([FromRoute] Guid accountId, [FromBody] CartRequest cart)
         {
-            return await _orderService.CreateOrder(accountId, cart);
+            var result = await _orderService.CreateOrder(accountId, cart);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
         [HttpGet("{accountId}/consignsales")]
         public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSale([FromRoute] Guid accountId, [FromQuery] ConsignSaleRequest request)
         {
-            return await _consignSaleService.GetAllConsignSales(accountId, request);
+            var result = await _consignSaleService.GetAllConsignSales(accountId, request);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
 
         [HttpPost("{accountId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSale([FromRoute] Guid accountId, [FromBody] CreateConsignSaleRequest request)
         {
-            return await _consignSaleService.CreateConsignSale(accountId, request);
+            var result = await _consignSaleService.CreateConsignSale(accountId, request);
+            
+            if(result.ResultStatus!=ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError,result);
+            }
+            return Ok(result);
         }
 
         [HttpPost("{accountId}/inquiries")]

@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using System.Net;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
@@ -46,20 +47,36 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<OrderDetailResponse<FashionItem>>>> GetOrderDetailById(
             [FromRoute] Guid OrderdetailId)
         {
-            return await _orderDetailService.GetOrderDetailById(OrderdetailId);
+            var result = await _orderDetailService.GetOrderDetailById(OrderdetailId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+
+            return Ok(result);
         }
 
         [HttpPut("{OrderId}/cancel")]
         public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid OrderId)
         {
-            return await _orderService.CancelOrder(OrderId);
+            var result = await _orderService.CancelOrder(OrderId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
         }
 
         [HttpPut("{OrderId}/confirm-deliveried")]
         public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrderDelivered(
             [FromRoute] Guid OrderId)
         {
-            return await _orderService.ConfirmOrderDeliveried(OrderId);
+            var result = await _orderService.ConfirmOrderDeliveried(OrderId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpPost("{orderId}/pay/vnpay")]
@@ -82,7 +99,7 @@ namespace WebApi.Controllers
             {
                 throw new NotAuthorizedToPayOrderException();
             }
-            
+
             //check
 
             var paymentUrl = _vnPayService.CreatePaymentUrl(

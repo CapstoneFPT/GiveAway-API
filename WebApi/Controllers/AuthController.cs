@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Net;
+using System.Security.Claims;
 using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using Microsoft.AspNetCore.Authentication;
@@ -31,6 +32,12 @@ public class AuthController : ControllerBase
     )
     {
         var result = await _authService.Login(loginRequest.Email, loginRequest.Password);
+
+        if (result.ResultStatus != ResultStatus.Success)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+        }
+        
         return Ok(result);
     }
 
@@ -69,29 +76,56 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("forgot-password")]
-    public async Task<Result<string>> ForgotPassword([FromQuery] ForgetPasswordRequest request)
+    public async Task<ActionResult<Result<string>>> ForgotPassword([FromQuery] ForgetPasswordRequest request)
     {
         var user = await _authService.CheckPassword(request.Email, request.Password);
-        return user;
+        
+        if(user.ResultStatus != ResultStatus.Success)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, user);
+        }
+        
+        return Ok(user);
     }
 
     [HttpPut("reset-password")]
     public async Task<ActionResult<Result<AccountResponse>>> ResetPassword(string confirmtoken)
     {
-        return await _authService.ChangeToNewPassword(confirmtoken);
+        var result = await _authService.ChangeToNewPassword(confirmtoken);
+        
+        if(result.ResultStatus != ResultStatus.Success)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+        }
+        
+        return Ok(result);
     }
 
     [HttpPost("register")]
-    public async Task<Result<AccountResponse>> Register(RegisterRequest registerRequest)
+    public async Task<ActionResult<Result<AccountResponse>>> Register(RegisterRequest registerRequest)
     {
-        return await _authService.Register(registerRequest);
+        var result =  await _authService.Register(registerRequest);
+        
+        if(result.ResultStatus != ResultStatus.Success)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+        }
+        
+        return result;
     }
 
     [HttpPost("create-staff-account")]
     public async Task<ActionResult<Result<AccountResponse>>> CreateStaffAccount(
         [FromBody] CreateStaffAccountRequest registerRequest)
     {
-        return await _authService.CreateStaffAccount(registerRequest);
+        var result = await _authService.CreateStaffAccount(registerRequest);
+        
+        if(result.ResultStatus != ResultStatus.Success)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+        }
+        
+        return result;
     }
 
     [HttpGet("confirm-email")]
@@ -106,15 +140,29 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("resend-verify-email")]
-    public async Task<Result<string>> ResendVerifyEmail(string email)
+    public async Task<ActionResult<Result<string>>> ResendVerifyEmail(string email)
     {
-        return await _authService.ResendVerifyEmail(email);
+        var result = await _authService.ResendVerifyEmail(email);
+        
+        if(result.ResultStatus != ResultStatus.Success)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+        }
+        
+        return Ok(result);
     }
 
     [HttpPut("{accountId}/change-password")]
     public async Task<ActionResult<Result<AccountResponse>>> ChangePassword([FromRoute] Guid accountId,
         [FromBody] ChangePasswordRequest request)
     {
-        return await _authService.CheckPasswordToChange(accountId, request);
+        var result = await _authService.CheckPasswordToChange(accountId, request);
+        
+        if(result.ResultStatus != ResultStatus.Success)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+        }
+        
+        return Ok(result);
     }
 }

@@ -37,10 +37,10 @@ public class AuctionHub : Hub<IAuctionClient>
     
     public override async Task OnConnectedAsync()
     {
-        var auctionId = Context.GetHttpContext().Request.Query["auctionId"];
+        var auctionId = Context.GetHttpContext()!.Request.Query["auctionId"];
         if (!string.IsNullOrEmpty(auctionId))
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, auctionId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, auctionId.ToString());
         }
 
         await base.OnConnectedAsync();
@@ -48,10 +48,10 @@ public class AuctionHub : Hub<IAuctionClient>
     
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var auctionId = Context.GetHttpContext().Request.Query["auctionId"];
+        var auctionId = Context.GetHttpContext()!.Request.Query["auctionId"];
         if (!string.IsNullOrEmpty(auctionId))
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, auctionId);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, auctionId.ToString());
         }
         await base.OnDisconnectedAsync(exception);
     }

@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using System.Net;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Refunds;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,18 +25,33 @@ namespace WebApi.Controllers
         [HttpGet("{refundId}")]
         public async Task<ActionResult<Result<RefundResponse>>> GetRefundById([FromRoute] Guid refundId)
         {
-            return await _refundService.GetRefundById(refundId);
+            var result = await _refundService.GetRefundById(refundId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpPut("{refundId}/approval")]
         public async Task<ActionResult<Result<RefundResponse>>> ApprovalRefundRequestFromShop([FromRoute] Guid refundId, RefundStatus refundStatus)
         {
-            return await _refundService.ApprovalRefundRequestFromShop(refundId, refundStatus);
+            var result = await _refundService.ApprovalRefundRequestFromShop(refundId, refundStatus);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
         [HttpPost]
         public async Task<ActionResult<Result<List<RefundResponse>>>> RequestRefundItemToShop([FromBody] List<CreateRefundRequest> refundRequest)
         {
-            return await _orderDetailService.RequestRefundToShop(refundRequest);
+            var result = await _orderDetailService.RequestRefundToShop(refundRequest);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
     }
 }
