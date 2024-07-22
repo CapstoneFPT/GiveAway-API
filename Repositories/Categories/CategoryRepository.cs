@@ -55,7 +55,7 @@ namespace Repositories.Categories
             {
                 relevantCategoryIds = fashionItemDao
                     .Where(fi => fi.ShopId == shopId.Value)
-                    .Select(fi => fi.CategoryId)
+                    .Select(fi => fi.CategoryId.Value)
                     .Distinct();
             }
             else
@@ -117,6 +117,27 @@ namespace Repositories.Categories
         public async Task<List<Category>> GetCategoryWithCondition(CategoryRequest categoryRequest)
         {
             var query = GenericDao<Category>.Instance.GetQueryable();
+            if (categoryRequest.ParentId != null)
+            {
+                var lv2 = await GenericDao<Category>.Instance.GetQueryable()
+                    .Where(c => c.ParentId == categoryRequest.ParentId).ToListAsync();
+                var listCategoryLv3 = new List<Category>();
+                foreach (var item in lv2)
+                {
+                    var lv3 = await GenericDao<Category>.Instance.GetQueryable()
+                        .Where(c => c.ParentId == item.CategoryId).ToListAsync();
+                    listCategoryLv3.AddRange(lv3);
+                }
+                var lisCategoryLv4 = new List<Category>();
+                foreach (var item in listCategoryLv3)
+                {
+                    var lv4 = await GenericDao<Category>.Instance.GetQueryable()
+                        .Where(c => c.ParentId == item.CategoryId).ToListAsync();
+                    lisCategoryLv4.AddRange(lv4);
+                }
+
+                return lisCategoryLv4;
+            }
             if (!string.IsNullOrWhiteSpace(categoryRequest.SearchName))
                 query = query.Where(x => EF.Functions.ILike(x.Name, $"%{categoryRequest.SearchName}%"));
             if (categoryRequest.Level != null)

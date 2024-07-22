@@ -16,8 +16,8 @@ public class FashionItem
     public ConsignSaleDetail ConsignSaleDetail { get; set; }
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
-    public Category Category { get; set; }
-    public Guid CategoryId { get; set; }
+    public Category? Category { get; set; }
+    public Guid? CategoryId { get; set; }
     public FashionItemStatus Status { get; set; }
     public SizeType Size { get; set; }
     public string Color { get; set; }
