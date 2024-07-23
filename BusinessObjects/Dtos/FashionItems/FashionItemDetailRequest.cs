@@ -19,9 +19,9 @@ namespace BusinessObjects.Dtos.FashionItems
         public string Note { get; set; }
         /*[Required]
         public int Quantity { get; set; }*/
-        public int? Value { get; set; }
+        
         [Required]
-        public string Condition { get; set; }
+        public int Condition { get; set; }
         public string? Brand { get; set; } = "No Brand";
         public required string Color { get; set; }
         public required GenderType Gender { get; set; }
