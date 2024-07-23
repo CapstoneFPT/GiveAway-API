@@ -64,7 +64,9 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<List<ConsignSaleDetailResponse>>>> GetConsignSaleDetailsByConsignSaleId(
             [FromRoute] Guid consignsaleId)
         {
-            return await _consignsaleService.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
+            var result= await _consignsaleService.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
+            
+            return result.ResultStatus != ResultStatus.Success ? StatusCode((int)HttpStatusCode.InternalServerError, result) : Ok(result);
         }
     }
 }

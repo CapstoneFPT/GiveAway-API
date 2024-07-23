@@ -194,7 +194,7 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<ActionResult<Result<List<ConsignSaleDetailResponse>>>> GetConsignSaleDetailsByConsignSaleId(Guid consignsaleId)
+        public async Task<Result<List<ConsignSaleDetailResponse>>> GetConsignSaleDetailsByConsignSaleId(Guid consignsaleId)
         {
             var result = await _consignSaleDetailRepository.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
             var response = new Result<List<ConsignSaleDetailResponse>>()
