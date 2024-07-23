@@ -70,3 +70,4 @@ public class RefundNoFoundException : Exception
 {
 }
 public class StatusNotAvailableException : Exception{}
+public class ConsignSaleDetailsNotFoundException : Exception { }

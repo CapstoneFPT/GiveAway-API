@@ -1,10 +1,13 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
+using Repositories.ConsignSaleDetails;
 using Repositories.ConsignSales;
 using Services.Emails;
 
@@ -14,13 +17,15 @@ namespace Services.ConsignSales
     {
         private readonly IConsignSaleRepository _consignSaleRepository;
         private readonly IAccountRepository _accountRepository;
+        private readonly IConsignSaleDetailRepository _consignSaleDetailRepository;
         private readonly IEmailService _emailService;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
-            IEmailService emailService)
+            IConsignSaleDetailRepository consignSaleDetailRepository, IEmailService emailService)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
+            _consignSaleDetailRepository = consignSaleDetailRepository;
             _emailService = emailService;
         }
 
@@ -186,6 +191,18 @@ namespace Services.ConsignSales
             response.Data = Consign;
             response.Messages = ["Successfully"];
             response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
+
+        public async Task<ActionResult<Result<List<ConsignSaleDetailResponse>>>> GetConsignSaleDetailsByConsignSaleId(Guid consignsaleId)
+        {
+            var result = await _consignSaleDetailRepository.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
+            var response = new Result<List<ConsignSaleDetailResponse>>()
+            {
+                Data = result,
+                Messages = new []{"There are " + result.Count + " items in this consign"},
+                ResultStatus = ResultStatus.Success,
+            };
             return response;
         }
 

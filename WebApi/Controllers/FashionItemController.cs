@@ -34,7 +34,7 @@ namespace WebApi.Controllers
             return await _fashionItemService.CheckFashionItemAvailability(itemid);
         }
         [HttpPut("{itemId}")]
-        public async Task<ActionResult<Result<FashionItemDetailResponse>>> UpdateFashionItem([FromRoute] Guid itemId, [FromBody] FashionItemDetailRequest request)
+        public async Task<ActionResult<Result<FashionItemDetailResponse>>> UpdateFashionItem([FromRoute] Guid itemId, [FromBody] UpdateFashionItemRequest request)
         {
             return await _fashionItemService.UpdateFashionItem(itemId, request);
         }

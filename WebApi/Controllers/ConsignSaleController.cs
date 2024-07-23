@@ -1,4 +1,5 @@
 ﻿using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,13 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<ConsignSaleResponse>>> ConfirmReceivedConsignFromShop([FromRoute] Guid consignsaleId)
         {
             return await _consignsaleService.ConfirmReceivedFromShop(consignsaleId);
+        }
+
+        [HttpGet("{consignsaleId}/consignsaledetails")]
+        public async Task<ActionResult<Result<List<ConsignSaleDetailResponse>>>> GetConsignSaleDetailsByConsignSaleId(
+            [FromRoute] Guid consignsaleId)
+        {
+            return await _consignsaleService.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
         }
     }
 }

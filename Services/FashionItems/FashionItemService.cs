@@ -91,7 +91,7 @@ namespace Services.FashionItems
         }
 
         public async Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId,
-            FashionItemDetailRequest request)
+            UpdateFashionItemRequest request)
         {
             var response = new Result<FashionItemDetailResponse>();
             var item = await _fashionitemRepository.GetFashionItemById(itemId);
@@ -101,10 +101,20 @@ namespace Services.FashionItems
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-
-            var newdata = _mapper.Map(request, item);
+            ;
+            item.SellingPrice = request.SellingPrice.HasValue ? request.SellingPrice.Value : item.SellingPrice;
+            item.Name = request.Name ?? item.Name;
+            item.Note = request.Note ?? item.Note;
+            item.Value = request.Value.HasValue ? request.Value.Value : item.Value;
+            item.Condition = request.Condition ?? item.Condition;
+            item.Brand = request.Brand ?? item.Brand;
+            item.Color = request.Color ?? item.Color;
+            item.Gender = request.Gender ?? item.Gender;    
+            item.Size = request.Size ?? item.Size;
+            item.CategoryId = request.CategoryId ?? item.CategoryId;
+            await _fashionitemRepository.UpdateFashionItem(item);
             response.Data =
-                _mapper.Map<FashionItemDetailResponse>(await _fashionitemRepository.UpdateFashionItem(newdata));
+                _mapper.Map<FashionItemDetailResponse>(item);
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Update Successfully"];
             return response;

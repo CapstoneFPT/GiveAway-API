@@ -54,7 +54,7 @@ namespace Repositories.ConsignSales
                     Value = item.Value,
                     Condition = item.Condition,
                     ShopId = newConsign.ShopId,
-                    CategoryId = item.CategoryId,
+                    /*CategoryId = item.CategoryId,*/
                     Status = FashionItemStatus.Pending,
                     Brand = item.Brand,
                     Color = item.Color,

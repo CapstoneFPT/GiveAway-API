@@ -8,6 +8,7 @@ using Repositories.Auctions;
 using Repositories.Bids;
 using Repositories.Categories;
 using Repositories.ConsignedForSaleItems;
+using Repositories.ConsignSaleDetails;
 using Repositories.ConsignSales;
 using Repositories.Deliveries;
 using Repositories.Images;
@@ -112,6 +113,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IRevenueRepository, RevenueRepository>();
         serviceCollection.AddScoped<IRefundRepository, RefundRepository>();
         serviceCollection.AddScoped<IWithdrawRepository, WithdrawRepository>();
+        serviceCollection.AddScoped<IConsignSaleDetailRepository, ConsignSaleDetailRepository>();
         return serviceCollection;
     }
     
