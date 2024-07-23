@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Net;
+using AutoMapper;
 using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Category;
 using BusinessObjects.Dtos.Commons;
@@ -28,12 +29,26 @@ namespace WebApi.Controllers
         [HttpGet("{categoryId}/fahsionitems")]
         public async Task<ActionResult<Result<PaginationResponse<FashionItemDetailResponse>>>> GetItemsByCategoryHierarchy([FromRoute] Guid categoryId, [FromQuery] AuctionFashionItemRequest request)
         {
-            return await _fashionitemService.GetItemByCategoryHierarchy(categoryId, request);
+            var result = await _fashionitemService.GetItemByCategoryHierarchy(categoryId, request);
+
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+            
+            return Ok(result);
         }
         [HttpGet]
         public async Task<ActionResult<Result<List<Category>>>> GetAllParentCategory()
         {
-            return await _categoryService.GetAllParentCategory();
+            var result = await _categoryService.GetAllParentCategory();
+            
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+            
+            return Ok(result);
         }
 
         [HttpGet("tree")]
@@ -56,20 +71,41 @@ namespace WebApi.Controllers
         [HttpGet("{categoryId}")]
         public async Task<ActionResult<Result<List<Category>>>> GetAllChildrenCategory([FromRoute] Guid categoryId)
         {
-            return await _categoryService.GetAllChildrenCategory(categoryId);
+            var result = await _categoryService.GetAllChildrenCategory(categoryId);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+            
+            return Ok(result);
         }
 
         [HttpPost("{categoryId}")]
         public async Task<ActionResult<Result<Category>>> CreateCategory([FromRoute] Guid categoryId, [FromBody] CreateCategoryRequest request)
         {
-            return await _categoryService.CreateCategory(categoryId, request);
+            var result = await _categoryService.CreateCategory(categoryId, request);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+            
+            return Ok(result);
         }
 
         [HttpGet("condition")]
         public async Task<ActionResult<Result<List<Category>>>> GetCategoryWithCondition(
             [FromQuery] CategoryRequest categoryRequest)
         {
-            return await _categoryService.GetCategoryWithCondition(categoryRequest);
+            var result = await _categoryService.GetCategoryWithCondition(categoryRequest);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+            
+            return Ok(result);
         }
     }
 

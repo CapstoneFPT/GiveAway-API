@@ -97,7 +97,7 @@ public class AuctionController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = _auctionService.UpdateAuction(id, request);
+        var result = await _auctionService.UpdateAuction(id, request);
         return Ok(result);
     }
 
@@ -127,7 +127,7 @@ public class AuctionController : ControllerBase
     }
 
     [HttpDelete("{id}/bids/{bidId}")]
-    public async Task<ActionResult> DeleteBid([FromRoute] Guid id, [FromRoute] Guid bidId)
+    public Task<ActionResult> DeleteBid([FromRoute] Guid id, [FromRoute] Guid bidId)
     {
         throw new NotImplementedException();
     }
@@ -145,7 +145,7 @@ public class AuctionController : ControllerBase
     }
 
     [HttpGet("{id}/bids/{bidId}")]
-    public async Task<ActionResult<BidDetailResponse>> GetBid([FromRoute] Guid id, [FromRoute] Guid bidId)
+    public Task<ActionResult<BidDetailResponse>> GetBid([FromRoute] Guid id, [FromRoute] Guid bidId)
     {
         throw new NotImplementedException();
     }
@@ -155,14 +155,15 @@ public class AuctionController : ControllerBase
     [HttpGet("{id}/bids/latest")]
     public async Task<ActionResult<BidDetailResponse>> GetLatestBid([FromRoute] Guid id)
     {
-       var result = await _auctionService.GetLargestBid(auctionId:id); 
+        var result = await _auctionService.GetLargestBid(auctionId: id);
         return Ok(result);
     }
 
     #region AuctionDeposits
 
     [HttpGet("{auctionId}/deposits")]
-    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits([FromRoute] Guid auctionId, [FromQuery]GetDepositsRequest request)
+    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits(
+        [FromRoute] Guid auctionId, [FromQuery] GetDepositsRequest request)
     {
         var result = await _auctionService.GetAuctionDeposits(auctionId, request);
         return Ok(result);
@@ -182,9 +183,10 @@ public class AuctionController : ControllerBase
         var result = await _auctionService.PlaceDeposit(auctionId, request);
         return CreatedAtAction(nameof(GetDeposit), new { auctionId = result.AuctionId, depositId = result.Id }, result);
     }
-    
+
     [HttpGet("{auctionId}/deposits/has-deposit")]
-    public async Task<ActionResult<HasMemberPlacedDepositResult>> HasDeposit([FromRoute] Guid auctionId, [FromQuery] CheckDepositRequest request)
+    public async Task<ActionResult<HasMemberPlacedDepositResult>> HasDeposit([FromRoute] Guid auctionId,
+        [FromQuery] CheckDepositRequest request)
     {
         bool result = await _auctionDepositService.CheckDepositAvailable(auctionId, request.MemberId);
         return Ok(new HasMemberPlacedDepositResult()
@@ -213,7 +215,7 @@ public class AuctionController : ControllerBase
 
         throw new NotImplementedException();
     }
-    
+
 
     [HttpGet("{auctionId}/deposits/{depositId}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDepositDetailResponse))]
@@ -225,12 +227,12 @@ public class AuctionController : ControllerBase
     }
 
     #endregion
-    
-    
+
+
     [HttpGet("current-time")]
-    public IActionResult  GetCurrentTime()
+    public IActionResult GetCurrentTime()
     {
-        return Ok(new {currentTime = DateTime.UtcNow});
+        return Ok(new { currentTime = DateTime.UtcNow });
     }
 }
 

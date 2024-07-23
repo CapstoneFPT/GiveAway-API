@@ -13,13 +13,18 @@ namespace Repositories.FashionItems
 {
     public interface IFashionItemRepository
     {
-        Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(AuctionFashionItemRequest request);
+        Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
+            AuctionFashionItemRequest request);
+
         Task<FashionItem> GetFashionItemById(Guid id);
         Task<FashionItem> AddFashionItem(FashionItem request);
         Task<FashionItem> UpdateFashionItem(FashionItem fashionItem);
-        Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id, AuctionFashionItemRequest request);
+
+        Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,
+            AuctionFashionItemRequest request);
+
         Task BulkUpdate(List<FashionItem> fashionItems);
-        Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem,bool>> predicate);
+        Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem, bool>> predicate);
         Task UpdateFashionItems(List<FashionItem> fashionItems);
         Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> itemId);
     }

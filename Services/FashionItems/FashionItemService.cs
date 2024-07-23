@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using AutoMapper;
+using AutoMapper.Internal;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
@@ -66,7 +67,7 @@ namespace Services.FashionItems
                 response.Messages = ["Empty"];
                 return response;
             }
-
+            
             response.Data = result;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Results in page: " + result.PageNumber];

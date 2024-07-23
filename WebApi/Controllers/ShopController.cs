@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using System.Net;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Feedbacks;
@@ -42,34 +43,59 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> AddFashionItem([FromRoute] Guid shopId,
             [FromBody] FashionItemDetailRequest request)
         {
-            return await _fashionItemService.AddFashionItem(shopId, request);
+            var result = await _fashionItemService.AddFashionItem(shopId, request);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
 
         [HttpGet]
         public async Task<ActionResult<Result<List<ShopDetailResponse>>>> GetAllShop()
         {
-            return await _shopService.GetAllShop();
+            var result = await _shopService.GetAllShop();
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpGet("{shopId}")]
         public async Task<ActionResult<Result<ShopDetailResponse>>> GetShopById([FromRoute] Guid shopId)
         {
-            return await _shopService.GetShopById(shopId);
+            var result = await _shopService.GetShopById(shopId);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpGet("{shopId}/orders")]
         public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByShopId(
             [FromRoute] Guid shopId, [FromQuery] OrderRequest orderRequest)
         {
-            return await _orderService.GetOrdersByShopId(shopId, orderRequest);
+            var result = await _orderService.GetOrdersByShopId(shopId, orderRequest);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpPost("{shopId}/orders")]
         public async Task<ActionResult<Result<OrderResponse>>> CreateOrderByShop([FromRoute] Guid shopId,
             [FromBody] CreateOrderRequest orderRequest)
         {
-            return await _orderService.CreateOrderByShop(shopId, orderRequest);
+            var result = await _orderService.CreateOrderByShop(shopId, orderRequest);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpPost("{shopId}/orders/{orderId}/pay-with-cash")]
@@ -87,28 +113,44 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId(
             [FromRoute] Guid shopId, [FromQuery] ConsignSaleRequestForShop request)
         {
-            return await _consignSaleService.GetAllConsignSalesByShopId(shopId, request);
+            var result = await _consignSaleService.GetAllConsignSalesByShopId(shopId, request);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpPost("{shopId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,
             [FromBody] CreateConsignSaleByShopRequest consignRequest)
         {
-            return await _consignSaleService.CreateConsignSaleByShop(shopId, consignRequest);
+            var result = await _consignSaleService.CreateConsignSaleByShop(shopId, consignRequest);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpGet("{shopId}/refunds")]
         public async Task<ActionResult<Result<PaginationResponse<RefundResponse>>>> GetRefundsByShopId(
             [FromRoute] Guid shopId,[FromQuery] RefundRequest refundRequest)
         {
-            return await _refundService.GetRefundByShopId(shopId, refundRequest);
+            var result = await _refundService.GetRefundByShopId(shopId, refundRequest);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
         }
 
         [HttpGet("{shopId}/inquiries")]
-        public async Task<ActionResult<Result<PaginationResponse<InquiryListResponse>>>> GetInquiriesByShopId(
+        public async Task<ActionResult<PaginationResponse<InquiryListResponse>>> GetInquiriesByShopId(
             [FromRoute] Guid shopId, InquiryListRequest inquiryRequest)
         {
             var result = await _shopService.GetInquiriesByShopId(shopId, inquiryRequest);
+            
             return Ok(result);
         }
 
