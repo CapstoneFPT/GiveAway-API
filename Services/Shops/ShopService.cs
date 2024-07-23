@@ -47,7 +47,7 @@ namespace Services.Shops
             }
 
             response.Messages = ["There isn't any shop available"];
-            response.ResultStatus = ResultStatus.Empty;
+            response.ResultStatus = ResultStatus.Success;
             return response;
         }
 

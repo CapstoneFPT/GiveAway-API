@@ -74,7 +74,7 @@ namespace Services.FashionItems
             var result = await _fashionitemRepository.GetAllFashionItemPagination(request);
             if (result.TotalCount < 1)
             {
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 response.Messages = ["Empty"];
                 return response;
             }
@@ -145,7 +145,7 @@ namespace Services.FashionItems
                 return response;
             }
 
-            response.ResultStatus = ResultStatus.Empty;
+            response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Empty"];
             return response;
         }

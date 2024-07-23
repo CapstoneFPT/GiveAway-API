@@ -63,7 +63,7 @@ namespace Services.Refunds
             var result = await _refundRepository.GetRefundsByShopId(shopId, refundRequest);
             if (result.TotalCount < 1)
             {
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 response.Messages = ["Empty"];
                 return response;
             }

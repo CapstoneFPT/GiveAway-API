@@ -153,7 +153,7 @@ namespace Services.ConsignSales
             if (listConsign == null)
             {
                 response.Messages = ["You don't have any consignment"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
             response.Data = listConsign;
@@ -166,10 +166,10 @@ namespace Services.ConsignSales
         {
             var response = new Result<PaginationResponse<ConsignSaleResponse>>();
             var listConsign = await _consignSaleRepository.GetAllConsignSaleByShopId(shopId, request);
-            if (listConsign == null)
+            if (listConsign.TotalCount == 0)
             {
                 response.Messages = ["You don't have any consignment"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
             response.Data = listConsign;

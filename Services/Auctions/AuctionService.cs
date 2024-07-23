@@ -89,7 +89,7 @@ namespace Services.Auctions
                 await _auctionRepository.UpdateAuctionStatus(auctionId: id, auctionStatus: AuctionStatus.Finished);
                 return new Result<OrderResponse>()
                 {
-                    ResultStatus = ResultStatus.Empty, Messages = new[] { "No Bids" }
+                    ResultStatus = ResultStatus.Success, Messages = new[] { "No Bids" }
                 };
             }
 

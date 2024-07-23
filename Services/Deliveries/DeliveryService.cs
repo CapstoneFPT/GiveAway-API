@@ -73,7 +73,7 @@ namespace Services.Deliveries
             if(list == null)
             {
                 response.Messages = ["Empty! Please create one"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
             response.Data = _mapper.Map<List<DeliveryResponse>>(list);

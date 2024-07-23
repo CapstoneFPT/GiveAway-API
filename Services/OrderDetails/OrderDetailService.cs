@@ -56,7 +56,7 @@ namespace Services.OrderDetails
             if (listOrder.TotalCount == 0)
             {
                 response.Messages = ["You don't have any order"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
 

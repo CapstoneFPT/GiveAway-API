@@ -109,7 +109,7 @@ namespace Services.Categories
             var listCate = await _categoryRepository.GetAllParentCategory();
             if (listCate.Count == 0)
             {
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 response.Messages = ["Empty"];
                 return response;
             }
@@ -132,7 +132,7 @@ namespace Services.Categories
             }
             if (listCate.Count == 0)
             {
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 response.Messages = ["Empty"];
                 return response;
             }

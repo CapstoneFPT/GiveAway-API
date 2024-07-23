@@ -63,7 +63,7 @@ namespace Services.Orders
             if (cart.listItemId.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
 
@@ -271,7 +271,7 @@ namespace Services.Orders
             if (listOrder.TotalCount == 0)
             {
                 response.Messages = ["You don't have any order"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
 
@@ -306,7 +306,7 @@ namespace Services.Orders
             if (order.TotalCount == 0)
             {
                 response.Messages = ["Your order list is empty"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
 
@@ -348,7 +348,7 @@ namespace Services.Orders
             if (orderRequest.listItemId.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
-                response.ResultStatus = ResultStatus.Empty;
+                response.ResultStatus = ResultStatus.Success;
                 return response;
             }
 
