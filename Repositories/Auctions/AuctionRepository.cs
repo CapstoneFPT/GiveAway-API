@@ -96,7 +96,7 @@ namespace Repositories.Auctions
                     SellingPrice = auctionItem.SellingPrice,
                     AuctionItemStatus = auctionItem.Status,
                     Note = auctionItem.Note,
-                    Value = auctionItem.Value,
+                    /*Value = auctionItem.Value,*/
                     ShopId = auctionItem.ShopId,
                     CategoryId = auctionItem.CategoryId.Value
                 },
@@ -189,7 +189,7 @@ namespace Repositories.Auctions
                     SellingPrice = x.AuctionFashionItem.SellingPrice,
                     AuctionItemStatus = x.AuctionFashionItem.Status,
                     Note = x.AuctionFashionItem.Note,
-                    Value = x.AuctionFashionItem.Value,
+                    /*Value = x.AuctionFashionItem.Value,*/
                     ShopId = x.AuctionFashionItem.ShopId,
                     CategoryId = x.AuctionFashionItem.CategoryId.Value
                 }

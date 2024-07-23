@@ -13,8 +13,8 @@ namespace BusinessObjects.Dtos.FashionItems
         public int? SellingPrice { get; set; }
         public string? Name { get; set; }
         public string? Note { get; set; }
-        public int? Value { get; set; }
-        public string? Condition { get; set; }
+        
+        public int? Condition { get; set; }
         public string? Brand { get; set; }
         public string? Color { get; set; }
         public GenderType? Gender { get; set; }

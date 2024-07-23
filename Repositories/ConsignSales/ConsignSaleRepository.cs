@@ -51,7 +51,7 @@ namespace Repositories.ConsignSales
                     SellingPrice = item.ConfirmedPrice,
                     Name = item.Name,
                     Note = item.Note,
-                    Value = item.Value,
+                    /*Value = item.Value,*/
                     Condition = item.Condition,
                     ShopId = newConsign.ShopId,
                     /*CategoryId = item.CategoryId,*/
@@ -276,7 +276,7 @@ namespace Repositories.ConsignSales
                     SellingPrice = item.ConfirmedPrice,
                     Name = item.Name,
                     Note = item.Note,
-                    Value = item.Value,
+                    /*Value = item.Value,*/
                     Condition = item.Condition,
                     ShopId = shopId,
                     CategoryId = item.CategoryId,

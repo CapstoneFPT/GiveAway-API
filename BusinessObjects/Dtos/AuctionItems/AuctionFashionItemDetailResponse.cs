@@ -11,8 +11,8 @@ public class AuctionFashionItemDetailResponse
     public string Name { get; set; }
     public string Note { get; set; }
     public int Quantity { get; set; }
-    public decimal? Value { get; set; }
-    public string Condition { get; set; }
+    /*public decimal? Value { get; set; }*/
+    public int Condition { get; set; }
     public int Duration { get; set; }
     public decimal InitialPrice { get; set; }
     public FashionItemStatus AuctionItemStatus { get; set; }

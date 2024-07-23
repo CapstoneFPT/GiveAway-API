@@ -30,6 +30,7 @@ namespace Repositories
                 /*.ForMember(a => a.Consigner, opt => opt.MapFrom(a => a.ConsignSaleDetail.ConsignSale.Member.Fullname))*/
                 .ForMember(a => a.CategoryName, opt => opt.MapFrom(a => a.Category.Name))
                 .ForMember(a => a.ShopAddress, opt => opt.MapFrom(a => a.Shop.Address))
+                .ForMember(a => a.Images, opt => opt.MapFrom(a => a.Images.Select(c => c.Url)))
                 .ReverseMap();
             CreateMap<PaginationResponse<FashionItem>, PaginationResponse<FashionItemDetailResponse>>();
             CreateMap<Order, OrderResponse>()
@@ -54,7 +55,7 @@ namespace Repositories
                 .ForPath(a => a.FashionItemDetail.SellingPrice, opt => opt.MapFrom(a => a.FashionItem.SellingPrice))
                 .ForPath(a => a.FashionItemDetail.Name, opt => opt.MapFrom(a => a.FashionItem.Name))
                 .ForPath(a => a.FashionItemDetail.Note, opt => opt.MapFrom(a => a.FashionItem.Note))
-                .ForPath(a => a.FashionItemDetail.Value, opt => opt.MapFrom(a => a.FashionItem.Value))
+                /*.ForPath(a => a.FashionItemDetail.Value, opt => opt.MapFrom(a => a.FashionItem.Value))*/
                 .ForPath(a => a.FashionItemDetail.Condition, opt => opt.MapFrom(a => a.FashionItem.Condition))
                 /*.ForPath(a => a.FashionItemDetail.ConsignDuration, opt => opt.MapFrom(a => a.FashionItem.ConsignSaleDetail.ConsignSale.ConsignDuration))*/
                 .ForPath(a => a.FashionItemDetail.ShopAddress, opt => opt.MapFrom(a => a.FashionItem.Shop.Address))

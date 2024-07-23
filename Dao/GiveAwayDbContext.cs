@@ -262,7 +262,7 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<FashionItem>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
         modelBuilder.Entity<FashionItem>().Property(e => e.Note).HasColumnType("varchar").HasMaxLength(100);
-        modelBuilder.Entity<FashionItem>().Property(e => e.Value).HasColumnType("numeric");
+        modelBuilder.Entity<FashionItem>().Property(e => e.Condition).HasColumnType("numeric").HasMaxLength(100);
 
         modelBuilder.Entity<FashionItem>().Property(e => e.Status)
             .HasConversion(prop => prop.ToString(), s => (FashionItemStatus)Enum.Parse(typeof(FashionItemStatus), s))
@@ -283,7 +283,7 @@ public class GiveAwayDbContext : DbContext
             .HasConversion(prop => prop.ToString(), s => (SizeType)Enum.Parse(typeof(SizeType), s))
             .HasColumnType("varchar")
             .HasMaxLength(5);
-
+        
         modelBuilder.Entity<FashionItem>().HasOne(x => x.ConsignSaleDetail).WithOne(x => x.FashionItem)
             .HasForeignKey<ConsignSaleDetail>(x => x.FashionItemId).OnDelete(DeleteBehavior.Cascade);
 

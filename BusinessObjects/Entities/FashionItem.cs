@@ -10,9 +10,9 @@ public class FashionItem
     public int SellingPrice { get; set; }
     public string Name { get; set; }
     public string Note { get; set; }
-    public int? Value { get; set; }
+    
 
-    public string Condition { get; set; }
+    public int Condition { get; set; }
     public ConsignSaleDetail ConsignSaleDetail { get; set; }
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
@@ -23,6 +23,7 @@ public class FashionItem
     public string Color { get; set; }
     public string? Brand { get; set; } = "No Brand";
     public GenderType Gender { get; set; }
+    public ICollection<Image> Images { get; set; } = new List<Image>();
 }
 
 

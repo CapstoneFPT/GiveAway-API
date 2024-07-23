@@ -11,11 +11,11 @@ namespace BusinessObjects.Dtos.ConsignSales
     {
         public string Name { get; set; }
         public string Note { get; set; }
-        public int? Value { get; set; }
+        /*public int? Value { get; set; }*/
         public int DealPrice { get; set; }
         public int ConfirmedPrice { get; set; }
 
-        public string Condition { get; set; }
+        public int Condition { get; set; }
         public Guid CategoryId { get; set; }
         public SizeType Size { get; set; }
         public string Color { get; set; }

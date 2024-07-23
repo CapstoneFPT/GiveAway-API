@@ -106,8 +106,8 @@ namespace Services.FashionItems
             item.SellingPrice = request.SellingPrice.HasValue ? request.SellingPrice.Value : item.SellingPrice;
             item.Name = request.Name ?? item.Name;
             item.Note = request.Note ?? item.Note;
-            item.Value = request.Value.HasValue ? request.Value.Value : item.Value;
-            item.Condition = request.Condition ?? item.Condition;
+            /*item.Value = request.Value.HasValue ? request.Value.Value : item.Value;*/
+            item.Condition = request.Condition.HasValue ? request.Condition.Value : item.Condition;
             item.Brand = request.Brand ?? item.Brand;
             item.Color = request.Color ?? item.Color;
             item.Gender = request.Gender ?? item.Gender;    

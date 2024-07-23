@@ -73,16 +73,23 @@ namespace Repositories.FashionItems
                 {
                     ItemId = x.FashionItem.ItemId,
                     Name = x.FashionItem.Name,
+                    Note = x.FashionItem.Note,
+                    
+                    Condition = x.FashionItem.Condition,
+                    ShopAddress = x.FashionItem.Shop.Address,
+                    Color = x.FashionItem.Color,
+                    Brand = x.FashionItem.Brand != null ? x.FashionItem.Brand : "No Brand",
                     Status = x.FashionItem.Status,
                     Type = x.FashionItem.Type,
                     IsOrderedYet = x.IsOrderedYet,
                     SellingPrice = x.FashionItem.SellingPrice,
                     ShopId = x.FashionItem.ShopId,
                     CategoryName = x.FashionItem.Category != null ? x.FashionItem.Category.Name : "N/A",
-                    Gender = x.FashionItem.Gender
+                    Gender = x.FashionItem.Gender,
+                    Images = x.FashionItem.Images.Select(c => c.Url).ToList()
                 })
                 .AsNoTracking().ToListAsync();
-
+            
             var result = new PaginationResponse<FashionItemDetailResponse>
             {
                 Items = items,
@@ -100,7 +107,7 @@ namespace Repositories.FashionItems
             var query = await GenericDao<FashionItem>.Instance.GetQueryable()
                 .Include(c => c.Shop)
                 .Include(a => a.Category)
-                /*.Include(b => b.ConsignSaleDetail).ThenInclude(c => c.ConsignSale).ThenInclude(c => c.Member)*/
+                .Include(b => b.Images)
                 .AsNoTracking().FirstOrDefaultAsync(x => x.ItemId.Equals(id));
             return query;
         }
@@ -160,7 +167,7 @@ namespace Repositories.FashionItems
                         SellingPrice = f.SellingPrice,
                         Name = f.Name,
                         Note = f.Note,
-                        Value = f.Value,
+                        /*Value = f.Value,*/
                         Condition = f.Condition,
                         ShopAddress = f.Shop.Address,
                         ShopId = f.Shop.ShopId,
