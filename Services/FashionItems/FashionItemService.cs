@@ -34,11 +34,22 @@ namespace Services.FashionItems
         {
             var response = new Result<FashionItemDetailResponse>();
             var item = new FashionItem();
-            var newdata = _mapper.Map(request, item);
-            newdata.ShopId = shopId;
-            /*newdata.Category = await _categoryRepository.GetCategoryById(request.CategoryId);*/
-            newdata.Type = FashionItemType.ItemBase;
-            newdata.Status = FashionItemStatus.Available;
+            var newdata = new FashionItem()
+            {
+                Name = request.Name,
+                Note = request.Note,
+                Condition = request.Condition,
+                Brand = request.Brand,
+                Gender = request.Gender,
+                Size = request.Size,
+                CategoryId = request.CategoryId,
+                ShopId = shopId,
+                Type = FashionItemType.ItemBase,
+                Status = FashionItemStatus.Available,
+                Color = request.Color,
+                SellingPrice = request.SellingPrice,
+            };
+            
             var newItem = await _fashionitemRepository.AddFashionItem(newdata);
             foreach (string img in request.Images)
             {
