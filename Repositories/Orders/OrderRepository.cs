@@ -305,7 +305,7 @@ namespace Repositories.Orders
             if (request.OrderCode != null)
             {
                 listOrderResponse = listOrderResponse
-                    .Where(f => f.OrderCode.ToUpper().Equals(f.OrderCode.ToUpper())).ToList();
+                    .Where(f => f.OrderCode.ToUpper().Contains(request.OrderCode.ToUpper())).ToList();
             }
 
             var count = listOrderResponse.Count;
