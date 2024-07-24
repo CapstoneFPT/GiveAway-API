@@ -10,6 +10,7 @@ using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Dtos.Shops;
+using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Entities;
 
 namespace Repositories
@@ -88,6 +89,9 @@ namespace Repositories
                 .ReverseMap();
             CreateMap<OrderDetail, OrderDetailsResponse>()
                 .ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))
+                .ReverseMap();
+            CreateMap<Transaction, GetTransactionsResponse>()
+                /*.ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))*/
                 .ReverseMap();
         }
     }

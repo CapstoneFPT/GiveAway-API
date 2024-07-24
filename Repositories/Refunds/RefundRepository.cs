@@ -20,10 +20,12 @@ namespace Repositories.Refunds
     {
       
         private readonly IMapper _mapper;
+        private readonly GiveAwayDbContext _giveAwayDbContext;
 
-        public RefundRepository(IMapper mapper)
+        public RefundRepository(IMapper mapper, GiveAwayDbContext giveAwayDbContext)
         {
             _mapper = mapper;
+            _giveAwayDbContext = giveAwayDbContext;
         }
 
         public async Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, ApprovalRefundRequest request)
@@ -103,6 +105,16 @@ namespace Repositories.Refunds
                 PageNumber = request.PageNumber,
             };
             return result;
+        }
+
+        public async Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId)
+        {
+            var refund = await _giveAwayDbContext.Refunds.AsQueryable().Include(c => c.OrderDetail)
+                .ThenInclude(c => c.FashionItem).Where(c => c.RefundId == refundId).FirstOrDefaultAsync();
+            refund.RefundStatus = RefundStatus.Completed;
+            refund.OrderDetail.FashionItem.Status = FashionItemStatus.Unavailable;
+            await GenericDao<Refund>.Instance.UpdateAsync(refund);
+            return await GetRefundById(refundId);
         }
     }
 }

@@ -88,7 +88,8 @@ public enum RefundStatus
 {
     Pending,
     Approved,
-    Rejected
+    Rejected,
+    Completed
 }
 
 public enum PointPackageStatus

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
+using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;
@@ -13,16 +15,24 @@ namespace Repositories.Transactions
     public class TransactionRepository : ITransactionRepository
     {
         private readonly GiveAwayDbContext _giveAwayDbContext;
+        private readonly IMapper _mapper;
 
-        public TransactionRepository(GiveAwayDbContext giveAwayDbContext)
+        public TransactionRepository(GiveAwayDbContext giveAwayDbContext, IMapper mapper)
         {
             _giveAwayDbContext = giveAwayDbContext;
+            _mapper = mapper;
         }
 
         public async Task<Transaction?> CreateTransaction(Transaction transaction)
         {
             var result = await GenericDao<Transaction>.Instance.AddAsync(transaction);
             return result;
+        }
+
+        public async Task<GetTransactionsResponse> CreateTransactionRefund(Transaction transaction)
+        {
+            var result = await GenericDao<Transaction>.Instance.AddAsync(transaction);
+            return _mapper.Map<GetTransactionsResponse>(result);
         }
 
         public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetTransactions<T>(

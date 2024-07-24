@@ -7,11 +7,14 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Refunds;
+using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Org.BouncyCastle.Asn1.Ocsp;
+using Repositories.Accounts;
 using Repositories.OrderDetails;
 using Repositories.Orders;
 using Repositories.Refunds;
+using Repositories.Transactions;
 using Services.Emails;
 
 namespace Services.Refunds
@@ -20,12 +23,17 @@ namespace Services.Refunds
     {
         private readonly IRefundRepository _refundRepository;
         private readonly IOrderRepository _orderRepository;
+        private readonly ITransactionRepository _transactionRepository;
+        private readonly IAccountRepository _accountRepository;
         private readonly IEmailService _emailService;
 
-        public RefundService(IRefundRepository refundRepository, IOrderRepository orderRepository, IEmailService emailService)
+        public RefundService(IRefundRepository refundRepository, IOrderRepository orderRepository,
+            ITransactionRepository transactionRepository, IAccountRepository accountRepository, IEmailService emailService)
         {
             _refundRepository = refundRepository;
             _orderRepository = orderRepository;
+            _transactionRepository = transactionRepository;
+            _accountRepository = accountRepository;
             _emailService = emailService;
         }
 
@@ -99,16 +107,66 @@ namespace Services.Refunds
                          <h4>We would like to {request.RefundStatus.ToString().ToUpper()} your refund request<h4>
                          <p>Description: {request.ResponseFromShop}<p>
                          <p>Refund Percentage: {request.RefundPercentage}%
-                         <p>Refund Amount: {request.RefundAmount}UP";
+                         <p>Refund Amount: {request.RefundAmount}UP
+                         <b>We will refund to you right after our shop confirm received items<b>";
+                         
                 await _emailService.SendEmail(content);
                 return true;
             }
             return false;
         }
 
-        public Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
+        public async Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
         {
-            throw new NotImplementedException();
+            var response = new Result<RefundResponse>();
+            var refund = await _refundRepository.GetRefundById(refundId);
+            if (refund == null)
+            {
+                throw new RefundNoFoundException();
+            }
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Select(c => c.OrderDetailId).Contains(refund.OrderDetailId));
+            if (order == null)
+            {
+                throw new OrderNotFoundException();
+            }
+
+            if (!refund.RefundStatus.Equals(RefundStatus.Approved))
+            {
+                response.ResultStatus = ResultStatus.Error;
+                response.Messages = new[] { "This refund is not available to confirm" };
+                return response;
+            }
+            var refundResponse = await _refundRepository.ConfirmReceivedAndRefund(refundId);
+
+            var member = await _accountRepository.GetAccountById(order.MemberId.Value);
+            if (member == null)
+            {
+                throw new AccountNotFoundException();
+            }
+
+            member.Balance += refund.RefundAmount.Value;
+            await _accountRepository.UpdateAccount(member);
+
+            var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
+            if (admin == null)
+                throw new AccountNotFoundException();
+            admin.Balance -= refund.RefundAmount.Value;
+            await _accountRepository.UpdateAccount(admin);
+
+            Transaction refundTransaction = new Transaction()
+            {
+                Amount = refund.RefundAmount.Value,
+                CreatedDate = DateTime.UtcNow,
+                Type = TransactionType.Refund,
+                RefundId = refundId,
+                MemberId = order.MemberId
+            };
+
+            refundResponse.TransactionsResponse = await _transactionRepository.CreateTransactionRefund(refundTransaction);
+            response.Data = refundResponse;
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = new[] { "Confirm item is received and refund to customer successfully" };
+            return response;
         }
     }
 }

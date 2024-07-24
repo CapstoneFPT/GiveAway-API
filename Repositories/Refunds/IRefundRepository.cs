@@ -13,5 +13,6 @@ namespace Repositories.Refunds
         Task<PaginationResponse<RefundResponse>> GetAllRefunds(RefundRequest  request);
         Task<RefundResponse> GetRefundById(Guid refundId);
         Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, ApprovalRefundRequest request);
+        Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId);
     }
 }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.Transactions;
 
 namespace BusinessObjects.Dtos.Refunds
 {
@@ -26,5 +27,6 @@ namespace BusinessObjects.Dtos.Refunds
         public string[] Images { get; set; }
         public RefundStatus RefundStatus { get; set; }
         public OrderDetailsResponse OrderDetailsResponse { get; set; }
+        public GetTransactionsResponse? TransactionsResponse { get; set; }
     }
 }
