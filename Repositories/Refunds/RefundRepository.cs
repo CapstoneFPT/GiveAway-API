@@ -26,7 +26,7 @@ namespace Repositories.Refunds
             _mapper = mapper;
         }
 
-        public async Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, RefundStatus refundStatus)
+        public async Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, ApprovalRefundRequest request)
         {
             var refund = await GenericDao<Refund>.Instance.GetQueryable().Include(c => c.OrderDetail)
                 .ThenInclude(c => c.FashionItem)
@@ -35,18 +35,20 @@ namespace Repositories.Refunds
             {
                 throw new RefundNoFoundException();
             }
-            if (refundStatus.Equals(RefundStatus.Approved))
+            if (request.Status.Equals(RefundStatus.Approved))
             {
                 refund.RefundStatus = RefundStatus.Approved;
                 refund.OrderDetail.FashionItem.Status = FashionItemStatus.Returned;
             }
-            if (refundStatus.Equals(RefundStatus.Rejected))
+            if (request.Status.Equals(RefundStatus.Rejected))
             {
                 refund.RefundStatus = RefundStatus.Rejected;        
             }
 
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
-            return await GetRefundById(refundId);
+            var response = await GetRefundById(refundId);
+            response.ResponseFromShop = request.Description;
+            return response;
         }
 
         public async Task<RefundResponse> GetRefundById(Guid refundId)
@@ -61,7 +63,7 @@ namespace Repositories.Refunds
             return refund;
         }
 
-        public async Task<PaginationResponse<RefundResponse>> GetRefundsByShopId(Guid shopId, RefundRequest request)
+        public async Task<PaginationResponse<RefundResponse>> GetAllRefunds(RefundRequest request)
         {
             var query = GenericDao<Refund>.Instance.GetQueryable();
             if (request.Status != null)
@@ -72,6 +74,11 @@ namespace Repositories.Refunds
             if (request.PreviousTime != null)
             {
                 query = query.Where(f => f.CreatedDate <= request.PreviousTime);
+            }
+
+            if (request.ShopId != null)
+            {
+                query = query.Where(c => c.OrderDetail.FashionItem.ShopId == request.ShopId);
             }
 
             query = query.OrderBy(c => c.CreatedDate);

@@ -220,7 +220,7 @@ namespace Services.ConsignSales
             {
                 content.To = consignSale.Email;
             }
-            content.Subject = $"[GIVEAWAY] Invoice from GiveAway {consignSale.ConsignSaleCode}";
+            content.Subject = $"[GIVEAWAY] CONSIGNSALE INVOICE FROM GIVEAWAY {consignSale.ConsignSaleCode}";
             content.Body = $@"<h1>Dear customer,<h1>
                          <h2>Thank you for purchase at GiveAway<h2>
                          <h4>Here is the detail of your consign<h4>  <p>ConsignSale Code: {consignSale.ConsignSaleCode}<p>

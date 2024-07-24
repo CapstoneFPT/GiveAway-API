@@ -133,17 +133,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{shopId}/refunds")]
-        public async Task<ActionResult<Result<PaginationResponse<RefundResponse>>>> GetRefundsByShopId(
-            [FromRoute] Guid shopId,[FromQuery] RefundRequest refundRequest)
-        {
-            var result = await _refundService.GetRefundByShopId(shopId, refundRequest);
-            
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
-            return Ok(result);
-        }
+        
 
         [HttpGet("{shopId}/inquiries")]
         public async Task<ActionResult<PaginationResponse<InquiryListResponse>>> GetInquiriesByShopId(

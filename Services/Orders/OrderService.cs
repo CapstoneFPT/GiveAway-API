@@ -477,7 +477,7 @@ namespace Services.Orders
                 content.To = order.Email;
             }
 
-            content.Subject = $"[GIVEAWAY] Invoice from GiveAway {order.OrderCode}";
+            content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY {order.OrderCode}";
             content.Body = $@"<h2>Dear customer,<h2>
                          <h3>Thank you for purchase at GiveAway<h3><br>
                          <h4>Here is the detail of your order<h4>

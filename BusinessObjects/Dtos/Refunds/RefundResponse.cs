@@ -17,7 +17,8 @@ namespace BusinessObjects.Dtos.Refunds
         public string Description { get; set; }
         public DateTime CreatedDate { get; set; }
         public Guid OrderDetailId { get; set; }
-        
+        public string? ResponseFromShop { get; set; }
+
         public string[] Images { get; set; }
         public RefundStatus RefundStatus { get; set; }
         public OrderDetailsResponse OrderDetailsResponse { get; set; }
