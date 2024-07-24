@@ -14,5 +14,6 @@ namespace Services.Refunds
         Task<Result<PaginationResponse<RefundResponse>>> GetAllRefunds(RefundRequest refundRequest);
         Task<Result<RefundResponse>> GetRefundById(Guid refundId);
         Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, ApprovalRefundRequest request);
+        Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId);
     }
 }

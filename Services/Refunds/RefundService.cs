@@ -105,5 +105,10 @@ namespace Services.Refunds
             }
             return false;
         }
+
+        public Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

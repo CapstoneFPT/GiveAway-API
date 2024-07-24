@@ -168,5 +168,10 @@ namespace Repositories.OrderDetails
 
             return (items, page, pageSize, count);
         }
+
+        public async Task UpdateRange(List<OrderDetail> orderDetails)
+        {
+            await GenericDao<OrderDetail>.Instance.UpdateRange(orderDetails);
+        }
     }
 }
