@@ -78,6 +78,7 @@ namespace Services.Refunds
             var result = await _refundRepository.GetAllRefunds(refundRequest);
             if (result.TotalCount < 1)
             {
+                response.Data = result;
                 response.ResultStatus = ResultStatus.Success;
                 response.Messages = ["Empty"];
                 return response;
