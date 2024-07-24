@@ -10,8 +10,8 @@ namespace Repositories.Refunds
 {
     public interface IRefundRepository
     {
-        Task<PaginationResponse<RefundResponse>> GetRefundsByShopId(Guid shopId, RefundRequest  request);
+        Task<PaginationResponse<RefundResponse>> GetAllRefunds(RefundRequest  request);
         Task<RefundResponse> GetRefundById(Guid refundId);
-        Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, RefundStatus refundStatus);
+        Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, ApprovalRefundRequest request);
     }
 }
