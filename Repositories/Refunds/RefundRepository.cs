@@ -38,16 +38,20 @@ namespace Repositories.Refunds
             if (request.Status.Equals(RefundStatus.Approved))
             {
                 refund.RefundStatus = RefundStatus.Approved;
+                refund.RefundPercentage = request.RefundPercentage;
+                refund.ResponseFromShop = request.Description;
                 refund.OrderDetail.FashionItem.Status = FashionItemStatus.Returned;
             }
             if (request.Status.Equals(RefundStatus.Rejected))
             {
-                refund.RefundStatus = RefundStatus.Rejected;        
+                refund.RefundStatus = RefundStatus.Rejected;
+                refund.RefundPercentage = 0;
+                refund.ResponseFromShop = request.Description;
             }
-
+            
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
             var response = await GetRefundById(refundId);
-            response.ResponseFromShop = request.Description;
+            
             return response;
         }
 

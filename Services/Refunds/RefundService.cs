@@ -91,13 +91,15 @@ namespace Services.Refunds
                 content.Subject = $"[GIVEAWAY] REFUND RESPONSE FROM GIVEAWAY {order.OrderCode}";
                 content.Body = $@"<h2>Dear customer,<h2>
                          <h3>Thank you for purchase at GiveAway<h3><br>
-                         <h4>Your item is: <h4>
+                         <h3>Your item is: <h3>
                          <h4>Item Name: {request.OrderDetailsResponse.ItemName}<h4>
                          <h4>Item Price: {request.OrderDetailsResponse.UnitPrice}<h4>
                          
                          <h3>Response from shop<h3>
                          <h4>We would like to {request.RefundStatus.ToString().ToUpper()} your refund request<h4>
-                         <p>Description: {request.ResponseFromShop}<p>";
+                         <p>Description: {request.ResponseFromShop}<p>
+                         <p>Refund Percentage: {request.RefundPercentage}%
+                         <p>Refund Amount: {request.RefundAmount}UP";
                 await _emailService.SendEmail(content);
                 return true;
             }

@@ -10,6 +10,7 @@ namespace BusinessObjects.Dtos.Refunds
     public class ApprovalRefundRequest
     {
         public RefundStatus Status { get; set; }
+        public int RefundPercentage { get; set; }
         public string Description { get; set; }
     }
 }
