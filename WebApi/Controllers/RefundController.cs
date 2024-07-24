@@ -34,15 +34,21 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{refundId}/approval")]
-        public async Task<ActionResult<Result<RefundResponse>>> ApprovalRefundRequestFromShop([FromRoute] Guid refundId, RefundStatus refundStatus)
+        public async Task<ActionResult<Result<RefundResponse>>> ApprovalRefundRequestFromShop([FromRoute] Guid refundId, [FromBody] ApprovalRefundRequest request)
         {
-            var result = await _refundService.ApprovalRefundRequestFromShop(refundId, refundStatus);
+            var result = await _refundService.ApprovalRefundRequestFromShop(refundId, request);
             
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             
             return Ok(result);
         }
+
+        /*[HttpPut("{refundId}/confirm-received-and-refund")]
+        public async Task<ActionResult<Result<RefundResponse>>> ConfirmReceivedAndRefund([FromRoute] Guid refundId)
+        {
+
+        }*/
         [HttpPost]
         public async Task<ActionResult<Result<List<RefundResponse>>>> RequestRefundItemToShop([FromBody] List<CreateRefundRequest> refundRequest)
         {
@@ -51,6 +57,17 @@ namespace WebApi.Controllers
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             
+            return Ok(result);
+        }
+        [HttpGet]
+        public async Task<ActionResult<Result<PaginationResponse<RefundResponse>>>> GetAllRefunds(
+            [FromQuery] RefundRequest refundRequest)
+        {
+            var result = await _refundService.GetAllRefunds(refundRequest);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
             return Ok(result);
         }
     }

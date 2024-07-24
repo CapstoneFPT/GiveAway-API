@@ -11,8 +11,8 @@ namespace Services.Refunds
 {
     public interface IRefundService
     {
-        Task<Result<PaginationResponse<RefundResponse>>> GetRefundByShopId(Guid shopId, RefundRequest refundRequest);
+        Task<Result<PaginationResponse<RefundResponse>>> GetAllRefunds(RefundRequest refundRequest);
         Task<Result<RefundResponse>> GetRefundById(Guid refundId);
-        Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, RefundStatus refundStatus);
+        Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, ApprovalRefundRequest request);
     }
 }

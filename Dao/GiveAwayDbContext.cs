@@ -436,7 +436,8 @@ public class GiveAwayDbContext : DbContext
                 s => (RefundStatus)Enum.Parse(typeof(RefundStatus), s)
             ).HasColumnType("varchar")
             .HasMaxLength(20);
-
+        modelBuilder.Entity<Refund>().Property(e => e.RefundPercentage).HasColumnType("numeric").HasMaxLength(100);
+        modelBuilder.Entity<Refund>().Property(e => e.ResponseFromShop).HasColumnType("varchar").HasMaxLength(255);
         #endregion
 
         #region Feedback
