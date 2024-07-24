@@ -48,7 +48,7 @@ public class PointPackageController : ControllerBase
     }
 
     [HttpPost("{pointPackageId}/purchase")]
-    public async Task<IActionResult> Purchase([FromRoute] Guid pointPackageId,
+    public async Task<ActionResult<PointPackagePurchaseResponse>> Purchase([FromRoute] Guid pointPackageId,
         [FromBody] PurchasePointPackageRequest request)
     {
         var pointPackage = await _pointPackageService.GetPointPackageDetail(pointPackageId);
@@ -80,7 +80,11 @@ public class PointPackageController : ControllerBase
             "Point package purchase initiated. OrderCode: {OrderCode}, MemberId: {MemberId}, Package: {Points} points",
             orderResult.Data.OrderCode, request.MemberId, pointPackage.Points);
 
-        return Ok(new { paymentUrl, orderCode = orderResult.Data.OrderCode });
+        return Ok(new PointPackagePurchaseResponse()
+        {
+            PaymentUrl = paymentUrl,
+            OrderCode = orderResult.Data.OrderCode
+        });
     }
 
     [HttpGet("payment-return")]
@@ -137,6 +141,12 @@ public class PointPackageController : ControllerBase
             response.VnPayResponseCode);
         return Ok(new  { success = false, message = "Payment failed", orderCode = response.OrderId });
     }
+}
+
+public class PointPackagePurchaseResponse
+{
+    public string PaymentUrl { get; set; }
+    public string OrderCode { get; set; }
 }
 
 public class PurchasePointPackageRequest
