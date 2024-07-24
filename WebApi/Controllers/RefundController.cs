@@ -43,6 +43,12 @@ namespace WebApi.Controllers
             
             return Ok(result);
         }
+
+        /*[HttpPut("{refundId}/confirm-received-and-refund")]
+        public async Task<ActionResult<Result<RefundResponse>>> ConfirmReceivedAndRefund([FromRoute] Guid refundId)
+        {
+
+        }*/
         [HttpPost]
         public async Task<ActionResult<Result<List<RefundResponse>>>> RequestRefundItemToShop([FromBody] List<CreateRefundRequest> refundRequest)
         {
