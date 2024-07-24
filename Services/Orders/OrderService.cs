@@ -411,6 +411,14 @@ namespace Services.Orders
             order.CompletedDate = DateTime.UtcNow;
             await _orderRepository.UpdateOrder(order);
 
+            var listorderDetail = await _orderDetailRepository.GetOrderDetails(c => c.OrderId == orderId);
+            foreach (var itemOrderDetail in listorderDetail)
+            {
+                itemOrderDetail.RefundExpirationDate = DateTime.UtcNow;
+                itemOrderDetail.FashionItem.Status = FashionItemStatus.Refundable;
+            }
+
+            await _orderDetailRepository.UpdateRange(listorderDetail);
             Expression<Func<OrderDetail, bool>> predicate = x => x.OrderId == orderId;
             Expression<Func<OrderDetail, OrderDetailsResponse>> selector = x => new OrderDetailsResponse()
             {

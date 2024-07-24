@@ -44,11 +44,14 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        /*[HttpPut("{refundId}/confirm-received-and-refund")]
+        [HttpPut("{refundId}/confirm-received-and-refund")]
         public async Task<ActionResult<Result<RefundResponse>>> ConfirmReceivedAndRefund([FromRoute] Guid refundId)
         {
-
-        }*/
+            var result = await _refundService.ConfirmReceivedAndRefund(refundId);
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            return Ok(result);
+        }
         [HttpPost]
         public async Task<ActionResult<Result<List<RefundResponse>>>> RequestRefundItemToShop([FromBody] List<CreateRefundRequest> refundRequest)
         {

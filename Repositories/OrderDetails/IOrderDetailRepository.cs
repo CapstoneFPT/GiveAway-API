@@ -23,5 +23,6 @@ namespace Repositories.OrderDetails
         Task<(List<T> Items, int Page, int PageSize, int TotalCount)>
             GetOrderDetailsPaginate<T>(Expression<Func<OrderDetail, bool>>? predicate,
                 Expression<Func<OrderDetail, T>>? selector, bool isTracking, int page = -1, int pageSize = -1);
+        Task UpdateRange(List<OrderDetail> orderDetails);
     }
 }
