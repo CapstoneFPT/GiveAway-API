@@ -9,8 +9,15 @@ namespace Repositories.PointPackages;
 
 public class PointPackageRepository : IPointPackageRepository
 {
-   
-    public async Task<T?> GetSingle<T>(Expression<Func<PointPackage, bool>> predicate, Expression<Func<PointPackage, T>>? selector)
+    private readonly GiveAwayDbContext _giveAwayDbContext;
+
+    public PointPackageRepository(GiveAwayDbContext giveAwayDbContext)
+    {
+        _giveAwayDbContext = giveAwayDbContext;
+    }
+
+    public async Task<T?> GetSingle<T>(Expression<Func<PointPackage, bool>> predicate,
+        Expression<Func<PointPackage, T>>? selector)
     {
         var query = GenericDao<PointPackage>.Instance.GetQueryable();
 
@@ -21,7 +28,7 @@ public class PointPackageRepository : IPointPackageRepository
                 .Select(selector)
                 .FirstOrDefaultAsync();
         }
-        
+
         return await query
             .Where(predicate)
             .Cast<T>()
@@ -30,16 +37,19 @@ public class PointPackageRepository : IPointPackageRepository
 
     public async Task AddPointsToBalance(Guid accountId, int amount)
     {
-        var account = await GenericDao<Account>.Instance.GetQueryable()
-            .FirstOrDefaultAsync(x => x.AccountId == accountId);
+        // var account = await _giveAwayDbContext.Accounts
+        //     .FirstOrDefaultAsync(x => x.AccountId == accountId);
+        //
+        // if (account == null)
+        // {
+        //     throw new AccountNotFoundException();
+        // }
+        // account.Balance += amount;
+        // _giveAwayDbContext.Accounts.Update(account);
+        // await _giveAwayDbContext.SaveChangesAsync();
 
-        if (account == null)
-        {
-            throw new AccountNotFoundException();
-        }
-
-        account.Balance += amount;
-        await GenericDao<Account>.Instance.UpdateAsync(account);
+        await _giveAwayDbContext.Accounts.Where(x => x.AccountId == accountId).ExecuteUpdateAsync(s =>
+            s.SetProperty(account => account.Balance, account => account.Balance + amount));
     }
 
     public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetPointPackages<T>(
@@ -52,10 +62,10 @@ public class PointPackageRepository : IPointPackageRepository
         {
             query = query.Where(predicate);
         }
-        
+
         var total = await query.CountAsync();
-       
-        if(page != 0 && pageSize != 0)
+
+        if (page != 0 && pageSize != 0)
         {
             query = query.Skip((page - 1) * pageSize).Take(pageSize);
         }
@@ -69,7 +79,7 @@ public class PointPackageRepository : IPointPackageRepository
         {
             items = await query.Cast<T>().ToListAsync();
         }
-        
+
         return (items, page, pageSize, total);
     }
 }

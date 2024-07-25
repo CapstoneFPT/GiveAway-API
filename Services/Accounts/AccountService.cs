@@ -156,6 +156,11 @@ namespace Services.Accounts
                 predicate = predicate.And(account => request.Status.Contains(account.Status));
             }
 
+            if (request.Role != null)
+            {
+                predicate = predicate.And(account => account.Role == request.Role);
+            }
+
 
             Expression<Func<Account, AccountResponse>> selector = account => new AccountResponse()
             {
