@@ -148,7 +148,7 @@ namespace Repositories.Orders
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByAccountId(Guid accountId, OrderRequest request)
         {
             var query = _giveAwayDbContext.Orders.AsQueryable();
-            query = query.Include(c => c.Member).Where(c => c.MemberId == accountId).OrderByDescending(c => c.CreatedDate);
+            query = query.Include(c => c.Member).Where(c => c.MemberId == accountId && c.OrderDetails.Any(c => c.PointPackageId == null)).OrderByDescending(c => c.CreatedDate);
 
             if (request.Status != null)
             {
