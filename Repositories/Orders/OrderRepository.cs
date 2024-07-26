@@ -138,7 +138,6 @@ namespace Repositories.Orders
         {
             var result = await GenericDao<Order>.Instance
                     .GetQueryable()
-                    .Include(order => order.Member)
                     .Include(order => order.OrderDetails)
                     .ThenInclude(orderDetail => orderDetail.FashionItem)
                     .SingleOrDefaultAsync(predicate);
