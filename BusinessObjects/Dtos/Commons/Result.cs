@@ -38,8 +38,9 @@ public enum FashionItemStatus
     OnDelivery,
     Sold,
     Refundable,
-    Pending,
+    PendingForConsignSale,
     PendingAuction,
+    PendingForOrder,
     AwaitingAuction,
     Bidding,
     Won,
@@ -81,7 +82,8 @@ public enum OrderStatus
     AwaitingPayment,
     OnDelivery,
     Completed,
-    Cancelled
+    Cancelled,
+    Pending
 }
 
 public enum RefundStatus

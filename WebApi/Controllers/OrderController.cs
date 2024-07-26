@@ -139,13 +139,13 @@ namespace WebApi.Controllers
 
                     if (transaction.ResultStatus == ResultStatus.Success)
                     {
-                        order.Status = OrderStatus.OnDelivery;
+                        order.Status = OrderStatus.Pending;
                         order.PaymentDate = DateTime.UtcNow;
 
                         await _orderService.UpdateOrder(order);
                         await _orderService.UpdateFashionItemStatus(order.OrderId);
                         await _orderService.UpdateAdminBalance(order);
-                        await _orderService.SendEmailOrder(order);
+                        /*await _orderService.SendEmailOrder(order);*/
 
                         return Redirect("http://localhost:3000");
                     }
@@ -192,10 +192,17 @@ namespace WebApi.Controllers
             await _orderService.UpdateOrder(order);
             await _orderService.UpdateFashionItemStatus(order.OrderId);
             await _orderService.UpdateAdminBalance(order);
-            await _orderService.SendEmailOrder(order);
+            /*await _orderService.SendEmailOrder(order);*/
 
             return Ok(new PayWithPointsResponse()
                 { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
+        }
+
+        [HttpPut("{orderId}/confirm-pending-order")]
+        public async Task<ActionResult<Result<OrderResponse>>> ConfirmPendingOrder([FromRoute] Guid orderId)
+        {
+            var result = await _orderService.ConfirmPendingOrder(orderId);
+            return Ok(result);
         }
     }
 
