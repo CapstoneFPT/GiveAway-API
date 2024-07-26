@@ -28,6 +28,8 @@ namespace Repositories.ConsignSales
             //tao moi 1 consign
             ConsignSale newConsign = new ConsignSale()
             {
+                ConsignorName = request.ConsignorName,
+                Phone = request.Phone,
                 Type = request.Type,
                 CreatedDate = DateTime.UtcNow,
                 ConsignDuration = 60,
@@ -35,9 +37,7 @@ namespace Repositories.ConsignSales
                 MemberId = accountId,
                 Status = ConsignSaleStatus.Pending,
                 TotalPrice = request.fashionItemForConsigns.Sum(c => c.DealPrice),
-                SoldPrice = 0,
                 ConsignSaleMethod = ConsignSaleMethod.Online,
-                MemberReceivedAmount = 0,
                 ConsignSaleCode = await GenerateUniqueString(),
             };
             await GenericDao<ConsignSale>.Instance.AddAsync(newConsign);
@@ -48,41 +48,31 @@ namespace Repositories.ConsignSales
             {
                 FashionItem fashionItem = new FashionItem()
                 {
-                    SellingPrice = item.ConfirmedPrice,
                     Name = item.Name,
                     Note = item.Note,
-                    /*Value = item.Value,*/
                     Condition = item.Condition,
                     ShopId = newConsign.ShopId,
-                    /*CategoryId = item.CategoryId,*/
                     Status = FashionItemStatus.Pending,
                     Brand = item.Brand,
                     Color = item.Color,
                     Size = item.Size,
                     Gender = item.Gender,
                 };
-                switch (request.Type)
+                fashionItem.Type = request.Type switch
                 {
-                    case ConsignSaleType.ConsignedForSale:
-                        fashionItem.Type = FashionItemType.ConsignedForSale;
-                        break;
-                    case ConsignSaleType.ConsignedForAuction:
-                        fashionItem.Type = FashionItemType.ConsignedForAuction;
-                        break;
-                    default:
-                        fashionItem.Type = FashionItemType.ItemBase;
-                        break;
-                }
+                    ConsignSaleType.ConsignedForSale => FashionItemType.ConsignedForSale,
+                    ConsignSaleType.ConsignedForAuction => FashionItemType.ConsignedForAuction,
+                    _ => FashionItemType.ItemBase
+                };
 
                 await GenericDao<FashionItem>.Instance.AddAsync(fashionItem);
 
-                //them image tuong ung voi moi mon do
-                for (int i = 0; i < item.Image.Count(); i++)
+                foreach (var image in item.Images)
                 {
-                    Image img = new Image()
+                    var img = new Image()
                     {
                         FashionItemId = fashionItem.ItemId,
-                        Url = item.Image[i]
+                        Url = image
                     };
                     await GenericDao<Image>.Instance.AddAsync(img);
                 }
@@ -94,7 +84,6 @@ namespace Repositories.ConsignSales
                     ConfirmedPrice = 0,
                     DealPrice = item.DealPrice,
                     FashionItemId = fashionItem.ItemId,
-                    /*FashionItem = fashionItem,*/
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
                 await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);
@@ -206,9 +195,13 @@ namespace Repositories.ConsignSales
             return _mapper.Map<ConsignSaleResponse>(consign);
         }
 
-        public async Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId)
+        public async Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId,bool isTracking = false)
         {
-            return await GenericDao<ConsignSale>.Instance.GetQueryable().Where(c => c.MemberId == accountId).ToListAsync();
+            var query = GenericDao<ConsignSale>.Instance.GetQueryable().Where(c => c.MemberId == accountId);
+            
+            if (!isTracking)
+                query = query.AsNoTracking();
+            return await query.ToListAsync();
         }
 
         public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
@@ -249,9 +242,9 @@ namespace Repositories.ConsignSales
                 ConsignSaleMethod = ConsignSaleMethod.Offline,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(60),
-                TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice),
+                TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice.Value),
                 SoldPrice = 0,
-                MemberReceivedAmount = 0,
+                ConsignorReceivedAmount = 0,
                 ConsignSaleCode = await GenerateUniqueString(),
             };
             if (isMemberExisted != null)
@@ -260,7 +253,7 @@ namespace Repositories.ConsignSales
             }
             else
             {
-                newConsign.RecipientName = request.Consigner;
+                newConsign.ConsignorName = request.Consigner;
                 newConsign.Address = request.Address;
                 newConsign.Phone = request.Phone;
                 newConsign.Email = request.Email;
@@ -302,12 +295,12 @@ namespace Repositories.ConsignSales
                 await GenericDao<FashionItem>.Instance.AddAsync(fashionItem);
 
                 //them image tuong ung voi moi mon do
-                for (int i = 0; i < item.Image.Count(); i++)
+                for (int i = 0; i < item.Images.Count(); i++)
                 {
                     Image img = new Image()
                     {
                         FashionItemId = fashionItem.ItemId,
-                        Url = item.Image[i]
+                        Url = item.Images[i]
                     };
                     await GenericDao<Image>.Instance.AddAsync(img);
                 }
@@ -316,10 +309,9 @@ namespace Repositories.ConsignSales
                 //tao moi consigndetail tuong ung voi mon do
                 ConsignSaleDetail consignDetail = new ConsignSaleDetail()
                 {
-                    ConfirmedPrice = item.ConfirmedPrice,
+                    ConfirmedPrice = item.ConfirmedPrice.Value,
                     DealPrice = item.DealPrice,
                     FashionItemId = fashionItem.ItemId,
-
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
                 await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);

@@ -16,5 +16,6 @@ namespace Services.FashionItems
         Task<Result<FashionItemDetailResponse>> CheckFashionItemAvailability(Guid itemId);
         Task<List<FashionItem>> GetRefundableItems();
         Task ChangeToSoldItems(List<FashionItem> refundableItems);
+        Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId, UpdateFashionItemStatusRequest request);
     }
 }

@@ -82,7 +82,7 @@ namespace Repositories.FashionItems
                     Status = x.FashionItem.Status,
                     Type = x.FashionItem.Type,
                     IsOrderedYet = x.IsOrderedYet,
-                    SellingPrice = x.FashionItem.SellingPrice,
+                    SellingPrice = x.FashionItem.SellingPrice.Value,
                     ShopId = x.FashionItem.ShopId,
                     CategoryName = x.FashionItem.Category != null ? x.FashionItem.Category.Name : "N/A",
                     Gender = x.FashionItem.Gender,
@@ -104,11 +104,11 @@ namespace Repositories.FashionItems
 
         public async Task<FashionItem> GetFashionItemById(Guid id)
         {
-            var query = await GenericDao<FashionItem>.Instance.GetQueryable()
+            var query = await _giveAwayDbContext.FashionItems.AsQueryable()
                 .Include(c => c.Shop)
                 .Include(a => a.Category)
                 .Include(b => b.Images)
-                .AsNoTracking().FirstOrDefaultAsync(x => x.ItemId.Equals(id));
+                .FirstOrDefaultAsync(x => x.ItemId.Equals(id));
             return query;
         }
 
@@ -164,7 +164,7 @@ namespace Repositories.FashionItems
                     {
                         ItemId = f.ItemId,
                         Type = f.Type,
-                        SellingPrice = f.SellingPrice,
+                        SellingPrice = f.SellingPrice.Value,
                         Name = f.Name,
                         Note = f.Note,
                         /*Value = f.Value,*/
@@ -218,7 +218,9 @@ namespace Repositories.FashionItems
 
         public async Task<FashionItem> UpdateFashionItem(FashionItem fashionItem)
         {
-            return await GenericDao<FashionItem>.Instance.UpdateAsync(fashionItem);
+            _giveAwayDbContext.FashionItems.Update(fashionItem);
+            await _giveAwayDbContext.SaveChangesAsync();
+            return fashionItem;
         }
 
         private async Task GetCategoryIdsRecursive(Guid? id, HashSet<Guid> categoryIds)

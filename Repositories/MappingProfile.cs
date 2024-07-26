@@ -69,7 +69,7 @@ namespace Repositories
                 .ForPath(a => a.FashionItemDetail.Size, opt => opt.MapFrom(a => a.FashionItem.Size))
                 .ReverseMap();
             CreateMap<ConsignSale, ConsignSaleResponse>()
-                .ForMember(a => a.Consginer, opt => opt.MapFrom(a => a.RecipientName))
+                .ForMember(a => a.Consginer, opt => opt.MapFrom(a => a.ConsignorName))
                 .ForMember(a => a.ConsignSaleDetails, opt => opt.MapFrom(a => a.ConsignSaleDetails))
                 .ReverseMap();
             CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse>()

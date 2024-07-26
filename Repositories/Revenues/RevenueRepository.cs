@@ -86,7 +86,7 @@ public class RevenueRepository : IRevenueRepository
         }
 
         var result = await query
-            .SumAsync(consignSale => consignSale.MemberReceivedAmount);
+            .SumAsync(consignSale => consignSale.ConsignorReceivedAmount);
 
         return result;
     }

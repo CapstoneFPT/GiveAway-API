@@ -52,9 +52,17 @@ namespace Repositories.Accounts
             return user;
         }
 
-        public async Task<Account?> GetAccountById(Guid id)
+        public async Task<Account?> GetAccountById(Guid id, bool isTracking = false)
         {
-            var user = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == id);
+            var query = GenericDao<Account>.Instance.GetQueryable()
+                ;
+
+            if (!isTracking)
+            {
+                query = query.AsNoTracking();
+            }
+
+            var user = await query.FirstOrDefaultAsync(c => c.AccountId == id);
             return user;
         }
 

@@ -7,7 +7,7 @@ public class FashionItem
 {
     [Key] public Guid ItemId { get; set; }
     public FashionItemType Type { get; set; }
-    public int SellingPrice { get; set; }
+    public int? SellingPrice { get; set; }
     public string Name { get; set; }
     public string Note { get; set; }
     

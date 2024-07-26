@@ -93,7 +93,7 @@ namespace Repositories.Auctions
                     Condition = auctionItem.Condition,
                     Duration = auctionItem.Duration,
                     InitialPrice = auctionItem.InitialPrice,
-                    SellingPrice = auctionItem.SellingPrice,
+                    SellingPrice = auctionItem.SellingPrice.Value,
                     AuctionItemStatus = auctionItem.Status,
                     Note = auctionItem.Note,
                     /*Value = auctionItem.Value,*/
@@ -186,7 +186,7 @@ namespace Repositories.Auctions
                     Condition = x.AuctionFashionItem.Condition,
                     Duration = x.AuctionFashionItem.Duration,
                     InitialPrice = x.AuctionFashionItem.InitialPrice,
-                    SellingPrice = x.AuctionFashionItem.SellingPrice,
+                    SellingPrice = x.AuctionFashionItem.SellingPrice.Value,
                     AuctionItemStatus = x.AuctionFashionItem.Status,
                     Note = x.AuctionFashionItem.Note,
                     /*Value = x.AuctionFashionItem.Value,*/

@@ -195,5 +195,20 @@ namespace Services.FashionItems
             }
             return _fashionitemRepository.UpdateFashionItems(refundableItems);
         }
+
+        public async Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId, UpdateFashionItemStatusRequest request)
+        {
+            var item = await _fashionitemRepository.GetFashionItemById(itemId);
+
+            item.Status = request.Status;
+            
+            await _fashionitemRepository.UpdateFashionItem(item);
+            return new Result<FashionItemDetailResponse?>
+            {
+                Data = _mapper.Map<FashionItemDetailResponse>(item),
+                ResultStatus = ResultStatus.Success,
+                Messages = ["Update Successfully"]
+            };
+        }
     }
 }

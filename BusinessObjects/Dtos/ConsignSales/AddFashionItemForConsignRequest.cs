@@ -11,9 +11,8 @@ namespace BusinessObjects.Dtos.ConsignSales
     {
         public string Name { get; set; }
         public string Note { get; set; }
-        /*public int? Value { get; set; }*/
         public int DealPrice { get; set; }
-        public int ConfirmedPrice { get; set; }
+        public int? ConfirmedPrice { get; set; }
 
         public int Condition { get; set; }
         public Guid CategoryId { get; set; }
@@ -21,6 +20,6 @@ namespace BusinessObjects.Dtos.ConsignSales
         public string Color { get; set; }
         public string? Brand { get; set; } = "No Brand";
         public GenderType Gender { get; set; }
-        public required string[] Image {  get; set; } 
+        public required string[] Images {  get; set; } 
     }
 }
