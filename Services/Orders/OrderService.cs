@@ -20,6 +20,7 @@ using Microsoft.Extensions.Configuration;
 using Services.Emails;
 using AutoMapper.Execution;
 using BusinessObjects.Utils;
+using Repositories.Refunds;
 
 namespace Services.Orders
 {
@@ -36,12 +37,13 @@ namespace Services.Orders
         private readonly ITransactionRepository _transactionRepository;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
+        private readonly IRefundRepository _refundRepository;
 
         public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
             IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository,
             IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
             IShopRepository shopRepository, ITransactionRepository transactionRepository,
-            IConfiguration configuration, IEmailService emailService)
+            IConfiguration configuration, IEmailService emailService, IRefundRepository refundRepository)
         {
             _orderRepository = orderRepository;
             _fashionItemRepository = fashionItemRepository;
@@ -54,12 +56,17 @@ namespace Services.Orders
             _transactionRepository = transactionRepository;
             _configuration = configuration;
             _emailService = emailService;
+            _refundRepository = refundRepository;
         }
 
         public async Task<Result<OrderResponse>> CreateOrder(Guid accountId,
             CartRequest cart)
         {
             var response = new Result<OrderResponse>();
+            if (cart.PaymentMethod.Equals(PaymentMethod.Cash))
+            {
+                throw new WrongPaymentMethodException("Not allow to pay with cash");
+            }
             if (cart.listItemId.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
@@ -183,7 +190,7 @@ namespace Services.Orders
         public async Task UpdateFashionItemStatus(Guid orderOrderId)
         {
             var orderDetails = await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderOrderId);
-            orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.OnDelivery);
+            orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.PendingForOrder);
             var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
             await _fashionItemRepository.BulkUpdate(fashionItems!);
         }
@@ -284,13 +291,32 @@ namespace Services.Orders
         public async Task<Result<string>> CancelOrder(Guid orderId)
         {
             var response = new Result<string>();
-            var order = await _orderRepository.GetOrderById(orderId);
-            if (order == null || order.Status != OrderStatus.AwaitingPayment)
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
+            if (order == null)
             {
                 throw new OrderNotFoundException();
             }
 
+            if (!order.Status.Equals(OrderStatus.Pending) && !order.Status.Equals(OrderStatus.AwaitingPayment))
+            {
+                throw new StatusNotAvailableException();
+            }
+
+            if (order.Status.Equals(OrderStatus.Pending) && !order.PaymentMethod.Equals(PaymentMethod.COD))
+            {
+                order.Member.Balance += order.TotalPrice;
+                var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
+                if (admin == null)
+                    throw new AccountNotFoundException();
+                admin.Balance -= order.TotalPrice;
+                await _accountRepository.UpdateAccount(admin);
+            }
             order.Status = OrderStatus.Cancelled;
+            foreach (var item in order.OrderDetails.Select(c => c.FashionItem))
+            {
+                item.Status = FashionItemStatus.Available;
+            }
+
             await _orderRepository.UpdateOrder(order);
             response.Messages = ["Your order is cancelled"];
             response.ResultStatus = ResultStatus.Success;
@@ -490,7 +516,7 @@ namespace Services.Orders
                          <h3>Thank you for purchase at GiveAway<h3><br>
                          <h4>Here is the detail of your order<h4>
                          <p>Order Code: {order.OrderCode}<p>
-                         <p>Total Price: {order.TotalPrice}<p>
+                         <p>Total Price: {order.TotalPrice} VND<p>
                          <p>Purchase Date: {order.CreatedDate}<p>
                          <p>Payment Method: {order.PaymentMethod}<p>
                          <p>Payment Date: {order.PaymentDate}<p>";
@@ -512,6 +538,32 @@ namespace Services.Orders
 
             account!.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(account);
+        }
+
+        public async Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId)
+        {
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
+            if (order == null)
+            {
+                throw new OrderNotFoundException();
+            }
+
+            if (!order.Status.Equals(OrderStatus.Pending))
+            {
+                throw new StatusNotAvailableException();
+            }
+            order.Status = OrderStatus.OnDelivery;
+            foreach (var item in order.OrderDetails.Select(c => c.FashionItem))
+            {
+                item.Status = FashionItemStatus.OnDelivery;
+            }
+            await _orderRepository.UpdateOrder(order);
+            await SendEmailOrder(order);
+            var response = new Result<OrderResponse>();
+            response.ResultStatus = ResultStatus.Success;
+            response.Messages = new[] { "Confirm order successfully. Order has to be ready for customer " };
+            response.Data = _mapper.Map<OrderResponse>(order);
+            return response;
         }
     }
 }
