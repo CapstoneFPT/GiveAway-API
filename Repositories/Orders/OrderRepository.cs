@@ -62,7 +62,7 @@ namespace Repositories.Orders
             order.Phone = cart.Phone;
             if (cart.PaymentMethod.Equals(PaymentMethod.COD))
             {
-                order.Status = OrderStatus.OnDelivery;
+                order.Status = OrderStatus.Pending;
             }
             else
             {
@@ -88,7 +88,7 @@ namespace Repositories.Orders
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
                 if (cart.PaymentMethod.Equals(PaymentMethod.COD))
                 {
-                    item.Status = FashionItemStatus.OnDelivery;
+                    item.Status = FashionItemStatus.PendingForOrder;
                     await GenericDao<FashionItem>.Instance.UpdateAsync(item);
                 }
                 var orderDetailResponse = new OrderDetailsResponse()
@@ -175,9 +175,12 @@ namespace Repositories.Orders
                     OrderCode = x.OrderCode,
                     PaymentMethod = x.PaymentMethod,
                     PaymentDate = x.PaymentDate,
+                    MemberId = x.MemberId,
+                    CompletedDate = x.CompletedDate,
                     CustomerName = x.Member.Fullname,
                     RecipientName = x.RecipientName,
                     ContactNumber = x.Phone,
+                    Email = x.Email,
                     Address = x.Address,
                     PurchaseType = x.PurchaseType,
                     Status = x.Status,
@@ -348,6 +351,7 @@ namespace Repositories.Orders
                 .FirstOrDefaultAsync();
             order.Status = OrderStatus.Completed;
             order.CompletedDate = DateTime.UtcNow;
+            order.PaymentDate = DateTime.UtcNow;
             await GenericDao<Order>.Instance.UpdateAsync(order);
             var orderResponse = await GenericDao<Order>.Instance.GetQueryable().Include(c => c.OrderDetails)
                 .Where(c => c.OrderId == orderId)

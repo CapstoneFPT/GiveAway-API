@@ -52,7 +52,7 @@ namespace Repositories.ConsignSales
                     Note = item.Note,
                     Condition = item.Condition,
                     ShopId = newConsign.ShopId,
-                    Status = FashionItemStatus.Pending,
+                    Status = FashionItemStatus.PendingForConsignSale,
                     Brand = item.Brand,
                     Color = item.Color,
                     Size = item.Size,

@@ -32,5 +32,6 @@ namespace Services.Orders
         Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId, PayOrderWithCashRequest request);
         Task<Result<string>> SendEmailOrder (Order order);
         Task UpdateAdminBalance(Order order);
+        Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId);
     }
 }
