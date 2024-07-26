@@ -362,7 +362,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<ConsignSale>().HasMany(x => x.ConsignSaleDetails).WithOne(x => x.ConsignSale)
             .HasForeignKey(x => x.ConsignSaleId);
         modelBuilder.Entity<ConsignSale>().Property(x => x.Address).HasColumnType("varchar").HasMaxLength(255);
-        modelBuilder.Entity<ConsignSale>().Property(x => x.RecipientName).HasColumnType("varchar").HasMaxLength(100);
+        modelBuilder.Entity<ConsignSale>().Property(x => x.ConsignorName).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<ConsignSale>().Property(x => x.Phone).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<ConsignSale>().Property(x => x.Email).HasColumnType("varchar").HasMaxLength(50);
         modelBuilder.Entity<ConsignSale>().Property(e => e.ConsignSaleMethod)
