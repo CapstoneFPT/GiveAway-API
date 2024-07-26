@@ -82,7 +82,7 @@ namespace Repositories.Orders
                     .FirstOrDefaultAsync(c => c.ItemId == id);
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = order.OrderId;
-                orderDetail.UnitPrice = item.SellingPrice;
+                orderDetail.UnitPrice = item.SellingPrice.Value;
                 orderDetail.FashionItemId = id;
 
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
@@ -138,7 +138,6 @@ namespace Repositories.Orders
         {
             var result = await GenericDao<Order>.Instance
                     .GetQueryable()
-                    .Include(order => order.Member)
                     .Include(order => order.OrderDetails)
                     .ThenInclude(orderDetail => orderDetail.FashionItem)
                     .SingleOrDefaultAsync(predicate);
@@ -411,7 +410,7 @@ namespace Repositories.Orders
 
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = orderresult.OrderId;
-                orderDetail.UnitPrice = item.SellingPrice;
+                orderDetail.UnitPrice = item.SellingPrice.Value;
 
                 orderDetail.FashionItemId = id;
 

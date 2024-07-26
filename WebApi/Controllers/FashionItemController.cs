@@ -59,5 +59,16 @@ namespace WebApi.Controllers
             
             return Ok(result);
         }
+        
+        [HttpPatch("{itemId}/status")]
+        public async Task<ActionResult<Result<FashionItemDetailResponse>>> UpdateFashionItemStatus([FromRoute] Guid itemId, [FromBody] UpdateFashionItemStatusRequest request)
+        {
+            var result = await _fashionItemService.UpdateFashionItemStatus(itemId, request);
+            
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            
+            return Ok(result);
+        }
     }
 }

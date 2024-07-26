@@ -20,10 +20,10 @@ public class ConsignSale
     public ConsignSaleStatus Status { get; set; }
     public int TotalPrice { get; set; }
     public int SoldPrice { get; set; }
-    public int MemberReceivedAmount { get; set; }
+    public int ConsignorReceivedAmount { get; set; }
     public Transaction? Transaction { get; set; }
     
-    public string? RecipientName { get; set; }
+    public string? ConsignorName { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
     [EmailAddress] public string? Email { get; set; }

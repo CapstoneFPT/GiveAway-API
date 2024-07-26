@@ -21,7 +21,7 @@ namespace Repositories.Accounts
         Task<Account?> ResetPasswordToken(Account? user);
         Task<Account> FindUserByPasswordResetToken(string token);
         Task<List<Account?>> GetAllAccounts();
-        Task<Account?> GetAccountById(Guid id);
+        Task<Account?> GetAccountById(Guid id, bool isTracking = false);
         Task<Account?> Register(Account? account);
         Task<Account?> UpdateAccount(Account? account);
         string CreateRandomToken();

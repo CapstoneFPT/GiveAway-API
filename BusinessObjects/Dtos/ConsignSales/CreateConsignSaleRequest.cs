@@ -13,6 +13,8 @@ namespace BusinessObjects.Dtos.ConsignSales
         public ConsignSaleType Type { get; set; }
         public Guid ShopId { get; set; }
         public List<AddFashionItemForConsignRequest> fashionItemForConsigns { get; set; } = new List<AddFashionItemForConsignRequest>();
+        public string? ConsignorName { get; set; }
+        public string? Phone { get; set; }
     }
     public class CreateConsignSaleByShopRequest
     {
