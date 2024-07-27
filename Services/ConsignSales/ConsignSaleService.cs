@@ -29,7 +29,8 @@ namespace Services.ConsignSales
             _emailService = emailService;
         }
 
-        public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
+        public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
+            ApproveConsignSaleRequest request)
         {
             var response = new Result<ConsignSaleResponse>();
             var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
@@ -39,19 +40,23 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
-            else if (!consign.Status.Equals(ConsignSaleStatus.Pending))
+
+            if (!consign.Status.Equals(ConsignSaleStatus.Pending))
             {
                 response.Messages = ["This consign is not allowed to approval"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-            else if (!status.Equals(ConsignSaleStatus.AwaitDelivery) && !status.Equals(ConsignSaleStatus.Rejected))
+
+            if (!request.Status.Equals(ConsignSaleStatus.AwaitDelivery) &&
+                !request.Status.Equals(ConsignSaleStatus.Rejected))
             {
                 response.Messages = ["Status not available"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-            response.Data = await _consignSaleRepository.ApprovalConsignSale(consignId, status);
+
+            response.Data = await _consignSaleRepository.ApprovalConsignSale(consignId, request.Status);
             response.Messages = ["Approval successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;
@@ -67,12 +72,14 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-            else if (!consign.Status.Equals(ConsignSaleStatus.AwaitDelivery))
+
+            if (!consign.Status.Equals(ConsignSaleStatus.AwaitDelivery))
             {
                 response.Messages = ["This consign is not allowed to confirm"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
             var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
             await SendEmailConsignSale(consignId);
             response.Data = result;
@@ -81,17 +88,20 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
+        public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId,
+            CreateConsignSaleRequest request)
         {
             var response = new Result<ConsignSaleResponse>();
             //check account co' active hay ko
             var account = await _accountRepository.GetAccountById(accountId);
-            if (account == null || account.Status.Equals(AccountStatus.Inactive) || account.Status.Equals(AccountStatus.NotVerified))
+            if (account == null || account.Status.Equals(AccountStatus.Inactive) ||
+                account.Status.Equals(AccountStatus.NotVerified))
             {
                 response.Messages = ["This account is not available to consign"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
             //check list consign status pending co' dat gioi han. = 5 chua
             var listconsignpending = await _consignSaleRepository.GetAllConsignPendingByAccountId(accountId);
             if (listconsignpending.Count >= 5)
@@ -100,6 +110,7 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
             //tao moi' 1 consign form
             var consign = await _consignSaleRepository.CreateConsignSale(accountId, request);
             if (consign == null)
@@ -108,20 +119,23 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
             response.Data = consign;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
             return response;
         }
 
-        public async Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request)
+        public async Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId,
+            CreateConsignSaleByShopRequest request)
         {
             var response = new Result<ConsignSaleResponse>();
             var isMemberExisted = await _accountRepository.FindUserByPhone(request.Phone);
             if (isMemberExisted != null)
             {
                 var account = await _accountRepository.GetAccountById(isMemberExisted.AccountId);
-                if (account == null || account.Status.Equals(AccountStatus.Inactive) || account.Status.Equals(AccountStatus.NotVerified))
+                if (account == null || account.Status.Equals(AccountStatus.Inactive) ||
+                    account.Status.Equals(AccountStatus.NotVerified))
                 {
                     response.Messages = ["This account is not available to consign"];
                     response.ResultStatus = ResultStatus.Error;
@@ -145,9 +159,9 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSales(Guid accountId, ConsignSaleRequest request)
+        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSales(Guid accountId,
+            ConsignSaleRequest request)
         {
-
             var response = new Result<PaginationResponse<ConsignSaleResponse>>();
             var listConsign = await _consignSaleRepository.GetAllConsignSale(accountId, request);
             if (listConsign == null)
@@ -156,13 +170,15 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
+
             response.Data = listConsign;
             response.Messages = ["There are " + listConsign.TotalCount + " consignment"];
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
 
-        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(Guid shopId, ConsignSaleRequestForShop request)
+        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(Guid shopId,
+            ConsignSaleRequestForShop request)
         {
             var response = new Result<PaginationResponse<ConsignSaleResponse>>();
             var listConsign = await _consignSaleRepository.GetAllConsignSaleByShopId(shopId, request);
@@ -172,6 +188,7 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
+
             response.Data = listConsign;
             response.Messages = ["There are " + listConsign.TotalCount + " consignment"];
             response.ResultStatus = ResultStatus.Success;
@@ -188,19 +205,21 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
             response.Data = Consign;
             response.Messages = ["Successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
 
-        public async Task<Result<List<ConsignSaleDetailResponse>>> GetConsignSaleDetailsByConsignSaleId(Guid consignsaleId)
+        public async Task<Result<List<ConsignSaleDetailResponse>>> GetConsignSaleDetailsByConsignSaleId(
+            Guid consignsaleId)
         {
             var result = await _consignSaleDetailRepository.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
             var response = new Result<List<ConsignSaleDetailResponse>>()
             {
                 Data = result,
-                Messages = new []{"There are " + result.Count + " items in this consign"},
+                Messages = new[] { "There are " + result.Count + " items in this consign" },
                 ResultStatus = ResultStatus.Success,
             };
             return response;
@@ -220,6 +239,7 @@ namespace Services.ConsignSales
             {
                 content.To = consignSale.Email;
             }
+
             content.Subject = $"[GIVEAWAY] CONSIGNSALE INVOICE FROM GIVEAWAY {consignSale.ConsignSaleCode}";
             content.Body = $@"<h1>Dear customer,<h1>
                          <h2>Thank you for purchase at GiveAway<h2>
@@ -231,10 +251,11 @@ namespace Services.ConsignSales
             if (!consignSale.Type.Equals(ConsignSaleType.ForSale))
             {
                 content.Body += $"<p>Consign Duration: {consignSale.ConsignDuration}<p>" +
-                                $"<p>Start Date: {consignSale.StartDate}<p>" + 
+                                $"<p>Start Date: {consignSale.StartDate}<p>" +
                                 $"<p>End Date: {consignSale.EndDate}<p>" +
                                 $"<p>Consign Method: {consignSale.ConsignSaleMethod}";
             }
+
             await _emailService.SendEmail(content);
             response.Messages = ["The invoice has been send to customer mail"];
             response.ResultStatus = ResultStatus.Success;

@@ -11,6 +11,10 @@ public class WithdrawNotFoundException : Exception
 {
 }
 
+public class ConsignSaleNotFoundException : Exception
+{
+}
+
 public class AnomalousWithdrawStatusException(string message) : Exception(message);
 
 public class FashionItemNotFoundException : Exception
@@ -64,10 +68,17 @@ public class OrderNotFoundException : Exception
 }
 
 public class WrongPaymentMethodException(string message) : Exception(message);
+
 public class RefundExpiredException(string message) : Exception(message);
 
 public class RefundNoFoundException : Exception
 {
 }
-public class StatusNotAvailableException : Exception{}
-public class ConsignSaleDetailsNotFoundException : Exception { }
+
+public class StatusNotAvailableException : Exception
+{
+}
+
+public class ConsignSaleDetailsNotFoundException : Exception
+{
+}
