@@ -248,11 +248,19 @@ namespace Repositories.Orders
         }
 
         //TODO: Trả kiểu dữ liệu đơn giản hơn 
-        public async Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest request)
+        public async Task<PaginationResponse<OrderResponse>> GetOrders(OrderRequest request)
         {
-            var listItemId = await GenericDao<FashionItem>.Instance.GetQueryable().Where(c => c.ShopId == shopId)
+            var listItemId = new List<Guid>();
+            if (request.ShopId != null)
+            {
+                 listItemId = await GenericDao<FashionItem>.Instance.GetQueryable().Where(c => c.ShopId == request.ShopId)
                     .Select(c => c.ItemId).ToListAsync();
-
+            }
+            else
+            {
+                listItemId = await GenericDao<FashionItem>.Instance.GetQueryable()
+                    .Select(c => c.ItemId).ToListAsync();
+            }
             var listOrderdetail = new List<OrderDetailResponse<FashionItem>>();
             foreach (var itemId in listItemId)
             {

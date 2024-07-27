@@ -11,6 +11,7 @@ namespace BusinessObjects.Dtos.Orders
     {
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
+        public Guid? ShopId { get; set; }
         public OrderStatus? Status { get; set; }
         public string? OrderCode { get; set; }
     }

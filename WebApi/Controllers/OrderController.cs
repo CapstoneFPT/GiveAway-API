@@ -35,7 +35,17 @@ namespace WebApi.Controllers
             _accountService = accountService;
             _logger = logger;
         }
+        [HttpGet]
+        public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByShopId(
+            [FromQuery] OrderRequest orderRequest)
+        {
+            var result = await _orderService.GetOrders(orderRequest);
 
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
+        }
         [HttpGet("{OrderId}/orderdetails")]
         public async Task<ActionResult<Result<PaginationResponse<OrderDetailResponse<FashionItem>>>>>
             GetOrderDetailsByOrderId([FromRoute] Guid OrderId, [FromQuery] OrderDetailRequest request)

@@ -7,6 +7,7 @@ using BusinessObjects.Dtos.Auth;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -27,10 +28,11 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly string tempdata = "tempdatakey";
     private readonly string newpass = "newpasskey";
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
     public AuthService(IAccountRepository accountRepository, ITokenService tokenService, IEmailService emailService,
         IMemoryCache memoryCache, IMapper mapper, IShopRepository shopRepository,
-        IConfiguration configuration)
+        IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
     {
         _accountRepository = accountRepository;
         _tokenService = tokenService;
@@ -39,6 +41,7 @@ public class AuthService : IAuthService
         _mapper = mapper;
         _shopRepository = shopRepository;
         _configuration = configuration;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     public async Task<Result<AccountResponse>> ChangeToNewPassword(string confirmtoken)
@@ -174,11 +177,7 @@ public class AuthService : IAuthService
         }
     }
 
-    /*public async Task<Account> FindUserByEmail(string email)
-    {
-        var result = await _accountRepository.FindUserByEmail(email);
-        return result;
-    }*/
+    
 
     public async Task<Result<LoginResponse>> Login(string email, string password)
     {
@@ -348,11 +347,24 @@ public class AuthService : IAuthService
         _cache.Set(tempdata, token, cacheEntryOption);
         string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
 
+        var PathToFile = _webHostEnvironment.WebRootPath + Path.DirectorySeparatorChar.ToString()
+                                                         + "MailTemplate" + Path.DirectorySeparatorChar.ToString() +
+                                                         "VerifyAccountMail.html";
+        /*var subject = "Confirm Account Registration";*/
+        string HtmlBody = "";
+        using (StreamReader streamReader = System.IO.File.OpenText(PathToFile))
+        {
+            HtmlBody = streamReader.ReadToEnd();
+        }
+
+        string Message = $@"<a href=""{formattedLink}"">Click here to verify your email</a>";
+        string messageBody = string.Format(HtmlBody, Message);
+
         SendEmailRequest content = new SendEmailRequest
         {
             To = email,
             Subject = "[GIVEAWAY] Verify Account",
-            Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
+            Body = messageBody,
         };
         await _emailService.SendEmail(content);
         response.Data = formattedLink;

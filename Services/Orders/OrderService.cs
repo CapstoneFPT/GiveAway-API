@@ -324,13 +324,14 @@ namespace Services.Orders
         }
 
 
-        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByShopId(Guid shopId,
+        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrders(
             OrderRequest orderRequest)
         {
             var response = new Result<PaginationResponse<OrderResponse>>();
-            var order = await _orderRepository.GetOrdersByShopId(shopId, orderRequest);
+            var order = await _orderRepository.GetOrders(orderRequest);
             if (order.TotalCount == 0)
             {
+                response.Data = order;
                 response.Messages = ["Your order list is empty"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
