@@ -139,7 +139,8 @@ namespace Repositories.ConsignSales
         {
             try
             {
-                var consignSale = await GenericDao<ConsignSale>.Instance.GetQueryable().Where(c => c.ConsignSaleId == consignId)
+                var consignSale = await GenericDao<ConsignSale>.Instance.GetQueryable()
+                    .Where(c => c.ConsignSaleId == consignId)
                     .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
                 return consignSale;
             }
@@ -195,10 +196,10 @@ namespace Repositories.ConsignSales
             return _mapper.Map<ConsignSaleResponse>(consign);
         }
 
-        public async Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId,bool isTracking = false)
+        public async Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId, bool isTracking = false)
         {
             var query = GenericDao<ConsignSale>.Instance.GetQueryable().Where(c => c.MemberId == accountId);
-            
+
             if (!isTracking)
                 query = query.AsNoTracking();
             return await query.ToListAsync();
@@ -230,7 +231,8 @@ namespace Repositories.ConsignSales
             CreateConsignSaleByShopRequest request)
         {
             //tao moi 1 consign
-            var isMemberExisted = await GenericDao<Account>.Instance.GetQueryable().Where(c => c.Phone.Equals(request.Phone))
+            var memberId = await GenericDao<Account>.Instance.GetQueryable()
+                .Where(c => c.Phone.Equals(request.Phone)).Select(x => x.AccountId)
                 .FirstOrDefaultAsync();
             ConsignSale newConsign = new ConsignSale()
             {
@@ -247,9 +249,9 @@ namespace Repositories.ConsignSales
                 ConsignorReceivedAmount = 0,
                 ConsignSaleCode = await GenerateUniqueString(),
             };
-            if (isMemberExisted != null)
+            if (memberId != Guid.Empty)
             {
-                newConsign.MemberId = isMemberExisted.AccountId;
+                newConsign.MemberId = memberId;
             }
             else
             {
@@ -260,7 +262,6 @@ namespace Repositories.ConsignSales
             }
 
             await GenericDao<ConsignSale>.Instance.AddAsync(newConsign);
-            //tao nhung~ mon do trong consign moi'
 
             foreach (var item in request.fashionItemForConsigns)
             {
@@ -272,7 +273,6 @@ namespace Repositories.ConsignSales
                     /*Value = item.Value,*/
                     Condition = item.Condition,
                     ShopId = shopId,
-                    CategoryId = item.CategoryId,
                     Status = FashionItemStatus.Unavailable,
                     Brand = item.Brand,
                     Color = item.Color,
@@ -295,7 +295,7 @@ namespace Repositories.ConsignSales
                 await GenericDao<FashionItem>.Instance.AddAsync(fashionItem);
 
                 //them image tuong ung voi moi mon do
-                for (int i = 0; i < item.Images.Count(); i++)
+                for (int i = 0; i < item.Images.Length; i++)
                 {
                     Image img = new Image()
                     {
