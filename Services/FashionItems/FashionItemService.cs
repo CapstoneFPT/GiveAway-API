@@ -45,7 +45,7 @@ namespace Services.FashionItems
                 CategoryId = request.CategoryId,
                 ShopId = shopId,
                 Type = FashionItemType.ItemBase,
-                Status = FashionItemStatus.Available,
+                Status = FashionItemStatus.Unavailable,
                 Color = request.Color,
                 SellingPrice = request.SellingPrice,
             };

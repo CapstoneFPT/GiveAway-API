@@ -23,6 +23,6 @@ namespace BusinessObjects.Dtos.ConsignSales
         public required string Phone {  get; set; }
         public string? Address { get; set; }
         [EmailAddress] public string? Email { get; set; }
-        public List<AddFashionItemForConsignRequest> fashionItemForConsigns { get; set; } = new List<AddFashionItemForConsignRequest>();
+        public List<AddFashionItemForConsignByShop> fashionItemForConsigns { get; set; } = new List<AddFashionItemForConsignByShop>();
     }
 }

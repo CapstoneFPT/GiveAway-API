@@ -244,7 +244,7 @@ namespace Repositories.ConsignSales
                 ConsignSaleMethod = ConsignSaleMethod.Offline,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(60),
-                TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice.Value),
+                TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice),
                 SoldPrice = 0,
                 ConsignorReceivedAmount = 0,
                 ConsignSaleCode = await GenerateUniqueString(),
@@ -272,6 +272,7 @@ namespace Repositories.ConsignSales
                     Note = item.Note,
                     /*Value = item.Value,*/
                     Condition = item.Condition,
+                    CategoryId = item.CategoryId,
                     ShopId = shopId,
                     Status = FashionItemStatus.Unavailable,
                     Brand = item.Brand,
@@ -309,8 +310,8 @@ namespace Repositories.ConsignSales
                 //tao moi consigndetail tuong ung voi mon do
                 ConsignSaleDetail consignDetail = new ConsignSaleDetail()
                 {
-                    ConfirmedPrice = item.ConfirmedPrice.Value,
-                    DealPrice = item.DealPrice,
+                    ConfirmedPrice = item.ConfirmedPrice,
+                    DealPrice = 0,
                     FashionItemId = fashionItem.ItemId,
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
