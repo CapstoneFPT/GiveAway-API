@@ -34,29 +34,31 @@ namespace WebApi.Controllers
 
         [HttpPut("{consignsaleId}/approval")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> ApprovalConsignSale([FromRoute] Guid consignsaleId,
-            ConsignSaleStatus consignStatus)
+            ApproveConsignSaleRequest request)
         {
-            var result = await _consignsaleService.ApprovalConsignSale(consignsaleId, consignStatus);
-            
-            if(result.ResultStatus != ResultStatus.Success)
+            var result = await _consignsaleService.ApprovalConsignSale(consignsaleId, request);
+
+            if (result.ResultStatus != ResultStatus.Success)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             }
-            
+
             return Ok(result);
         }
 
-        [HttpPut("{consignsaleId}/confirm-received")]
+     
+
+        [HttpPut("{consignSaleId}/confirm-received")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> ConfirmReceivedConsignFromShop(
-            [FromRoute] Guid consignsaleId)
+            [FromRoute] Guid consignSaleId, [FromBody] ConfirmReceivedConsignRequest request)
         {
-            var result = await _consignsaleService.ConfirmReceivedFromShop(consignsaleId);
-            
-            if(result.ResultStatus != ResultStatus.Success)
+            var result = await _consignsaleService.ConfirmReceivedFromShop(consignSaleId);
+
+            if (result.ResultStatus != ResultStatus.Success)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             }
-            
+
             return Ok(result);
         }
 
@@ -64,9 +66,29 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<List<ConsignSaleDetailResponse>>>> GetConsignSaleDetailsByConsignSaleId(
             [FromRoute] Guid consignsaleId)
         {
-            var result= await _consignsaleService.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
-            
-            return result.ResultStatus != ResultStatus.Success ? StatusCode((int)HttpStatusCode.InternalServerError, result) : Ok(result);
+            var result = await _consignsaleService.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
+
+            return result.ResultStatus != ResultStatus.Success
+                ? StatusCode((int)HttpStatusCode.InternalServerError, result)
+                : Ok(result);
         }
+    }
+
+    public class ConfirmReceivedConsignRequest
+    {
+        public ConsignSaleStatus Status { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+
+        public List<FashionItemConsignUpdate> FashionItemConsignUpdates { get; set; } =
+            new List<FashionItemConsignUpdate>();
+    }
+
+    public class FashionItemConsignUpdate
+    {
+        public Guid FashionItemId { get; set; }
+        public FashionItemStatus Status { get; set; }
+        public int SellingPrice { get; set; }
+        public Guid CategoryId { get; set; }
     }
 }

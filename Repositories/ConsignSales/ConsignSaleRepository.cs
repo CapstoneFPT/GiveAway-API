@@ -5,6 +5,7 @@ using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Repositories.ConsignSales;
@@ -137,17 +138,10 @@ namespace Repositories.ConsignSales
 
         public async Task<ConsignSaleResponse> GetConsignSaleById(Guid consignId)
         {
-            try
-            {
-                var consignSale = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                    .Where(c => c.ConsignSaleId == consignId)
-                    .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
-                return consignSale;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            var consignSale = await GenericDao<ConsignSale>.Instance.GetQueryable()
+                .Where(c => c.ConsignSaleId == consignId)
+                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
+            return consignSale;
         }
 
         public async Task<string> GenerateUniqueString()
@@ -208,18 +202,26 @@ namespace Repositories.ConsignSales
         public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                .Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)
                 .Where(c => c.ConsignSaleId == consignId)
                 .FirstOrDefaultAsync();
+
+            if (consign == null) throw new ConsignSaleNotFoundException();
 
             consign.Status = ConsignSaleStatus.Received;
             consign.StartDate = DateTime.UtcNow;
             consign.EndDate = DateTime.UtcNow.AddDays(60);
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
-            foreach (var consigndetail in consign.ConsignSaleDetails)
+
+            if (consign.ConsignSaleDetails == null)
+            {
+                throw new ConsignSaleDetailsNotFoundException();
+            }
+
+            foreach (var consignSaleDetail in consign.ConsignSaleDetails)
             {
                 var item = await GenericDao<FashionItem>.Instance.GetQueryable()
-                    .FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
+                    .FirstOrDefaultAsync(c => c.ItemId == consignSaleDetail.FashionItemId);
+                if (item == null) throw new FashionItemNotFoundException();
                 item.Status = FashionItemStatus.Unavailable;
                 await GenericDao<FashionItem>.Instance.UpdateAsync(item);
             }

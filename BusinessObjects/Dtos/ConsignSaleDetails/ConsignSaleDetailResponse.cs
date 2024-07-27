@@ -20,6 +20,7 @@ namespace BusinessObjects.Dtos.ConsignSaleDetails
     public class ConsignSaleDetailResponse2
     {
         public Guid ConsignSaleDetailId { get; set; }
+        public Guid FashionItemId { get; set; }
         public int DealPrice { get; set; }
         public int ConfirmedPrice { get; set;}
         public string ItemName { get; set; }
