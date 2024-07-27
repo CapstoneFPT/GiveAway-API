@@ -19,7 +19,7 @@ namespace Repositories.Orders
         Task<OrderResponse> CreateOrderHierarchy(Guid accountId ,CartRequest cart);
         Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberid);
         Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId);
-        Task<PaginationResponse<OrderResponse>> GetOrdersByShopId(Guid shopId, OrderRequest orderRequest);
+        Task<PaginationResponse<OrderResponse>> GetOrders(OrderRequest orderRequest);
         Task<Order?> GetSingleOrder(Expression<Func<Order,bool>> predicate);
         Task<OrderResponse> ConfirmOrderDelivered(Guid orderId);
         Task<List<Order?>> GetOrders(Expression<Func<Order?, bool>> predicate);

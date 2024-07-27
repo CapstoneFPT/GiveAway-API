@@ -74,17 +74,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{shopId}/orders")]
-        public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByShopId(
-            [FromRoute] Guid shopId, [FromQuery] OrderRequest orderRequest)
-        {
-            var result = await _orderService.GetOrdersByShopId(shopId, orderRequest);
-            
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
-            return Ok(result);
-        }
+        
 
         [HttpPost("{shopId}/orders")]
         public async Task<ActionResult<Result<OrderResponse>>> CreateOrderByShop([FromRoute] Guid shopId,
