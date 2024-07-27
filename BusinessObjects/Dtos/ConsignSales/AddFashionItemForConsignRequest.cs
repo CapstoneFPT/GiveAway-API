@@ -17,7 +17,7 @@ namespace BusinessObjects.Dtos.ConsignSales
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Please enter valid integer Number")]
         public int DealPrice { get; set; }
-        public int? ConfirmedPrice { get; set; }
+        
         public int Condition { get; set; }
         public SizeType Size { get; set; }
         public string Color { get; set; }
