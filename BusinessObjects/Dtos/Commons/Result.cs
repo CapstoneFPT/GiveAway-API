@@ -121,8 +121,7 @@ public enum TransactionType
 public enum WithdrawStatus
 {
     Processing,
-    Approved,
-    Rejected
+    Completed,
 }
 
 public enum PurchaseType
