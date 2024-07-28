@@ -32,7 +32,7 @@ public class WithdrawService : IWithdrawService
             throw new WithdrawNotFoundException();
         }
 
-        if (withdraw.Status != WithdrawStatus.Pending)
+        if (withdraw.Status != WithdrawStatus.Processing)
         {
             throw new AnomalousWithdrawStatusException("Withdraw status is not Pending");
         }

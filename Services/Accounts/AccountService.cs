@@ -240,7 +240,7 @@ namespace Services.Accounts
                 Amount = request.Amount,
                 MemberId = accountId,
                 CreatedDate = DateTime.UtcNow,
-                Status = WithdrawStatus.Pending, 
+                Status = WithdrawStatus.Processing, 
                 Bank = request.Bank,
                 BankAccountName = request.BankAccountName,
                 BankAccountNumber = request.BankAccountNumber

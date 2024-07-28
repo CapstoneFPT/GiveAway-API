@@ -120,7 +120,7 @@ public enum TransactionType
 
 public enum WithdrawStatus
 {
-    Pending,
+    Processing,
     Approved,
     Rejected
 }
