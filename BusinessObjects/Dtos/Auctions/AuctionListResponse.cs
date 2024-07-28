@@ -11,6 +11,7 @@ public class AuctionListResponse
     public DateTime EndDate { get; set; }
     public int DepositFee { get; set; }
     public AuctionStatus Status { get; set; }
+    public string ImageUrl { get; set; }
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
     public ShopDetailResponse Shop { get; set; }
