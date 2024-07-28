@@ -74,33 +74,36 @@ namespace Repositories.Auctions
                 AuctionId = auctionDetail.AuctionId,
                 StartDate = auctionDetail.StartDate,
                 EndDate = auctionDetail.EndDate,
-                Shop = new ShopDetailResponse()
-                {
-                    ShopId = shop.ShopId,
-                    Address = shop.Address,
-                    StaffId = shop.StaffId,
-                },
                 Status = auctionDetail.Status,
+                DepositFee = auctionDetail.DepositFee,
+                StepIncrement = auctionDetail.StepIncrement,
                 Title = auctionDetail.Title,
-                AuctionFashionItem = new AuctionFashionItemDetailResponse()
+                AuctionItem = new AuctionItemDetailResponse()
                 {
                     ItemId = auctionItem.ItemId,
                     Name = auctionItem.Name,
-                    Type = auctionItem.Type,
+                    FashionItemType = auctionItem.Type,
                     Condition = auctionItem.Condition,
-                    Duration = auctionItem.Duration,
                     InitialPrice = auctionItem.InitialPrice,
                     SellingPrice = auctionItem.SellingPrice.Value,
-                    AuctionItemStatus = auctionItem.Status,
                     Note = auctionItem.Note,
-                    /*Value = auctionItem.Value,*/
-                    ShopId = auctionItem.ShopId,
-                    CategoryId = auctionItem.CategoryId.Value
+                    Images = auctionItem.Images.Select(x => new AuctionItemImage()
+                    {
+                        ImageId = x.ImageId,
+                        ImageUrl = x.Url
+                    }).ToList(),
+                    Status = auctionItem.Status,
+                    Shop = new ShopAuctionDetailResponse()
+                    {
+                        ShopId = shop.ShopId,
+                        Address = shop.Address,
+                    },
+                    Category =
+                    {
+                        CategoryId = auctionItem.CategoryId.Value,
+                        CategoryName = auctionItem.Category.Name
+                    }
                 },
-                DepositFee = auctionDetail.DepositFee,
-                ShopId = auctionDetail.ShopId,
-                StepIncrement = auctionDetail.StepIncrement,
-                AuctionItemId = auctionDetail.AuctionFashionItemId,
             };
         }
 
@@ -155,44 +158,21 @@ namespace Repositories.Auctions
             return result;
         }
 
-        public Task<AuctionDetailResponse?> GetAuction(Guid id)
+        public async Task<Auction?> GetAuction(Guid id, bool includeRelations = false)
         {
-            var result = GenericDao<Auction>.Instance
-                .GetQueryable()
-                .Include(x => x.Shop)
-                .Include(x => x.AuctionFashionItem)
-                .Where(x => x.AuctionId == id)
-                .Select(x => new AuctionDetailResponse
-                {
-                    AuctionId = x.AuctionId,
-                    StartDate = x.StartDate,
-                    EndDate = x.EndDate,
-                    Shop = new ShopDetailResponse
-                    {
-                        ShopId = x.Shop.ShopId,
-                        Address = x.Shop.Address,
-                        StaffId = x.Shop.StaffId
-                    },
-                    Status = x.Status,
-                    Title = x.Title,
-                    StepIncrement = x.StepIncrement,
-                    AuctionItemId = x.AuctionFashionItemId,
-                    AuctionFashionItem = new AuctionFashionItemDetailResponse
-                    {
-                        ItemId = x.AuctionFashionItem.ItemId,
-                        Name = x.AuctionFashionItem.Name,
-                        Type = x.AuctionFashionItem.Type,
-                        Condition = x.AuctionFashionItem.Condition,
-                        Duration = x.AuctionFashionItem.Duration,
-                        InitialPrice = x.AuctionFashionItem.InitialPrice,
-                        SellingPrice = x.AuctionFashionItem.SellingPrice.Value,
-                        AuctionItemStatus = x.AuctionFashionItem.Status,
-                        Note = x.AuctionFashionItem.Note,
-                        /*Value = x.AuctionFashionItem.Value,*/
-                        ShopId = x.AuctionFashionItem.ShopId,
-                        CategoryId = x.AuctionFashionItem.CategoryId.Value
-                    }
-                }).AsNoTracking().FirstOrDefaultAsync();
+            var query = GenericDao<Auction>.Instance.GetQueryable();
+
+            if (includeRelations)
+            {
+                query = query.Include(x => x.AuctionFashionItem)
+                    .ThenInclude(x => x.Images)
+                    .Include(x => x.AuctionFashionItem).ThenInclude(x => x.Category)
+                    .Include(x => x.Shop);
+            }
+
+            query = query.Where(x => x.AuctionId == id);
+            var result = await query.FirstOrDefaultAsync();
+
 
             return result;
         }
@@ -292,7 +272,7 @@ namespace Repositories.Auctions
         }
 
 
-        public async Task<AuctionDetailResponse?> RejectAuction(Guid id)
+        public async Task<RejectAuctionResponse?> RejectAuction(Guid id)
         {
             var toBeRejected = await GenericDao<Auction>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.AuctionId == id);
@@ -320,7 +300,7 @@ namespace Repositories.Auctions
             auctionItem.Status = FashionItemStatus.Available;
 
             var result = await GenericDao<Auction>.Instance.UpdateAsync(toBeRejected);
-            return new AuctionDetailResponse()
+            return new RejectAuctionResponse()
             {
                 AuctionId = result.AuctionId,
                 Status = result.Status,

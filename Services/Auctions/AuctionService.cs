@@ -103,7 +103,7 @@ namespace Services.Auctions
                 PaymentMethod = PaymentMethod.Point,
                 TotalPrice = winningBid.Amount,
                 BidId = winningBid.Id,
-                AuctionFashionItemId = auction.AuctionItemId
+                AuctionFashionItemId = auction.AuctionFashionItemId
             };
 
 
@@ -152,10 +152,52 @@ namespace Services.Auctions
             return result;
         }
 
-        public Task<AuctionDetailResponse?> GetAuction(Guid id)
+        public async Task<AuctionDetailResponse?> GetAuction(Guid id)
         {
-            var result = _auctionRepository.GetAuction(id);
-            return result;
+            var result = await _auctionRepository.GetAuction(id, true);
+
+            if (result == null)
+            {
+                throw new AuctionNotFoundException();
+            }
+
+            return new AuctionDetailResponse()
+            {
+                AuctionId = result.AuctionId,
+                Title = result.Title,
+                StartDate = result.StartDate,
+                EndDate = result.EndDate,
+                Status = result.Status,
+                DepositFee = result.DepositFee,
+                StepIncrement = result.StepIncrement,
+                AuctionItem = new AuctionItemDetailResponse()
+                {
+                    ItemId = result.AuctionFashionItemId,
+                    Name = result.AuctionFashionItem.Name,
+                    FashionItemType = result.AuctionFashionItem.Type,
+                    SellingPrice = result.AuctionFashionItem.SellingPrice.Value,
+                    InitialPrice = result.AuctionFashionItem.InitialPrice,
+                    Condition = result.AuctionFashionItem.Condition,
+                    Note = result.AuctionFashionItem.Note,
+                    Category = new AuctionItemCategory()
+                    {
+                        CategoryId = result.AuctionFashionItem.CategoryId.Value,
+                        CategoryName = result.AuctionFashionItem.Category.Name,
+                        Level = result.AuctionFashionItem.Category.Level
+                    },
+                    Shop = new ShopAuctionDetailResponse()
+                    {
+                        ShopId = result.Shop.ShopId,
+                        Address = result.Shop.Address,
+                    },
+                    Images = result.AuctionFashionItem.Images.Select(
+                        img => new AuctionItemImage()
+                        {
+                            ImageId = img.ImageId,
+                            ImageUrl = img.Url
+                        }).ToList()
+                }
+            };
         }
 
         public Task<AuctionDetailResponse?> DeleteAuction(Guid id)
@@ -259,7 +301,7 @@ namespace Services.Auctions
             await scheduler.ScheduleJob(endJob, endTrigger);
         }
 
-        public Task<AuctionDetailResponse?> RejectAuction(Guid id)
+        public Task<RejectAuctionResponse?> RejectAuction(Guid id)
         {
             var result = _auctionRepository.RejectAuction(id);
             return result;

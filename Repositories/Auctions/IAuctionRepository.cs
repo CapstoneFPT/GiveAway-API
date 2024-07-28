@@ -15,11 +15,11 @@ namespace Repositories.Auctions
     {
         Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request);
         Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request);
-        Task<AuctionDetailResponse?> GetAuction(Guid id);
+        Task<Auction?> GetAuction(Guid id, bool includeRelations = false);
         Task<AuctionDetailResponse?> DeleteAuction(Guid id);
         Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request);
         Task<AuctionDetailResponse?> ApproveAuction(Guid id);
-        Task<AuctionDetailResponse?> RejectAuction(Guid id);
+        Task<RejectAuctionResponse?> RejectAuction(Guid id);
         Task<Auction> UpdateAuctionStatus(Guid auctionId, AuctionStatus auctionStatus);
         Task<List<Guid>> GetAuctionEndingNow();
         Task<List<Guid>> GetAuctionStartingNow();

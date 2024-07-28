@@ -21,7 +21,7 @@ namespace Services.Auctions
         Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId, CreateAuctionDepositRequest request);
         Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId);
         Task<AuctionDetailResponse?> ApproveAuction(Guid id);
-        Task<AuctionDetailResponse?> RejectAuction(Guid id);
+        Task<RejectAuctionResponse?> RejectAuction(Guid id);
         Task<BidDetailResponse?> PlaceBid(Guid id, CreateBidRequest request);
         Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request);
         Task<BidDetailResponse?> GetLargestBid(Guid auctionId);
