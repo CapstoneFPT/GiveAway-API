@@ -12,4 +12,5 @@ public class CreateWithdrawResponse
     public string? BankAccountNumber { get; set; }
     public string? BankAccountName { get; set; }
     public string? Bank { get; set; }
+    public int AmountLeft { get; set; }
 }

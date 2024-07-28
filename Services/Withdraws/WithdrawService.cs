@@ -22,7 +22,7 @@ public class WithdrawService : IWithdrawService
         _accountRepository = accountRepository;
     }
 
-    public async Task<ApproveWithdrawResponse> ApproveWithdraw(Guid withdrawId)
+    public async Task<CompleteWithdrawResponse> CompleteWithdrawRequest(Guid withdrawId)
     {
         Expression<Func<Withdraw, bool>> predicate = x => x.WithdrawId == withdrawId;
         var withdraw = await _withdrawRepository.GetSingleWithdraw(predicate);
@@ -37,39 +37,11 @@ public class WithdrawService : IWithdrawService
             throw new AnomalousWithdrawStatusException("Withdraw status is not Pending");
         }
 
-        var member = await _accountRepository.GetMemberById(withdraw.MemberId);
-
-        if (member == null)
-        {
-            throw new AccountNotFoundException();
-        }
-
-        if (member.Balance < withdraw.Amount)
-        {
-           throw new InsufficientBalanceException(); 
-        }
-
-        member.Balance -= withdraw.Amount;
-
-        await _accountRepository.UpdateMemberAccount(member);
-
-        withdraw.Status = WithdrawStatus.Approved;
+        withdraw.Status = WithdrawStatus.Completed;
 
         await _withdrawRepository.UpdateWithdraw(withdraw);
-
-
-        var transaction = new Transaction
-        {
-            Amount = withdraw.Amount,
-            CreatedDate = DateTime.UtcNow,
-            MemberId = withdraw.MemberId,
-            Type = TransactionType.Withdraw,
-        };
-
-        await _transactionRepository.CreateTransaction(transaction);
-
-
-        return new ApproveWithdrawResponse()
+        
+        return new CompleteWithdrawResponse()
         {
             WithdrawId = withdrawId,
             Status = withdraw.Status,
@@ -80,7 +52,7 @@ public class WithdrawService : IWithdrawService
     }
 }
 
-public class ApproveWithdrawResponse
+public class CompleteWithdrawResponse
 {
     public Guid WithdrawId { get; set; }
     public WithdrawStatus Status { get; set; }

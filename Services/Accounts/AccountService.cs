@@ -240,7 +240,7 @@ namespace Services.Accounts
                 Amount = request.Amount,
                 MemberId = accountId,
                 CreatedDate = DateTime.UtcNow,
-                Status = WithdrawStatus.Processing, 
+                Status = WithdrawStatus.Processing,
                 Bank = request.Bank,
                 BankAccountName = request.BankAccountName,
                 BankAccountNumber = request.BankAccountNumber
@@ -248,16 +248,29 @@ namespace Services.Accounts
 
             var result = await _withdrawRepository.CreateWithdraw(newWithdraw);
 
+            account.Balance -= request.Amount;
+            await _account.UpdateAccount(account);
+            
+            var transaction = new Transaction
+            {
+                Amount = result.Amount,
+                CreatedDate = DateTime.UtcNow,
+                MemberId = result.MemberId,
+                Type = TransactionType.Withdraw,
+            };
+
+            await _transactionRepository.CreateTransaction(transaction);
             return new CreateWithdrawResponse()
             {
                 WithdrawId = result.WithdrawId,
                 Amount = result.Amount,
+                AmountLeft = account.Balance,
                 Bank = result.Bank,
                 BankAccountName = result.BankAccountName,
                 BankAccountNumber = result.BankAccountNumber,
                 MemberId = result.MemberId,
                 Status = result.Status,
-                CreatedDate = result.CreatedDate
+                CreatedDate = result.CreatedDate,
             };
         }
 

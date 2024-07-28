@@ -14,10 +14,10 @@ public class WithdrawController : ControllerBase
       _withdrawService = withdrawService;
    }
    
-   [HttpPut("{withdrawId}/approve")]
-   public async Task<ActionResult<ApproveWithdrawResponse>> ApproveWithdraw([FromRoute] Guid withdrawId)
+   [HttpPut("{withdrawId}/complete-request")]
+   public async Task<ActionResult<CompleteWithdrawResponse>> CompleteWithdrawRequest([FromRoute] Guid withdrawId)
    {
-      var result = await _withdrawService.ApproveWithdraw(withdrawId);
+      var result = await _withdrawService.CompleteWithdrawRequest(withdrawId);
       return Ok(result);
    }
 }
