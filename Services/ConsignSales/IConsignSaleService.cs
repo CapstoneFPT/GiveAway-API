@@ -12,7 +12,7 @@ namespace Services.ConsignSales
         Task<Result<ConsignSaleResponse>> GetConsignSaleById(Guid consignId);
         Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request);
         Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId, ApproveConsignSaleRequest request);
-        Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId);
+        Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId,ConfirmReceivedConsignRequest request);
         Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
         Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(Guid shopId, ConsignSaleRequestForShop request);
         Task<Result<string>> SendEmailConsignSale(Guid consignSaleId);

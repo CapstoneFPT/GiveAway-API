@@ -62,7 +62,8 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId)
+        public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId,
+            ConfirmReceivedConsignRequest request)
         {
             var response = new Result<ConsignSaleResponse>();
             var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
@@ -80,7 +81,7 @@ namespace Services.ConsignSales
                 return response;
             }
 
-            var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
+            var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId,request);
             await SendEmailConsignSale(consignId);
             response.Data = result;
             response.Messages = ["Confirm received successfully"];

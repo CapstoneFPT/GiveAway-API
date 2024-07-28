@@ -46,13 +46,13 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-     
+
 
         [HttpPut("{consignSaleId}/confirm-received")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> ConfirmReceivedConsignFromShop(
             [FromRoute] Guid consignSaleId, [FromBody] ConfirmReceivedConsignRequest request)
         {
-            var result = await _consignsaleService.ConfirmReceivedFromShop(consignSaleId);
+            var result = await _consignsaleService.ConfirmReceivedFromShop(consignSaleId, request);
 
             if (result.ResultStatus != ResultStatus.Success)
             {
@@ -74,21 +74,4 @@ namespace WebApi.Controllers
         }
     }
 
-    public class ConfirmReceivedConsignRequest
-    {
-        public ConsignSaleStatus Status { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-
-        public List<FashionItemConsignUpdate> FashionItemConsignUpdates { get; set; } =
-            new List<FashionItemConsignUpdate>();
-    }
-
-    public class FashionItemConsignUpdate
-    {
-        public Guid FashionItemId { get; set; }
-        public FashionItemStatus Status { get; set; }
-        public int SellingPrice { get; set; }
-        public Guid CategoryId { get; set; }
-    }
 }

@@ -8,6 +8,7 @@ using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Repositories.ConsignSales;
 
 namespace Repositories.ConsignSales
@@ -199,34 +200,40 @@ namespace Repositories.ConsignSales
             return await query.ToListAsync();
         }
 
-        public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
+        public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId,
+            ConfirmReceivedConsignRequest request)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                .Where(c => c.ConsignSaleId == consignId)
-                .FirstOrDefaultAsync();
+                .Include(c => c.ConsignSaleDetails!)
+                .ThenInclude(cd => cd.FashionItem)
+                .FirstOrDefaultAsync(c => c.ConsignSaleId == consignId);
 
-            if (consign == null) throw new ConsignSaleNotFoundException();
-
+            if (consign == null)
+            {
+                throw new ConsignSaleNotFoundException();
+            }
+            
             consign.Status = ConsignSaleStatus.Received;
             consign.StartDate = DateTime.UtcNow;
             consign.EndDate = DateTime.UtcNow.AddDays(60);
+            
+            var updateRequestIds = new HashSet<Guid>(request.FashionItemConsignUpdates.Select(u => u.FashionItemId));
+            
+            foreach (var detail in consign.ConsignSaleDetails)
+            {
+                if (detail.FashionItem != null && updateRequestIds.Contains(detail.FashionItem.ItemId))
+                {
+                    var updateRequest = request.FashionItemConsignUpdates.First(u => u.FashionItemId == detail.FashionItem.ItemId);
+                    detail.FashionItem.CategoryId = updateRequest.CategoryId;
+                    detail.FashionItem.SellingPrice = updateRequest.SellingPrice;
+                    detail.FashionItem.Status = FashionItemStatus.Unavailable;
+                }
+            }
+
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
 
-            if (consign.ConsignSaleDetails == null)
-            {
-                throw new ConsignSaleDetailsNotFoundException();
-            }
-
-            foreach (var consignSaleDetail in consign.ConsignSaleDetails)
-            {
-                var item = await GenericDao<FashionItem>.Instance.GetQueryable()
-                    .FirstOrDefaultAsync(c => c.ItemId == consignSaleDetail.FashionItemId);
-                if (item == null) throw new FashionItemNotFoundException();
-                item.Status = FashionItemStatus.Unavailable;
-                await GenericDao<FashionItem>.Instance.UpdateAsync(item);
-            }
-
             return _mapper.Map<ConsignSaleResponse>(consign);
+
         }
 
         public async Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId,
