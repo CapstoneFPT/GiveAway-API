@@ -25,7 +25,7 @@ namespace Services.Emails
         {
             _configuration = configuration;
             _accountRepository = accountRepository;
-            _templateDirectory = Path.Combine(AppContext.BaseDirectory, configuration["EmailTemplateDirectory"]);
+            _templateDirectory = Path.Combine(AppContext.BaseDirectory, configuration.GetSection("MailSettings:EmailTemplateDirectory").Value);
         }
         public string GetEmailTemplate(string templateName)
         {
