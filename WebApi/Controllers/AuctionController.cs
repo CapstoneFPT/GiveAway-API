@@ -58,7 +58,7 @@ public class AuctionController : ControllerBase
     public async Task<ActionResult<PaginationResponse<AuctionListResponse>>> GetAuctions(
         [FromQuery] GetAuctionsRequest request)
     {
-        var result = await _auctionService.GetAuctions(request);
+        var result = await _auctionService.GetAuctionList(request);
         return Ok(result);
     }
 

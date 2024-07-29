@@ -11,6 +11,8 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using LinqKit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Repositories.AuctionDeposits;
@@ -146,10 +148,43 @@ namespace Services.Auctions
             return result;
         }
 
-        public Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
+        public async Task<PaginationResponse<AuctionListResponse>> GetAuctionList(GetAuctionsRequest request)
         {
-            var result = _auctionRepository.GetAuctions(request);
-            return result;
+            Expression<Func<Auction, bool>> predicate = auction => true;
+
+            if (!request.GetExpiredAuctions)
+            {
+                predicate = auction => auction.EndDate >= DateTime.UtcNow;
+            }
+
+            if (request.SearchTerm is not null)
+            {
+                predicate = predicate.And(auction => EF.Functions.ILike(auction.Title, $"%{request.SearchTerm}%"));
+            }
+            
+            Expression<Func<Auction, AuctionListResponse>> selector = auction => new AuctionListResponse()
+            {
+                AuctionId = auction.AuctionId,
+                Title = auction.Title,
+                StartDate = auction.StartDate,
+                EndDate = auction.EndDate,
+                Status = auction.Status,
+                DepositFee = auction.DepositFee,
+                ImageUrl = auction.AuctionFashionItem.Images.FirstOrDefault().Url,
+                AuctionItemId = auction.AuctionFashionItemId,
+                ShopId = auction.ShopId
+            };
+
+            (List<AuctionListResponse> Items, int Page, int PageSize, int Total) result =
+                await _auctionRepository.GetAuctionProjections<AuctionListResponse>(request.PageNumber,
+                    request.PageSize, predicate, selector);
+            return new PaginationResponse<AuctionListResponse>()
+            {
+                Items = result.Items,
+                PageNumber = result.Page,
+                PageSize = result.PageSize,
+                TotalCount = result.Total,
+            };
         }
 
         public async Task<AuctionDetailResponse?> GetAuction(Guid id)

@@ -1,4 +1,7 @@
-﻿using BusinessObjects.Dtos.AuctionItems;
+﻿using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Shops;
@@ -108,55 +111,7 @@ namespace Repositories.Auctions
         }
 
 
-        public async Task<PaginationResponse<AuctionListResponse>> GetAuctions(GetAuctionsRequest request)
-        {
-            var query = GenericDao<Auction>.Instance.GetQueryable();
-
-            query = query.Include(x => x.Shop).Include(x => x.AuctionFashionItem)
-                .ThenInclude(x => x.Images);
-
-            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-                query = query.Where(x => EF.Functions.ILike(x.Title, $"%{request.SearchTerm}%"));
-
-            var count = await query.CountAsync();
-            query = query.OrderByDescending(
-                x => x.StartDate);
-
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
-
-
-            var items = await query
-                .Select(x => new AuctionListResponse
-                {
-                    AuctionId = x.AuctionId,
-                    Title = x.Title,
-                    StartDate = x.StartDate,
-                    EndDate = x.EndDate,
-                    Status = x.Status,
-                    ShopId = x.ShopId,
-                    Shop = new ShopDetailResponse
-                    {
-                        ShopId = x.Shop.ShopId,
-                        Address = x.Shop.Address,
-                        StaffId = x.Shop.StaffId,
-                        Phone = x.Shop.Phone
-                    },
-                    AuctionItemId = x.AuctionFashionItemId,
-                    DepositFee = x.DepositFee,
-                    ImageUrl = x.AuctionFashionItem.Images.FirstOrDefault().Url
-                }).AsNoTracking().ToListAsync();
-
-            var result = new PaginationResponse<AuctionListResponse>
-            {
-                Items = items,
-                PageSize = request.PageSize,
-                TotalCount = count,
-                SearchTerm = request.SearchTerm,
-                PageNumber = request.PageNumber,
-            };
-            return result;
-        }
+       
 
         public async Task<Auction?> GetAuction(Guid id, bool includeRelations = false)
         {
@@ -263,7 +218,6 @@ namespace Repositories.Auctions
 
             toBeApproved.Status = AuctionStatus.Approved;
             await GenericDao<Auction>.Instance.UpdateAsync(toBeApproved);
-
             return new AuctionDetailResponse()
             {
                 AuctionId = toBeApproved.AuctionId,
@@ -343,6 +297,35 @@ namespace Repositories.Auctions
                 .ToListAsync();
 
             return result;
+        }
+
+        public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetAuctionProjections<T>(int? requestPageNumber, int? requestPageSize, Expression<Func<Auction, bool>> predicate, Expression<Func<Auction, T>> selector)
+        {
+            var query = GenericDao<Auction>.Instance.GetQueryable();
+
+            if (predicate != null)
+                query = query.Where(predicate);
+
+            var totalCount = await query.CountAsync();
+            
+            var page = requestPageNumber ?? -1;
+            var pageSize = requestPageSize ?? -1;
+
+            if (page >= 0 && pageSize >= 0)
+            {
+                query = query.Skip((page-1) * pageSize).Take(pageSize);
+            }
+
+            List<T> result;
+            if (selector != null)
+            {
+                result = await query.Select(selector).ToListAsync();
+            }
+            else
+            {
+                result = await query.Cast<T>().ToListAsync();
+            }
+            return (result, page, pageSize, totalCount);
         }
     }
 }

@@ -14,5 +14,4 @@ public class AuctionListResponse
     public string ImageUrl { get; set; }
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
-    public ShopDetailResponse Shop { get; set; }
 }
