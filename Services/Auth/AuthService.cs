@@ -312,7 +312,7 @@ public class AuthService : IAuthService
             .SetSlidingExpiration(TimeSpan.FromSeconds(190))
             .SetPriority(CacheItemPriority.Normal);
         _cache.Set(tempdata, token, cacheEntryOption);
-        var mail = SendMailRegister(member.Email, token);
+        var mail = _emailService.SendMailRegister(member.Email, token);
 
         response.ResultStatus = ResultStatus.Success;
         response.Messages = mail.Result.Messages;
@@ -706,25 +706,7 @@ public class AuthService : IAuthService
         return response;
     }
 
-    public async Task<Result<string>> SendMailRegister(string email, string token)
-    {
-        var response = new Result<string>();
-        var user = await _accountRepository.FindUserByEmail(email);
-        string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
-        string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
-        string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
-
-        SendEmailRequest content = new SendEmailRequest
-        {
-            To = email,
-            Subject = "[GIVEAWAY] Verify Account",
-            Body = $@"<a href=""{formattedLink}"">Click here to verify your email</a>",
-        };
-        await _emailService.SendEmail(content);
-        response.Messages = ["Register successfully! Please check your email for verification in 3 minutes"];
-        response.ResultStatus = ResultStatus.Success;
-        return response;
-    }
+    
 
     public async Task<Result<string>> VerifyEmail(Guid id, string token)
     {
