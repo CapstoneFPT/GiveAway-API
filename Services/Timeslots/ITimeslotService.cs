@@ -11,5 +11,6 @@ namespace Services.Timeslots
     public interface ITimeslotService
     {
         Task<PaginationResponse<TimeslotListResponse>> GetTimeslotList(GetTimeslotsRequest request);
+        Task<CreateTimeslotResponse?> CreateTimeslot(CreateTimeslotRequest request);
     }
 }

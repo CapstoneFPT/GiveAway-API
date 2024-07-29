@@ -225,12 +225,12 @@ namespace Services.Auctions
                         ShopId = result.Shop.ShopId,
                         Address = result.Shop.Address,
                     },
-                    Images = result.AuctionFashionItem.Images.Select(
+                    Images = result.AuctionFashionItem.Images.Count > 0 ? result.AuctionFashionItem.Images.Select(
                         img => new AuctionItemImage()
                         {
                             ImageId = img.ImageId,
                             ImageUrl = img.Url
-                        }).ToList()
+                        }).ToList() : []
                 }
             };
         }

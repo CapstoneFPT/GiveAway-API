@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Timeslots;
 using Microsoft.AspNetCore.Mvc;
 using Services.Timeslots;
@@ -15,12 +16,21 @@ public class TimeslotController : ControllerBase
     {
         _timeslotService = timeslotService;
     }
-   [HttpGet]
-   public async Task<ActionResult<PaginationResponse<TimeslotListResponse>>> GetTimeslots(
-      [FromQuery] GetTimeslotsRequest request)
-   {
-       var result = await _timeslotService.GetTimeslotList(request);
-       
-       return Ok(result);
-   }
+
+    [HttpGet]
+    public async Task<ActionResult<PaginationResponse<TimeslotListResponse>>> GetTimeslots(
+        [FromQuery] GetTimeslotsRequest request)
+    {
+        var result = await _timeslotService.GetTimeslotList(request);
+
+        return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<CreateTimeslotResponse>> CreateTimeslot(CreateTimeslotRequest request)
+    {
+        var result = await _timeslotService.CreateTimeslot(request);
+
+        return Ok(result);
+    }
 }

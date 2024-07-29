@@ -51,5 +51,10 @@ namespace Services.Timeslots
                 TotalCount = result.Total
             };
         }
+
+        public Task<CreateTimeslotResponse?> CreateTimeslot(CreateTimeslotRequest request)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
