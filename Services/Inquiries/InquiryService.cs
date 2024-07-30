@@ -9,6 +9,7 @@ using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Entities;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Repositories.Inquiries;
 
 namespace Services.Inquiries
@@ -26,7 +27,11 @@ namespace Services.Inquiries
             InquiryListRequest inquiryRequest)
         {
             Expression<Func<Inquiry, bool>> predicate = inquiry => true;
-
+            if (!string.IsNullOrEmpty(inquiryRequest.SearchName))
+            {
+                predicate = predicate.And(inquiry =>
+                    EF.Functions.ILike(inquiry.Member.Fullname, $"%{inquiryRequest.SearchName}%"));
+            }
 
             if (inquiryRequest.MemberId != null)
             {
@@ -36,6 +41,8 @@ namespace Services.Inquiries
             {
                 InquiryId = inquiry.InquiryId,
                 Fullname = inquiry.Member.Fullname,
+                Email = inquiry.Member.Email,
+                Phone = inquiry.Member.Phone,
                 Message = inquiry.Message,
                 CreatedDate = inquiry.CreatedDate
             };
