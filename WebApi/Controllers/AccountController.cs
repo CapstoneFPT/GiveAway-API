@@ -201,7 +201,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/transactions")]
-    public async Task<ActionResult<GetTransactionsResponse>> GetTransactions([FromRoute] Guid accountId,
+    public async Task<ActionResult<PaginationResponse<GetTransactionsResponse>>> GetTransactions([FromRoute] Guid accountId,
         [FromQuery] GetTransactionsRequest request)
     {
         var result = await _accountService.GetTransactions(accountId, request);
