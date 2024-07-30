@@ -29,7 +29,7 @@ namespace Services.Emails
         }
         public string GetEmailTemplate(string templateName)
         {
-            var templatePath = Path.Combine(_templateDirectory, templateName);
+            var templatePath = Path.Combine("/app/" + _templateDirectory, templateName);
             return File.ReadAllText(templatePath);
         }
 
