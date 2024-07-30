@@ -14,5 +14,6 @@ public class Address
     public Account Member { set; get; }
     public Guid MemberId { set; get; }
     public bool IsDefault { set; get; }
+    public DateTime CreatedDate { get; set; }
 }
 

@@ -22,4 +22,5 @@ public class Auction
     public ICollection<Bid> Bids = new List<Bid>();
     
     public Schedule Schedule { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

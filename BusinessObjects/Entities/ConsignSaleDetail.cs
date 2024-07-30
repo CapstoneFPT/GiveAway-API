@@ -12,4 +12,5 @@ public class ConsignSaleDetail
     public int ConfirmedPrice { get; set; }
     public ConsignSale ConsignSale { get; set; }
     public FashionItem FashionItem { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

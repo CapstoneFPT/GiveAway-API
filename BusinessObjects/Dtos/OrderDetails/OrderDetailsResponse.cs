@@ -7,4 +7,5 @@ public class OrderDetailsResponse
     public DateTime? RefundExpirationDate { get; set; }
     public string ItemName { get; set; }
     public Guid? PointPackageId { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

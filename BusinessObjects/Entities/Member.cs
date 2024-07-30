@@ -2,8 +2,6 @@
 
 public class Member : Account
 {
-    
-    
     public ICollection<ConsignSale> Requests = new List<ConsignSale>();
     public ICollection<Address> Deliveries = new List<Address>();
     public ICollection<Order> Orders = new List<Order>();

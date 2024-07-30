@@ -60,6 +60,7 @@ namespace Services.Categories
                     newCategory.Level = 2;
                     newCategory.ParentId = parentId;
                     newCategory.Status = CategoryStatus.Unavailable;
+                    newCategory.CreatedDate = DateTime.UtcNow;
                     response.Data = await _categoryRepository.AddCategory(newCategory);
                     response.Messages = new[] { "Add successfully! Please continue create until the final" };
                     response.ResultStatus = ResultStatus.Success;
@@ -69,6 +70,7 @@ namespace Services.Categories
                     newCategory.Level = 3;
                     newCategory.ParentId = parentId;
                     newCategory.Status = CategoryStatus.Unavailable;
+                    newCategory.CreatedDate = DateTime.UtcNow;
                     response.Data = await _categoryRepository.AddCategory(newCategory);
                     response.Messages = new[] { "Add successfully! Please continue create until the final" };
                     response.ResultStatus = ResultStatus.Success;
@@ -78,7 +80,7 @@ namespace Services.Categories
                     newCategory.Level = 4;
                     newCategory.ParentId = parentId;
                     newCategory.Status = CategoryStatus.Available;
-
+                    newCategory.CreatedDate = DateTime.UtcNow;
                     parentCate.Status = CategoryStatus.Available;
                     await _categoryRepository.UpdateCategory(parentCate);
 

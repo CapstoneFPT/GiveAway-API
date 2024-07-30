@@ -12,6 +12,7 @@ public class Timeslot
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public TimeSlotStatus Status { get; set; }
+    public DateTime CreatedDate { get; set; }
 
     public ICollection<Schedule> Schedules = new List<Schedule>();
 }
