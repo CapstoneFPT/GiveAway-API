@@ -25,12 +25,12 @@ namespace Services.Emails
         {
             _configuration = configuration;
             _accountRepository = accountRepository;
-            _templateDirectory = Path.Combine(configuration["EmailTemplateDirectory"]);
+            _templateDirectory = Path.Combine(AppContext.BaseDirectory, configuration["EmailTemplateDirectory"]);
         }
         public string GetEmailTemplate(string templateName)
         {
-            var templatePath = Path.Combine(_templateDirectory, templateName);
-            return File.ReadAllText(templatePath);
+            string path = Path.Combine("https://github.com/CapstoneFPT/GiveAway-API/tree/main/WebApi/MailTemplate", $"{templateName}.html");
+            return File.ReadAllText(path, Encoding.UTF8);
         }
 
         public async Task SendEmail(SendEmailRequest request)
@@ -57,7 +57,7 @@ namespace Services.Emails
             string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
             string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
 
-            var template = GetEmailTemplate("VerifyAccountMail.html");
+            var template = GetEmailTemplate("VerifyAccountMail");
             template = template.Replace($"[link]", formattedLink);
 
                 SendEmailRequest content = new SendEmailRequest
