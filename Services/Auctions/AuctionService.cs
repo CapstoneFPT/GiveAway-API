@@ -161,6 +161,11 @@ namespace Services.Auctions
             {
                 predicate = predicate.And(auction => EF.Functions.ILike(auction.Title, $"%{request.SearchTerm}%"));
             }
+
+            if (request.Status.Length > 0)
+            {
+                predicate = predicate.And(auction => request.Status.Contains(auction.Status));
+            }
             
             Expression<Func<Auction, AuctionListResponse>> selector = auction => new AuctionListResponse()
             {

@@ -16,7 +16,9 @@ namespace BusinessObjects.Dtos.Refunds
         public Guid RefundId { get; set; }
 
         public string Description { get; set; }
+
         public DateTime CreatedDate { get; set; }
+
         public Guid OrderDetailId { get; set; }
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }

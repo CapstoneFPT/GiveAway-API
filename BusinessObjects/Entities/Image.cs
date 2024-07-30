@@ -11,4 +11,5 @@ public class Image
     public Guid FashionItemId { get; set; }
     public Refund Refund { get; set; }
     public Guid? RefundId { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

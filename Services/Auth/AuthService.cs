@@ -304,6 +304,7 @@ public class AuthService : IAuthService
         member.Phone = request.Phone;
         member.Role = Roles.Member;
         member.Status = AccountStatus.NotVerified;
+        member.CreatedDate = DateTime.UtcNow;
 
         var user = await _accountRepository.Register(member);
 

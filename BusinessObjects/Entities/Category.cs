@@ -16,4 +16,5 @@ public class Category
     public ICollection<Category> Children = new List<Category>();
     public ICollection<FashionItem> FashionItems { get; set; }
     public CategoryStatus Status { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

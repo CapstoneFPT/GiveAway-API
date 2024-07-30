@@ -10,6 +10,5 @@ public class Shop
    public Staff Staff { get; set; }
    public Guid StaffId { get; set; }
    public string Phone { get; set; }
-
-   
+   public DateTime CreatedDate { get; set; }
 }

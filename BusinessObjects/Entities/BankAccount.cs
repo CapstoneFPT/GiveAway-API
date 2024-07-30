@@ -11,4 +11,5 @@ public class BankAccount
     
     public Guid MemberId { get; set; }
     public Member Member { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

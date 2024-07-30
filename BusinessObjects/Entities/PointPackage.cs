@@ -8,6 +8,7 @@ public class PointPackage
     public int Points { get; set; }
     public int Price { get; set; }
     public PointPackageStatus Status { get; set; }
+    public DateTime CreatedDate { get; set; }
 
     public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 }

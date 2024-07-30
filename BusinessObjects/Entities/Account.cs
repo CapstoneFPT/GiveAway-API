@@ -19,5 +19,6 @@ public class Account
     public Roles Role { get; set; }
     public AccountStatus Status { get; set; }
     public int Balance { get; set; }
+    public DateTime CreatedDate { get; set; }
 
 }

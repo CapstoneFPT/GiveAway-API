@@ -12,4 +12,5 @@ public class Schedule
    public Guid TimeslotId { get; set; }
    public Auction Auction { get; set; }
    public Guid AuctionId { get; set; }
+   public DateTime CreatedDate { get; set; }
 }

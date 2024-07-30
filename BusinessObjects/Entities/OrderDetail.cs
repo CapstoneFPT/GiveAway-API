@@ -17,5 +17,6 @@ public class OrderDetail
     public PointPackage? PointPackage { get; set; }
     public Guid? PointPackageId { get; set; }
     public Feedback? Feedback { get; set; }
+    public DateTime CreatedDate { get; set; }
     
 }
