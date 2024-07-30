@@ -1,9 +1,10 @@
-﻿namespace BusinessObjects.Dtos.Feedbacks;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BusinessObjects.Dtos.Feedbacks;
 
 public class CreateFeedbackRequest
 {
     public Guid MemberId { get; set; }
+    [Required]
     public string Content { get; set; }
-    public DateTime CreatedDate { get; set; }
-    public Guid ShopId { get; set; }
 }

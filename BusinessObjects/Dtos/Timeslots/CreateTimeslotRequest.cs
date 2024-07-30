@@ -4,7 +4,7 @@ namespace BusinessObjects.Dtos.Timeslots;
 
 public class CreateTimeslotRequest
 {
-    [MaxLength(3, ErrorMessage = "Cannot create more than 3 timeslots at a time")]
+    [MaxLength(5, ErrorMessage = "Cannot create more than 3 timeslots at a time")]
     public CreateTimeslotData[] Data { get; set; } = [];
 }
 

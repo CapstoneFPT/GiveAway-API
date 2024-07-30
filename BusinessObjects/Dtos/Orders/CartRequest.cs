@@ -11,10 +11,12 @@ namespace BusinessObjects.Dtos.Orders
     public class CartRequest
     {
         public PaymentMethod PaymentMethod { get; set; }
+        [Required]
         public string Address { get; set; }
-        public string? RecipientName { get; set; }
+        public string RecipientName { get; set; }
         [Phone]
         public string? Phone { get; set; }
-        public List<Guid?> listItemId { get; set; }
+
+        public List<Guid?> ItemIds { get; set; } = [];
     }
 }

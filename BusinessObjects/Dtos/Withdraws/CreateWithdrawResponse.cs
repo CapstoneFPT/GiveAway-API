@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Dtos.Withdraws;
 

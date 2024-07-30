@@ -47,7 +47,7 @@ namespace Repositories.Orders
             CartRequest cart)
         {
             var listItem = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
-                .Where(c => cart.listItemId.Contains(c.ItemId)).ToListAsync();
+                .Where(c => cart.ItemIds.Contains(c.ItemId)).ToListAsync();
             var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
             var memberAccount = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
 
@@ -76,7 +76,7 @@ namespace Repositories.Orders
             var result = await GenericDao<Order>.Instance.AddAsync(order);
             var listOrderDetailResponse = new List<OrderDetailsResponse>();
 
-            foreach (var id in cart.listItemId)
+            foreach (var id in cart.ItemIds)
             {
                 var item = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);
@@ -388,7 +388,7 @@ namespace Repositories.Orders
         {
 
             var listItem = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
-                .Where(c => orderRequest.listItemId.Contains(c.ItemId)).ToListAsync();
+                .Where(c => orderRequest.ItemIds.Contains(c.ItemId)).ToListAsync();
 
 
             int totalPrice = 0;
@@ -411,7 +411,7 @@ namespace Repositories.Orders
 
             var listOrderDetailResponse = new List<OrderDetailsResponse>();
 
-            foreach (var id in orderRequest.listItemId)
+            foreach (var id in orderRequest.ItemIds)
             {
                 var item = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);

@@ -67,14 +67,14 @@ namespace Services.Orders
             {
                 throw new WrongPaymentMethodException("Not allow to pay with cash");
             }
-            if (cart.listItemId.Count == 0)
+            if (cart.ItemIds.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
 
-            var checkItemAvailable = await _orderRepository.IsOrderAvailable(cart.listItemId);
+            var checkItemAvailable = await _orderRepository.IsOrderAvailable(cart.ItemIds);
             if (checkItemAvailable.Count > 0)
             {
                 var orderResponse = new OrderResponse();
@@ -86,7 +86,7 @@ namespace Services.Orders
                 return response;
             }
 
-            var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.listItemId, accountId);
+            var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.ItemIds, accountId);
             if (checkOrderExisted.Count > 0)
             {
                 var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
@@ -372,7 +372,7 @@ namespace Services.Orders
         public async Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
             var response = new Result<OrderResponse>();
-            if (orderRequest.listItemId.Count == 0)
+            if (orderRequest.ItemIds.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
                 response.ResultStatus = ResultStatus.Success;
@@ -380,7 +380,7 @@ namespace Services.Orders
             }
 
             
-            var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.listItemId);
+            var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.ItemIds);
             if (checkItemAvailable.Count > 0)
             {
                 var orderResponse = new OrderResponse();
@@ -392,7 +392,7 @@ namespace Services.Orders
                 return response;
             }
 
-            var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, orderRequest.listItemId);
+            var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, orderRequest.ItemIds);
             if (isitembelongshop.Count > 0)
             {
                 var orderResponse = new OrderResponse();

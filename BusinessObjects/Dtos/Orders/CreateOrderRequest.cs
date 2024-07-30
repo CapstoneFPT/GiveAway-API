@@ -12,10 +12,14 @@ namespace BusinessObjects.Dtos.Orders
     {
 
         /*public PaymentMethod PaymentMethod { get; set; }*/
+        [Required]
         public string Address { get; set; }
+        [Required]
         public string RecipientName { get; set; }
+        [Required]
+        [Phone]
         public string Phone {  get; set; }
-        [EmailAddress] public string Email { get; set; }    
-        public List<Guid?> listItemId { get; set; }
+        [EmailAddress] public string Email { get; set; }
+        public List<Guid?> ItemIds { get; set; } = [];
     }
 }
