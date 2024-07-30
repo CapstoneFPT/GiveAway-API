@@ -17,6 +17,7 @@ COPY ["Repositories/Repositories.csproj", "Repositories/"]
 COPY ["BusinessObjects/BusinessObjects.csproj", "BusinessObjects/"]
 RUN dotnet restore "./WebApi/WebApi.csproj"
 COPY . .
+COPY ["Services/MailTemplate", "/app/Services/MailTemplate"]
 WORKDIR "/src/WebApi"
 RUN dotnet build "./WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
@@ -27,4 +28,5 @@ RUN dotnet publish "./WebApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY --from=build /app/Services/MailTemplate /app/Services/MailTemplate
 ENTRYPOINT ["dotnet", "WebApi.dll"]

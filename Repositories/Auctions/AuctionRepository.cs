@@ -53,8 +53,8 @@ namespace Repositories.Auctions
                 ShopId = request.ShopId,
                 DepositFee = request.DepositFee,
                 StepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100),
-                StartDate = request.ScheduleDate.ToDateTime(timeslot.StartTime),
-                EndDate = request.ScheduleDate.ToDateTime(timeslot.EndTime),
+                StartDate = request.ScheduleDate.ToDateTime(timeslot.StartTime).ToUniversalTime(),
+                EndDate = request.ScheduleDate.ToDateTime(timeslot.EndTime).ToUniversalTime(),
                 Status = AuctionStatus.Pending
             };
             var auctionDetail = await GenericDao<Auction>.Instance.AddAsync(newAuction);
