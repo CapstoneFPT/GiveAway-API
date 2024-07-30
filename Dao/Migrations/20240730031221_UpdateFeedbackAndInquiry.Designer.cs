@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240730031221_UpdateFeedbackAndInquiry")]
+    partial class UpdateFeedbackAndInquiry
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -528,6 +531,15 @@ namespace Dao.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamptz");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Fullname")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar");
+
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uuid");
 
@@ -535,9 +547,9 @@ namespace Dao.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
+                    b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(20)
+                        .HasMaxLength(10)
                         .HasColumnType("varchar");
 
                     b.HasKey("InquiryId");

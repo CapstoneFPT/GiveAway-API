@@ -68,38 +68,7 @@ namespace Services.Shops
             return response;
         }
 
-        public async Task<PaginationResponse<InquiryListResponse>> GetInquiriesByShopId(Guid shopId,
-            InquiryListRequest inquiryRequest)
-        {
-            Expression<Func<Inquiry, bool>> predicate = inquiry => inquiry.ShopId == shopId;
-
-            if (!string.IsNullOrEmpty(inquiryRequest.Fullname))
-            {
-                predicate = predicate.And(inquiry =>
-                    EF.Functions.ILike(inquiry.Fullname, $"%{inquiryRequest.Fullname}%"));
-            }
-
-            Expression<Func<Inquiry, InquiryListResponse>> selector = inquiry => new InquiryListResponse()
-            {
-                InquiryId = inquiry.InquiryId,
-                ShopId = inquiry.ShopId,
-                Fullname = inquiry.Fullname,
-                Message = inquiry.Message,
-                CreatedDate = inquiry.CreatedDate
-            };
-
-            (List<InquiryListResponse> Items, int Page, int PageSize, int TotalCount) result =
-                await _inquiryRepository.GetInquiries<InquiryListResponse>(inquiryRequest.Page, inquiryRequest.PageSize,
-                    predicate, selector);
-
-            return new PaginationResponse<InquiryListResponse>()
-            {
-                Items = result.Items,
-                PageNumber = result.Page,
-                PageSize = result.PageSize,
-                TotalCount = result.TotalCount
-            };
-        }
+        
 
         public async Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(Guid shopId,
             TransactionRequest transactionRequest)

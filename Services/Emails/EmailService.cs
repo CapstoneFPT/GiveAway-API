@@ -25,7 +25,7 @@ namespace Services.Emails
         {
             _configuration = configuration;
             _accountRepository = accountRepository;
-            _templateDirectory = Path.Combine(AppContext.BaseDirectory, configuration.GetSection("MailSettings:EmailTemplateDirectory").Value);
+            _templateDirectory = Path.Combine(AppContext.BaseDirectory, configuration["EmailTemplateDirectory"]);
         }
         public string GetEmailTemplate(string templateName)
         {
@@ -57,7 +57,7 @@ namespace Services.Emails
             string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
             string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
 
-            var template = GetEmailTemplate("VerifyAccountMail");
+            var template = GetEmailTemplate("VerifyAccountMail.html");
             template = template.Replace($"[link]", formattedLink);
 
                 SendEmailRequest content = new SendEmailRequest

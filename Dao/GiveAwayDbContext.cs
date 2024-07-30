@@ -135,10 +135,7 @@ public class GiveAwayDbContext : DbContext
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
 
-        modelBuilder.Entity<Member>()
-            .HasMany(x => x.Feedbacks)
-            .WithOne(x => x.Member)
-            .HasForeignKey(x => x.MemberId);
+        
 
         modelBuilder.Entity<Member>()
             .HasMany(x => x.Transactions)
@@ -246,8 +243,9 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<Inquiry>().ToTable("Inquiry").HasKey(e => e.InquiryId);
         modelBuilder.Entity<Inquiry>().Property(e => e.CreatedDate).HasColumnType("timestamptz").ValueGeneratedOnAdd();
-        modelBuilder.Entity<Inquiry>().Property(e => e.Fullname).HasColumnType("varchar").HasMaxLength(50);
-        modelBuilder.Entity<Inquiry>().Property(e => e.Phone).HasColumnType("varchar").HasMaxLength(10);
+        modelBuilder.Entity<Inquiry>().Property(e => e.Status)
+            .HasConversion(prop => prop.ToString(), s => (InquiryStatus)Enum.Parse(typeof(InquiryStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
 
         #endregion
 
@@ -333,7 +331,10 @@ public class GiveAwayDbContext : DbContext
             .HasOne<Refund>(x => x.Refund)
             .WithOne(x => x.OrderDetail)
             .HasForeignKey<Refund>(x => x.OrderDetailId);
-
+        modelBuilder.Entity<OrderDetail>()
+            .HasOne<Feedback>(x => x.Feedback)
+            .WithOne(x => x.OrderDetail)
+            .HasForeignKey<Feedback>(x => x.OrderDetailId);
         #endregion
 
         #region ConsignSale
@@ -445,7 +446,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Feedback>()
             .ToTable("Feedback")
             .HasKey(x => x.FeedbackId);
-
+        
         #endregion
     }
 }

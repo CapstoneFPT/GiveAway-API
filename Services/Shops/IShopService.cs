@@ -15,7 +15,7 @@ namespace Services.Shops
     {
         Task<Result<List<ShopDetailResponse>>> GetAllShop();
         Task<Result<ShopDetailResponse>> GetShopById(Guid shopid);
-        Task<PaginationResponse<InquiryListResponse>> GetInquiriesByShopId(Guid shopId, InquiryListRequest inquiryRequest);
+        
         Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(Guid shopId, TransactionRequest transactionRequest);
         Task<FeedbackResponse> CreateFeedbackForShop(Guid shopId, CreateFeedbackRequest feedbackRequest);
     }

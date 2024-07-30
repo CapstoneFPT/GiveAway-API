@@ -1,4 +1,6 @@
-﻿namespace BusinessObjects.Dtos.Inquiries;
+﻿using BusinessObjects.Dtos.Commons;
+
+namespace BusinessObjects.Dtos.Inquiries;
 
 public class CreateInquiryResponse
 {
@@ -8,6 +10,6 @@ public class CreateInquiryResponse
     public string Phone { get; set; }
     public string Email { get; set; }
     public string Fullname { get; set; }
-    public Guid ShopId { get; set; }
+    public InquiryStatus InquiryStatus { get; set; }
     public Guid MemberId { get; set; }
 }

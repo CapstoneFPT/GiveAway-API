@@ -175,3 +175,10 @@ public enum SizeType
     XXXL,
     XXXXL,
 }
+
+public enum InquiryStatus
+{
+    Processing,
+    Approved,
+    Rejected
+}

@@ -125,14 +125,7 @@ namespace WebApi.Controllers
 
         
 
-        [HttpGet("{shopId}/inquiries")]
-        public async Task<ActionResult<PaginationResponse<InquiryListResponse>>> GetInquiriesByShopId(
-            [FromRoute] Guid shopId, InquiryListRequest inquiryRequest)
-        {
-            var result = await _shopService.GetInquiriesByShopId(shopId, inquiryRequest);
-            
-            return Ok(result);
-        }
+        
 
         [HttpGet("{shopId}/offline-transactions")]
         public async Task<ActionResult<PaginationResponse<TransactionResponse>>> GetTransactionsByShopId(

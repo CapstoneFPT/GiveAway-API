@@ -11,5 +11,5 @@ public class Shop
    public Guid StaffId { get; set; }
    public string Phone { get; set; }
 
-   public ICollection<Inquiry> Inquiries = new List<Inquiry>();
+   
 }

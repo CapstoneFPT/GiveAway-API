@@ -16,5 +16,6 @@ public class OrderDetail
     public Guid? FashionItemId { get; set; }
     public PointPackage? PointPackage { get; set; }
     public Guid? PointPackageId { get; set; }
+    public Feedback? Feedback { get; set; }
     
 }

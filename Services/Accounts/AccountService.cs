@@ -191,27 +191,26 @@ namespace Services.Accounts
         {
             var inquiry = new Inquiry()
             {
-                Fullname = request.Fullname,
-                Email = request.Email,
-                Phone = request.Phone,
+                
                 Message = request.Message,
                 MemberId = accountId,
-                ShopId = request.ShopId,
+                Status = InquiryStatus.Processing,
                 CreatedDate = DateTime.UtcNow
             };
 
             var result = await _inquiryRepository.CreateInquiry(inquiry);
-
+            var account = await _account.GetAccountById(accountId);
             return new CreateInquiryResponse()
             {
                 InquiryId = result.InquiryId,
                 MemberId = result.MemberId,
-                ShopId = result.ShopId,
-                Fullname = result.Fullname,
-                Email = result.Email,
-                Phone = result.Phone,
+                
+                Fullname = account.Fullname,
+                Email = account.Email,
+                Phone = account.Phone,
                 Message = result.Message,
-                CreatedDate = result.CreatedDate
+                CreatedDate = result.CreatedDate,
+                InquiryStatus = result.Status
             };
         }
 
