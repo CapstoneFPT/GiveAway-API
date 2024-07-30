@@ -25,11 +25,11 @@ namespace Services.Emails
         {
             _configuration = configuration;
             _accountRepository = accountRepository;
-            _templateDirectory = Path.Combine(AppContext.BaseDirectory, configuration["EmailTemplateDirectory"]);
+            _templateDirectory = Path.Combine("/app/" , configuration["EmailTemplateDirectory"]);
         }
         public string GetEmailTemplate(string templateName)
         {
-            var templatePath = Path.Combine("/app/" + _templateDirectory, templateName);
+            var templatePath = Path.Combine(_templateDirectory, templateName);
             return File.ReadAllText(templatePath);
         }
 
