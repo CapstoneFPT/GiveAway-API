@@ -232,7 +232,7 @@ public class AuctionController : ControllerBase
     [HttpGet("current-time")]
     public IActionResult GetCurrentTime()
     {
-        return Ok(new { currentTime = DateTime.UtcNow });
+        return Ok(new { currentTime = DateTime.Now });
     }
 }
 
