@@ -19,7 +19,9 @@ services:
       - "8080:8080"
     volumes:
       - /etc/letsencrypt/live/giveawayproject.jettonetto.org:/etc/letsencrypt/live/giveawayproject.jettonetto.org:ro
-      - /etc/letsencrypt/archive/giveawayproject.jettonetto.org:/etc/letsencrypt/archive/giveawayproject.jettonetto.org:ro 
+      - /etc/letsencrypt/archive/giveawayproject.jettonetto.org:/etc/letsencrypt/archive/giveawayproject.jettonetto.org:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     user: "0:0"
   prometheus:
     image: prom/prometheus
