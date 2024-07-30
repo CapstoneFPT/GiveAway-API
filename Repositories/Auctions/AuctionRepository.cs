@@ -16,7 +16,8 @@ namespace Repositories.Auctions
     {
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
-            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable()
+            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable().Include(x=>x.Category).Include(x=>x.Images)
+                .Include(x=>x.Shop)
                 .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
 
             if (auctionItem == null)
@@ -88,13 +89,12 @@ namespace Repositories.Auctions
                     FashionItemType = auctionItem.Type,
                     Condition = auctionItem.Condition,
                     InitialPrice = auctionItem.InitialPrice,
-                    SellingPrice = auctionItem.SellingPrice.Value,
                     Note = auctionItem.Note,
-                    Images = auctionItem.Images.Select(x => new AuctionItemImage()
+                    Images = auctionItem.Images.Count > 0 ? auctionItem.Images.Select(x => new AuctionItemImage()
                     {
                         ImageId = x.ImageId,
                         ImageUrl = x.Url
-                    }).ToList(),
+                    }).ToList() : [],
                     Status = auctionItem.Status,
                     Shop = new ShopAuctionDetailResponse()
                     {

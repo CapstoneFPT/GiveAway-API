@@ -4,11 +4,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_HTTPS_PORT=8443
+      - ASPNETCORE_HTTP_PORT=8080
+      - ASPNETCORE_Kestrel__Endpoints__Https__Certificate__Path=/etc/letsencrypt/archive/giveawayproject.jettonetto.org/fullchain1.pem
+      - ASPNETCORE_Kestrel__Endpoints__Https__Certificate__KeyPath=/etc/letsencrypt/archive/giveawayproject.jettonetto.org/privkey1.pem
+      - ASPNETCORE_Kestrel__Endpoints__Https__Url=https://0.0.0.0:443
+      - ASPNETCORE_Kestrel__Endpoints__Http__Url=http://0.0.0.0:80
+      - ASPNETCORE_HOSTNAME=giveawayproject.jettonetto.org
     ports:
-      - "8081:8081"
+      - "8443:443"
       - "8080:8080"
     volumes:
-      - /etc/letsencrypt/live/giveawayproject.jettonetto.org:/etc/letsencrypt/live/giveawayproject.jettonetto.org
+      - /etc/letsencrypt/live/giveawayproject.jettonetto.org:/etc/letsencrypt/live/giveawayproject.jettonetto.org:ro
+      - /etc/letsencrypt/archive/giveawayproject.jettonetto.org:/etc/letsencrypt/archive/giveawayproject.jettonetto.org:ro 
+    user: "0:0"
   prometheus:
     image: prom/prometheus
     ports:
