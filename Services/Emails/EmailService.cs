@@ -29,7 +29,6 @@ namespace Services.Emails
         }
         public string GetEmailTemplate(string templateName)
         {
-            /*string path = Path.Combine("C:\\FPT_University_FULL\\CAPSTONE_API\\WebApi\\MailTemplate\\", $"{templateName}.html");*/
             string path = Path.Combine("Services/MailTemplate/", $"{templateName}.html");
             return File.ReadAllText(path, Encoding.UTF8);
         }
