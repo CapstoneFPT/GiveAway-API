@@ -31,7 +31,7 @@ namespace Repositories.AuctionDeposits
             var timeDiff = auction.StartDate - DateTime.UtcNow;
             if (timeDiff.TotalHours < 24)
             {
-                throw new InvalidOperationException("Deposit can only be made after 24 hours of auction start");
+                throw new InvalidOperationException("Deposit can only be made before 24 hours of auction start");
             }
 
             if (existingDeposit != null)
