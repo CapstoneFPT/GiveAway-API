@@ -82,31 +82,31 @@ namespace Repositories.Auctions
                 DepositFee = auctionDetail.DepositFee,
                 StepIncrement = auctionDetail.StepIncrement,
                 Title = auctionDetail.Title,
-                AuctionItem = new AuctionItemDetailResponse()
-                {
-                    ItemId = auctionItem.ItemId,
-                    Name = auctionItem.Name,
-                    FashionItemType = auctionItem.Type,
-                    Condition = auctionItem.Condition,
-                    InitialPrice = auctionItem.InitialPrice,
-                    Note = auctionItem.Note,
-                    Images = auctionItem.Images.Count > 0 ? auctionItem.Images.Select(x => new AuctionItemImage()
-                    {
-                        ImageId = x.ImageId,
-                        ImageUrl = x.Url
-                    }).ToList() : [],
-                    Status = auctionItem.Status,
-                    Shop = new ShopAuctionDetailResponse()
-                    {
-                        ShopId = shop.ShopId,
-                        Address = shop.Address,
-                    },
-                    Category =
-                    {
-                        CategoryId = auctionItem.CategoryId.Value,
-                        CategoryName = auctionItem.Category.Name
-                    }
-                },
+                // AuctionItem = new AuctionItemDetailResponse()
+                // {
+                //     ItemId = auctionItem.ItemId,
+                //     Name = auctionItem.Name,
+                //     FashionItemType = auctionItem.Type,
+                //     Condition = auctionItem.Condition,
+                //     InitialPrice = auctionItem.InitialPrice,
+                //     Note = auctionItem.Note,
+                //     Images = auctionItem.Images.Count > 0 ? auctionItem.Images.Select(x => new AuctionItemImage()
+                //     {
+                //         ImageId = x.ImageId,
+                //         ImageUrl = x.Url
+                //     }).ToList() : [],
+                //     Status = auctionItem.Status,
+                //     Shop = new ShopAuctionDetailResponse()
+                //     {
+                //         ShopId = shop.ShopId,
+                //         Address = shop.Address,
+                //     },
+                //     Category =
+                //     {
+                //         CategoryId = auctionItem.CategoryId.Value,
+                //         CategoryName = auctionItem.Category.Name
+                //     }
+                // },
             };
         }
 
@@ -211,11 +211,11 @@ namespace Repositories.Auctions
                 throw new AuctionNotFoundException();
             }
 
-            if (toBeApproved.Status == AuctionStatus.Rejected)
+            if (toBeApproved.Status != AuctionStatus.Pending)
             {
-                throw new AuctionAlreadyRejectedException();
+                throw new InvalidOperationException("Auction must be on pending");
             }
-
+            
             toBeApproved.Status = AuctionStatus.Approved;
             await GenericDao<Auction>.Instance.UpdateAsync(toBeApproved);
             return new AuctionDetailResponse()
@@ -237,9 +237,9 @@ namespace Repositories.Auctions
                 throw new AuctionNotFoundException();
             }
 
-            if (toBeRejected.Status == AuctionStatus.Approved)
+            if (toBeRejected.Status != AuctionStatus.Pending)
             {
-                throw new AuctionAlreadyApprovedException();
+                throw new InvalidOperationException("Auction must be on pending");
             }
 
             toBeRejected.Status = AuctionStatus.Rejected;
@@ -253,15 +253,12 @@ namespace Repositories.Auctions
 
             auctionItem.Status = FashionItemStatus.Available;
 
+            await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
             var result = await GenericDao<Auction>.Instance.UpdateAsync(toBeRejected);
             return new RejectAuctionResponse()
             {
                 AuctionId = result.AuctionId,
                 Status = result.Status,
-                AuctionFashionItem = new AuctionFashionItemDetailResponse()
-                {
-                    AuctionItemStatus = result.AuctionFashionItem.Status
-                }
             };
         }
 
