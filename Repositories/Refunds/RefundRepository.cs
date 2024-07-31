@@ -44,11 +44,15 @@ namespace Repositories.Refunds
                 refund.ResponseFromShop = request.Description;
                 refund.OrderDetail.FashionItem.Status = FashionItemStatus.Returned;
             }
-            if (request.Status.Equals(RefundStatus.Rejected))
+            else if (request.Status.Equals(RefundStatus.Rejected))
             {
                 refund.RefundStatus = RefundStatus.Rejected;
                 refund.RefundPercentage = 0;
                 refund.ResponseFromShop = request.Description;
+            }
+            else
+            {
+                throw new StatusNotAvailableException();
             }
             
             await GenericDao<Refund>.Instance.UpdateAsync(refund);

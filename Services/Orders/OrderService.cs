@@ -473,7 +473,7 @@ namespace Services.Orders
             };
 
             await _transactionRepository.CreateTransaction(transaction);
-            await SendEmailOrder(order);
+            await _emailService.SendEmailOrder(order);
             var response = new PayOrderWithCashResponse
             {
                 AmountGiven = request.AmountGiven, OrderId = orderId,
@@ -498,34 +498,7 @@ namespace Services.Orders
             return response;
         }
 
-        public async Task<Result<string>> SendEmailOrder(Order order)
-        {
-            var response = new Result<string>();
-            SendEmailRequest content = new SendEmailRequest();
-            if (order.MemberId != null)
-            {
-                var member = await _accountRepository.GetAccountById(order.MemberId.Value);
-                content.To = member.Email;
-            }
-            else
-            {
-                content.To = order.Email;
-            }
-
-            content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY {order.OrderCode}";
-            content.Body = $@"<h2>Dear customer,<h2>
-                         <h3>Thank you for purchase at GiveAway<h3><br>
-                         <h4>Here is the detail of your order<h4>
-                         <p>Order Code: {order.OrderCode}<p>
-                         <p>Total Price: {order.TotalPrice} VND<p>
-                         <p>Purchase Date: {order.CreatedDate}<p>
-                         <p>Payment Method: {order.PaymentMethod}<p>
-                         <p>Payment Date: {order.PaymentDate}<p>";
-            await _emailService.SendEmail(content);
-            response.Messages = ["The invoice has been send to customer mail"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
-        }
+        
 
         public async Task UpdateAdminBalance(Order order)
         {
@@ -559,7 +532,7 @@ namespace Services.Orders
                 item.Status = FashionItemStatus.OnDelivery;
             }
             await _orderRepository.UpdateOrder(order);
-            await SendEmailOrder(order);
+            await _emailService.SendEmailOrder(order);
             var response = new Result<OrderResponse>();
             response.ResultStatus = ResultStatus.Success;
             response.Messages = new[] { "Confirm order successfully. Order has to be ready for customer " };

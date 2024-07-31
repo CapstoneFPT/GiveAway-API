@@ -60,6 +60,7 @@ namespace Repositories.Orders
             order.PurchaseType = PurchaseType.Online;
             order.RecipientName = cart.RecipientName;
             order.Phone = cart.Phone;
+            order.Email = memberAccount.Email;
             if (cart.PaymentMethod.Equals(PaymentMethod.COD))
             {
                 order.Status = OrderStatus.Pending;
@@ -83,6 +84,7 @@ namespace Repositories.Orders
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = order.OrderId;
                 orderDetail.UnitPrice = item.SellingPrice.Value;
+                orderDetail.CreatedDate = DateTime.UtcNow;
                 orderDetail.FashionItemId = id;
 
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
@@ -96,6 +98,7 @@ namespace Repositories.Orders
                     OrderDetailId = orderDetail.OrderDetailId,
                     ItemName = item.Name,
                     UnitPrice = orderDetail.UnitPrice,
+                    CreatedDate = orderDetail.CreatedDate
                 };
                 totalPrice += orderDetail.UnitPrice;
 
@@ -123,6 +126,7 @@ namespace Repositories.Orders
                 RecipientName = resultUpdate.RecipientName,
                 ContactNumber = resultUpdate.Phone,
                 CustomerName = memberAccount.Fullname,
+                Email = resultUpdate.Email,
                 Status = resultUpdate.Status,
                 OrderDetailItems = listOrderDetailResponse,
             };
