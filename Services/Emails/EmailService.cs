@@ -33,7 +33,7 @@ namespace Services.Emails
         {
             string pathLocal = Path.Combine("C:\\FPT_University_FULL\\CAPSTONE_API\\Services\\MailTemplate\\", $"{templateName}.html");
             string path = Path.Combine("Services/MailTemplate/", $"{templateName}.html");
-            return File.ReadAllText(pathLocal, Encoding.UTF8);
+            return File.ReadAllText(path, Encoding.UTF8);
         }
 
         public async Task SendEmail(SendEmailRequest request)
