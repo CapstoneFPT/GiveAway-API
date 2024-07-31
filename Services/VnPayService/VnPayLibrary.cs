@@ -135,10 +135,7 @@ public static class Utils
                     remoteIpAddress = Array.Find(Dns.GetHostEntry(remoteIpAddress).AddressList,
                         x => x.AddressFamily == AddressFamily.InterNetwork);
                 }
-
-                if (remoteIpAddress != null) ipAddress = remoteIpAddress.ToString();
-
-                return ipAddress;
+                return remoteIpAddress != null ? remoteIpAddress.ToString() : "172.18.0.3";
             }
         }
         catch (Exception ex)
@@ -146,7 +143,7 @@ public static class Utils
             return "Invalid IP:" + ex.Message;
         }
 
-        return "127.0.0.1";
+        return ipAddress;
     }
 }
 
