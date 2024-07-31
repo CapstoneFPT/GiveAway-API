@@ -144,7 +144,7 @@ namespace Services.FashionItems
                 response.ResultStatus = ResultStatus.Success;
                 response.Messages = ["Successfully with " + response.Data.TotalCount + " items"];
                 return response;
-            }
+            }   
 
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Empty"];
