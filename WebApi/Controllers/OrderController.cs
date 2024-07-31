@@ -105,6 +105,11 @@ namespace WebApi.Controllers
                 throw new WrongPaymentMethodException("Order is not paid by QRCode");
             }
 
+            if (order.Status != OrderStatus.AwaitingPayment)
+            {
+                throw new InvalidOperationException("Order is not awaiting payment");
+            }
+
             if (order.MemberId != request.MemberId)
             {
                 throw new NotAuthorizedToPayOrderException();
@@ -127,6 +132,12 @@ namespace WebApi.Controllers
             //check
             var response = _vnPayService.ProcessPayment(requestParams);
             var order = await _orderService.GetOrderById(new Guid(response.OrderId));
+
+            if (order.Status != OrderStatus.AwaitingPayment)
+            {
+                throw new InvalidOperationException("Order is not awaiting payment");
+            }
+            
             if (response.Success)
             {
                 try
@@ -187,6 +198,11 @@ namespace WebApi.Controllers
             if (order.PaymentMethod != PaymentMethod.Point)
             {
                 throw new WrongPaymentMethodException("Order is not paid by Point");
+            }
+            
+            if(order.Status != OrderStatus.AwaitingPayment)
+            {
+                throw new InvalidOperationException("Order is not awaiting payment");
             }
 
             if (order.MemberId != request.MemberId)
