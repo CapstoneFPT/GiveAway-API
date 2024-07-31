@@ -238,7 +238,7 @@ namespace Dao.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("BankAccounts");
+                    b.ToTable("BankAccounts", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Bid", b =>
@@ -794,7 +794,7 @@ namespace Dao.Migrations
                     b.HasIndex("StaffId")
                         .IsUnique();
 
-                    b.ToTable("Shops");
+                    b.ToTable("Shops", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Timeslot", b =>
@@ -916,7 +916,7 @@ namespace Dao.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Withdraws");
+                    b.ToTable("Withdraws", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Admin", b =>

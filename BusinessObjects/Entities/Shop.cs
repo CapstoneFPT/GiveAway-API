@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Point = NetTopologySuite.Geometries.Point;
 
 namespace BusinessObjects.Entities;
 
@@ -10,5 +11,6 @@ public class Shop
    public Staff Staff { get; set; }
    public Guid StaffId { get; set; }
    public string Phone { get; set; }
+   // public Point Location { get; set; }
    public DateTime CreatedDate { get; set; }
 }

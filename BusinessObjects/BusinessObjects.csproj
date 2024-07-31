@@ -19,7 +19,9 @@
       </PackageReference>
       <PackageReference Include="MailKit" Version="4.5.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+      <PackageReference Include="NetTopologySuite" Version="2.5.0" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="8.0.4" />
       <PackageReference Include="payOS" Version="1.0.6" />
       <PackageReference Include="Quartz.AspNetCore" Version="3.11.0" />
     </ItemGroup>

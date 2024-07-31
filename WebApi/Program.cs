@@ -31,17 +31,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddServices();
 builder.Services.AddRepositories();
 // builder.Services.AddDao();
-builder.Services.AddQuartz(configurator =>
-{
-});
+builder.Services.AddQuartz(configurator => { });
 builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 // builder.Services.AddLongRunningServices();
 builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPay"));
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = true;
-});
+builder.Services.AddSignalR(options => { options.EnableDetailedErrors = true; });
 builder.Services.UseHttpClientMetrics();
 builder.Services.AddProblemDetails(options =>
 {
@@ -60,9 +55,9 @@ builder.Services.AddProblemDetails(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<GiveAwayDbContext>(optionsAction: optionsBuilder =>
 {
-    optionsBuilder.UseNpgsql(builder.Configuration.GetConnectionString("DefaultDB"));
-    
-},ServiceLifetime.Scoped);
+    optionsBuilder.UseNpgsql(builder.Configuration.GetConnectionString("DefaultDB")
+    );
+}, ServiceLifetime.Scoped);
 builder.Services.AddMemoryCache();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -108,7 +103,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials().SetIsOriginAllowedToAllowWildcardSubdomains();
+            policy.WithOrigins("http://localhost:5173", "http://localhost:3000").AllowAnyHeader().AllowAnyMethod()
+                .AllowCredentials().SetIsOriginAllowedToAllowWildcardSubdomains();
         });
 });
 
