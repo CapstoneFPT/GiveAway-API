@@ -157,7 +157,7 @@ namespace WebApi.Controllers
                         await _orderService.UpdateAdminBalance(order);
                         /*await _orderService.SendEmailOrder(order);*/
 
-                        return Redirect("http://localhost:3000");
+                        return Redirect("http://localhost:5173");
                     }
                 }
                 catch (Exception e)
