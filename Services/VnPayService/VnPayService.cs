@@ -27,7 +27,7 @@ public class VnPayService : IVnPayService
         _vnPayLibrary.AddRequestData("vnp_Amount", (amount * 100).ToString());
         _vnPayLibrary.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
         _vnPayLibrary.AddRequestData("vnp_CurrCode", "VND");
-        _vnPayLibrary.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(_httpContextAccessor.HttpContext));
+        _vnPayLibrary.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(_httpContextAccessor.HttpContext) != null ? Utils.GetIpAddress(_httpContextAccessor.HttpContext) : "172.18.0.3");
         _vnPayLibrary.AddRequestData("vnp_Locale", "vn");
         _vnPayLibrary.AddRequestData("vnp_OrderInfo", orderId.ToString());
         _vnPayLibrary.AddRequestData("vnp_OrderType", "other");
