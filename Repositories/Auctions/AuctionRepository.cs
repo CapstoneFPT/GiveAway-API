@@ -52,6 +52,7 @@ namespace Repositories.Auctions
                 Title = request.Title,
                 ShopId = request.ShopId,
                 DepositFee = request.DepositFee,
+                CreatedDate = DateTime.UtcNow,
                 StepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100),
                 StartDate = request.ScheduleDate.ToDateTime(timeslot.StartTime).ToUniversalTime(),
                 EndDate = request.ScheduleDate.ToDateTime(timeslot.EndTime).ToUniversalTime(),
@@ -72,6 +73,7 @@ namespace Repositories.Auctions
 
             auctionItem.Status = FashionItemStatus.AwaitingAuction;
 
+            await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
 
             return new AuctionDetailResponse
             {
