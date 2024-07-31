@@ -205,7 +205,7 @@ namespace WebApi.Controllers
             await _orderService.UpdateOrder(order);
             await _orderService.UpdateFashionItemStatus(order.OrderId);
             await _orderService.UpdateAdminBalance(order);
-            /*await _orderService.SendEmailOrder(order);*/
+            await _emailService.SendEmailOrder(order);
 
             return Ok(new PayWithPointsResponse()
                 { Sucess = true, Message = "Payment success", OrderId = order.OrderId });

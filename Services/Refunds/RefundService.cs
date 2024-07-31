@@ -42,7 +42,7 @@ namespace Services.Refunds
             var response = new Result<RefundResponse>();
             var refund = await _refundRepository.GetRefundById(refundId);
             
-            if (request.Status.Equals(RefundStatus.Pending) || !refund.RefundStatus.Equals(RefundStatus.Pending))
+            if (request.Status.Equals(RefundStatus.Pending) || refund.RefundStatus.Equals(request.Status))
             {
                 throw new StatusNotAvailableException();
             }

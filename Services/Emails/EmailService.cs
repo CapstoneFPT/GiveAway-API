@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
 using Repositories.Accounts;
 using BusinessObjects.Entities;
+using Org.BouncyCastle.Bcpg.Attr;
 
 namespace Services.Emails
 {
@@ -91,8 +92,8 @@ namespace Services.Emails
             template = template.Replace($"[Order Code]", order.OrderCode);
             template = template.Replace($"[Quantity]", order.OrderDetails.Count().ToString());
             template = template.Replace($"[Payment Method]", order.PaymentMethod.ToString());
-            template = template.Replace($"[Payment Date]", order.PaymentDate.ToString());
-            template = template.Replace($"[Total Price]", order.PaymentDate.ToString());
+            template = template.Replace($"[Payment Date]", order.PaymentDate.GetValueOrDefault().ToString("d"));
+            template = template.Replace($"[Total Price]", order.TotalPrice.ToString());
             template = template.Replace($"[Recipient Name]", order.RecipientName);
             template = template.Replace($"[Phone Number]", order.Phone);
             template = template.Replace($"[Email]", order.Email);
