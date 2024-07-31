@@ -60,6 +60,7 @@ namespace Repositories.Orders
             order.PurchaseType = PurchaseType.Online;
             order.RecipientName = cart.RecipientName;
             order.Phone = cart.Phone;
+            order.Email = memberAccount.Email;
             if (cart.PaymentMethod.Equals(PaymentMethod.COD))
             {
                 order.Status = OrderStatus.Pending;

@@ -346,12 +346,12 @@ public class AuthService : IAuthService
             .SetSlidingExpiration(TimeSpan.FromSeconds(190))
             .SetPriority(CacheItemPriority.Normal);
         _cache.Set(tempdata, token, cacheEntryOption);
-        string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
+        /*string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
 
         var PathToFile = _webHostEnvironment.WebRootPath + Path.DirectorySeparatorChar.ToString()
                                                          + "MailTemplate" + Path.DirectorySeparatorChar.ToString() +
                                                          "VerifyAccountMail.html";
-        /*var subject = "Confirm Account Registration";*/
+        *//*var subject = "Confirm Account Registration";*//*
         string HtmlBody = "";
         using (StreamReader streamReader = System.IO.File.OpenText(PathToFile))
         {
@@ -366,9 +366,9 @@ public class AuthService : IAuthService
             To = email,
             Subject = "[GIVEAWAY] Verify Account",
             Body = messageBody,
-        };
-        await _emailService.SendEmail(content);
-        response.Data = formattedLink;
+        };*/
+        await _emailService.SendMailRegister(email, token);
+        
         response.Messages =
             ["Resend verification email successfully! Please check your email for verification in 3 minutes"];
         response.ResultStatus = ResultStatus.Success;

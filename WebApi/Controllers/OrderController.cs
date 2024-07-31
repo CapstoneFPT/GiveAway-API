@@ -6,6 +6,7 @@ using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
+using Services.Emails;
 using Services.OrderDetails;
 using Services.Orders;
 using Services.Transactions;
@@ -23,16 +24,18 @@ namespace WebApi.Controllers
         private readonly ITransactionService _transactionService;
         private readonly ILogger<OrderController> _logger;
         private readonly IAccountService _accountService;
+        private readonly IEmailService _emailService;
 
         public OrderController(IOrderService orderService, IOrderDetailService orderDetailService, IVnPayService
                 vnPayService, ITransactionService transactionService, ILogger<OrderController> logger,
-            IAccountService accountService)
+            IAccountService accountService, IEmailService emailService)
         {
             _orderService = orderService;
             _orderDetailService = orderDetailService;
             _vnPayService = vnPayService;
             _transactionService = transactionService;
             _accountService = accountService;
+            _emailService = emailService;
             _logger = logger;
         }
         [HttpGet]
@@ -155,7 +158,7 @@ namespace WebApi.Controllers
                         await _orderService.UpdateOrder(order);
                         await _orderService.UpdateFashionItemStatus(order.OrderId);
                         await _orderService.UpdateAdminBalance(order);
-                        /*await _orderService.SendEmailOrder(order);*/
+                        await _emailService.SendEmailOrder(order);
 
                         return Redirect("http://localhost:3000");
                     }
