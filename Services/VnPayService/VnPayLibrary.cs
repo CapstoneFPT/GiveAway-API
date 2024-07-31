@@ -140,7 +140,7 @@ public static class Utils
         }
         catch (Exception ex)
         {
-            return "Invalid IP:" + ex.Message;
+            return "172.18.0.3";
         }
 
         return ipAddress;
