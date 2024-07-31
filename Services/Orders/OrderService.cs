@@ -70,7 +70,7 @@ namespace Services.Orders
             if (cart.ItemIds.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
-                response.ResultStatus = ResultStatus.Success;
+                response.ResultStatus = ResultStatus.Error;
                 return response;
             }
 
@@ -375,7 +375,7 @@ namespace Services.Orders
             if (orderRequest.ItemIds.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
-                response.ResultStatus = ResultStatus.Success;
+                response.ResultStatus = ResultStatus.Error;
                 return response;
             }
 
