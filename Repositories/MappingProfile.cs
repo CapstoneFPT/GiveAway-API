@@ -89,6 +89,8 @@ namespace Repositories
                 .ReverseMap();
             CreateMap<OrderDetail, OrderDetailsResponse>()
                 .ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))
+                .ForMember(dest => dest.ItemStatus, opt => opt.MapFrom(src => src.FashionItem.Status))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
                 .ReverseMap();
             CreateMap<Transaction, GetTransactionsResponse>()
                 /*.ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))*/

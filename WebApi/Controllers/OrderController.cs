@@ -214,7 +214,7 @@ namespace WebApi.Controllers
             }
 
             order.PaymentDate = DateTime.UtcNow;
-            order.Status = OrderStatus.OnDelivery;
+            order.Status = OrderStatus.Pending;
 
             await _accountService.DeductPoints(request.MemberId, order.TotalPrice);
             await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
