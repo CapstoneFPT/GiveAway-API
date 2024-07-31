@@ -47,7 +47,7 @@ namespace Services.Refunds
                 throw new StatusNotAvailableException();
             }
             var data = await _refundRepository.ApprovalRefundFromShop(refundId, request);
-            await SendEmailRefund(data);
+            /*await SendEmailRefund(data);*/
             response.Data = data;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Successfully"];

@@ -131,6 +131,7 @@ namespace Repositories.FashionItems
 
             var query = GenericDao<Category>.Instance.GetQueryable()
                 .Where(c => listCate.Contains(c.CategoryId))
+                .Include(c => c.FashionItems).ThenInclude(c => c.Images)
                 .SelectMany(c => c.FashionItems)
                 .AsNoTracking();
 
@@ -178,6 +179,7 @@ namespace Repositories.FashionItems
                         Brand = f.Brand,
                         Gender = f.Gender,
                         Status = f.Status,
+                        Images = f.Images.Select(c => c.Url).ToList()
                     }
                 )
                 .ToListAsync();
