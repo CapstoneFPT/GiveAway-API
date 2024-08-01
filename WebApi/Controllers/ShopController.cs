@@ -110,7 +110,7 @@ namespace WebApi.Controllers
             
             return Ok(result);
         }
-
+    
         [HttpPost("{shopId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,
             [FromBody] CreateConsignSaleByShopRequest consignRequest)
