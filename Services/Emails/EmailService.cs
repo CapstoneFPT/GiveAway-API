@@ -12,9 +12,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Refunds;
 using Repositories.Accounts;
 using BusinessObjects.Entities;
 using Org.BouncyCastle.Bcpg.Attr;
+using Repositories.Orders;
 
 namespace Services.Emails
 {
@@ -22,18 +24,20 @@ namespace Services.Emails
     {
         private readonly IConfiguration _configuration;
         private readonly IAccountRepository _accountRepository;
+        private readonly IOrderRepository _orderRepository;
         private readonly string _templateDirectory;
-        public EmailService(IConfiguration configuration, IAccountRepository accountRepository)
+        public EmailService(IConfiguration configuration, IAccountRepository accountRepository, IOrderRepository orderRepository)
         {
             _configuration = configuration;
             _accountRepository = accountRepository;
+            _orderRepository = orderRepository;
             _templateDirectory = Path.Combine(AppContext.BaseDirectory, configuration["EmailTemplateDirectory"]);
         }
         public string GetEmailTemplate(string templateName)
         {
             string pathLocal = Path.Combine("C:\\FPT_University_FULL\\CAPSTONE_API\\Services\\MailTemplate\\", $"{templateName}.html");
             string path = Path.Combine("Services/MailTemplate/", $"{templateName}.html");
-            return File.ReadAllText(pathLocal, Encoding.UTF8);
+            return File.ReadAllText(path, Encoding.UTF8);
         }
 
         public async Task SendEmail(SendEmailRequest request)
@@ -104,6 +108,33 @@ namespace Services.Emails
             response.Messages = ["The invoice has been send to customer mail"];
             response.ResultStatus = ResultStatus.Success;
             return response;
+        }
+        public async Task<bool> SendEmailRefund(RefundResponse request)
+        {
+            SendEmailRequest content = new SendEmailRequest();
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Select(c => c.OrderDetailId).Contains(request.OrderDetailId));
+            var template = GetEmailTemplate("RefundMail");
+            template = template.Replace("[Order Code]", order.OrderCode);   
+            template = template.Replace("[Status]", request.RefundStatus.ToString());   
+            template = template.Replace("[Product Name]", request.OrderDetailsResponse.ItemName);
+            template = template.Replace("[Created Date]", request.CreatedDate.ToString("G"));
+            template = template.Replace("[Refund Percent]", request.RefundPercentage.Value.ToString());
+            template = template.Replace("[Refund Amount]", request.RefundAmount.Value.ToString());
+            template = template.Replace("[Customer Name]", request.CustomerName);
+            template = template.Replace("[Phone Number]", request.CustomerPhone);
+            template = template.Replace("[Email]", request.CustomerEmail);
+            template = template.Replace("[Description]", request.Description);
+            template = template.Replace("[Response]", request.ResponseFromShop);
+            if (order.Member.Email != null)
+            {
+                content.To = order.Member.Email;
+                content.Subject = $"[GIVEAWAY] REFUND RESPONSE FROM GIVEAWAY";
+                content.Body = template;
+                         
+                await SendEmail(content);
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -47,7 +47,7 @@ namespace Services.Refunds
                 throw new StatusNotAvailableException();
             }
             var data = await _refundRepository.ApprovalRefundFromShop(refundId, request);
-            /*await SendEmailRefund(data);*/
+            await _emailService.SendEmailRefund(data);
             response.Data = data;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Successfully"];
@@ -90,32 +90,7 @@ namespace Services.Refunds
             return response;
         }
 
-        private async Task<bool> SendEmailRefund(RefundResponse request)
-        {
-            SendEmailRequest content = new SendEmailRequest();
-            var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Select(c => c.OrderDetailId).Contains(request.OrderDetailId));
-            if (order.Member.Email != null)
-            {
-                content.To = order.Member.Email;
-                content.Subject = $"[GIVEAWAY] REFUND RESPONSE FROM GIVEAWAY {order.OrderCode}";
-                content.Body = $@"<h2>Dear customer,<h2>
-                         <h3>Thank you for purchase at GiveAway<h3><br>
-                         <h3>Your item is: <h3>
-                         <h4>Item Name: {request.OrderDetailsResponse.ItemName}<h4>
-                         <h4>Item Price: {request.OrderDetailsResponse.UnitPrice}<h4>
-                         
-                         <h3>Response from shop<h3>
-                         <h4>We would like to {request.RefundStatus.ToString().ToUpper()} your refund request<h4>
-                         <p>Description: {request.ResponseFromShop}<p>
-                         <p>Refund Percentage: {request.RefundPercentage}%
-                         <p>Refund Amount: {request.RefundAmount}UP
-                         <b>We will refund to you right after our shop confirm received items<b>";
-                         
-                await _emailService.SendEmail(content);
-                return true;
-            }
-            return false;
-        }
+        
 
         public async Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
         {

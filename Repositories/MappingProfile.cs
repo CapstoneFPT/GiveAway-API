@@ -81,6 +81,7 @@ namespace Repositories
                 .ForMember(dest => dest.OrderDetailsResponse, opt => opt.MapFrom(src => src.OrderDetail))
                 .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.OrderDetail.Order.Member.Fullname))
                 .ForMember(dest => dest.CustomerEmail, opt => opt.MapFrom(src => src.OrderDetail.Order.Member.Email))
+                .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.OrderDetail.Order.Member.Phone))
                 .ForMember(dest => dest.RefundPercentage, opt => opt.MapFrom(src => src.RefundPercentage))
                 .ForMember(dest => dest.RefundAmount, opt => opt.MapFrom(src => src.RefundPercentage / 100 * src.OrderDetail.UnitPrice ))
                 .ReverseMap();

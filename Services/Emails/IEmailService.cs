@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 
 namespace Services.Emails
@@ -14,5 +15,6 @@ namespace Services.Emails
         Task SendEmail(SendEmailRequest request);
         Task<Result<string>> SendMailRegister(string mail, string token);
         Task<Result<string>> SendEmailOrder(Order order);
+        Task<bool> SendEmailRefund(RefundResponse request);
     }
 }

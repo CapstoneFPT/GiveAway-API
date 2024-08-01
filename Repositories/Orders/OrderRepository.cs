@@ -423,6 +423,7 @@ namespace Repositories.Orders
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = orderresult.OrderId;
                 orderDetail.UnitPrice = item.SellingPrice.Value;
+                orderDetail.CreatedDate = DateTime.UtcNow;
 
                 orderDetail.FashionItemId = id;
 
@@ -430,12 +431,11 @@ namespace Repositories.Orders
                 item.Status = FashionItemStatus.OnDelivery; 
                 await GenericDao<FashionItem>.Instance.UpdateAsync(item);
 
-                var orderDetailResponse = new OrderDetailsResponse()
-                {
-                    OrderDetailId = orderDetail.OrderDetailId,
-                    ItemName = item.Name,
-                    UnitPrice = orderDetail.UnitPrice,
-                };
+                var orderDetailResponse = await _giveAwayDbContext.OrderDetails.AsQueryable()
+                    .Where(c => c.FashionItemId == id)
+                    .ProjectTo<OrderDetailsResponse>(_mapper.ConfigurationProvider)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
                 totalPrice += orderDetail.UnitPrice;
 
                 listOrderDetailResponse.Add(orderDetailResponse);

@@ -461,7 +461,7 @@ namespace Services.Orders
 
             var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopId);
             var shopAccount = await _accountRepository.GetAccountById(shop!.StaffId);
-            shopAccount!.Balance += request.AmountGiven;
+            shopAccount!.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(shopAccount);
 
             var transaction = new Transaction()
@@ -469,11 +469,11 @@ namespace Services.Orders
                 OrderId = orderId,
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Purchase,
-                Amount = request.AmountGiven,
+                Amount = order.TotalPrice,
             };
 
             await _transactionRepository.CreateTransaction(transaction);
-            await _emailService.SendEmailOrder(order);
+            
             var response = new PayOrderWithCashResponse
             {
                 AmountGiven = request.AmountGiven, OrderId = orderId,

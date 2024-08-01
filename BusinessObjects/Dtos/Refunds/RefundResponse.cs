@@ -21,6 +21,7 @@ namespace BusinessObjects.Dtos.Refunds
 
         public Guid OrderDetailId { get; set; }
         public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
         public string CustomerEmail { get; set; }
         public string? ResponseFromShop { get; set; }
         public int? RefundPercentage { get; set; }
