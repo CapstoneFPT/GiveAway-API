@@ -90,7 +90,7 @@ namespace Repositories
             CreateMap<OrderDetail, OrderDetailsResponse>()
                 .ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))
                 .ForMember(dest => dest.ItemStatus, opt => opt.MapFrom(src => src.FashionItem.Status))
-                .ForMember(dest => dest.ItemBrand, opt => opt.MapFrom(src => src.FashionItem.Brand))
+                .ForMember(dest => dest.ItemBrand, opt => opt.MapFrom(src => !string.IsNullOrEmpty(src.FashionItem.Brand) ? src.FashionItem.Brand : "No Brand"))
                 .ForMember(dest => dest.ItemColor, opt => opt.MapFrom(src => src.FashionItem.Color))
                 .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.FashionItem.Condition))
                 .ForMember(dest => dest.ItemGender, opt => opt.MapFrom(src => src.FashionItem.Gender))
