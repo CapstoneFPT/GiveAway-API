@@ -9,15 +9,26 @@ using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
+using Quartz.Util;
 
 namespace Repositories.Auctions
 {
     public class AuctionRepository : IAuctionRepository
     {
+        private DateTime GetUtcDateTimeFromLocalDateTime(DateOnly scheduledDate, TimeOnly scheduledTime,
+            TimeZoneInfo timeZone)
+        {
+            var scheduleDateTime = scheduledDate.ToDateTime(scheduledTime);
+            var localDateTime = TimeZoneInfo.ConvertTime(scheduleDateTime, TimeZoneInfo.Local, timeZone);
+            var utcTime = TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
+            return utcTime;
+        }
+
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
-            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable().Include(x=>x.Category).Include(x=>x.Images)
-                .Include(x=>x.Shop)
+            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable().Include(x => x.Category)
+                .Include(x => x.Images)
+                .Include(x => x.Shop)
                 .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
 
             if (auctionItem == null)
@@ -46,6 +57,8 @@ namespace Repositories.Auctions
                 throw new TimeslotNotFoundException();
             }
 
+
+            var timezone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
             var newAuction = new Auction
             {
                 AuctionFashionItemId = request.AuctionItemId,
@@ -54,8 +67,8 @@ namespace Repositories.Auctions
                 DepositFee = request.DepositFee,
                 CreatedDate = DateTime.UtcNow,
                 StepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100),
-                StartDate = request.ScheduleDate.ToDateTime(timeslot.StartTime).ToUniversalTime(),
-                EndDate = request.ScheduleDate.ToDateTime(timeslot.EndTime).ToUniversalTime(),
+                StartDate = GetUtcDateTimeFromLocalDateTime(request.ScheduleDate, request.StartTime, timezone),
+                EndDate = GetUtcDateTimeFromLocalDateTime(request.ScheduleDate, request.EndTime, timezone),
                 Status = AuctionStatus.Pending
             };
             var auctionDetail = await GenericDao<Auction>.Instance.AddAsync(newAuction);
@@ -112,8 +125,6 @@ namespace Repositories.Auctions
             };
         }
 
-
-       
 
         public async Task<Auction?> GetAuction(Guid id, bool includeRelations = false)
         {
@@ -217,7 +228,7 @@ namespace Repositories.Auctions
             {
                 throw new InvalidOperationException("Auction must be on pending");
             }
-            
+
             toBeApproved.Status = AuctionStatus.Approved;
             await GenericDao<Auction>.Instance.UpdateAsync(toBeApproved);
             return new AuctionDetailResponse()
@@ -298,7 +309,9 @@ namespace Repositories.Auctions
             return result;
         }
 
-        public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetAuctionProjections<T>(int? requestPageNumber, int? requestPageSize, Expression<Func<Auction, bool>> predicate, Expression<Func<Auction, T>> selector)
+        public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetAuctionProjections<T>(
+            int? requestPageNumber, int? requestPageSize, Expression<Func<Auction, bool>> predicate,
+            Expression<Func<Auction, T>> selector)
         {
             var query = GenericDao<Auction>.Instance.GetQueryable();
 
@@ -306,13 +319,13 @@ namespace Repositories.Auctions
                 query = query.Where(predicate);
 
             var totalCount = await query.CountAsync();
-            
+
             var page = requestPageNumber ?? -1;
             var pageSize = requestPageSize ?? -1;
 
             if (page >= 0 && pageSize >= 0)
             {
-                query = query.Skip((page-1) * pageSize).Take(pageSize);
+                query = query.Skip((page - 1) * pageSize).Take(pageSize);
             }
 
             List<T> result;
@@ -324,6 +337,7 @@ namespace Repositories.Auctions
             {
                 result = await query.Cast<T>().ToListAsync();
             }
+
             return (result, page, pageSize, totalCount);
         }
     }

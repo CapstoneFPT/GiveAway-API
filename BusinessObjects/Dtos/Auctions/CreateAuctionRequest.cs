@@ -8,6 +8,9 @@ public class CreateAuctionRequest : IValidatableObject
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
     public DateOnly ScheduleDate { get; set; }
+    public TimeOnly StartTime { get; set; }
+    public TimeOnly EndTime { get; set; }
+    
     public Guid TimeslotId { get; set; }
     [Range(1,100,ErrorMessage = "Value must be between 1 and 100")]
     public int StepIncrementPercentage { get; set; }
@@ -15,6 +18,7 @@ public class CreateAuctionRequest : IValidatableObject
 
     [Range(1, int.MaxValue, ErrorMessage = "Error: Minimum deposit must be greater than 0")]
     public int DepositFee { get; set; }
+
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
