@@ -48,7 +48,8 @@ namespace Services.FashionItems
                 Status = FashionItemStatus.Unavailable,
                 Color = request.Color,
                 SellingPrice = request.SellingPrice,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow,
+                Description = request.Description
             };
             
             var newItem = await _fashionitemRepository.AddFashionItem(newdata);
