@@ -13,10 +13,10 @@ namespace Services.OrderDetails
 {
     public interface IOrderDetailService
     {
-        Task<Result<PaginationResponse<OrderDetailResponse<FashionItem>>>> GetOrderDetailsByOrderId(Guid orderId, OrderDetailRequest request);
+        Task<Result<PaginationResponse<OrderDetailsResponse>>> GetOrderDetailsByOrderId(Guid orderId, OrderDetailRequest request);
         Task<Result<OrderDetailResponse<FashionItem>>> GetOrderDetailById(Guid orderId);
 
-        Task<Result<List<RefundResponse>>> RequestRefundToShop(List<CreateRefundRequest> refundRequest);
+        Task<Result<RefundResponse>> RequestRefundToShop(CreateRefundRequest refundRequest);
 
         Task ChangeFashionItemsStatus(List<OrderDetail> orderDetails, FashionItemStatus fashionItemStatus);
     }

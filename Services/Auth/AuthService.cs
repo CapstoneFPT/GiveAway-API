@@ -384,7 +384,7 @@ public class AuthService : IAuthService
         SendEmailRequest content = new SendEmailRequest
         {
             To = $"{account.Email}",
-            Subject = "[GIVEAWAY] Reset Password",
+            Subject = "[GIVEAWAY] RESET PASSWORD",
             Body = $@"
 <html xmlns:v=""urn:schemas-microsoft-com:vml"" xmlns:o=""urn:schemas-microsoft-com:office:office"" lang=""en"">
 <head>

@@ -48,10 +48,10 @@ namespace Services.OrderDetails
             return response;
         }
 
-        public async Task<Result<PaginationResponse<OrderDetailResponse<FashionItem>>>> GetOrderDetailsByOrderId(
+        public async Task<Result<PaginationResponse<OrderDetailsResponse>>> GetOrderDetailsByOrderId(
             Guid orderId, OrderDetailRequest request)
         {
-            var response = new Result<PaginationResponse<OrderDetailResponse<FashionItem>>>();
+            var response = new Result<PaginationResponse<OrderDetailsResponse>>();
             var listOrder = await _orderDetailRepository.GetAllOrderDetailByOrderId(orderId, request);
             if (listOrder.TotalCount == 0)
             {
@@ -66,25 +66,19 @@ namespace Services.OrderDetails
             return response;
         }
 
-        public async Task<Result<List<RefundResponse>>> RequestRefundToShop(
-            List<CreateRefundRequest> refundRequest)
+        public async Task<Result<RefundResponse>> RequestRefundToShop(
+            CreateRefundRequest refundRequest)
         {
-            var response = new Result<List<RefundResponse>>();
-            var orderDetailIds = refundRequest.Select(r => r.OrderDetailIds).ToList();
-            var orderDetail = await _orderDetailRepository.GetOrderDetails(c => orderDetailIds.Contains(c.OrderDetailId));
-            if (orderDetail.Count == 0)
+            var response = new Result<RefundResponse>();
+            
+            var orderDetail = await _orderDetailRepository.GetOrderDetails(c => c.OrderDetailId == refundRequest.OrderDetailIds);
+            if (orderDetail is null)
             {
                 throw new OrderNotFoundException();
             }
 
-            /*var order = await _orderRepository.GetOrderById(orderDetail.OrderId);
-            if (order.MemberId != accountId)
-            {
-                response.Messages = ["You are not allowed to refund this item"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
-            }*/
-
+            
+        
             if (orderDetail.Any(c => c.RefundExpirationDate < DateTime.UtcNow))
             {
                 throw new RefundExpiredException("There are items that ran out refund expiration");

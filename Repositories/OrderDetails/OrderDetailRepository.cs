@@ -33,12 +33,12 @@ namespace Repositories.OrderDetails
             return await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
         }
 
-        public async Task<PaginationResponse<OrderDetailResponse<FashionItem>>> GetAllOrderDetailByOrderId(Guid id,
+        public async Task<PaginationResponse<OrderDetailsResponse>> GetAllOrderDetailByOrderId(Guid id,
             OrderDetailRequest request)
         {
             var query = GenericDao<OrderDetail>.Instance.GetQueryable();
             query = query.Where(c => c.OrderId == id);
-
+            
             if (request.ShopId != null)
             {
                 query = query.Where(c => c.FashionItem.ShopId == request.ShopId);
@@ -49,16 +49,10 @@ namespace Repositories.OrderDetails
 
 
             var items = await query
-                .Select(x => new OrderDetailResponse<FashionItem>
-                {
-                    OrderDetailId = x.OrderDetailId,
-                    FashionItemDetail = x.FashionItem,
-                    OrderId = x.OrderId,
-                    UnitPrice = x.UnitPrice,
-                })
+                .ProjectTo<OrderDetailsResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().ToListAsync();
 
-            var result = new PaginationResponse<OrderDetailResponse<FashionItem>>
+            var result = new PaginationResponse<OrderDetailsResponse>
             {
                 Items = items,
                 PageSize = request.PageSize,
@@ -93,45 +87,46 @@ namespace Repositories.OrderDetails
             return query;
         }
 
-        public async Task<List<RefundResponse>> CreateRefundToShop(
-            List<CreateRefundRequest> refundRequest)
+        public async Task<RefundResponse> CreateRefundToShop(
+            CreateRefundRequest refundRequest)
         {
-            var orderDetailIds = refundRequest.Select(r => r.OrderDetailIds).ToList();
+            
 
-            foreach (var item in refundRequest)
+            var fashionItem = await GenericDao<OrderDetail>.Instance.GetQueryable()
+                .Include(c => c.FashionItem)
+                .Where(c => c.OrderDetailId == refundRequest.OrderDetailIds)
+                .Select(c => c.FashionItem)
+                .FirstOrDefaultAsync();
+            fashionItem.Status = FashionItemStatus.PendingForRefund;
+            await GenericDao<FashionItem>.Instance.UpdateAsync(fashionItem);
+            var refund = new Refund()
             {
-                var fashionItem = await GenericDao<OrderDetail>.Instance.GetQueryable()
-                    .Include(c => c.FashionItem)
-                    .Where(c => c.OrderDetailId == item.OrderDetailIds)
-                    .Select(c => c.FashionItem)
-                    .FirstOrDefaultAsync();
-                var refund = new Refund()
+                OrderDetailId = refundRequest.OrderDetailIds,
+                Description = refundRequest.Description,
+                CreatedDate = DateTime.UtcNow,
+                RefundStatus = RefundStatus.Pending
+            };
+            await GenericDao<Refund>.Instance.AddAsync(refund);
+
+            List<Image> listImage = new List<Image>();
+            foreach (var img in refundRequest.Images)
+            {
+                var newImg = new Image()
                 {
-                    OrderDetailId = item.OrderDetailIds,
-                    Description = item.Description,
+                    FashionItemId = fashionItem.ItemId,
+                    RefundId = refund.RefundId,
                     CreatedDate = DateTime.UtcNow,
-                    RefundStatus = RefundStatus.Pending
-                };
-                await GenericDao<Refund>.Instance.AddAsync(refund);
-                
-                for (int i = 0; i < item.Images.Count(); i++)
-                {
-                    Image img = new Image()
-                    {
-                        FashionItemId = fashionItem.ItemId,
-                        Url = item.Images[i],
-                        RefundId = refund.RefundId
-                    };
-                    await GenericDao<Image>.Instance.AddAsync(img);
-                }
+                    Url = img,
+                }; 
+                listImage.Add(newImg);
             }
 
-
+            await GenericDao<Image>.Instance.AddRange(listImage);
             var refundResponse = await GenericDao<Refund>.Instance.GetQueryable()
                 
-                .Where(c => orderDetailIds.Contains(c.OrderDetailId))
+                .Where(c => c.OrderDetailId == refundRequest.OrderDetailIds)
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+                .FirstOrDefaultAsync();
             return refundResponse;
         }
 

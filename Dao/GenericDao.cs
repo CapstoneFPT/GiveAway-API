@@ -57,7 +57,22 @@ public class GenericDao<T> where T : class
             throw new DbCustomException(e.Message, e.InnerException?.Message);
         }
     }
+    public async Task<List<T>> AddRange(List<T> entity)
+    {
+        try
+        {
+            var dbContext = new GiveAwayDbContext();
 
+            await dbContext.Set<T>().AddRangeAsync(entity);
+            await dbContext.SaveChangesAsync();
+
+            return entity;
+        }
+        catch (Exception e)
+        {
+            throw new DbCustomException(e.Message, e.InnerException?.Message);
+        }
+    }
     public async Task<T> UpdateAsync(T entity)
     {
         try

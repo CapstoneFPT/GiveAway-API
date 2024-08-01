@@ -90,7 +90,18 @@ namespace Repositories
             CreateMap<OrderDetail, OrderDetailsResponse>()
                 .ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))
                 .ForMember(dest => dest.ItemStatus, opt => opt.MapFrom(src => src.FashionItem.Status))
+                .ForMember(dest => dest.ItemBrand, opt => opt.MapFrom(src => !string.IsNullOrEmpty(src.FashionItem.Brand) ? src.FashionItem.Brand : "No Brand"))
+                .ForMember(dest => dest.ItemColor, opt => opt.MapFrom(src => src.FashionItem.Color))
+                .ForMember(dest => dest.Condition, opt => opt.MapFrom(src => src.FashionItem.Condition))
+                .ForMember(dest => dest.ItemGender, opt => opt.MapFrom(src => src.FashionItem.Gender))
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.FashionItem.Category.Name))
+                .ForMember(dest => dest.ItemNote, opt => opt.MapFrom(src => src.FashionItem.Note))
+                .ForMember(dest => dest.ItemType, opt => opt.MapFrom(src => src.FashionItem.Type))
+                .ForMember(dest => dest.ItemSize, opt => opt.MapFrom(src => src.FashionItem.Size))
+                .ForMember(dest => dest.ItemImage, opt => opt.MapFrom(src => src.FashionItem.Images.Select(c => c.Url)))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+                .ForMember(dest => dest.ShopAddress, opt => opt.MapFrom(src => src.FashionItem.Shop.Address))
+                .ForMember(dest => dest.OrderCode, opt => opt.MapFrom(src => src.Order.OrderCode))
                 .ReverseMap();
             CreateMap<Transaction, GetTransactionsResponse>()
                 /*.ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))*/
