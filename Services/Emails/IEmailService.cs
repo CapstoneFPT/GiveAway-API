@@ -16,5 +16,6 @@ namespace Services.Emails
         Task<Result<string>> SendMailRegister(string mail, string token);
         Task<Result<string>> SendEmailOrder(Order order);
         Task<bool> SendEmailRefund(RefundResponse request);
+        Task<bool> SendEmailConsignSale(Guid consignSaleId);
     }
 }

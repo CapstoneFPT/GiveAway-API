@@ -49,7 +49,7 @@ namespace Repositories.Refunds
                 refund.RefundStatus = RefundStatus.Rejected;
                 refund.RefundPercentage = 0;
                 refund.ResponseFromShop = request.Description;
-                refund.OrderDetail.FashionItem.Status = FashionItemStatus.Refundable;
+                refund.OrderDetail.FashionItem.Status = FashionItemStatus.Sold;
             }
             else
             {
