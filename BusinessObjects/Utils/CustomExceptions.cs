@@ -11,6 +11,10 @@ public class WithdrawNotFoundException : Exception
 {
 }
 
+public class ScheduledTimeOverlappedException : Exception
+{
+}
+
 public class ConsignSaleNotFoundException : Exception
 {
 }

@@ -21,7 +21,6 @@ using Repositories.Refunds;
 using Repositories.Revenues;
 using Repositories.Schedules;
 using Repositories.Shops;
-using Repositories.Timeslots;
 using Repositories.Transactions;
 using Repositories.Withdraws;
 
@@ -47,7 +46,6 @@ using Services.Refunds;
 using Services.Revenue;
 using Services.Schedules;
 using Services.Shops;
-using Services.Timeslots;
 using Services.Transactions;
 using Services.VnPayService;
 using Services.Withdraws;
@@ -79,7 +77,6 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IConsignSaleService, ConsignSaleService>();
         serviceCollection.AddScoped<IScheduleService, ScheduleService>();
         serviceCollection.AddScoped<IShopService, ShopService>();
-        serviceCollection.AddScoped<ITimeslotService, TimeslotService>();
         serviceCollection.AddScoped<ITransactionService, TransactionService>();
         serviceCollection.AddScoped<IVnPayService, VnPayService>();
         serviceCollection.AddScoped<IRevenueService, RevenueService>();
@@ -108,7 +105,6 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IConsignSaleRepository, ConsignSaleRepository>();
         serviceCollection.AddScoped<IScheduleRepository, ScheduleRepository>();
         serviceCollection.AddScoped<IShopRepository, ShopRepository>();
-        serviceCollection.AddScoped<ITimeslotRepository, TimeslotRepository>();
         serviceCollection.AddScoped<ITransactionRepository, TransactionRepository>();
         serviceCollection.AddScoped<IRevenueRepository, RevenueRepository>();
         serviceCollection.AddScoped<IRefundRepository, RefundRepository>();
@@ -134,9 +130,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<PointPackage>>();
         serviceCollection.AddScoped<GenericDao<ConsignSale>>();
         serviceCollection.AddScoped<GenericDao<ConsignSaleDetail>>();
-        serviceCollection.AddScoped<GenericDao<Schedule>>();
         serviceCollection.AddScoped<GenericDao<Shop>>();
-        serviceCollection.AddScoped<GenericDao<Timeslot>>();
         serviceCollection.AddScoped<GenericDao<Transaction>>();
         serviceCollection.AddScoped<GenericDao<Refund>>();
         serviceCollection.AddScoped<GenericDao<Withdraw>>();

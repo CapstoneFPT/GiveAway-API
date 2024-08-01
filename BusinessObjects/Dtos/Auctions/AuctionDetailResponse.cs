@@ -26,6 +26,11 @@ public class AuctionItemDetailResponse
     public string Note { get; set; }
     public FashionItemStatus Status { get; set; }
     public int Condition { get; set; }
+    public string Brand { get; set; }
+    public string Color { get; set; }
+    public SizeType Size { get; set; }
+    public GenderType Gender { get; set; }
+    public string Description { get; set; }
     public int InitialPrice { get; set; }
     public ShopAuctionDetailResponse Shop { get; set; }
     public List<AuctionItemImage> Images { get; set; } = [];

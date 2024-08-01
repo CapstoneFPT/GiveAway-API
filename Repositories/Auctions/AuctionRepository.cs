@@ -1,23 +1,56 @@
-﻿using System.Data.SqlTypes;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
-using BusinessObjects.Dtos.AuctionItems;
+﻿using System.Linq.Expressions;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Dao;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repositories.Auctions
 {
     public class AuctionRepository : IAuctionRepository
     {
+        private static DateTime GetUtcDateTimeFromLocalDateTime(DateOnly scheduledDate, TimeOnly scheduledTime,
+            TimeZoneInfo timeZone)
+        {
+            var scheduleDateTime = scheduledDate.ToDateTime(scheduledTime);
+            var localDateTime = TimeZoneInfo.ConvertTime(scheduleDateTime, TimeZoneInfo.Local, timeZone);
+            var utcTime = TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
+            return utcTime;
+        }
+
+        private static async Task<bool> IsDateTimeOverlapped(DateTime startDate, DateTime endDate,
+            Guid? excludingAuction = null)
+        {
+            var query = GenericDao<Auction>.Instance.GetQueryable();
+            Expression<Func<Auction, bool>> predicate = a =>
+                (a.StartDate <= endDate && a.EndDate >= startDate) &&
+                (a.Status == AuctionStatus.Pending || a.Status == AuctionStatus.Approved ||
+                 a.Status == AuctionStatus.OnGoing);
+
+            if (excludingAuction.HasValue)
+            {
+                predicate = predicate.And(a => a.AuctionId != excludingAuction.Value);
+            }
+
+            var potentiallyConflictedAuctions = await query.Where(predicate).ToListAsync();
+
+            return potentiallyConflictedAuctions.Exists(existingAuction =>
+                IsOverlapping(startDate, endDate, existingAuction.StartDate, existingAuction.EndDate));
+        }
+
+        private static bool IsOverlapping(DateTime startDate, DateTime endDate, DateTime existingAuctionStartDate,
+            DateTime existingAuctionEndDate)
+        {
+            return startDate < existingAuctionEndDate && existingAuctionStartDate < endDate;
+        }
+
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
-            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable().Include(x=>x.Category).Include(x=>x.Images)
-                .Include(x=>x.Shop)
+            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable().Include(x => x.Category)
+                .Include(x => x.Images)
+                .Include(x => x.Shop)
                 .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
 
             if (auctionItem == null)
@@ -38,14 +71,12 @@ namespace Repositories.Auctions
                 throw new ShopNotFoundException();
             }
 
-            var timeslot = await GenericDao<Timeslot>.Instance.GetQueryable()
-                .FirstOrDefaultAsync(x => x.TimeslotId == request.TimeslotId);
-
-            if (timeslot == null)
+            if (await IsDateTimeOverlapped(request.ScheduleDate.ToDateTime(request.StartTime), request.ScheduleDate.ToDateTime(request.EndTime)))
             {
-                throw new TimeslotNotFoundException();
+                throw new ScheduledTimeOverlappedException();
             }
 
+            var timezone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
             var newAuction = new Auction
             {
                 AuctionFashionItemId = request.AuctionItemId,
@@ -54,22 +85,14 @@ namespace Repositories.Auctions
                 DepositFee = request.DepositFee,
                 CreatedDate = DateTime.UtcNow,
                 StepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100),
-                StartDate = request.ScheduleDate.ToDateTime(timeslot.StartTime).ToUniversalTime(),
-                EndDate = request.ScheduleDate.ToDateTime(timeslot.EndTime).ToUniversalTime(),
+                StartDate = GetUtcDateTimeFromLocalDateTime(request.ScheduleDate, request.StartTime, timezone),
+                EndDate = GetUtcDateTimeFromLocalDateTime(request.ScheduleDate, request.EndTime, timezone),
                 Status = AuctionStatus.Pending
             };
             var auctionDetail = await GenericDao<Auction>.Instance.AddAsync(newAuction);
 
             auctionItem.Status = FashionItemStatus.PendingAuction;
             await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
-
-            var newSchedule = new Schedule()
-            {
-                AuctionId = auctionDetail.AuctionId,
-                Date = request.ScheduleDate,
-                TimeslotId = request.TimeslotId
-            };
-            await GenericDao<Schedule>.Instance.AddAsync(newSchedule);
 
             auctionItem.Status = FashionItemStatus.AwaitingAuction;
 
@@ -112,8 +135,6 @@ namespace Repositories.Auctions
             };
         }
 
-
-       
 
         public async Task<Auction?> GetAuction(Guid id, bool includeRelations = false)
         {
@@ -217,7 +238,7 @@ namespace Repositories.Auctions
             {
                 throw new InvalidOperationException("Auction must be on pending");
             }
-            
+
             toBeApproved.Status = AuctionStatus.Approved;
             await GenericDao<Auction>.Instance.UpdateAsync(toBeApproved);
             return new AuctionDetailResponse()
@@ -298,7 +319,9 @@ namespace Repositories.Auctions
             return result;
         }
 
-        public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetAuctionProjections<T>(int? requestPageNumber, int? requestPageSize, Expression<Func<Auction, bool>> predicate, Expression<Func<Auction, T>> selector)
+        public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetAuctionProjections<T>(
+            int? requestPageNumber, int? requestPageSize, Expression<Func<Auction, bool>> predicate,
+            Expression<Func<Auction, T>> selector)
         {
             var query = GenericDao<Auction>.Instance.GetQueryable();
 
@@ -306,13 +329,13 @@ namespace Repositories.Auctions
                 query = query.Where(predicate);
 
             var totalCount = await query.CountAsync();
-            
+
             var page = requestPageNumber ?? -1;
             var pageSize = requestPageSize ?? -1;
 
             if (page >= 0 && pageSize >= 0)
             {
-                query = query.Skip((page-1) * pageSize).Take(pageSize);
+                query = query.Skip((page - 1) * pageSize).Take(pageSize);
             }
 
             List<T> result;
@@ -324,6 +347,7 @@ namespace Repositories.Auctions
             {
                 result = await query.Cast<T>().ToListAsync();
             }
+
             return (result, page, pageSize, totalCount);
         }
     }
