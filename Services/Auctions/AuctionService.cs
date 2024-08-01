@@ -328,7 +328,7 @@ namespace Services.Auctions
 
             var startTrigger = TriggerBuilder.Create()
                 .WithIdentity($"StartAuctionTrigger_{auction.AuctionId}")
-                .StartAt(new DateTimeOffset(auction.StartDate, TimeSpan.Zero))
+                .StartAt(new DateTimeOffset(auction.StartDate))
                 .Build();
 
             await scheduler.ScheduleJob(startJob, startTrigger);
@@ -340,7 +340,7 @@ namespace Services.Auctions
 
             var endTrigger = TriggerBuilder.Create()
                 .WithIdentity($"EndAuctionTrigger_{auction.AuctionId}")
-                .StartAt(new DateTimeOffset(auction.EndDate, TimeSpan.Zero))
+                .StartAt(new DateTimeOffset(auction.EndDate))
                 .Build();
 
             await scheduler.ScheduleJob(endJob, endTrigger);

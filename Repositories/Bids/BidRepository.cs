@@ -30,7 +30,7 @@ namespace Repositories.Bids
                 throw new InvalidOperationException("Auction not found or have ended");
             }
 
-            if (auction.Status != AuctionStatus.OnGoing)
+            if (auction.StartDate > DateTime.UtcNow || auction.Status != AuctionStatus.OnGoing)
             {
                 throw new InvalidOperationException("Auction has not started yet");
             }
