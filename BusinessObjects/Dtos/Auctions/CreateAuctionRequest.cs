@@ -7,9 +7,8 @@ public class CreateAuctionRequest : IValidatableObject
     public string Title { get; set; }
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
-    public DateOnly ScheduleDate { get; set; }
-    public TimeOnly StartTime { get; set; }
-    public TimeOnly EndTime { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
     
     [Range(1,100,ErrorMessage = "Value must be between 1 and 100")]
     public int StepIncrementPercentage { get; set; }
@@ -21,11 +20,22 @@ public class CreateAuctionRequest : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-
-        if (ScheduleDate < DateOnly.FromDateTime(DateTime.Now))
+        if (StartTime.ToUniversalTime() < DateTime.UtcNow)
         {
-            yield return new ValidationResult("Schedule date must be greater than current date",
-                new[] { nameof(ScheduleDate) });
+            yield return new ValidationResult("Start time must be greater than current time",
+                new[] { nameof(StartTime) });
+        }
+        
+        if (EndTime.ToUniversalTime() < DateTime.UtcNow)
+        {
+            yield return new ValidationResult("End time must be greater than current time",
+                new[] { nameof(EndTime) });
+        }
+        
+        if (StartTime >= EndTime)
+        {
+            yield return new ValidationResult("Start time must be less than end time",
+                new[] { nameof(StartTime), nameof(EndTime) });
         }
     }
 }
