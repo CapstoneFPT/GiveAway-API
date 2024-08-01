@@ -82,7 +82,7 @@ namespace Services.ConsignSales
             }
 
             var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId,request);
-            await SendEmailConsignSale(consignId);
+            await _emailService.SendEmailConsignSale(consignId);
             response.Data = result;
             response.Messages = ["Confirm received successfully"];
             response.ResultStatus = ResultStatus.Success;
@@ -152,8 +152,8 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-
-            await SendEmailConsignSale(consign.ConsignSaleId);
+            
+            
             response.Data = consign;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
@@ -226,41 +226,6 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<string>> SendEmailConsignSale(Guid consignSaleId)
-        {
-            var consignSale = await _consignSaleRepository.GetConsignSaleById(consignSaleId);
-            var response = new Result<string>();
-            SendEmailRequest content = new SendEmailRequest();
-            if (consignSale.MemberId != null)
-            {
-                var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
-                content.To = member.Email;
-            }
-            else
-            {
-                content.To = consignSale.Email;
-            }
-
-            content.Subject = $"[GIVEAWAY] CONSIGNSALE INVOICE FROM GIVEAWAY {consignSale.ConsignSaleCode}";
-            content.Body = $@"<h1>Dear customer,<h1>
-                         <h2>Thank you for purchase at GiveAway<h2>
-                         <h4>Here is the detail of your consign<h4>  <p>ConsignSale Code: {consignSale.ConsignSaleCode}<p>
-                         <p>ConsignSale Type: {consignSale.Type}<p>
-                         <p>Created Date: {consignSale.CreatedDate}<p>
-                         <p>Total Price: {consignSale.TotalPrice}<p>
-                         <p>Consign Status: {consignSale.Status}<p>";
-            if (!consignSale.Type.Equals(ConsignSaleType.ForSale))
-            {
-                content.Body += $"<p>Consign Duration: {consignSale.ConsignDuration}<p>" +
-                                $"<p>Start Date: {consignSale.StartDate}<p>" +
-                                $"<p>End Date: {consignSale.EndDate}<p>" +
-                                $"<p>Consign Method: {consignSale.ConsignSaleMethod}";
-            }
-
-            await _emailService.SendEmail(content);
-            response.Messages = ["The invoice has been send to customer mail"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
-        }
+        
     }
 }

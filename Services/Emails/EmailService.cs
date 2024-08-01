@@ -15,7 +15,10 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Refunds;
 using Repositories.Accounts;
 using BusinessObjects.Entities;
+using Dao;
+using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Bcpg.Attr;
+using Repositories.ConsignSales;
 using Repositories.Orders;
 
 namespace Services.Emails
@@ -25,13 +28,15 @@ namespace Services.Emails
         private readonly IConfiguration _configuration;
         private readonly IAccountRepository _accountRepository;
         private readonly IOrderRepository _orderRepository;
-        private readonly string _templateDirectory;
-        public EmailService(IConfiguration configuration, IAccountRepository accountRepository, IOrderRepository orderRepository)
+        private readonly IConsignSaleRepository _consignSaleRepository;
+        
+        public EmailService(IConfiguration configuration, IAccountRepository accountRepository, IOrderRepository orderRepository,
+            IConsignSaleRepository consignSaleRepository)
         {
             _configuration = configuration;
             _accountRepository = accountRepository;
             _orderRepository = orderRepository;
-            _templateDirectory = Path.Combine(AppContext.BaseDirectory, configuration["EmailTemplateDirectory"]);
+            _consignSaleRepository = consignSaleRepository;
         }
         public string GetEmailTemplate(string templateName)
         {
@@ -126,12 +131,44 @@ namespace Services.Emails
             template = template.Replace("[Email]", request.CustomerEmail);
             template = template.Replace("[Description]", request.Description);
             template = template.Replace("[Response]", request.ResponseFromShop);
-            if (order.Member.Email != null)
+            if (order.MemberId != null)
             {
-                content.To = order.Member.Email;
+                var member = await GenericDao<Account>.Instance.GetQueryable().Where(c => c.AccountId == order.MemberId)
+                    .FirstOrDefaultAsync();
+                content.To = member.Email;
                 content.Subject = $"[GIVEAWAY] REFUND RESPONSE FROM GIVEAWAY";
                 content.Body = template;
                          
+                await SendEmail(content);
+                return true;
+            }
+            return false;
+        }
+        public async Task<bool> SendEmailConsignSale(Guid consignSaleId)
+        {
+            var consignSale = await _consignSaleRepository.GetConsignSaleById(consignSaleId);
+            SendEmailRequest content = new SendEmailRequest();
+            if (consignSale.MemberId != null)
+            {
+                var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
+                content.To = member.Email;
+                
+                content.Subject = $"[GIVEAWAY] CONSIGNSALE INVOICE FROM GIVEAWAY {consignSale.ConsignSaleCode}";
+                content.Body = $@"<h1>Dear customer,<h1>
+                         <h2>Thank you for purchase at GiveAway<h2>
+                         <h4>Here is the detail of your consign<h4>  <p>ConsignSale Code: {consignSale.ConsignSaleCode}<p>
+                         <p>ConsignSale Type: {consignSale.Type}<p>
+                         <p>Created Date: {consignSale.CreatedDate}<p>
+                         <p>Total Price: {consignSale.TotalPrice}<p>
+                         <p>Consign Status: {consignSale.Status}<p>";
+                if (!consignSale.Type.Equals(ConsignSaleType.ForSale))
+                {
+                    content.Body += $"<p>Consign Duration: {consignSale.ConsignDuration}<p>" +
+                                    $"<p>Start Date: {consignSale.StartDate}<p>" +
+                                    $"<p>End Date: {consignSale.EndDate}<p>" +
+                                    $"<p>Consign Method: {consignSale.ConsignSaleMethod}";
+                }
+
                 await SendEmail(content);
                 return true;
             }
