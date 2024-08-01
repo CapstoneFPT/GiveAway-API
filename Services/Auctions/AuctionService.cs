@@ -217,6 +217,11 @@ namespace Services.Auctions
                     FashionItemType = result.AuctionFashionItem.Type,
                     SellingPrice = result.AuctionFashionItem.SellingPrice.Value,
                     InitialPrice = result.AuctionFashionItem.InitialPrice,
+                    Size = result.AuctionFashionItem.Size,
+                    Color = result.AuctionFashionItem.Color,
+                    Gender = result.AuctionFashionItem.Gender,
+                    Description = result.AuctionFashionItem.Description,
+                    Brand = result.AuctionFashionItem.Brand ?? "N/A",
                     Condition = result.AuctionFashionItem.Condition,
                     Note = result.AuctionFashionItem.Note,
                     Category = new AuctionItemCategory()
