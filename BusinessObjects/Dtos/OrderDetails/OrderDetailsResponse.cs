@@ -4,6 +4,7 @@ namespace BusinessObjects.Dtos.OrderDetails;
 
 public class OrderDetailsResponse
 {
+    public string OrderCode { get; set; }
     public Guid OrderDetailId { get; set; }
     public int UnitPrice { get; set; }
     public DateTime? RefundExpirationDate { get; set; }
@@ -18,6 +19,7 @@ public class OrderDetailsResponse
     public GenderType ItemGender { get; set; }
     public List<string>? ItemImage { get; set; }
     public FashionItemStatus ItemStatus { get; set; }
+    public string ShopAddress { get; set; }
     public Guid? PointPackageId { get; set; }
     public DateTime CreatedDate { get; set; }
 }

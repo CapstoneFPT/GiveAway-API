@@ -100,6 +100,8 @@ namespace Repositories
                 .ForMember(dest => dest.ItemSize, opt => opt.MapFrom(src => src.FashionItem.Size))
                 .ForMember(dest => dest.ItemImage, opt => opt.MapFrom(src => src.FashionItem.Images.Select(c => c.Url)))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate))
+                .ForMember(dest => dest.ShopAddress, opt => opt.MapFrom(src => src.FashionItem.Shop.Address))
+                .ForMember(dest => dest.OrderCode, opt => opt.MapFrom(src => src.Order.OrderCode))
                 .ReverseMap();
             CreateMap<Transaction, GetTransactionsResponse>()
                 /*.ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))*/
