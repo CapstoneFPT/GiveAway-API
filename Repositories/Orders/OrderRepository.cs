@@ -323,8 +323,11 @@ namespace Repositories.Orders
             }
 
             var count = listOrderResponse.Count;
-            listOrderResponse = listOrderResponse.Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize).ToList();
+            listOrderResponse = listOrderResponse
+                .OrderByDescending(c => c.CreatedDate).Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                
+                .ToList();
 
             var result = new PaginationResponse<OrderResponse>
             {
