@@ -11,11 +11,10 @@ namespace Repositories.Auctions
 {
     public class AuctionRepository : IAuctionRepository
     {
-        private static DateTime GetUtcDateTimeFromLocalDateTime(DateOnly scheduledDate, TimeOnly scheduledTime,
-            TimeZoneInfo timeZone)
+        private static DateTime GetUtcDateTimeFromLocalDateTime(DateTime scheduledDate
+            ,TimeZoneInfo timeZone)
         {
-            var scheduleDateTime = scheduledDate.ToDateTime(scheduledTime);
-            var localDateTime = TimeZoneInfo.ConvertTime(scheduleDateTime, TimeZoneInfo.Local, timeZone);
+            var localDateTime = TimeZoneInfo.ConvertTime(scheduledDate, TimeZoneInfo.Local, timeZone);
             var utcTime = TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
             return utcTime;
         }
@@ -71,7 +70,7 @@ namespace Repositories.Auctions
                 throw new ShopNotFoundException();
             }
 
-            if (await IsDateTimeOverlapped(request.ScheduleDate.ToDateTime(request.StartTime), request.ScheduleDate.ToDateTime(request.EndTime)))
+            if (await IsDateTimeOverlapped(request.StartTime, request.EndTime))
             {
                 throw new ScheduledTimeOverlappedException();
             }
@@ -85,8 +84,8 @@ namespace Repositories.Auctions
                 DepositFee = request.DepositFee,
                 CreatedDate = DateTime.UtcNow,
                 StepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100),
-                StartDate = GetUtcDateTimeFromLocalDateTime(request.ScheduleDate, request.StartTime, timezone),
-                EndDate = GetUtcDateTimeFromLocalDateTime(request.ScheduleDate, request.EndTime, timezone),
+                StartDate = GetUtcDateTimeFromLocalDateTime(request.StartTime, timezone),
+                EndDate = GetUtcDateTimeFromLocalDateTime(request.EndTime, timezone),
                 Status = AuctionStatus.Pending
             };
             var auctionDetail = await GenericDao<Auction>.Instance.AddAsync(newAuction);
