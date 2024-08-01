@@ -279,7 +279,7 @@ namespace Repositories.ConsignSales
                     SellingPrice = item.ConfirmedPrice,
                     Name = item.Name,
                     Note = item.Note,
-                    /*Value = item.Value,*/
+                    Description = item.Description,
                     Condition = item.Condition,
                     CategoryId = item.CategoryId,
                     ShopId = shopId,

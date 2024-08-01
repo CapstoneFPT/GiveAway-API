@@ -74,7 +74,7 @@ namespace Repositories.FashionItems
                     ItemId = x.FashionItem.ItemId,
                     Name = x.FashionItem.Name,
                     Note = x.FashionItem.Note,
-                    
+                    Description = x.FashionItem.Description,
                     Condition = x.FashionItem.Condition,
                     ShopAddress = x.FashionItem.Shop.Address,
                     Color = x.FashionItem.Color,
@@ -168,7 +168,7 @@ namespace Repositories.FashionItems
                         SellingPrice = f.SellingPrice.Value,
                         Name = f.Name,
                         Note = f.Note,
-                        /*Value = f.Value,*/
+                        Description = f.Description,
                         Condition = f.Condition,
                         ShopAddress = f.Shop.Address,
                         ShopId = f.Shop.ShopId,

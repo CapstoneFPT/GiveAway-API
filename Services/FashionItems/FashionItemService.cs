@@ -50,7 +50,7 @@ namespace Services.FashionItems
                 Color = request.Color,
                 SellingPrice = request.SellingPrice,
                 CreatedDate = DateTime.UtcNow,
-                Description = request.Description
+                
             };
             
             var newItem = await _fashionitemRepository.AddFashionItem(newdata);
@@ -60,6 +60,7 @@ namespace Services.FashionItems
                 {
                     Url = img,
                     FashionItemId = newItem.ItemId,
+                    CreatedDate = DateTime.UtcNow
                 };
                 await _imageRepository.AddImage(newimage);
             }

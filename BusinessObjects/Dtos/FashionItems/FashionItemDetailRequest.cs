@@ -18,7 +18,6 @@ namespace BusinessObjects.Dtos.FashionItems
        
         public string? Note { get; set; }
         [Required]
-        public string? Note { get; set; }
         public string Description { get; set; }
         /*[Required]
         public int Quantity { get; set; }*/

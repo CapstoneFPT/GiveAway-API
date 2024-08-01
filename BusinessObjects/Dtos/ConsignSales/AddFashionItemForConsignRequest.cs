@@ -13,7 +13,7 @@ namespace BusinessObjects.Dtos.ConsignSales
         [Required]
         [MaxLength(100,ErrorMessage = "Name cannot be longer than 100 characters.")]
         public string Name { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Please enter valid integer Number")]
         public int DealPrice { get; set; }
