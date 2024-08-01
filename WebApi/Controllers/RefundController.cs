@@ -53,7 +53,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
         [HttpPost]
-        public async Task<ActionResult<Result<List<RefundResponse>>>> RequestRefundItemToShop([FromBody] List<CreateRefundRequest> refundRequest)
+        public async Task<ActionResult<Result<RefundResponse>>> RequestRefundItemToShop([FromBody] CreateRefundRequest refundRequest)
         {
             var result = await _orderDetailService.RequestRefundToShop(refundRequest);
             

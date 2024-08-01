@@ -40,6 +40,7 @@ public enum FashionItemStatus
     Refundable,
     PendingForConsignSale,
     PendingAuction,
+    PendingForRefund,
     PendingForOrder,
     AwaitingAuction,
     Bidding,
