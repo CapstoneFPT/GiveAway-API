@@ -84,8 +84,8 @@ namespace Repositories.Auctions
                 DepositFee = request.DepositFee,
                 CreatedDate = DateTime.UtcNow,
                 StepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100),
-                StartDate = GetUtcDateTimeFromLocalDateTime(request.StartTime, timezone),
-                EndDate = GetUtcDateTimeFromLocalDateTime(request.EndTime, timezone),
+                StartDate = request.StartTime,
+                EndDate = request.EndTime,
                 Status = AuctionStatus.Pending
             };
             var auctionDetail = await GenericDao<Auction>.Instance.AddAsync(newAuction);
