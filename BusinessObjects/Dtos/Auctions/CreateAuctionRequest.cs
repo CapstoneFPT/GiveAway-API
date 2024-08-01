@@ -11,7 +11,6 @@ public class CreateAuctionRequest : IValidatableObject
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     
-    public Guid TimeslotId { get; set; }
     [Range(1,100,ErrorMessage = "Value must be between 1 and 100")]
     public int StepIncrementPercentage { get; set; }
     
