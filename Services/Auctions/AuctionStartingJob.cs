@@ -44,7 +44,7 @@ public class AuctionStartingJob : IJob
 
             _logger.LogInformation("Auction {AuctionId} has been started", auctionToStart.AuctionId);
 
-            dbContext.Auctions.UpdateRange(auctionToStart);
+            dbContext.Auctions.Update(auctionToStart);
             await dbContext.SaveChangesAsync();
 
             _logger.LogInformation("Auction {AuctionId} has been started", auctionToStart.AuctionId);
