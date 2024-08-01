@@ -14,8 +14,8 @@ namespace BusinessObjects.Dtos.FashionItems
         public FashionItemType Type { get; set; }
         public int SellingPrice { get; set; }
         public string Name { get; set; }
-        public string Note { get; set; }
-        /*public int? Value { get; set; }*/
+        public string? Note { get; set; }
+        public string Description { get; set; }
         public int Condition { get; set; }
         /*public int? ConsignDuration { get; set; }*/
         public FashionItemStatus Status { get; set; }

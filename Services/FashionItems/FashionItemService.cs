@@ -37,7 +37,8 @@ namespace Services.FashionItems
             var newdata = new FashionItem()
             {
                 Name = request.Name,
-                Note = request.Note,
+                Note = !string.IsNullOrEmpty(request.Note) ? request.Note : null,
+                Description = request.Description,
                 Condition = request.Condition,
                 Brand = request.Brand,
                 Gender = request.Gender,

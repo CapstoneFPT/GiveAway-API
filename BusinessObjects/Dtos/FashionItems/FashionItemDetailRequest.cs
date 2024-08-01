@@ -15,10 +15,10 @@ namespace BusinessObjects.Dtos.FashionItems
         public int SellingPrice { get; set; }
         [Required]
         public string Name { get; set; }
+       
+        public string? Note { get; set; }
         [Required]
-        public string Note { get; set; }
-        /*[Required]
-        public int Quantity { get; set; }*/
+        public string Description { get; set; }
         
         [Required]
         public int Condition { get; set; }
