@@ -347,6 +347,15 @@ namespace Repositories.ConsignSales
                 query = query.Where(f => f.Status == request.Status);
             }
 
+            if (request.StartDate != null)
+            {
+                query = query.Where(f => f.StartDate >= request.StartDate);
+            }
+
+            if (request.EndDate != null)
+            {
+                query = query.Where(f => f.EndDate <= request.EndDate);
+            }
             query = query.Where(c => c.ShopId == shopId);
 
             var count = await query.CountAsync();
