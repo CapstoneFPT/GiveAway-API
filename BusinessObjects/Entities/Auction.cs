@@ -21,6 +21,5 @@ public class Auction
     public ICollection<AuctionDeposit> AuctionDeposits = new List<AuctionDeposit>();
     public ICollection<Bid> Bids = new List<Bid>();
     
-    public Schedule Schedule { get; set; }
     public DateTime CreatedDate { get; set; }
 }

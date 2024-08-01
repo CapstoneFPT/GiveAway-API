@@ -15,7 +15,7 @@ namespace Repositories.Auctions
 {
     public class AuctionRepository : IAuctionRepository
     {
-        private DateTime GetUtcDateTimeFromLocalDateTime(DateOnly scheduledDate, TimeOnly scheduledTime,
+        private static DateTime GetUtcDateTimeFromLocalDateTime(DateOnly scheduledDate, TimeOnly scheduledTime,
             TimeZoneInfo timeZone)
         {
             var scheduleDateTime = scheduledDate.ToDateTime(scheduledTime);
@@ -49,15 +49,6 @@ namespace Repositories.Auctions
                 throw new ShopNotFoundException();
             }
 
-            var timeslot = await GenericDao<Timeslot>.Instance.GetQueryable()
-                .FirstOrDefaultAsync(x => x.TimeslotId == request.TimeslotId);
-
-            if (timeslot == null)
-            {
-                throw new TimeslotNotFoundException();
-            }
-
-
             var timezone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
             var newAuction = new Auction
             {
@@ -75,14 +66,6 @@ namespace Repositories.Auctions
 
             auctionItem.Status = FashionItemStatus.PendingAuction;
             await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
-
-            var newSchedule = new Schedule()
-            {
-                AuctionId = auctionDetail.AuctionId,
-                Date = request.ScheduleDate,
-                TimeslotId = request.TimeslotId
-            };
-            await GenericDao<Schedule>.Instance.AddAsync(newSchedule);
 
             auctionItem.Status = FashionItemStatus.AwaitingAuction;
 

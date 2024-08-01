@@ -18,7 +18,6 @@ public class GiveAwayDbContext : DbContext
     public DbSet<FashionItem> FashionItems { get; set; }
     public DbSet<Image> Images { get; set; }
     public DbSet<Auction> Auctions { get; set; }
-    public DbSet<Schedule> Schedules { get; set; }
     public DbSet<Address> Addresses { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
     public DbSet<AuctionFashionItem> AuctionFashionItems { get; set; }
@@ -27,7 +26,6 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Admin> Admins { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Order> Orders { get; set; }
-    public DbSet<Timeslot> TimeSlots { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Bid> Bids { get; set; }
     public DbSet<AuctionDeposit> AuctionDeposits { get; set; }
@@ -378,23 +376,7 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
-        #region Schedule
-
-        modelBuilder.Entity<Schedule>().ToTable("Schedule").HasKey(e => e.ScheduleId);
-
-        #endregion
-
-        #region Timeslot
-
-        modelBuilder.Entity<Timeslot>().ToTable("Timeslot").HasKey(e => e.TimeslotId);
-
-        modelBuilder.Entity<Timeslot>().Property(x => x.Status)
-            .HasConversion(prop => prop.ToString(),
-                s => (TimeSlotStatus)Enum.Parse(typeof(TimeSlotStatus), s))
-            .HasColumnType("varchar")
-            .HasMaxLength(20);
-
-        #endregion
+      
 
         #region Transaction
 
