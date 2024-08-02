@@ -1,9 +1,7 @@
-﻿using BusinessObjects.Dtos.Auctions;
-using BusinessObjects.Dtos.Bids;
+﻿using BusinessObjects.Dtos.Bids;
 using Microsoft.AspNetCore.SignalR;
-using Services.Auctions;
 
-namespace WebApi.Hubs;
+namespace Services.Auctions;
 
 public class AuctionHub : Hub<IAuctionClient>
 {
