@@ -17,7 +17,6 @@ namespace WebApi.Controllers
 {
     [Route("api/orders")]
     [ApiController]
-    [EnableCors("AllowAll")]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;

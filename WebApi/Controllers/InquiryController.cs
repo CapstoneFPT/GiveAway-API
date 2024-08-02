@@ -7,7 +7,6 @@ using Services.Inquiries;
 namespace WebApi.Controllers;
 [Route("api/inquiries")]
 [ApiController] 
-[EnableCors("AllowAll")]
 public class InquiryController : ControllerBase
 {
     private readonly IInquiryService _inquiryService;

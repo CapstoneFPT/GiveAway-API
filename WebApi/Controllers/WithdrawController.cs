@@ -6,7 +6,6 @@ namespace WebApi.Controllers;
 
 [Route("api/withdraws")]
 [ApiController]
-[EnableCors("AllowAll")]
 public class WithdrawController : ControllerBase
 {
     private readonly IWithdrawService _withdrawService;

@@ -10,7 +10,6 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/dashboard")]
-[EnableCors("AllowAll")]
 public class DashboardController : ControllerBase
 
 {

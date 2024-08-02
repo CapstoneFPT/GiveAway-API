@@ -21,7 +21,6 @@ namespace WebApi.Controllers;
 
 [Route("api/accounts")]
 [ApiController]
-[EnableCors("AllowAll")]
 public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;

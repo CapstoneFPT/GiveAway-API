@@ -18,7 +18,6 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-[EnableCors("AllowAll")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;

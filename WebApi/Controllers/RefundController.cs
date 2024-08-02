@@ -12,7 +12,6 @@ namespace WebApi.Controllers
 {
     [Route("api/refunds")]
     [ApiController]
-    [EnableCors("AllowAll")]
     public class RefundController : ControllerBase
     {
         private readonly IRefundService _refundService;

@@ -15,7 +15,6 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/pointpackages")]
-[EnableCors("AllowAll")]
 public class PointPackageController : ControllerBase
 {
     private readonly ILogger<PointPackageController> _logger;

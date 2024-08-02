@@ -21,7 +21,6 @@ namespace WebApi.Controllers
 {
     [Route("api/shops")]
     [ApiController]
-    [EnableCors("AllowAll")]
     public class ShopController : ControllerBase
     {
         private readonly IFashionItemService _fashionItemService;

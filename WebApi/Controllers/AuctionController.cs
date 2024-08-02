@@ -13,7 +13,6 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/auctions")]
-[EnableCors("AllowAll")]
 public class AuctionController : ControllerBase
 {
     private readonly IAuctionService _auctionService;

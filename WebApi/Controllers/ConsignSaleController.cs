@@ -11,7 +11,6 @@ namespace WebApi.Controllers
 {
     [Route("api/consginsales")]
     [ApiController]
-    [EnableCors("AllowAll")]
     public class ConsignSaleController : ControllerBase
     {
         private readonly IConsignSaleService _consignsaleService;
