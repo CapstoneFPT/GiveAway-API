@@ -278,9 +278,9 @@ namespace Services.Accounts
         {
             Expression<Func<Transaction, bool>> predicate = transaction => transaction.MemberId == accountId;
 
-            if (request.Type != null)
+            if (request.Types.Length != 0)
             {
-                predicate = predicate.And(x => x.Type == request.Type);
+                predicate = predicate.And(x => request.Types.Contains(x.Type));
             }
 
             Expression<Func<Transaction, GetTransactionsResponse>> selector = transaction =>
@@ -290,12 +290,13 @@ namespace Services.Accounts
                     MemberId = transaction.MemberId,
                     Amount = transaction.Amount,
                     Type = transaction.Type,
-                    CreatedDate = transaction.CreatedDate
+                    CreatedDate = transaction.CreatedDate,
+                    OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
                 };
 
             (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await
-                _transactionRepository.GetTransactions<GetTransactionsResponse>(request.Page, request.PageSize,
-                    predicate, selector, isTracking: false);
+                _transactionRepository.GetTransactionsProjection<GetTransactionsResponse>(request.Page, request.PageSize,
+                    predicate, selector);
 
             return new PaginationResponse<GetTransactionsResponse>()
             {

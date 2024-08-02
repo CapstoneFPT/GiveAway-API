@@ -12,9 +12,9 @@ namespace Repositories.Transactions
     public interface ITransactionRepository
     {
         Task<Transaction?> CreateTransaction(Transaction transaction);
-        Task<(List<T> Items, int Page, int PageSize, int Total)> GetTransactions<T>(int? transactionRequestPage,
+        Task<(List<T> Items, int Page, int PageSize, int Total)> GetTransactionsProjection<T>(int? transactionRequestPage,
             int? transactionRequestPageSize, Expression<Func<Transaction, bool>>? predicate,
-            Expression<Func<Transaction, T>>? selector, bool isTracking = false);
+            Expression<Func<Transaction, T>>? selector);
         Task<GetTransactionsResponse> CreateTransactionRefund(Transaction transaction);
     }
 }
