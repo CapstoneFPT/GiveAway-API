@@ -13,8 +13,8 @@ namespace Repositories.FashionItems
 {
     public interface IFashionItemRepository
     {
-        Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
-            AuctionFashionItemRequest request);
+        // Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
+        //     AuctionFashionItemRequest request);
 
         Task<FashionItem> GetFashionItemById(Guid id);
         Task<FashionItem> AddFashionItem(FashionItem request);
@@ -27,5 +27,12 @@ namespace Repositories.FashionItems
         Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem, bool>> predicate);
         Task UpdateFashionItems(List<FashionItem> fashionItems);
         Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> itemId);
+
+        Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemProjections<T>(
+            int? page,
+            int? pageSize, Expression<Func<FashionItem, bool>>? predicate, Expression<Func<FashionItem, T>>? selector);
+
+        bool CheckItemIsInOrder(Guid itemId, Guid? memberId);
+        Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);
     }
 }

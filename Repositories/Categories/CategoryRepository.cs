@@ -13,6 +13,12 @@ using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace Repositories.Categories
 {
+    public class CategoryMiniNode
+    {
+        public Guid CategoryId { get; set; }
+        public Guid? ParentId { get; set; }
+    }
+
     public class CategoryRepository : ICategoryRepository
     {
         private readonly GiveAwayDbContext _giveAwayDbContext;
@@ -21,6 +27,7 @@ namespace Repositories.Categories
         {
             _giveAwayDbContext = giveAwayDbContext;
         }
+
         public async Task<List<Category>> GetAllParentCategory()
         {
             var listcate = await GenericDao<Category>.Instance.GetQueryable().Where(c => c.Level == 1).ToListAsync();
@@ -38,6 +45,30 @@ namespace Repositories.Categories
             return await GenericDao<Category>.Instance.GetQueryable()
                 .Where(c => c.ParentId == id && c.Level == level && c.Status.Equals(CategoryStatus.Available))
                 .ToListAsync();
+        }
+
+        public async Task<List<Guid>> GetAllChildrenCategoryIds(Guid categoryId)
+        {
+            var allCategories = await _giveAwayDbContext.Categories
+                .Select(c => new CategoryMiniNode { CategoryId = c.CategoryId, ParentId = c.ParentId })
+                .ToListAsync();
+
+            var childrenIds = new HashSet<Guid>();
+            GetChildrenIdsRecursive(categoryId, allCategories, childrenIds);
+            return childrenIds.ToList();
+        }
+
+        private void GetChildrenIdsRecursive(Guid parentId, List<CategoryMiniNode> allCategories,
+            HashSet<Guid> childrenIds)
+        {
+            var children = allCategories
+                .Where(c => c.ParentId == parentId)
+                .Select(c => c.CategoryId)
+                .Where(childrenIds.Add)
+                .ToList();
+
+            children.ForEach(childId => 
+                GetChildrenIdsRecursive(childId, allCategories, childrenIds));
         }
 
         public async Task<Category> AddCategory(Category category)
@@ -128,6 +159,7 @@ namespace Repositories.Categories
                         .Where(c => c.ParentId == item.CategoryId).ToListAsync();
                     listCategoryLv3.AddRange(lv3);
                 }
+
                 var lisCategoryLv4 = new List<Category>();
                 foreach (var item in listCategoryLv3)
                 {
@@ -138,6 +170,7 @@ namespace Repositories.Categories
 
                 return lisCategoryLv4;
             }
+
             if (!string.IsNullOrWhiteSpace(categoryRequest.SearchName))
                 query = query.Where(x => EF.Functions.ILike(x.Name, $"%{categoryRequest.SearchName}%"));
             if (categoryRequest.Level != null)
