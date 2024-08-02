@@ -6,6 +6,8 @@ using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using LinqKit;
+using Microsoft.EntityFrameworkCore;
 using Repositories.Categories;
 using Repositories.FashionItems;
 using Repositories.Images;
@@ -50,9 +52,8 @@ namespace Services.FashionItems
                 Color = request.Color,
                 SellingPrice = request.SellingPrice,
                 CreatedDate = DateTime.UtcNow,
-                
             };
-            
+
             var newItem = await _fashionitemRepository.AddFashionItem(newdata);
             foreach (string img in request.Images)
             {
@@ -66,7 +67,7 @@ namespace Services.FashionItems
             }
 
             response.Data = _mapper.Map<FashionItemDetailResponse>(newItem);
-            response.Messages = ["Add successfully"];   
+            response.Messages = ["Add successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
@@ -74,19 +75,91 @@ namespace Services.FashionItems
         public async Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetAllFashionItemPagination(
             AuctionFashionItemRequest request)
         {
-            var response = new Result<PaginationResponse<FashionItemDetailResponse>>();
-            var result = await _fashionitemRepository.GetAllFashionItemPagination(request);
-            if (result.TotalCount < 1)
+            Expression<Func<FashionItem, bool>> predicate = x => true;
+            Expression<Func<FashionItem, FashionItemDetailResponse>> selector = item => new
+                FashionItemDetailResponse()
+                {
+                    ItemId = item.ItemId,
+                    Name = item.Name,
+                    Note = item.Note,
+                    Description = item.Description ?? string.Empty,
+                    Condition = item.Condition,
+                    Brand = item.Brand,
+                    Gender = item.Gender,
+                    Size = item.Size,
+                    CategoryId = item.CategoryId ?? Guid.Empty,
+                    CategoryName = item.Category != null ? item.Category.Name : string.Empty,
+                    ShopId = item.ShopId,
+                    Type = item.Type,
+                    Status = item.Status,
+                    Color = item.Color,
+                    SellingPrice = item.SellingPrice ?? 0,
+                    ShopAddress = item.Shop.Address,
+                    Images = item.Images.Select(x => x.Url).ToList()
+                };
+
+            if (!string.IsNullOrEmpty(request.SearchTerm))
             {
-                response.ResultStatus = ResultStatus.Success;
-                response.Messages = ["Empty"];
-                return response;
+                predicate = predicate.And(item => EF.Functions.ILike(item.Name, $"%{request.SearchTerm}%"));
             }
+
+            if (request.Status != null)
+            {
+                predicate = predicate.And(item => request.Status.Contains(item.Status));
+            }
+
+            if (request.Type != null)
+            {
+                predicate = predicate.And(item => request.Type.Contains(item.Type));
+            }
+
+            if (request.CategoryId.HasValue)
+            {
+                var categoryIds = await _categoryRepository.GetAllChildrenCategoryIds(request.CategoryId.Value);
+                predicate = predicate.And(item => categoryIds.Contains(item.CategoryId.Value));
+            }
+
+            if (request.ShopId.HasValue)
+            {
+                predicate = predicate.And(item => item.ShopId == request.ShopId);
+            }
+
+            if (request.GenderType.HasValue)
+            {
+                predicate = predicate.And(item => item.Gender == request.GenderType);
+            }
+
+            (List<FashionItemDetailResponse> Items, int Page, int PageSize, int TotalCount) result =
+                await _fashionitemRepository.GetFashionItemProjections(request.PageNumber, request.PageSize, predicate,
+                    selector);
             
-            response.Data = result;
-            response.ResultStatus = ResultStatus.Success;
-            response.Messages = ["Results in page: " + result.PageNumber];
-            return response;
+            await CheckItemsInOrder(result.Items, request.MemberId);
+            
+            return new Result<PaginationResponse<FashionItemDetailResponse>>()
+            {
+                Data = new PaginationResponse<FashionItemDetailResponse>()
+                {
+                    Items = result.Items,
+                    PageSize = result.PageSize,
+                    PageNumber = result.Page,
+                    TotalCount = result.TotalCount
+                },
+                ResultStatus = ResultStatus.Success
+            };
+        }
+
+        private async Task CheckItemsInOrder(List<FashionItemDetailResponse> items, Guid? memberId)
+        {
+            if (memberId.HasValue)
+            {
+                var itemsId = items.Select(x => x.ItemId).ToList();
+
+                var orderItems = await _fashionitemRepository.GetOrderedItems(itemsId, memberId.Value);
+                foreach (var item in items)
+                {
+                    item.IsOrderedYet = orderItems.Contains(item.ItemId);
+                }
+            }
         }
 
         public async Task<Result<FashionItemDetailResponse>> GetFashionItemById(Guid id)
@@ -117,6 +190,7 @@ namespace Services.FashionItems
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
             ;
             item.SellingPrice = request.SellingPrice.HasValue ? request.SellingPrice.Value : item.SellingPrice;
             item.Name = request.Name ?? item.Name;
@@ -125,7 +199,7 @@ namespace Services.FashionItems
             item.Condition = request.Condition.HasValue ? request.Condition.Value : item.Condition;
             item.Brand = request.Brand ?? item.Brand;
             item.Color = request.Color ?? item.Color;
-            item.Gender = request.Gender ?? item.Gender;    
+            item.Gender = request.Gender ?? item.Gender;
             item.Size = request.Size ?? item.Size;
             item.CategoryId = request.CategoryId ?? item.CategoryId;
             await _fashionitemRepository.UpdateFashionItem(item);
@@ -147,7 +221,7 @@ namespace Services.FashionItems
                 response.ResultStatus = ResultStatus.Success;
                 response.Messages = ["Successfully with " + response.Data.TotalCount + " items"];
                 return response;
-            }   
+            }
 
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Empty"];
@@ -197,15 +271,17 @@ namespace Services.FashionItems
             {
                 item.Status = FashionItemStatus.Sold;
             }
+
             return _fashionitemRepository.UpdateFashionItems(refundableItems);
         }
 
-        public async Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId, UpdateFashionItemStatusRequest request)
+        public async Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId,
+            UpdateFashionItemStatusRequest request)
         {
             var item = await _fashionitemRepository.GetFashionItemById(itemId);
 
             item.Status = request.Status;
-            
+
             await _fashionitemRepository.UpdateFashionItem(item);
             return new Result<FashionItemDetailResponse?>
             {

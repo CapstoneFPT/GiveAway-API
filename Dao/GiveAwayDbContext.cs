@@ -172,6 +172,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Auction>()
             .Property(e => e.Title).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<Auction>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Auction>()
+            .HasMany(x => x.Bids)
+            .WithOne(x => x.Auction)
+            .HasForeignKey(x => x.AuctionId);
 
         #endregion
 
@@ -421,6 +425,10 @@ public class GiveAwayDbContext : DbContext
             .HasMaxLength(20);
         modelBuilder.Entity<Refund>().Property(e => e.RefundPercentage).HasColumnType("numeric").HasMaxLength(100);
         modelBuilder.Entity<Refund>().Property(e => e.ResponseFromShop).HasColumnType("varchar").HasMaxLength(255);
+        modelBuilder.Entity<Refund>().HasMany(x=>x.Images)
+            .WithOne(x=>x.Refund)
+            .HasForeignKey(x=>x.RefundId)
+            .OnDelete(DeleteBehavior.Cascade);
         #endregion
 
         #region Feedback

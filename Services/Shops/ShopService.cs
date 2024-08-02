@@ -88,8 +88,8 @@ namespace Services.Shops
             };
 
             (List<TransactionResponse> Items, int Page, int PageSize, int Total) result =
-                await _transactionRepository.GetTransactions<TransactionResponse>(transactionRequest.Page,
-                    transactionRequest.PageSize, predicate, selector, isTracking: false);
+                await _transactionRepository.GetTransactionsProjection<TransactionResponse>(transactionRequest.Page,
+                    transactionRequest.PageSize, predicate, selector);
 
             return new PaginationResponse<TransactionResponse>()
             {

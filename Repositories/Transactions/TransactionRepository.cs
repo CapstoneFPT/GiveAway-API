@@ -35,10 +35,10 @@ namespace Repositories.Transactions
             return _mapper.Map<GetTransactionsResponse>(result);
         }
 
-        public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetTransactions<T>(
+        public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetTransactionsProjection<T>(
             int? transactionRequestPage,
             int? transactionRequestPageSize, Expression<Func<Transaction, bool>>? predicate,
-            Expression<Func<Transaction, T>>? selector, bool isTracking = false)
+            Expression<Func<Transaction, T>>? selector)
         {
             var query = _giveAwayDbContext.Transactions.AsQueryable(); 
 

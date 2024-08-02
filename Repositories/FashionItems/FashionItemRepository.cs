@@ -23,82 +23,134 @@ namespace Repositories.FashionItems
             _giveAwayDbContext = dbContext;
         }
 
+        public bool CheckItemIsInOrder(Guid itemId, Guid? memberId)
+        {
+            var result =
+                    _giveAwayDbContext.OrderDetails
+                        .Any(orderDetail =>
+                            orderDetail.FashionItemId == itemId && orderDetail.Order.MemberId == memberId &&
+                            orderDetail.Order.Status == OrderStatus.AwaitingPayment)
+                ;
+            return memberId.HasValue && result;
+        }
+
+        public async Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId)
+        {
+            return await _giveAwayDbContext.OrderDetails
+                .Where(orderDetail =>
+                    itemIds.Contains(orderDetail.FashionItemId.Value) &&
+                    orderDetail.Order.MemberId == memberId &&
+                    orderDetail.Order.Status == OrderStatus.AwaitingPayment)
+                .Select(orderDetail => orderDetail.FashionItemId.Value)
+                .Distinct()
+                .ToListAsync();
+        }
+
         public async Task<FashionItem> AddFashionItem(FashionItem request)
         {
             return await GenericDao<FashionItem>.Instance.AddAsync(request);
         }
 
-        public async Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
-            AuctionFashionItemRequest request)
+        // public async Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
+        //     AuctionFashionItemRequest request)
+        // {
+        //     var query = _giveAwayDbContext.FashionItems.AsQueryable()
+        //         .Select(x => new
+        //         {
+        //             FashionItem = x,
+        //             IsOrderedYet = CheckItemIsInOrder(x.ItemId, request.MemberId)
+        //         });
+        //
+        //     if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        //         query = query.Where(x => EF.Functions.ILike(x.FashionItem.Name, $"%{request.SearchTerm}%"));
+        //     if (request.Status != null)
+        //     {
+        //         query = query.Where(f => request.Status.Contains(f.FashionItem.Status));
+        //     }
+        //
+        //     if (request.Type != null)
+        //     {
+        //         query = query.Where(f => request.Type.Contains(f.FashionItem.Type));
+        //     }
+        //
+        //     if (request.ShopId != null)
+        //     {
+        //         query = query.Where(f => f.FashionItem.ShopId.Equals(request.ShopId));
+        //     }
+        //
+        //     if (request.GenderType != null)
+        //     {
+        //         query = query.Where(f => f.FashionItem.Gender.Equals(request.GenderType));
+        //     }
+        //
+        //     var count = await query.CountAsync();
+        //     query = query.Skip((request.PageNumber - 1) * request.PageSize)
+        //         .Take(request.PageSize);
+        //
+        //     var items = await query.Select(x => new FashionItemDetailResponse()
+        //         {
+        //             ItemId = x.FashionItem.ItemId,
+        //             Name = x.FashionItem.Name,
+        //             Note = x.FashionItem.Note,
+        //             Description = x.FashionItem.Description,
+        //             Condition = x.FashionItem.Condition,
+        //             ShopAddress = x.FashionItem.Shop.Address,
+        //             Color = x.FashionItem.Color,
+        //             Brand = x.FashionItem.Brand != null ? x.FashionItem.Brand : "No Brand",
+        //             Status = x.FashionItem.Status,
+        //             Type = x.FashionItem.Type,
+        //             IsOrderedYet = x.IsOrderedYet,
+        //             SellingPrice = x.FashionItem.SellingPrice.Value,
+        //             ShopId = x.FashionItem.ShopId,
+        //             CategoryName = x.FashionItem.Category != null ? x.FashionItem.Category.Name : "N/A",
+        //             Gender = x.FashionItem.Gender,
+        //             Images = x.FashionItem.Images.Select(c => c.Url).ToList()
+        //         })
+        //         .AsNoTracking().ToListAsync();
+        //
+        //     var result = new PaginationResponse<FashionItemDetailResponse>
+        //     {
+        //         Items = items,
+        //         PageSize = request.PageSize,
+        //         TotalCount = count,
+        //         SearchTerm = request.SearchTerm,
+        //         PageNumber = request.PageNumber,
+        //     };
+        //     return result;
+        // }
+
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemProjections<T>(
+            int? page,
+            int? pageSize, Expression<Func<FashionItem, bool>>? predicate, Expression<Func<FashionItem, T>>? selector)
         {
-            var query = _giveAwayDbContext.FashionItems.AsQueryable()
-                .Select(x => new
-                {
-                    FashionItem = x,
-                    IsOrderedYet = _giveAwayDbContext.OrderDetails
-                        .Include(orderDetail => orderDetail.FashionItem)
-                        .Include(orderDetail => orderDetail.Order)
-                        .Any(orderDetail =>
-                            orderDetail.FashionItemId == x.ItemId && orderDetail.Order.MemberId == request.MemberId &&
-                            orderDetail.Order.Status == OrderStatus.AwaitingPayment)
-                });
+            var query = _giveAwayDbContext.FashionItems.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-                query = query.Where(x => EF.Functions.ILike(x.FashionItem.Name, $"%{request.SearchTerm}%"));
-            if (request.Status != null)
+            if (predicate != null)
             {
-                query = query.Where(f => request.Status.Contains(f.FashionItem.Status));
-            }
-
-            if (request.Type != null)
-            {
-                query = query.Where(f => request.Type.Contains(f.FashionItem.Type));
-            }
-
-            if (request.ShopId != null)
-            {
-                query = query.Where(f => f.FashionItem.ShopId.Equals(request.ShopId));
-            }
-
-            if (request.GenderType != null)
-            {
-                query = query.Where(f => f.FashionItem.Gender.Equals(request.GenderType));
+                query = query.Where(predicate);
             }
 
             var count = await query.CountAsync();
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
 
-            var items = await query.Select(x => new FashionItemDetailResponse()
-                {
-                    ItemId = x.FashionItem.ItemId,
-                    Name = x.FashionItem.Name,
-                    Note = x.FashionItem.Note,
-                    Description = x.FashionItem.Description,
-                    Condition = x.FashionItem.Condition,
-                    ShopAddress = x.FashionItem.Shop.Address,
-                    Color = x.FashionItem.Color,
-                    Brand = x.FashionItem.Brand != null ? x.FashionItem.Brand : "No Brand",
-                    Status = x.FashionItem.Status,
-                    Type = x.FashionItem.Type,
-                    IsOrderedYet = x.IsOrderedYet,
-                    SellingPrice = x.FashionItem.SellingPrice.Value,
-                    ShopId = x.FashionItem.ShopId,
-                    CategoryName = x.FashionItem.Category != null ? x.FashionItem.Category.Name : "N/A",
-                    Gender = x.FashionItem.Gender,
-                    Images = x.FashionItem.Images.Select(c => c.Url).ToList()
-                })
-                .AsNoTracking().ToListAsync();
-            
-            var result = new PaginationResponse<FashionItemDetailResponse>
+            var pageNum = page ?? -1;
+            var pageSizeNum = pageSize ?? -1;
+
+            if (pageNum > 0 && pageSizeNum > 0)
             {
-                Items = items,
-                PageSize = request.PageSize,
-                TotalCount = count,
-                SearchTerm = request.SearchTerm,
-                PageNumber = request.PageNumber,
-            };
-            return result;
+                query = query.Skip((pageNum - 1) * pageSizeNum).Take(pageSizeNum);
+            }
+
+            List<T> items = new List<T>();
+            if (selector != null)
+            {
+                items = await query.Select(selector).ToListAsync();
+            }
+            else
+            {
+                items = await query.Cast<T>().ToListAsync();
+            }
+
+            return (items, pageNum, pageSizeNum, count);
         }
 
 
@@ -122,10 +174,10 @@ namespace Repositories.FashionItems
                 return new PaginationResponse<FashionItemDetailResponse>
                 {
                     Items = new List<FashionItemDetailResponse>(),
-                    PageSize = request.PageSize,
+                    PageSize = request.PageSize ?? -1,
                     TotalCount = 0,
                     SearchTerm = request.SearchTerm,
-                    PageNumber = request.PageNumber,
+                    PageNumber = request.PageNumber ?? -1,
                 };
             }
 
@@ -156,10 +208,17 @@ namespace Repositories.FashionItems
             }
 
             var count = await query.CountAsync();
+            var pageNum = request.PageNumber ?? -1;
+            var pageSizeNum = request.PageSize ?? -1;
+
+
+            if (pageNum > 0 && pageSizeNum > 0)
+            {
+                query = query.Skip((pageNum - 1) * pageSizeNum)
+                    .Take(pageSizeNum);
+            }
 
             var items = await query
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
                 .Select(
                     f => new FashionItemDetailResponse
                     {
@@ -187,10 +246,10 @@ namespace Repositories.FashionItems
             var result = new PaginationResponse<FashionItemDetailResponse>
             {
                 Items = items,
-                PageSize = request.PageSize,
+                PageSize = request.PageSize ?? -1,
                 TotalCount = count,
                 SearchTerm = request.SearchTerm,
-                PageNumber = request.PageNumber,
+                PageNumber = request.PageNumber ?? -1,
             };
 
 
