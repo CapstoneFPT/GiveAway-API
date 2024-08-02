@@ -10,7 +10,7 @@ public class FashionItem
     public int? SellingPrice { get; set; }
     public string Name { get; set; }
     public string? Note { get; set; }
-    public string Description { get; set; }
+    public string? Description { get; set; }
     public int Condition { get; set; }
     public ConsignSaleDetail ConsignSaleDetail { get; set; }
     public Shop Shop { get; set; }

@@ -103,7 +103,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:3000").AllowAnyHeader().AllowAnyMethod()
+            policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "https://giveawayproject.jettonetto.org").AllowAnyHeader().AllowAnyMethod()
                 .AllowCredentials().SetIsOriginAllowedToAllowWildcardSubdomains();
         });
 });
@@ -145,40 +145,6 @@ builder
     .AddJsonOptions(x => { x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
 var config = builder.Configuration.GetSection("Kestrel");
-// if (!builder.Environment.IsDevelopment())
-// {
-//     var builderConfig = builder.Configuration;
-//     try
-//     {
-//         var httpsCertificatePath = builderConfig.GetSection(key: KestrelConstants.HttpsCertificatePath).Value;
-//         var httpsCertificatePassword = builderConfig.GetSection(key: KestrelConstants.HttpsCertificatePassword).Value;
-//             
-//         
-//         
-//         if (httpsCertificatePath.IsNullOrEmpty() || httpsCertificatePassword.IsNullOrEmpty())
-//         {
-//             throw new FileNotFoundException("https certificate not found", "fullchain.pem or privkey.pem");
-//         }
-//         
-//         builder.WebHost.ConfigureKestrel(options: options =>
-//         {
-//             options.ListenAnyIP(80);
-//             options.ListenAnyIP(81, listenOptions =>
-//             {
-//                 listenOptions.UseHttps(
-//                     builderConfig[httpsCertificatePath],
-//                     builderConfig[httpsCertificatePassword]
-//                 );
-//             });
-//         })
-//     }
-//     catch (Exception e)
-//     {
-//         throw new Exception("Error in configuring Kestrel", e);
-//     }
-// }
-
-
 var app = builder.Build();
 
 app.UseSwagger();
