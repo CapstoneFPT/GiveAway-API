@@ -106,7 +106,7 @@ public class AccountController : ControllerBase
 
     [HttpPut("{accountId}/deliveries/{deliveryId}")]
     public async Task<ActionResult<Result<DeliveryResponse>>> UpdateDelivery([FromRoute] Guid deliveryId,
-        [FromBody] DeliveryRequest deliveryRequest)
+        [FromBody] UpdateDeliveryRequest deliveryRequest)
     {
         var result = await _deliveryService.UpdateDelivery(deliveryId, deliveryRequest);
 

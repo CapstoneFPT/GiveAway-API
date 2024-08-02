@@ -133,7 +133,7 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.VerifyEmail(id, token);
         if (result.ResultStatus == ResultStatus.Success)
-            return Redirect("http://localhost:5173/");
+            return Redirect("https://giveawayproject.jettonetto.org/");
 
         //Todo: Do something when validation failed
         return Redirect("http://localhost:3000/");

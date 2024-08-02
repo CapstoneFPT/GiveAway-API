@@ -11,7 +11,7 @@ namespace Services.Auth;
 public interface IAuthService
 {
     Task<Result<LoginResponse>> Login(string email, string password);
-    Task<Result<string>> SendMail(string email);
+    
     Task<Result<string>> CheckPassword(string email, string newPassword);
     Task<Result<AccountResponse>> ChangeToNewPassword(string confirmtoken);
     Task<Result<AccountResponse>> Register(RegisterRequest request);

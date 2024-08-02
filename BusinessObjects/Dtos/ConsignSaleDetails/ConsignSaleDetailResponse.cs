@@ -12,6 +12,7 @@ namespace BusinessObjects.Dtos.ConsignSaleDetails
     {
         public Guid ConsignSaleDetailId { get; set; }
         public Guid ConsignSaleId { get; set; }
+        public string ConsignSaleCode { get; set; }
         public int DealPrice { get; set; }
         public int ConfirmedPrice { get; set; }
         public FashionItemDetailResponse FashionItem { get; set; }

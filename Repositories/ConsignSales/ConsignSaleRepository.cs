@@ -59,6 +59,7 @@ namespace Repositories.ConsignSales
                     Color = item.Color,
                     Size = item.Size,
                     Gender = item.Gender,
+                    CreatedDate = DateTime.UtcNow
                 };
                 fashionItem.Type = request.Type switch
                 {
@@ -86,7 +87,8 @@ namespace Repositories.ConsignSales
                     ConfirmedPrice = 0,
                     DealPrice = item.DealPrice,
                     FashionItemId = fashionItem.ItemId,
-                    ConsignSaleId = newConsign.ConsignSaleId
+                    ConsignSaleId = newConsign.ConsignSaleId,
+                    CreatedDate = DateTime.UtcNow
                 };
                 await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);
             }
@@ -200,8 +202,7 @@ namespace Repositories.ConsignSales
             return await query.ToListAsync();
         }
 
-        public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId,
-            ConfirmReceivedConsignRequest request)
+        public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleDetails!)
@@ -216,20 +217,19 @@ namespace Repositories.ConsignSales
             consign.Status = ConsignSaleStatus.Received;
             consign.StartDate = DateTime.UtcNow;
             consign.EndDate = DateTime.UtcNow.AddDays(60);
-            
-            var updateRequestIds = new HashSet<Guid>(request.FashionItemConsignUpdates.Select(u => u.FashionItemId));
+
+            int totalprice = 0;
             
             foreach (var detail in consign.ConsignSaleDetails)
             {
-                if (detail.FashionItem != null && updateRequestIds.Contains(detail.FashionItem.ItemId))
+                if (detail.FashionItem != null)
                 {
-                    var updateRequest = request.FashionItemConsignUpdates.First(u => u.FashionItemId == detail.FashionItem.ItemId);
-                    detail.FashionItem.CategoryId = updateRequest.CategoryId;
-                    detail.FashionItem.SellingPrice = updateRequest.SellingPrice;
                     detail.FashionItem.Status = FashionItemStatus.Unavailable;
+                    totalprice += detail.ConfirmedPrice;
                 }
             }
 
+            consign.TotalPrice = totalprice;
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
 
             return _mapper.Map<ConsignSaleResponse>(consign);

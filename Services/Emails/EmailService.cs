@@ -40,9 +40,9 @@ namespace Services.Emails
         }
         public string GetEmailTemplate(string templateName)
         {
-            string pathTon = Path.Combine("D:\\Captstone\\GiveAway-API\\Services\\MailTemplate\\", $"{templateName}.html");
-            string pathLocal = Path.Combine("C:\\FPT_University_FULL\\CAPSTONE_API\\Services\\MailTemplate\\", $"{templateName}.html");
-            string path = Path.Combine("Services/MailTemplate/", $"{templateName}.html");
+            /*string pathTon = Path.Combine("D:\\Captstone\\GiveAway-API\\Services\\MailTemplate\\", $"{templateName}.html");
+            string pathLocal = Path.Combine("C:\\FPT_University_FULL\\CAPSTONE_API\\Services\\MailTemplate\\", $"{templateName}.html");*/
+            string path = Path.Combine(_configuration.GetSection("EmailTemplateDirectory").Value, $"{templateName}.html");
             return File.ReadAllText(path, Encoding.UTF8);
         }
 
@@ -152,27 +152,54 @@ namespace Services.Emails
             {
                 var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
                 content.To = member.Email;
+
+                var template = GetEmailTemplate("ConsignSaleMail");
+                template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
+                template = template.Replace("[Type]", consignSale.Type.ToString());
+                template = template.Replace("[Created Date]", consignSale.CreatedDate.ToString("G"));
+                template = template.Replace("[Customer Name]", member.Fullname);
+                template = template.Replace("[Phone Number]", member.Phone);
+                template = template.Replace("[Email]", member.Email);
+                if (consignSale.Status.Equals(ConsignSaleStatus.AwaitDelivery))
+                {
+                    template = template.Replace("[Status]", "Approved");
+                    template = template.Replace("[Response]", "Please deliver your products to our shop as soon as possible");
+                    template = template.Replace("[ConsignSale Duration]", "60 Days");
+                }
+                else
+                {
+                    template = template.Replace("[Status]", "Rejected");
+                    template = template.Replace("[Response]", "Your products is kindly not suitable to our shop. We are so apologize");
+                    template = template.Replace("[ConsignSale Duration]", "0 Day");
+                }
                 
                 content.Subject = $"[GIVEAWAY] CONSIGNSALE INVOICE FROM GIVEAWAY {consignSale.ConsignSaleCode}";
-                content.Body = $@"<h1>Dear customer,<h1>
-                         <h2>Thank you for purchase at GiveAway<h2>
-                         <h4>Here is the detail of your consign<h4>  <p>ConsignSale Code: {consignSale.ConsignSaleCode}<p>
-                         <p>ConsignSale Type: {consignSale.Type}<p>
-                         <p>Created Date: {consignSale.CreatedDate}<p>
-                         <p>Total Price: {consignSale.TotalPrice}<p>
-                         <p>Consign Status: {consignSale.Status}<p>";
-                if (!consignSale.Type.Equals(ConsignSaleType.ForSale))
-                {
-                    content.Body += $"<p>Consign Duration: {consignSale.ConsignDuration}<p>" +
-                                    $"<p>Start Date: {consignSale.StartDate}<p>" +
-                                    $"<p>End Date: {consignSale.EndDate}<p>" +
-                                    $"<p>Consign Method: {consignSale.ConsignSaleMethod}";
-                }
+                content.Body = template;
 
                 await SendEmail(content);
                 return true;
             }
             return false;
+        }
+        public async Task<Result<string>> SendMailForgetPassword(string email)
+        {
+            var response = new Result<string>();
+            var account = await _accountRepository.FindUserByEmail(email);
+            var user = await _accountRepository.ResetPasswordToken(account);
+            response.Data = user.PasswordResetToken;
+            var template = GetEmailTemplate("ForgotPasswordMail");
+            template = template.Replace("[Token]", response.Data);
+            SendEmailRequest content = new SendEmailRequest
+            {
+                To = $"{account.Email}",
+                Subject = "[GIVEAWAY] RESET PASSWORD",
+                Body = template
+            };
+            await SendEmail(content);
+            response.Messages = ["Please check your mail to get the token to reset password"];
+            response.ResultStatus = ResultStatus.Success;
+
+            return response;
         }
     }
 }

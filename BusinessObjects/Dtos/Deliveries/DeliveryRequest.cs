@@ -14,7 +14,7 @@ namespace BusinessObjects.Dtos.Deliveries
         [Required, Phone]
         public string Phone { set; get; }
         [Required]
-        public string Address { set; get; }
+        public string Residence { set; get; }
         [Required]
         public string AddressType { set; get; }
     }

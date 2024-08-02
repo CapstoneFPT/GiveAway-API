@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Linq.Expressions;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Entities;
@@ -28,5 +29,20 @@ public class ConsignSaleDetailRepository : IConsignSaleDetailRepository
         }
 
         return lstconsignSaleDetail;
+    }
+
+    public async Task<ConsignSaleDetail?> GetSingleConsignSaleDetail(Expression<Func<ConsignSaleDetail, bool>> predicate)
+    {
+        var result = await GenericDao<ConsignSaleDetail>.Instance
+            .GetQueryable()
+            .Include(c => c.FashionItem)
+            .ThenInclude(c => c.Category)
+            .SingleOrDefaultAsync(predicate);
+        return result;
+    }
+
+    public async Task UpdateConsignSaleDetail(ConsignSaleDetail consignSaleDetail)
+    {
+        await GenericDao<ConsignSaleDetail>.Instance.UpdateAsync(consignSaleDetail);
     }
 }
