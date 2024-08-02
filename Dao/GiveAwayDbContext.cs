@@ -172,6 +172,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Auction>()
             .Property(e => e.Title).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<Auction>().Property(e => e.Status).HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<Auction>()
+            .HasMany(x => x.Bids)
+            .WithOne(x => x.Auction)
+            .HasForeignKey(x => x.AuctionId);
 
         #endregion
 
