@@ -54,5 +54,6 @@ namespace BusinessObjects.Dtos.Orders
         public string? Email { get; set; }
         public PurchaseType PurchaseType { get; set; }
         public OrderStatus Status { get; set; }
+        public string AuctionTitle { get; set; }
     }
 }

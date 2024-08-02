@@ -126,6 +126,7 @@ namespace Services.Orders
                         OrderId = orderResult.OrderId,
                         FashionItemId = orderRequest.AuctionFashionItemId,
                         UnitPrice = orderRequest.TotalPrice,
+                        CreatedDate = DateTime.UtcNow,
                     }
                 ;
             var orderDetailResult =
@@ -308,7 +309,8 @@ namespace Services.Orders
                 PaymentMethod = order.PaymentMethod,
                 CustomerName = order.Member.Fullname,
                 Email = order.Email,
-                Quantity = order.OrderDetails.Count
+                Quantity = order.OrderDetails.Count,
+                AuctionTitle = order.Bid.Auction.Title
             };
 
             if (request.Status != null)
@@ -332,6 +334,10 @@ namespace Services.Orders
                 predicate = predicate.And(order => order.PaymentMethod == request.PaymentMethod);
             }
 
+            if (request.IsFromAuction == true)
+            {
+                predicate = predicate.And(ord => ord.BidId != null);
+            }
             (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
                 await _orderRepository.GetOrdersProjection<OrderListResponse>(request.PageNumber,
                     request.PageSize, predicate, selector);
@@ -447,7 +453,8 @@ namespace Services.Orders
                 PaymentMethod = order.PaymentMethod,
                 CustomerName = order.Member.Fullname,
                 Email = order.Email,
-                Quantity = order.OrderDetails.Count
+                Quantity = order.OrderDetails.Count,
+                AuctionTitle = order.Bid.Auction.Title
             };
 
             if (orderRequest.Status != null)
@@ -470,7 +477,10 @@ namespace Services.Orders
             {
                 predicate = predicate.And(order => order.PaymentMethod == orderRequest.PaymentMethod);
             }
-
+            if (orderRequest.IsFromAuction == true)
+            {
+                predicate = predicate.And(ord => ord.BidId != null);
+            }
             (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
                 await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
                     orderRequest.PageSize, predicate, selector);
