@@ -24,7 +24,6 @@ namespace Repositories.Orders
 {
     public class OrderRepository : IOrderRepository
     {
-
         private readonly GiveAwayDbContext _giveAwayDbContext;
         private readonly IMapper _mapper;
         private static HashSet<string> generatedStrings = new HashSet<string>();
@@ -49,12 +48,13 @@ namespace Repositories.Orders
             var listItem = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                 .Where(c => cart.ItemIds.Contains(c.ItemId)).ToListAsync();
             var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
-            var memberAccount = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.AccountId == accountId);
+            var memberAccount = await GenericDao<Account>.Instance.GetQueryable()
+                .FirstOrDefaultAsync(c => c.AccountId == accountId);
 
             int totalPrice = 0;
             Order order = new Order();
             order.MemberId = accountId;
-            
+
             order.PaymentMethod = cart.PaymentMethod;
             order.Address = cart.Address;
             order.PurchaseType = PurchaseType.Online;
@@ -93,6 +93,7 @@ namespace Repositories.Orders
                     item.Status = FashionItemStatus.PendingForOrder;
                     await GenericDao<FashionItem>.Instance.UpdateAsync(item);
                 }
+
                 var orderDetailResponse = new OrderDetailsResponse()
                 {
                     OrderDetailId = orderDetail.OrderDetailId,
@@ -109,8 +110,6 @@ namespace Repositories.Orders
             order.TotalPrice = totalPrice;
             var resultUpdate = await GenericDao<Order>.Instance.UpdateAsync(result);
 
-
-            
 
             var orderResponse = new OrderResponse()
             {
@@ -135,23 +134,26 @@ namespace Repositories.Orders
 
         public async Task<Order?> GetOrderById(Guid id)
         {
-            return await GenericDao<Order>.Instance.GetQueryable().Include(c => c.Member).FirstOrDefaultAsync(c => c.OrderId == id);
+            return await GenericDao<Order>.Instance.GetQueryable().Include(c => c.Member)
+                .FirstOrDefaultAsync(c => c.OrderId == id);
         }
 
         public async Task<Order?> GetSingleOrder(Expression<Func<Order, bool>> predicate)
         {
             var result = await GenericDao<Order>.Instance
-                    .GetQueryable()
-                    .Include(order => order.OrderDetails)
-                    .ThenInclude(orderDetail => orderDetail.FashionItem)
-                    .SingleOrDefaultAsync(predicate);
+                .GetQueryable()
+                .Include(order => order.OrderDetails)
+                .ThenInclude(orderDetail => orderDetail.FashionItem)
+                .SingleOrDefaultAsync(predicate);
             return result;
         }
 
         public async Task<PaginationResponse<OrderResponse>> GetOrdersByAccountId(Guid accountId, OrderRequest request)
         {
             var query = _giveAwayDbContext.Orders.AsQueryable();
-            query = query.Include(c => c.Member).Where(c => c.MemberId == accountId && c.OrderDetails.Any(c => c.PointPackageId == null)).OrderByDescending(c => c.CreatedDate);
+            query = query.Include(c => c.Member)
+                .Where(c => c.MemberId == accountId && c.OrderDetails.Any(c => c.PointPackageId == null))
+                .OrderByDescending(c => c.CreatedDate);
 
             if (request.Status != null)
             {
@@ -164,8 +166,8 @@ namespace Repositories.Orders
             }
 
             var count = await query.CountAsync();
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
+            query = query.Skip((request.PageNumber.Value - 1) * request.PageSize.Value)
+                .Take(request.PageSize.Value);
 
             var list = await _giveAwayDbContext.OrderDetails.CountAsync();
 
@@ -194,9 +196,9 @@ namespace Repositories.Orders
             var result = new PaginationResponse<OrderResponse>
             {
                 Items = items,
-                PageSize = request.PageSize,
+                PageSize = request.PageSize.Value,
                 TotalCount = count,
-                PageNumber = request.PageNumber,
+                PageNumber = request.PageNumber.Value,
             };
             return result;
         }
@@ -219,15 +221,55 @@ namespace Repositories.Orders
             return newString;
         }
 
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetOrdersProjection<T>(
+            int? orderRequestPageNumber, int? orderRequestPageSize, Expression<Func<Order, bool>> predicate,
+            Expression<Func<Order, T>> selector)
+        {
+            var query = _giveAwayDbContext.Orders.AsQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            var count = await query.CountAsync();
+
+            var pageNumber = orderRequestPageNumber ?? -1;
+            var pageSize = orderRequestPageSize ?? -1;
+
+            if (pageNumber > 0 && pageSize > 0)
+            {
+                query = query.Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize);
+            }
+
+            List<T> items;
+            if (selector != null)
+            {
+                items = await query
+                    .Select(selector)
+                    .ToListAsync();
+            }
+            else
+            {
+                items = await query
+                    .Cast<T>().ToListAsync();
+            }
+
+            return (items, pageNumber, pageSize, count);
+        }
+
         private static string GenerateRandomString()
         {
             int number = random.Next(100000, 1000000);
             return prefix + number.ToString("D6");
         }
+
         private async Task<Order?> IsCodeExisted(string code)
         {
             return await GenericDao<Order>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.OrderCode.Equals(code));
         }
+
         public async Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberId)
         {
             var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable()
@@ -241,7 +283,8 @@ namespace Repositories.Orders
             var listItemNotAvailable = new List<Guid?>();
             foreach (var itemId in listItemId)
             {
-                var item = await GenericDao<FashionItem>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.ItemId == itemId);
+                var item = await GenericDao<FashionItem>.Instance.GetQueryable()
+                    .FirstOrDefaultAsync(c => c.ItemId == itemId);
                 if (item is null || !item.Status.Equals(FashionItemStatus.Available))
                 {
                     listItemNotAvailable.Add(itemId);
@@ -251,13 +294,13 @@ namespace Repositories.Orders
             return listItemNotAvailable;
         }
 
-        //TODO: Trả kiểu dữ liệu đơn giản hơn 
         public async Task<PaginationResponse<OrderResponse>> GetOrders(OrderRequest request)
         {
             var listItemId = new List<Guid>();
             if (request.ShopId != null)
             {
-                 listItemId = await GenericDao<FashionItem>.Instance.GetQueryable().Where(c => c.ShopId == request.ShopId)
+                listItemId = await GenericDao<FashionItem>.Instance.GetQueryable()
+                    .Where(c => c.ShopId == request.ShopId)
                     .Select(c => c.ItemId).ToListAsync();
             }
             else
@@ -265,6 +308,7 @@ namespace Repositories.Orders
                 listItemId = await GenericDao<FashionItem>.Instance.GetQueryable()
                     .Select(c => c.ItemId).ToListAsync();
             }
+
             var listOrderdetail = new List<OrderDetailResponse<FashionItem>>();
             foreach (var itemId in listItemId)
             {
@@ -286,7 +330,8 @@ namespace Repositories.Orders
 
             foreach (var orderId in listOrderdetail.Select(c => c.OrderId).Distinct())
             {
-                var order = await GenericDao<Order>.Instance.GetQueryable().Include(c => c.Member).Include(c => c.OrderDetails).FirstOrDefaultAsync(c => c.OrderId == orderId);
+                var order = await GenericDao<Order>.Instance.GetQueryable().Include(c => c.Member)
+                    .Include(c => c.OrderDetails).FirstOrDefaultAsync(c => c.OrderId == orderId);
                 var orderResponse = new OrderResponse()
                 {
                     OrderId = order.OrderId,
@@ -307,6 +352,7 @@ namespace Repositories.Orders
                 {
                     orderResponse.CustomerName = order.Member.Fullname;
                 }
+
                 /*orderResponse.OrderDetails = listOrderdetail.Where(c => c.OrderId == orderId).ToList();*/
                 listOrderResponse.Add(orderResponse);
             }
@@ -324,29 +370,27 @@ namespace Repositories.Orders
 
             var count = listOrderResponse.Count;
             listOrderResponse = listOrderResponse
-                .OrderByDescending(c => c.CreatedDate).Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
-                
+                .OrderByDescending(c => c.CreatedDate).Skip((request.PageNumber.Value - 1) * request.PageSize.Value)
+                .Take(request.PageSize.Value)
                 .ToList();
 
             var result = new PaginationResponse<OrderResponse>
             {
                 Items = listOrderResponse,
-                PageSize = request.PageSize,
+                PageSize = request.PageSize.Value,
                 TotalCount = count,
                 SearchTerm = request.OrderCode,
-                PageNumber = request.PageNumber,
+                PageNumber = request.PageNumber.Value,
             };
             return result;
         }
 
         public async Task<OrderResponse> ConfirmOrderDelivered(Guid orderId)
         {
-            
             var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable().Include(c => c.FashionItem)
                 .Where(c => c.OrderId == orderId)
                 .AsNoTracking().ToListAsync();
-            
+
             foreach (var orderDetail in listorderdetail)
             {
                 var fashionItem = orderDetail.FashionItem;
@@ -356,11 +400,11 @@ namespace Repositories.Orders
                     orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
                 }
                 else
-                {   
+                {
                     throw new FashionItemNotFoundException();
                 }
-                
             }
+
             await GenericDao<OrderDetail>.Instance.UpdateRange(listorderdetail);
             var order = await GenericDao<Order>.Instance.GetQueryable().Where(c => c.OrderId == orderId)
                 .FirstOrDefaultAsync();
@@ -378,22 +422,19 @@ namespace Repositories.Orders
         public async Task<List<Order>> GetOrders(Expression<Func<Order, bool>> predicate)
         {
             var result = await GenericDao<Order>.Instance.GetQueryable()
-                    .Where(predicate)
-                    .ToListAsync();
+                .Where(predicate)
+                .ToListAsync();
 
             return result;
         }
 
         public async Task BulkUpdate(List<Order> ordersToUpdate)
         {
-
             await GenericDao<Order>.Instance.UpdateRange(ordersToUpdate);
-
         }
 
         public async Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
-
             var listItem = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                 .Where(c => orderRequest.ItemIds.Contains(c.ItemId)).ToListAsync();
 
@@ -430,8 +471,8 @@ namespace Repositories.Orders
 
                 orderDetail.FashionItemId = id;
 
-                await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail); 
-                item.Status = FashionItemStatus.OnDelivery; 
+                await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
+                item.Status = FashionItemStatus.OnDelivery;
                 await GenericDao<FashionItem>.Instance.UpdateAsync(item);
 
                 var orderDetailResponse = await _giveAwayDbContext.OrderDetails.AsQueryable()
@@ -465,8 +506,6 @@ namespace Repositories.Orders
                 OrderDetailItems = listOrderDetailResponse
             };
             return orderResponse;
-
-
         }
     }
 }
