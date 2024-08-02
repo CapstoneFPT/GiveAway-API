@@ -9,10 +9,11 @@ namespace BusinessObjects.Dtos.Orders
 {
     public class OrderRequest
     {
-        public int PageNumber { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
+        public int? PageNumber { get; set; }
+        public int? PageSize { get; set; }
         public Guid? ShopId { get; set; }
         public OrderStatus? Status { get; set; }
+        public PaymentMethod? PaymentMethod { get; set; }
         public string? OrderCode { get; set; }
     }
 }

@@ -39,7 +39,7 @@ namespace WebApi.Controllers
             _logger = logger;
         }
         [HttpGet]
-        public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByShopId(
+        public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrders(
             [FromQuery] OrderRequest orderRequest)
         {
             var result = await _orderService.GetOrders(orderRequest);

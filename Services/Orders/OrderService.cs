@@ -20,6 +20,8 @@ using Microsoft.Extensions.Configuration;
 using Services.Emails;
 using AutoMapper.Execution;
 using BusinessObjects.Utils;
+using LinqKit;
+using Microsoft.EntityFrameworkCore;
 using Repositories.Refunds;
 
 namespace Services.Orders
@@ -67,6 +69,7 @@ namespace Services.Orders
             {
                 throw new WrongPaymentMethodException("Not allow to pay with cash");
             }
+
             if (cart.ItemIds.Count == 0)
             {
                 response.Messages = ["You have no item for order"];
@@ -159,6 +162,7 @@ namespace Services.Orders
             {
                 order!.Status = OrderStatus.Cancelled;
             }
+
             await _orderRepository.BulkUpdate(ordersToCancel!);
         }
 
@@ -242,17 +246,16 @@ namespace Services.Orders
                     TotalPrice = orderResult.TotalPrice,
                     OrderDetailItems = new List<OrderDetailsResponse>()
                     {
-                       new OrderDetailsResponse()
-                       {
-                           OrderDetailId = orderDetailResult.OrderDetailId,
-                           UnitPrice = orderDetailResult.UnitPrice,
-                           RefundExpirationDate = null,
-                           PointPackageId = orderDetailResult.PointPackageId
-                       }
+                        new OrderDetailsResponse()
+                        {
+                            OrderDetailId = orderDetailResult.OrderDetailId,
+                            UnitPrice = orderDetailResult.UnitPrice,
+                            RefundExpirationDate = null,
+                            PointPackageId = orderDetailResult.PointPackageId
+                        }
                     },
                     CreatedDate = orderResult.CreatedDate,
                     PaymentDate = orderResult.PaymentDate,
-                    
                 },
                 ResultStatus = ResultStatus.Success
             };
@@ -311,6 +314,7 @@ namespace Services.Orders
                 admin.Balance -= order.TotalPrice;
                 await _accountRepository.UpdateAccount(admin);
             }
+
             order.Status = OrderStatus.Cancelled;
             foreach (var item in order.OrderDetails.Select(c => c.FashionItem))
             {
@@ -324,24 +328,82 @@ namespace Services.Orders
         }
 
 
-        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrders(
-            OrderRequest orderRequest)
+        public async Task<Result<PaginationResponse<OrderListResponse>>> GetOrders(OrderRequest orderRequest)
         {
-            var response = new Result<PaginationResponse<OrderResponse>>();
-            var order = await _orderRepository.GetOrders(orderRequest);
-            if (order.TotalCount == 0)
+            // var response = new Result<PaginationResponse<OrderResponse>>();
+            // var order = await _orderRepository.GetOrders(orderRequest);
+            // if (order.TotalCount == 0)
+            // {
+            //     response.Data = order;
+            //     response.Messages = ["Your order list is empty"];
+            //     response.ResultStatus = ResultStatus.Success;
+            //     return response;
+            // }
+            //
+            // response.Data = order;
+            // response.Messages = ["Your list contains " + order.TotalCount + " orders"];
+            // response.ResultStatus = ResultStatus.Success;
+            // return response;
+
+            Expression<Func<Order, bool>> predicate = order => true;
+            Expression<Func<Order, OrderListResponse>> selector = order => new OrderListResponse()
             {
-                response.Data = order;
-                response.Messages = ["Your order list is empty"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
+                OrderId = order.OrderId,
+                OrderCode = order.OrderCode,
+                TotalPrice = order.TotalPrice,
+                Status = order.Status,
+                CreatedDate = order.CreatedDate,
+                PaymentDate = order.PaymentDate,
+                MemberId = order.MemberId,
+                CompletedDate = order.CompletedDate,
+                ContactNumber = order.Phone,
+                RecipientName = order.RecipientName,
+                PurchaseType = order.PurchaseType,
+                Address = order.Address,
+                PaymentMethod = order.PaymentMethod,
+                CustomerName = order.Member.Fullname,
+                Email = order.Email,
+                Quantity = order.OrderDetails.Count
+            };
+
+            if (orderRequest.Status != null)
+            {
+                predicate = order => order.Status == orderRequest.Status; 
             }
 
-            response.Data = order;
-            response.Messages = ["Your list contains " + order.TotalCount + " orders"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+            if (!string.IsNullOrEmpty(orderRequest.OrderCode))
+            {
+                predicate = predicate.And(order => EF.Functions.ILike(order.OrderCode, $"%{orderRequest.OrderCode}%"));
+            }
+
+            if (orderRequest.ShopId.HasValue)
+            {
+                predicate = predicate.And(order => order.OrderDetails.Any(c => c.FashionItem.ShopId == orderRequest.ShopId.Value));
+            }
+
+            if (orderRequest.PaymentMethod != null)
+            {
+               predicate = predicate.And(order => order.PaymentMethod == orderRequest.PaymentMethod); 
+            }
+
+            (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
+                await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
+                    orderRequest.PageSize, predicate, selector);
+
+            return new Result<PaginationResponse<OrderListResponse>>()
+            {
+                Data = new PaginationResponse<OrderListResponse>()
+                {
+                    Items = Items,
+                    PageNumber = Page,
+                    PageSize = PageSize,
+                    TotalCount = TotalCount,
+                    SearchTerm = orderRequest.OrderCode
+                },
+                ResultStatus = ResultStatus.Success
+            };
         }
+
 
         public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId)
         {
@@ -379,7 +441,7 @@ namespace Services.Orders
                 return response;
             }
 
-            
+
             var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.ItemIds);
             if (checkItemAvailable.Count > 0)
             {
@@ -473,7 +535,7 @@ namespace Services.Orders
             };
 
             await _transactionRepository.CreateTransaction(transaction);
-            
+
             var response = new PayOrderWithCashResponse
             {
                 AmountGiven = request.AmountGiven, OrderId = orderId,
@@ -498,7 +560,6 @@ namespace Services.Orders
             return response;
         }
 
-        
 
         public async Task UpdateAdminBalance(Order order)
         {
@@ -526,11 +587,13 @@ namespace Services.Orders
             {
                 throw new StatusNotAvailableException();
             }
+
             order.Status = OrderStatus.OnDelivery;
             foreach (var item in order.OrderDetails.Select(c => c.FashionItem))
             {
                 item.Status = FashionItemStatus.OnDelivery;
             }
+
             await _orderRepository.UpdateOrder(order);
             await _emailService.SendEmailOrder(order);
             var response = new Result<OrderResponse>();
