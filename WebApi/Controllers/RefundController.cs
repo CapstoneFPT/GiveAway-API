@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Refunds;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Protocol;
@@ -11,6 +12,7 @@ namespace WebApi.Controllers
 {
     [Route("api/refunds")]
     [ApiController]
+    [EnableCors("AllowAll")]
     public class RefundController : ControllerBase
     {
         private readonly IRefundService _refundService;
@@ -29,18 +31,19 @@ namespace WebApi.Controllers
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
 
         [HttpPut("{refundId}/approval")]
-        public async Task<ActionResult<Result<RefundResponse>>> ApprovalRefundRequestFromShop([FromRoute] Guid refundId, [FromBody] ApprovalRefundRequest request)
+        public async Task<ActionResult<Result<RefundResponse>>> ApprovalRefundRequestFromShop([FromRoute] Guid refundId,
+            [FromBody] ApprovalRefundRequest request)
         {
             var result = await _refundService.ApprovalRefundRequestFromShop(refundId, request);
-            
+
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
 
@@ -52,16 +55,19 @@ namespace WebApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             return Ok(result);
         }
+
         [HttpPost]
-        public async Task<ActionResult<Result<RefundResponse>>> RequestRefundItemToShop([FromBody] CreateRefundRequest refundRequest)
+        public async Task<ActionResult<Result<RefundResponse>>> RequestRefundItemToShop(
+            [FromBody] CreateRefundRequest refundRequest)
         {
             var result = await _orderDetailService.RequestRefundToShop(refundRequest);
-            
+
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
+
         [HttpGet]
         public async Task<ActionResult<Result<PaginationResponse<RefundResponse>>>> GetAllRefunds(
             [FromQuery] RefundRequest refundRequest)

@@ -5,6 +5,7 @@ using BusinessObjects.Dtos.Category;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,7 @@ namespace WebApi.Controllers
 {
     [Route("api/categories")]
     [ApiController]
+    [EnableCors("AllowAll")]
     public class CategoryController : ControllerBase
     {
         private readonly IFashionItemService _fashionitemService;

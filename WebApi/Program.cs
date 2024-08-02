@@ -103,7 +103,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigins",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "https://giveawayproject.jettonetto.org:443", "http://localhost:80").AllowAnyHeader().AllowAnyMethod()
+            policy.WithOrigins("https://giveawayproject.jettonetto.org", "http://localhost","http://127.0.0.1:80", "http://localhost:5173").AllowAnyHeader().AllowAnyMethod()
                 .AllowCredentials().SetIsOriginAllowedToAllowWildcardSubdomains();
         });
 });
@@ -154,7 +154,6 @@ app.UseHttpMetrics();
 
 app.UseProblemDetails();
 app.MapControllers();
-app.UseCors("AllowAll");
 app.MapHub<AuctionHub>("/auctionHub").RequireCors("AllowSpecificOrigins");
 app.UseHttpsRedirection();
 app.UseAuthentication();

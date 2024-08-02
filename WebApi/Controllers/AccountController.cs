@@ -9,6 +9,7 @@ using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.ConsignSales;
@@ -20,6 +21,7 @@ namespace WebApi.Controllers;
 
 [Route("api/accounts")]
 [ApiController]
+[EnableCors("AllowAll")]
 public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
