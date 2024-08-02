@@ -45,9 +45,9 @@ public enum FashionItemStatus
     PendingForOrder,
     AwaitingAuction,
     Bidding,
-    Won,
     Rejected,
-    Returned
+    Returned,
+    Won
 }
 
 public enum GenderType
@@ -136,7 +136,6 @@ public enum ConsignSaleType
 {
     ConsignedForSale,
     ConsignedForAuction,
-    ForSale
 }
 
 public enum ConsignSaleMethod

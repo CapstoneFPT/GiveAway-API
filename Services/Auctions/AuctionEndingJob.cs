@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
 using Dao;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,10 +14,12 @@ namespace Services.Auctions;
 public class AuctionEndingJob : IJob
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IHubContext<AuctionHub> _hubContext;
 
-    public AuctionEndingJob(IServiceProvider serviceProvider)
+    public AuctionEndingJob(IServiceProvider serviceProvider, IHubContext<AuctionHub> hubContext)
     {
         _serviceProvider = serviceProvider;
+        _hubContext = hubContext;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -46,6 +49,7 @@ public class AuctionEndingJob : IJob
         {
             var winningBid = auctionToEnd.Bids.MaxBy(x=> x.Amount);
             auctionToEnd.Status = AuctionStatus.Finished;
+            auctionToEnd.AuctionFashionItem.Status = FashionItemStatus.Won;
             dbContext.Auctions.Update(auctionToEnd);
 
             var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();

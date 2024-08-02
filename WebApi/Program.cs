@@ -20,7 +20,6 @@ using Services.Orders;
 using Services.VnPayService;
 using WebApi;
 using WebApi.Controllers;
-using WebApi.Hubs;
 using WebApi.Utils.CustomProblemDetails;
 using WebApi.Utils.WebServer;
 
