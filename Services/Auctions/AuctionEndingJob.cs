@@ -13,12 +13,10 @@ namespace Services.Auctions;
 public class AuctionEndingJob : IJob
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<AuctionEndingJob> _logger;
 
-    public AuctionEndingJob(IServiceProvider serviceProvider, ILogger<AuctionEndingJob> logger)
+    public AuctionEndingJob(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
-        _logger = logger;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -29,18 +27,24 @@ public class AuctionEndingJob : IJob
 
         var auctionToEnd = await dbContext.Auctions
             .Include(x => x.AuctionFashionItem)
-            .Include(x => x.Bids.OrderByDescending(b => b.Amount).First())
+            .Include(x => x.Bids)
             .FirstOrDefaultAsync(x => x.AuctionId == auctionId);
 
         if (auctionToEnd == null)
         {
-            _logger.LogError("No auction to end");
+            Console.WriteLine("No auction to end");
             return;
+        }
+
+        if (auctionToEnd.Bids.Count == 0)
+        {
+           Console.WriteLine("No bids");
+           return;
         }
         
         try
         {
-            var winningBid = auctionToEnd.Bids.First();
+            var winningBid = auctionToEnd.Bids.MaxBy(x=> x.Amount);
             auctionToEnd.Status = AuctionStatus.Finished;
             dbContext.Auctions.Update(auctionToEnd);
 
@@ -79,7 +83,7 @@ public class AuctionEndingJob : IJob
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to end auction {AuctionId}", auctionToEnd);
+            Console.WriteLine(e);
         }
 
         await dbContext.SaveChangesAsync();

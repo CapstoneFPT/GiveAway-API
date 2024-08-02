@@ -29,6 +29,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddServices();
+builder.Services.AddLogging();
 builder.Services.AddRepositories();
 // builder.Services.AddDao();
 builder.Services.AddQuartz(configurator => { });

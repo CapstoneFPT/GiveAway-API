@@ -10,12 +10,10 @@ namespace Services.Auctions;
 public class AuctionStartingJob : IJob
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger _logger;
 
-    public AuctionStartingJob(IServiceProvider serviceProvider, ILogger logger)
+    public AuctionStartingJob(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
-        _logger = logger;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -35,23 +33,20 @@ public class AuctionStartingJob : IJob
 
             if (auctionToStart == null)
             {
-                _logger.LogInformation("No auction to start");
                 return;
             }
 
             auctionToStart.Status = AuctionStatus.OnGoing;
             auctionToStart.AuctionFashionItem.Status = FashionItemStatus.Bidding;
 
-            _logger.LogInformation("Auction {AuctionId} has been started", auctionToStart.AuctionId);
 
             dbContext.Auctions.Update(auctionToStart);
             await dbContext.SaveChangesAsync();
 
-            _logger.LogInformation("Auction {AuctionId} has been started", auctionToStart.AuctionId);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error starting auction : {AuctionId}", auctionId);
+            Console.WriteLine(e);
         }
     }
 }
