@@ -12,5 +12,6 @@ namespace BusinessObjects.Dtos.Refunds
         public Guid OrderDetailIds { get; set; }
         public required string Description { get; set; }
         public required string[] Images { get; set; }
+        public int RefundPercentage { get; set; }
     }
 }

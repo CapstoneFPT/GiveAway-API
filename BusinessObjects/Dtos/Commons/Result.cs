@@ -37,6 +37,7 @@ public enum FashionItemStatus
     Unavailable,
     OnDelivery,
     Sold,
+    UnSold,
     Refundable,
     PendingForConsignSale,
     PendingAuction,

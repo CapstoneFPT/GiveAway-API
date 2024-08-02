@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Refunds;
+using BusinessObjects.Entities;
 
 namespace Repositories.Refunds
 {
@@ -14,5 +15,6 @@ namespace Repositories.Refunds
         Task<RefundResponse> GetRefundById(Guid refundId);
         Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, ApprovalRefundRequest request);
         Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId);
+        Task CreateRefund(Refund refund);
     }
 }

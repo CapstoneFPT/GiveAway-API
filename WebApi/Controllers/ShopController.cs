@@ -123,7 +123,18 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        
+        [HttpPost("{shopId}/refunds")]
+        public async Task<ActionResult<Result<RefundResponse>>> CreateRefundByShop([FromRoute] Guid shopId,
+            CreateRefundRequest request)
+        {
+            var result = await _refundService.CreateRefundByShop(shopId, request);
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+
+            return Ok(result);
+        }
 
         
 

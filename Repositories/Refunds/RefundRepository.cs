@@ -121,5 +121,10 @@ namespace Repositories.Refunds
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
             return await GetRefundById(refundId);
         }
+
+        public async Task CreateRefund(Refund refund)
+        {
+            await GenericDao<Refund>.Instance.AddAsync(refund);
+        }
     }
 }

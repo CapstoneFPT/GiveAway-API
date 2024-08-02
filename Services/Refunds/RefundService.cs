@@ -144,5 +144,25 @@ namespace Services.Refunds
             response.Messages = new[] { "Confirm item is received and refund to customer successfully" };
             return response;
         }
+
+        public async Task<Result<RefundResponse>> CreateRefundByShop(Guid shopId, CreateRefundRequest request)
+        {
+            var response = new Result<RefundResponse>();
+            var refund = new Refund()
+            {
+                Description = request.Description,
+                CreatedDate = DateTime.UtcNow,
+                OrderDetailId = request.OrderDetailIds,
+                RefundStatus = RefundStatus.Approved,
+                RefundPercentage = request.RefundPercentage,
+                ResponseFromShop = "We accepted refund request at shop"
+            };
+            await _refundRepository.CreateRefund(refund);
+            var result = await _refundRepository.GetRefundById(refund.RefundId);
+            response.Data = result;
+            response.Messages = new[] { "Success" };
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
     }
 }
