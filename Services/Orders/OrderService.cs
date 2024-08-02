@@ -273,22 +273,81 @@ namespace Services.Orders
             await _orderRepository.UpdateOrder(order);
         }
 
-        public async Task<Result<PaginationResponse<OrderResponse>>> GetOrdersByAccountId(Guid accountId,
+        public async Task<Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(Guid accountId,
             OrderRequest request)
         {
-            var response = new Result<PaginationResponse<OrderResponse>>();
-            var listOrder = await _orderRepository.GetOrdersByAccountId(accountId, request);
-            if (listOrder.TotalCount == 0)
+            // var response = new Result<PaginationResponse<OrderResponse>>();
+            // var listOrder = await _orderRepository.GetOrdersByAccountId(accountId, request);
+            // if (listOrder.TotalCount == 0)
+            // {
+            //     response.Messages = ["You don't have any order"];
+            //     response.ResultStatus = ResultStatus.Success;
+            //     return response;
+            // }
+            //
+            // response.Data = listOrder;
+            // response.Messages = ["There are " + listOrder.TotalCount + " in total"];
+            // response.ResultStatus = ResultStatus.Success;
+            // return response;
+
+            Expression<Func<Order, bool>> predicate = order => order.MemberId == accountId;
+            Expression<Func<Order, OrderListResponse>> selector = order => new OrderListResponse()
             {
-                response.Messages = ["You don't have any order"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
+                OrderId = order.OrderId,
+                OrderCode = order.OrderCode,
+                TotalPrice = order.TotalPrice,
+                Status = order.Status,
+                CreatedDate = order.CreatedDate,
+                PaymentDate = order.PaymentDate,
+                MemberId = order.MemberId,
+                CompletedDate = order.CompletedDate,
+                ContactNumber = order.Phone,
+                RecipientName = order.RecipientName,
+                PurchaseType = order.PurchaseType,
+                Address = order.Address,
+                PaymentMethod = order.PaymentMethod,
+                CustomerName = order.Member.Fullname,
+                Email = order.Email,
+                Quantity = order.OrderDetails.Count
+            };
+
+            if (request.Status != null)
+            {
+                predicate = order => order.Status == request.Status;
             }
 
-            response.Data = listOrder;
-            response.Messages = ["There are " + listOrder.TotalCount + " in total"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+            if (!string.IsNullOrEmpty(request.OrderCode))
+            {
+                predicate = predicate.And(order => EF.Functions.ILike(order.OrderCode, $"%{request.OrderCode}%"));
+            }
+
+            if (request.ShopId.HasValue)
+            {
+                predicate = predicate.And(order =>
+                    order.OrderDetails.Any(c => c.FashionItem.ShopId == request.ShopId.Value));
+            }
+
+            if (request.PaymentMethod != null)
+            {
+                predicate = predicate.And(order => order.PaymentMethod == request.PaymentMethod);
+            }
+
+            (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
+                await _orderRepository.GetOrdersProjection<OrderListResponse>(request.PageNumber,
+                    request.PageSize, predicate, selector);
+
+            return new Result<PaginationResponse<OrderListResponse>>()
+            {
+                Data = new PaginationResponse<OrderListResponse>()
+                {
+                    Items = Items,
+                    PageNumber = Page,
+                    PageSize = PageSize,
+                    TotalCount = TotalCount,
+                    SearchTerm = request.OrderCode
+                },
+                ResultStatus = ResultStatus.Success
+            };
         }
 
         public async Task<Result<string>> CancelOrder(Guid orderId)
@@ -330,21 +389,6 @@ namespace Services.Orders
 
         public async Task<Result<PaginationResponse<OrderListResponse>>> GetOrders(OrderRequest orderRequest)
         {
-            // var response = new Result<PaginationResponse<OrderResponse>>();
-            // var order = await _orderRepository.GetOrders(orderRequest);
-            // if (order.TotalCount == 0)
-            // {
-            //     response.Data = order;
-            //     response.Messages = ["Your order list is empty"];
-            //     response.ResultStatus = ResultStatus.Success;
-            //     return response;
-            // }
-            //
-            // response.Data = order;
-            // response.Messages = ["Your list contains " + order.TotalCount + " orders"];
-            // response.ResultStatus = ResultStatus.Success;
-            // return response;
-
             Expression<Func<Order, bool>> predicate = order => true;
             Expression<Func<Order, OrderListResponse>> selector = order => new OrderListResponse()
             {
@@ -368,7 +412,7 @@ namespace Services.Orders
 
             if (orderRequest.Status != null)
             {
-                predicate = order => order.Status == orderRequest.Status; 
+                predicate = order => order.Status == orderRequest.Status;
             }
 
             if (!string.IsNullOrEmpty(orderRequest.OrderCode))
@@ -378,12 +422,13 @@ namespace Services.Orders
 
             if (orderRequest.ShopId.HasValue)
             {
-                predicate = predicate.And(order => order.OrderDetails.Any(c => c.FashionItem.ShopId == orderRequest.ShopId.Value));
+                predicate = predicate.And(order =>
+                    order.OrderDetails.Any(c => c.FashionItem.ShopId == orderRequest.ShopId.Value));
             }
 
             if (orderRequest.PaymentMethod != null)
             {
-               predicate = predicate.And(order => order.PaymentMethod == orderRequest.PaymentMethod); 
+                predicate = predicate.And(order => order.PaymentMethod == orderRequest.PaymentMethod);
             }
 
             (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =

@@ -244,6 +244,8 @@ namespace Repositories.Auctions
             {
                 AuctionId = toBeApproved.AuctionId,
                 Status = toBeApproved.Status,
+                StartDate = toBeApproved.StartDate,
+                EndDate = toBeApproved.EndDate
             };
         }
 
