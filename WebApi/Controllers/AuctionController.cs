@@ -4,6 +4,7 @@ using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.AuctionDeposits;
 using Services.Auctions;
@@ -12,6 +13,7 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/auctions")]
+[EnableCors("AllowAll")]
 public class AuctionController : ControllerBase
 {
     private readonly IAuctionService _auctionService;

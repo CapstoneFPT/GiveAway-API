@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.PointPackages;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Services.Orders;
@@ -14,6 +15,7 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/pointpackages")]
+[EnableCors("AllowAll")]
 public class PointPackageController : ControllerBase
 {
     private readonly ILogger<PointPackageController> _logger;

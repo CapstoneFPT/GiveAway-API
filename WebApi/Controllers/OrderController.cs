@@ -4,6 +4,7 @@ using BusinessObjects.Dtos.OrderDetails;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.Emails;
@@ -16,6 +17,7 @@ namespace WebApi.Controllers
 {
     [Route("api/orders")]
     [ApiController]
+    [EnableCors("AllowAll")]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -38,6 +40,7 @@ namespace WebApi.Controllers
             _emailService = emailService;
             _logger = logger;
         }
+
         [HttpGet]
         public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrders(
             [FromQuery] OrderRequest orderRequest)
@@ -49,6 +52,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+
         [HttpGet("{OrderId}/orderdetails")]
         public async Task<ActionResult<Result<PaginationResponse<OrderDetailsResponse>>>>
             GetOrderDetailsByOrderId([FromRoute] Guid OrderId, [FromQuery] OrderDetailRequest request)
@@ -88,7 +92,7 @@ namespace WebApi.Controllers
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
 
@@ -140,7 +144,7 @@ namespace WebApi.Controllers
             {
                 throw new InvalidOperationException("Order is not awaiting payment");
             }
-            
+
             if (response.Success)
             {
                 try
@@ -202,8 +206,8 @@ namespace WebApi.Controllers
             {
                 throw new WrongPaymentMethodException("Order is not paid by Point");
             }
-            
-            if(order.Status != OrderStatus.AwaitingPayment)
+
+            if (order.Status != OrderStatus.AwaitingPayment)
             {
                 throw new InvalidOperationException("Order is not awaiting payment");
             }

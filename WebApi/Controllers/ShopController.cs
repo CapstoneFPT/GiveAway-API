@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Dtos.Transactions;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.ConsignSales;
@@ -20,6 +21,7 @@ namespace WebApi.Controllers
 {
     [Route("api/shops")]
     [ApiController]
+    [EnableCors("AllowAll")]
     public class ShopController : ControllerBase
     {
         private readonly IFashionItemService _fashionItemService;
@@ -47,7 +49,7 @@ namespace WebApi.Controllers
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
 
@@ -56,10 +58,10 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<List<ShopDetailResponse>>>> GetAllShop()
         {
             var result = await _shopService.GetAllShop();
-            
+
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
 
@@ -67,27 +69,26 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<ShopDetailResponse>>> GetShopById([FromRoute] Guid shopId)
         {
             var result = await _shopService.GetShopById(shopId);
-            
+
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
 
-        
 
         [HttpPost("{shopId}/orders")]
         public async Task<ActionResult<Result<OrderResponse>>> CreateOrderByShop([FromRoute] Guid shopId,
             [FromBody] CreateOrderRequest orderRequest)
         {
             var result = await _orderService.CreateOrderByShop(shopId, orderRequest);
-            
+
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
-        
+
         [HttpPost("{shopId}/orders/{orderId}/pay-with-cash")]
         public async Task<
             ActionResult<PayOrderWithCashResponse>> PayWithCash([FromRoute] Guid shopId, [FromRoute] Guid orderId,
@@ -97,29 +98,28 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        
 
         [HttpGet("{shopId}/consignsales")]
         public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId(
             [FromRoute] Guid shopId, [FromQuery] ConsignSaleRequestForShop request)
         {
             var result = await _consignSaleService.GetAllConsignSalesByShopId(shopId, request);
-            
+
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
-    
+
         [HttpPost("{shopId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,
             [FromBody] CreateConsignSaleByShopRequest consignRequest)
         {
             var result = await _consignSaleService.CreateConsignSaleByShop(shopId, consignRequest);
-            
+
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            
+
             return Ok(result);
         }
 
@@ -136,7 +136,6 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        
 
         [HttpGet("{shopId}/offline-transactions")]
         public async Task<ActionResult<PaginationResponse<TransactionResponse>>> GetTransactionsByShopId(
@@ -145,17 +144,18 @@ namespace WebApi.Controllers
             var result = await _shopService.GetOfflineTransactionsByShopId(shopId, transactionRequest);
             return Ok(result);
         }
-        
+
         [HttpPost("{shopId}/feedbacks")]
         public async Task<ActionResult<FeedbackResponse>> CreateFeedbackByShop([FromRoute] Guid shopId,
             [FromBody] CreateFeedbackRequest feedbackRequest)
         {
             return await _shopService.CreateFeedbackForShop(shopId, feedbackRequest);
         }
+
         [HttpPut("{shopId}/orders/{orderId}/cancel")]
-        public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid shopId,[FromRoute] Guid orderId)
+        public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid shopId, [FromRoute] Guid orderId)
         {
-            var result = await _orderService.CancelOrderByShop(shopId,orderId);
+            var result = await _orderService.CancelOrderByShop(shopId, orderId);
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);

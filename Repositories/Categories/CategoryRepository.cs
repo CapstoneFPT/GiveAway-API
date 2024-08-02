@@ -55,6 +55,7 @@ namespace Repositories.Categories
 
             var childrenIds = new HashSet<Guid>();
             GetChildrenIdsRecursive(categoryId, allCategories, childrenIds);
+            childrenIds.Add(categoryId);
             return childrenIds.ToList();
         }
 

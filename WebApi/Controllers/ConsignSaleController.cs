@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.ConsignSales;
@@ -10,6 +11,7 @@ namespace WebApi.Controllers
 {
     [Route("api/consginsales")]
     [ApiController]
+    [EnableCors("AllowAll")]
     public class ConsignSaleController : ControllerBase
     {
         private readonly IConsignSaleService _consignsaleService;

@@ -1,6 +1,7 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Services.Revenue;
@@ -9,6 +10,7 @@ namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/dashboard")]
+[EnableCors("AllowAll")]
 public class DashboardController : ControllerBase
 
 {

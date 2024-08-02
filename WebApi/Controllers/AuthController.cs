@@ -12,11 +12,13 @@ using Services.Emails;
 using BusinessObjects.Dtos.Account.Response;
 using Microsoft.AspNetCore.Identity;
 using BusinessObjects.Dtos.Account.Request;
+using Microsoft.AspNetCore.Cors;
 
 namespace WebApi.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[EnableCors("AllowAll")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
