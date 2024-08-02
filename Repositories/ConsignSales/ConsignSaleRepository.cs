@@ -122,12 +122,14 @@ namespace Repositories.ConsignSales
             query = query.Where(c => c.MemberId == accountId);
 
             var count = await query.CountAsync();
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
+            query = query
+                .OrderByDescending(c => c.CreatedDate)
+                .Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize);
 
             var items = await query
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
-                .OrderByDescending(c => c.CreatedDate)
+                
                 .AsNoTracking().ToListAsync();
 
             var result = new PaginationResponse<ConsignSaleResponse>
@@ -375,13 +377,15 @@ namespace Repositories.ConsignSales
             query = query.Where(c => c.ShopId == shopId);
 
             var count = await query.CountAsync();
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
+            query = query
+                .OrderByDescending(c => c.CreatedDate)
+                .Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize);
 
             var items = await query
                 /*.Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)*/
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
-                .OrderByDescending(c => c.CreatedDate)
+                
                 .AsNoTracking().ToListAsync();
 
 
