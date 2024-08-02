@@ -86,3 +86,4 @@ public class StatusNotAvailableException : Exception
 public class ConsignSaleDetailsNotFoundException : Exception
 {
 }
+public class AddressNotFoundException : Exception{}

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Utils;
 
 namespace Services.Deliveries
 {
@@ -37,6 +38,15 @@ namespace Services.Deliveries
             }
             var delivery = new Address();
             delivery.MemberId = accountId;
+            delivery.CreatedDate = DateTime.UtcNow;
+            if (list.Count == 0)
+            {
+                delivery.IsDefault = true;
+            }
+            else
+            {
+                delivery.IsDefault = false;
+            }
             var request = _mapper.Map(deliveryRequest, delivery);
             response.Data = _mapper.Map<DeliveryResponse>(await _deliveryRepository.CreateDelivery(delivery));
             response.ResultStatus = ResultStatus.Success;
@@ -50,9 +60,7 @@ namespace Services.Deliveries
             var delivery = await _deliveryRepository.GetDeliveryById(deliveryId);
             if (delivery == null)
             {
-                response.Messages = ["Delivery is not existed"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new AddressNotFoundException();
             }
             await _deliveryRepository.DeleteDelivery(delivery);
             response.ResultStatus = ResultStatus.Success;
@@ -65,13 +73,12 @@ namespace Services.Deliveries
             var response = new Result<List<DeliveryResponse>>();
             if(await _accountRepository.GetAccountById(memberId) is null)
             {
-                response.Messages = ["Member is not existed"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new AccountNotFoundException();
             }
             var list = await _deliveryRepository.GetDeliveryByMemberId(memberId);
             if(list == null)
             {
+                response.Data = new List<DeliveryResponse>();
                 response.Messages = ["Empty! Please create one"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
@@ -82,7 +89,7 @@ namespace Services.Deliveries
             return response;
         }
 
-        public async Task<Result<DeliveryResponse>> UpdateDelivery(Guid deliveryId, DeliveryRequest deliveryRequest)
+        public async Task<Result<DeliveryResponse>> UpdateDelivery(Guid deliveryId, UpdateDeliveryRequest deliveryRequest)
         {
             var response = new Result<DeliveryResponse>();
             var delivery = await _deliveryRepository.GetDeliveryById(deliveryId);

@@ -1,8 +1,10 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using AutoMapper;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -19,14 +21,16 @@ namespace Services.ConsignSales
         private readonly IAccountRepository _accountRepository;
         private readonly IConsignSaleDetailRepository _consignSaleDetailRepository;
         private readonly IEmailService _emailService;
+        private readonly IMapper _mapper;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
-            IConsignSaleDetailRepository consignSaleDetailRepository, IEmailService emailService)
+            IConsignSaleDetailRepository consignSaleDetailRepository, IEmailService emailService, IMapper mapper)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
             _consignSaleDetailRepository = consignSaleDetailRepository;
             _emailService = emailService;
+            _mapper = mapper;
         }
 
         public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
@@ -36,9 +40,7 @@ namespace Services.ConsignSales
             var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
             if (consign == null)
             {
-                response.Messages = ["Can not find the consign"];
-                response.ResultStatus = ResultStatus.NotFound;
-                return response;
+                throw new ConsignSaleNotFoundException();
             }
 
             if (!consign.Status.Equals(ConsignSaleStatus.Pending))
@@ -57,32 +59,29 @@ namespace Services.ConsignSales
             }
 
             response.Data = await _consignSaleRepository.ApprovalConsignSale(consignId, request.Status);
+            await _emailService.SendEmailConsignSale(consignId);
             response.Messages = ["Approval successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
 
         public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId,
-            ConfirmReceivedConsignRequest request)
+            ConsignSaleStatus status)
         {
             var response = new Result<ConsignSaleResponse>();
             var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
             if (consign == null)
             {
-                response.Messages = ["Consign is not found"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new ConsignSaleNotFoundException();
             }
 
             if (!consign.Status.Equals(ConsignSaleStatus.AwaitDelivery))
             {
-                response.Messages = ["This consign is not allowed to confirm"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new StatusNotAvailableException();
             }
 
-            var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId,request);
-            await _emailService.SendEmailConsignSale(consignId);
+            var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId, status);
+            /*await _emailService.SendEmailConsignSaleReceived(consignId);*/
             response.Data = result;
             response.Messages = ["Confirm received successfully"];
             response.ResultStatus = ResultStatus.Success;
@@ -226,6 +225,28 @@ namespace Services.ConsignSales
             return response;
         }
 
-        
+        public async Task<Result<ConsignSaleDetailResponse>> UpdateConsignSaleDetailForApprove(ConfirmReceivedConsignRequest request)
+        {
+            var response = new Result<ConsignSaleDetailResponse>();
+            var consignSaleDetail =
+                await _consignSaleDetailRepository.GetSingleConsignSaleDetail(c =>
+                    c.ConsignSaleDetailId == request.ConsignSaleDetailId);
+            if (consignSaleDetail == null)
+            {
+                throw new ConsignSaleDetailsNotFoundException();
+            }
+
+            consignSaleDetail.ConfirmedPrice = request.SellingPrice;
+            consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
+            consignSaleDetail.FashionItem.Description = request.Description;
+            consignSaleDetail.FashionItem.SellingPrice = request.SellingPrice;
+            await _consignSaleDetailRepository.UpdateConsignSaleDetail(consignSaleDetail);
+            
+            var result = _mapper.Map<ConsignSaleDetailResponse>(consignSaleDetail);
+            response.Data = result;
+            response.Messages = ["Success"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
     }
 }

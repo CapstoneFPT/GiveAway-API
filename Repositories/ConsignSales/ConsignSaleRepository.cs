@@ -59,6 +59,7 @@ namespace Repositories.ConsignSales
                     Color = item.Color,
                     Size = item.Size,
                     Gender = item.Gender,
+                    CreatedDate = DateTime.UtcNow
                 };
                 fashionItem.Type = request.Type switch
                 {
@@ -86,7 +87,8 @@ namespace Repositories.ConsignSales
                     ConfirmedPrice = 0,
                     DealPrice = item.DealPrice,
                     FashionItemId = fashionItem.ItemId,
-                    ConsignSaleId = newConsign.ConsignSaleId
+                    ConsignSaleId = newConsign.ConsignSaleId,
+                    CreatedDate = DateTime.UtcNow
                 };
                 await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);
             }
@@ -201,7 +203,7 @@ namespace Repositories.ConsignSales
         }
 
         public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId,
-            ConfirmReceivedConsignRequest request)
+            ConsignSaleStatus status)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleDetails!)
@@ -217,7 +219,7 @@ namespace Repositories.ConsignSales
             consign.StartDate = DateTime.UtcNow;
             consign.EndDate = DateTime.UtcNow.AddDays(60);
             
-            var updateRequestIds = new HashSet<Guid>(request.FashionItemConsignUpdates.Select(u => u.FashionItemId));
+            /*var updateRequestIds = new HashSet<Guid>(request.FashionItemConsignUpdates.Select(u => u.FashionItemId));
             
             foreach (var detail in consign.ConsignSaleDetails)
             {
@@ -228,7 +230,7 @@ namespace Repositories.ConsignSales
                     detail.FashionItem.SellingPrice = updateRequest.SellingPrice;
                     detail.FashionItem.Status = FashionItemStatus.Unavailable;
                 }
-            }
+            }*/
 
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
 
