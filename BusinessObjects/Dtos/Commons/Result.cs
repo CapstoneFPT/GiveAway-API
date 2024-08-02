@@ -74,6 +74,7 @@ public enum ConsignSaleStatus
     Pending,
     AwaitDelivery,
     Received,
+    OnSale,
     Completed,
     Rejected,
     Cancelled

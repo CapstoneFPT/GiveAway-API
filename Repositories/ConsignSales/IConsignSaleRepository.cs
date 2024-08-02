@@ -4,6 +4,7 @@ using BusinessObjects.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,5 +20,8 @@ namespace Repositories.ConsignSales
         Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId);
         Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
         Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(Guid shopId, ConsignSaleRequestForShop request);
+        Task<ConsignSale?> GetSingleConsignSale(Expression<Func<ConsignSale, bool>> predicate);
+        Task UpdateConsignSale(ConsignSale consignSale);
+        /*Task UpdateConsignSaleToOnSale(Guid fashionItemId);*/
     }
 }

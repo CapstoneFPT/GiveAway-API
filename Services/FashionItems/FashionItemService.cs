@@ -9,6 +9,7 @@ using BusinessObjects.Entities;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Categories;
+using Repositories.ConsignSales;
 using Repositories.FashionItems;
 using Repositories.Images;
 
@@ -20,15 +21,17 @@ namespace Services.FashionItems
         private readonly IImageRepository _imageRepository;
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
+        private readonly IConsignSaleRepository _consignSaleRepository;
 
         public FashionItemService(IFashionItemRepository fashionitemRepository, IImageRepository imageRepository,
             ICategoryRepository categoryRepository,
-            IMapper mapper)
+            IMapper mapper, IConsignSaleRepository consignSaleRepository)
         {
             _fashionitemRepository = fashionitemRepository;
             _imageRepository = imageRepository;
             _categoryRepository = categoryRepository;
             _mapper = mapper;
+            _consignSaleRepository = consignSaleRepository;
         }
 
         public async Task<Result<FashionItemDetailResponse>> AddFashionItem(Guid shopId,
@@ -238,6 +241,16 @@ namespace Services.FashionItems
                 {
                     item.Status = FashionItemStatus.Available;
                     await _fashionitemRepository.UpdateFashionItem(item);
+                    var consign =
+                        await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(item.ItemId)));
+                    if (consign != null)
+                    {
+                        if (!consign.ConsignSaleDetails.Any(c => c.FashionItem.Status.Equals(FashionItemStatus.Unavailable)))
+                        {
+                            consign.Status = ConsignSaleStatus.OnSale;
+                            await _consignSaleRepository.UpdateConsignSale(consign);
+                        }
+                    }
                     response.Messages = ["This item status has successfully changed to available"];
                     response.Data = _mapper.Map<FashionItemDetailResponse>(item);
                     response.ResultStatus = ResultStatus.Success;

@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Linq.Expressions;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleDetails;
@@ -191,6 +192,7 @@ namespace Repositories.ConsignSales
             else
             {
                 consign.Status = ConsignSaleStatus.AwaitDelivery;
+                consign.TotalPrice = consign.ConsignSaleDetails.Sum(c => c.ConfirmedPrice);
             }
 
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
@@ -400,5 +402,46 @@ namespace Repositories.ConsignSales
             };
             return result;
         }
+
+        public async Task<ConsignSale?> GetSingleConsignSale(Expression<Func<ConsignSale, bool>> predicate)
+        {
+            var result = await GenericDao<ConsignSale>.Instance
+                .GetQueryable()
+                .Include(cons => cons.ConsignSaleDetails)
+                .ThenInclude(consDetail => consDetail.FashionItem)
+                .SingleOrDefaultAsync(predicate);
+            return result;
+        }
+
+        public async Task UpdateConsignSale(ConsignSale consignSale)
+        {
+            await GenericDao<ConsignSale>.Instance.UpdateAsync(consignSale);
+        }
+
+        /*public async Task<bool> UpdateConsignSaleToOnSale(Guid fashionItemId)
+        {
+            var consignSaleDetail = await _giveAwayDbContext.ConsignSaleDetails.AsQueryable()
+                .Include(c => c.ConsignSale)
+                .Where(c => c.FashionItemId == fashionItemId)
+                .FirstOrDefaultAsync();
+            
+            if (consignSaleDetail == null)
+            {
+                return false;
+            }
+
+            var consignSale = await _giveAwayDbContext.ConsignSales.AsQueryable()
+                .Include(c => c.ConsignSaleDetails)
+                .ThenInclude(c => c.FashionItem)
+                .Where(c => c.ConsignSaleDetails.Contains(consignSaleDetail))
+                .FirstOrDefaultAsync();
+            if (!consignSale.ConsignSaleDetails.Any(c => c.FashionItem.Status.Equals(FashionItemStatus.Unavailable)))
+            {
+                consignSale.Status = ConsignSaleStatus.OnSale;
+                await GenericDao<ConsignSale>.Instance.UpdateAsync(consignSale);
+            }
+
+            return true;
+        }*/
     }
 }
