@@ -132,7 +132,8 @@ namespace Repositories.Bids
                         Id = x.BidId,
                         MemberId = x.MemberId,
                         CreatedDate = x.CreatedDate,
-                        IsWinning = x.IsWinning
+                        IsWinning = x.IsWinning,
+                        NextAmount = x.Amount + x.Auction.StepIncrement
                     })
                     .FirstOrDefaultAsync(x => x.AuctionId == auctionId)
                 ;
