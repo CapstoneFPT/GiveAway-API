@@ -65,8 +65,7 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId,
-            ConsignSaleStatus status)
+        public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId)
         {
             var response = new Result<ConsignSaleResponse>();
             var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
@@ -80,7 +79,7 @@ namespace Services.ConsignSales
                 throw new StatusNotAvailableException();
             }
 
-            var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId, status);
+            var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
             /*await _emailService.SendEmailConsignSaleReceived(consignId);*/
             response.Data = result;
             response.Messages = ["Confirm received successfully"];
@@ -225,12 +224,12 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleDetailResponse>> UpdateConsignSaleDetailForApprove(ConfirmReceivedConsignRequest request)
+        public async Task<Result<ConsignSaleDetailResponse>> UpdateConsignSaleDetailForApprove(Guid consignSaleDetailId,ConfirmReceivedConsignRequest request)
         {
             var response = new Result<ConsignSaleDetailResponse>();
             var consignSaleDetail =
                 await _consignSaleDetailRepository.GetSingleConsignSaleDetail(c =>
-                    c.ConsignSaleDetailId == request.ConsignSaleDetailId);
+                    c.ConsignSaleDetailId == consignSaleDetailId);
             if (consignSaleDetail == null)
             {
                 throw new ConsignSaleDetailsNotFoundException();

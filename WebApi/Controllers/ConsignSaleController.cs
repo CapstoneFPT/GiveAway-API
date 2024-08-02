@@ -50,9 +50,9 @@ namespace WebApi.Controllers
 
         [HttpPut("{consignSaleId}/confirm-received")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> ConfirmReceivedConsignFromShop(
-            [FromRoute] Guid consignSaleId, ConsignSaleStatus status)
+            [FromRoute] Guid consignSaleId)
         {
-            var result = await _consignsaleService.ConfirmReceivedFromShop(consignSaleId, status);
+            var result = await _consignsaleService.ConfirmReceivedFromShop(consignSaleId);
 
             if (result.ResultStatus != ResultStatus.Success)
             {
@@ -63,10 +63,10 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("consignsaledetails/{consignsaledetailId}/update-for-approve")]
-        public async Task<ActionResult<Result<ConsignSaleDetailResponse>>> UpdateConsignSaleDetailForApprove(
+        public async Task<ActionResult<Result<ConsignSaleDetailResponse>>> UpdateConsignSaleDetailForApprove([FromRoute] Guid consignsaledetailId,
             [FromBody] ConfirmReceivedConsignRequest request)
         {
-            var result = await _consignsaleService.UpdateConsignSaleDetailForApprove(request);
+            var result = await _consignsaleService.UpdateConsignSaleDetailForApprove(consignsaledetailId,request);
             if (result.ResultStatus != ResultStatus.Success)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
