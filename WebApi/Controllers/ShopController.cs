@@ -87,7 +87,7 @@ namespace WebApi.Controllers
             
             return Ok(result);
         }
-
+        
         [HttpPost("{shopId}/orders/{orderId}/pay-with-cash")]
         public async Task<
             ActionResult<PayOrderWithCashResponse>> PayWithCash([FromRoute] Guid shopId, [FromRoute] Guid orderId,
@@ -145,12 +145,22 @@ namespace WebApi.Controllers
             var result = await _shopService.GetOfflineTransactionsByShopId(shopId, transactionRequest);
             return Ok(result);
         }
-
+        
         [HttpPost("{shopId}/feedbacks")]
         public async Task<ActionResult<FeedbackResponse>> CreateFeedbackByShop([FromRoute] Guid shopId,
             [FromBody] CreateFeedbackRequest feedbackRequest)
         {
             return await _shopService.CreateFeedbackForShop(shopId, feedbackRequest);
+        }
+        [HttpPut("{shopId}/orders/{orderId}/cancel")]
+        public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid shopId,[FromRoute] Guid orderId)
+        {
+            var result = await _orderService.CancelOrderByShop(shopId,orderId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
         }
     }
 }

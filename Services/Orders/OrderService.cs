@@ -386,6 +386,46 @@ namespace Services.Orders
             return response;
         }
 
+        public async Task<Result<string>> CancelOrderByShop(Guid shopId, Guid orderId)
+        {
+            var response = new Result<string>();
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
+            if (order == null)
+            {
+                throw new OrderNotFoundException();
+            }
+
+            if (order.Status.Equals(OrderStatus.Completed))
+            {
+                throw new StatusNotAvailableException();
+            }
+
+            if (order.Status.Equals(OrderStatus.OnDelivery) && !order.PaymentMethod.Equals(PaymentMethod.COD))
+            {
+                order.Member.Balance += order.TotalPrice;
+                var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
+                if (admin == null)
+                    throw new AccountNotFoundException();
+                admin.Balance -= order.TotalPrice;
+                await _accountRepository.UpdateAccount(admin);
+            }
+            else
+            {
+                throw new StatusNotAvailableException();
+            }
+            order.Status = OrderStatus.Cancelled;
+            foreach (var item in order.OrderDetails.Select(c => c.FashionItem))
+            {
+                item.Status = FashionItemStatus.Unavailable;
+            }
+
+            await _orderRepository.UpdateOrder(order);
+            /*await _emailService.SendEmailCancelOrderByShop(order);*/
+            response.Messages = ["This order is cancelled by shop for some reason."];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
+        }
+
 
         public async Task<Result<PaginationResponse<OrderListResponse>>> GetOrders(OrderRequest orderRequest)
         {

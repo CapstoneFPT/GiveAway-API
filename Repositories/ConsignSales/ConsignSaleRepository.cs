@@ -19,10 +19,12 @@ namespace Repositories.ConsignSales
         private static HashSet<string> generatedStrings = new HashSet<string>();
         private static Random random = new Random();
         private const string prefix = "GA-CS-";
+        private readonly GiveAwayDbContext _giveAwayDbContext;
 
-        public ConsignSaleRepository(IMapper mapper)
+        public ConsignSaleRepository(IMapper mapper, GiveAwayDbContext dbContext)
         {
             _mapper = mapper;
+            _giveAwayDbContext = dbContext; 
         }
 
         public async Task<ConsignSaleResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
@@ -65,7 +67,7 @@ namespace Repositories.ConsignSales
                 {
                     ConsignSaleType.ConsignedForSale => FashionItemType.ConsignedForSale,
                     ConsignSaleType.ConsignedForAuction => FashionItemType.ConsignedForAuction,
-                    _ => FashionItemType.ItemBase
+                    ConsignSaleType.ForSale => FashionItemType.ItemBase
                 };
 
                 await GenericDao<FashionItem>.Instance.AddAsync(fashionItem);
@@ -203,7 +205,7 @@ namespace Repositories.ConsignSales
         }
 
         public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
-        {
+        {   
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleDetails!)
                 .ThenInclude(cd => cd.FashionItem)
@@ -228,8 +230,22 @@ namespace Repositories.ConsignSales
                     totalprice += detail.ConfirmedPrice;
                 }
             }
-
+            
             consign.TotalPrice = totalprice;
+            if (consign.Type.Equals(ConsignSaleType.ForSale))
+            {
+                var shop = await _giveAwayDbContext.Shops.AsQueryable()
+                    .Where(c => c.ShopId == consign.ShopId)
+                    .Select(c => c.Staff)
+                    .FirstOrDefaultAsync();
+                shop.Balance -= totalprice;
+                var member = await _giveAwayDbContext.Accounts.AsQueryable()
+                    .Where(c => c.AccountId == consign.MemberId)
+                    .FirstOrDefaultAsync();
+                member.Balance += totalprice;
+                await GenericDao<Account>.Instance.UpdateAsync(member);
+            }
+            
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
 
             return _mapper.Map<ConsignSaleResponse>(consign);
