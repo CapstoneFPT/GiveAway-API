@@ -57,9 +57,14 @@ namespace Repositories.Auctions
                 throw new AuctionItemNotFoundException();
             }
 
-            if (auctionItem.Status != FashionItemStatus.Available)
+            // if (auctionItem.Status != FashionItemStatus.Available)
+            // {
+            //     throw new AuctionItemNotAvailableForAuctioningException();
+            // }
+
+            if (auctionItem.Status != FashionItemStatus.PendingAuction)
             {
-                throw new AuctionItemNotAvailableForAuctioningException();
+                
             }
 
             var shop = await GenericDao<Shop>.Instance.GetQueryable()

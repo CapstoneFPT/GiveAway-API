@@ -215,7 +215,7 @@ namespace Services.Auctions
                     ItemId = result.AuctionFashionItemId,
                     Name = result.AuctionFashionItem.Name,
                     FashionItemType = result.AuctionFashionItem.Type,
-                    SellingPrice = result.AuctionFashionItem.SellingPrice.Value,
+                    SellingPrice = result.AuctionFashionItem.SellingPrice ?? 0,
                     InitialPrice = result.AuctionFashionItem.InitialPrice,
                     Size = result.AuctionFashionItem.Size,
                     Color = result.AuctionFashionItem.Color,
