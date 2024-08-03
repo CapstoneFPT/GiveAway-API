@@ -119,6 +119,7 @@ public enum TransactionType
     Purchase,
     Refund,
     Recharge,
+    Payout
 }
 
 public enum WithdrawStatus

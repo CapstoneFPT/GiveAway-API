@@ -8,10 +8,12 @@ using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.Asn1.Ocsp;
+using Quartz;
 using Repositories.Accounts;
 using Repositories.ConsignSaleDetails;
 using Repositories.ConsignSales;
 using Repositories.Orders;
+using Repositories.Schedules;
 using Services.Emails;
 
 namespace Services.ConsignSales
@@ -24,10 +26,12 @@ namespace Services.ConsignSales
         private readonly IOrderRepository _orderRepository;
         private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
+        private readonly ISchedulerFactory _schedulerFactory;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
             IConsignSaleDetailRepository consignSaleDetailRepository
-            ,IOrderRepository orderRepository, IEmailService emailService, IMapper mapper)
+            ,IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
+            ISchedulerFactory schedulerFactory)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
@@ -35,6 +39,7 @@ namespace Services.ConsignSales
             _orderRepository = orderRepository;
             _emailService = emailService;
             _mapper = mapper;
+            _schedulerFactory = schedulerFactory;
         }
 
         public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
@@ -84,6 +89,7 @@ namespace Services.ConsignSales
             }
 
             var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
+            await ScheduleConsignEnding(result);
             await _emailService.SendEmailConsignSaleReceived(consignId);
             response.Data = result;
             response.Messages = ["Confirm received successfully"];
@@ -91,6 +97,23 @@ namespace Services.ConsignSales
             return response;
         }
 
+        private async Task ScheduleConsignEnding(ConsignSaleResponse consign)
+        {
+            var schedule = await _schedulerFactory.GetScheduler();
+            var jobDataMap = new JobDataMap()
+            {
+                { "ConsignId", consign.ConsignSaleId }
+            };
+            var endJob = JobBuilder.Create<ConsignEndingJob>()
+                .WithIdentity($"EndConsign_{consign.ConsignSaleId}")
+                .SetJobData(jobDataMap)
+                .Build();
+            var endTrigger = TriggerBuilder.Create()
+                .WithIdentity($"EndConsignTrigger_{consign.ConsignSaleId}")
+                .StartAt(new DateTimeOffset(consign.EndDate.Value))
+                .Build();
+            await schedule.ScheduleJob(endJob, endTrigger);
+        }
         public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId,
             CreateConsignSaleRequest request)
         {

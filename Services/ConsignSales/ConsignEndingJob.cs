@@ -1,4 +1,5 @@
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,9 +20,10 @@ public class ConsignEndingJob : IJob
     {
         await using var scope = _serviceProvider.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
-        var consignId = context.JobDetail.JobDataMap.GetGuid("ConsignID");
+        var consignId = context.JobDetail.JobDataMap.GetGuid("ConsignId");
 
         var consignToEnd = await dbContext.ConsignSales
+            .Include(c => c.Member)
             .Include(c => c.ConsignSaleDetails)
             .ThenInclude(c => c.FashionItem)
             .FirstOrDefaultAsync(c => c.ConsignSaleId == consignId);
@@ -48,11 +50,24 @@ public class ConsignEndingJob : IJob
                     detail.FashionItem.Status = FashionItemStatus.UnSold;
                 }
             }
+
+            consignToEnd.Member.Balance += consignToEnd.ConsignorReceivedAmount;
+            dbContext.ConsignSales.Update(consignToEnd);
+            var transaction = new Transaction()
+            {
+                ConsignSaleId = consignToEnd.ConsignSaleId,
+                MemberId = consignToEnd.MemberId,
+                CreatedDate = DateTime.UtcNow,
+                Amount = consignToEnd.ConsignorReceivedAmount,
+                Type = TransactionType.Payout,
+            };
+            dbContext.Transactions.Add(transaction);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             throw;
         }
+        await dbContext.SaveChangesAsync();
     }
 }
