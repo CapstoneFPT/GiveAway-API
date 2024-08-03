@@ -80,7 +80,7 @@ namespace Services.ConsignSales
             }
 
             var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
-            /*await _emailService.SendEmailConsignSaleReceived(consignId);*/
+            await _emailService.SendEmailConsignSaleReceived(consignId);
             response.Data = result;
             response.Messages = ["Confirm received successfully"];
             response.ResultStatus = ResultStatus.Success;
