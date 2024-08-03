@@ -20,7 +20,7 @@ public class Order
 
 
     public PurchaseType PurchaseType { get; set; }
-    public Transaction? Transaction { get; set; }
+    public ICollection<Transaction> Transaction { get; set; } = [];
     public string? RecipientName { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }

@@ -378,6 +378,15 @@ namespace Services.Orders
                     throw new AccountNotFoundException();
                 admin.Balance -= order.TotalPrice;
                 await _accountRepository.UpdateAccount(admin);
+                var transaction = new Transaction()
+                {
+                    OrderId = orderId,
+                    MemberId = order.MemberId,
+                    Amount = order.TotalPrice,
+                    CreatedDate = DateTime.UtcNow,
+                    Type = TransactionType.Refund
+                };
+                await _transactionRepository.CreateTransaction(transaction);
             }
 
             order.Status = OrderStatus.Cancelled;
@@ -415,6 +424,15 @@ namespace Services.Orders
                     throw new AccountNotFoundException();
                 admin.Balance -= order.TotalPrice;
                 await _accountRepository.UpdateAccount(admin);
+                var transaction = new Transaction()
+                {
+                    OrderId = orderId,
+                    MemberId = order.MemberId,
+                    Amount = order.TotalPrice,
+                    CreatedDate = DateTime.UtcNow,
+                    Type = TransactionType.Refund
+                };
+                await _transactionRepository.CreateTransaction(transaction);
             }
             else
             {

@@ -317,8 +317,8 @@ public class GiveAwayDbContext : DbContext
             .HasConversion(prop => prop.ToString(), s => (PaymentMethod)Enum.Parse(typeof(PaymentMethod), s))
             .HasColumnType("varchar").HasMaxLength(30);
 
-        modelBuilder.Entity<Order>().HasOne(x => x.Transaction).WithOne(x => x.Order)
-            .HasForeignKey<Transaction>(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Order>().HasMany(x => x.Transaction).WithOne(x => x.Order)
+            .HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Order>().Property(x => x.Address).HasColumnType("varchar").HasMaxLength(255);
         modelBuilder.Entity<Order>().Property(x => x.RecipientName).HasColumnType("varchar").HasMaxLength(100);
