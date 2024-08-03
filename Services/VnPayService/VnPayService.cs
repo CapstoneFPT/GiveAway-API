@@ -31,7 +31,7 @@ public class VnPayService : IVnPayService
         _vnPayLibrary.AddRequestData("vnp_Locale", "vn");
         _vnPayLibrary.AddRequestData("vnp_OrderInfo", orderId.ToString());
         _vnPayLibrary.AddRequestData("vnp_OrderType", "other");
-        _vnPayLibrary.AddRequestData("vnp_ExpireDate", DateTime.Now.AddMinutes(15).ToString("yyyyMMddHHmmss"));
+        _vnPayLibrary.AddRequestData("vnp_ExpireDate", DateTime.UtcNow.AddMinutes(15).ToString("yyyyMMddHHmmss"));
         _vnPayLibrary.AddRequestData("vnp_ReturnUrl", $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}/api/{resourceName}/payment-return");
         _vnPayLibrary.AddRequestData("vnp_TxnRef", tick);
         
