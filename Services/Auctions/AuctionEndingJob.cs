@@ -48,8 +48,16 @@ public class AuctionEndingJob : IJob
         try
         {
             var winningBid = auctionToEnd.Bids.MaxBy(x=> x.Amount);
+            
+            if(winningBid == null)
+            {
+                Console.WriteLine("No winning bid");
+                return;
+            }
+            
             auctionToEnd.Status = AuctionStatus.Finished;
             auctionToEnd.AuctionFashionItem.Status = FashionItemStatus.Won;
+            auctionToEnd.AuctionFashionItem.SellingPrice = winningBid.Amount;
             dbContext.Auctions.Update(auctionToEnd);
 
             var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();

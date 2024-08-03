@@ -103,9 +103,19 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: "AllowSpecificOrigins",
         policy =>
         {
-            policy.WithOrigins("https://giveawayproject.jettonetto.org", "http://localhost","http://127.0.0.1:80", "http://localhost:5173","http://localhost:80",
-                    "https://giveawayproject.jettonetto.org:443", "http://localhost:3000").AllowAnyHeader().AllowAnyMethod()
-                .AllowCredentials().SetIsOriginAllowedToAllowWildcardSubdomains();
+            policy.WithOrigins(
+                    "https://giveawayproject.jettonetto.org",
+                    "http://localhost",
+                    "http://127.0.0.1:80", 
+                    "http://localhost:5173",
+                    "http://localhost:80",
+                    "https://giveawayproject.jettonetto.org:443", 
+                    "http://localhost:3000"
+                    )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                .SetIsOriginAllowedToAllowWildcardSubdomains();
         });
 });
 

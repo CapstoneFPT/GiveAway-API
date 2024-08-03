@@ -238,7 +238,16 @@ namespace Services.ConsignSales
             consignSaleDetail.ConfirmedPrice = request.SellingPrice;
             consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
             consignSaleDetail.FashionItem.Description = request.Description;
-            consignSaleDetail.FashionItem.SellingPrice = request.SellingPrice;
+
+            if (consignSaleDetail.FashionItem is AuctionFashionItem auctionFashionItem)
+            {
+               auctionFashionItem.InitialPrice = request.SellingPrice; 
+            }
+            else
+            {
+                consignSaleDetail.FashionItem.SellingPrice = request.SellingPrice;
+            }
+            
             await _consignSaleDetailRepository.UpdateConsignSaleDetail(consignSaleDetail);
             
             var result = _mapper.Map<ConsignSaleDetailResponse>(consignSaleDetail);
