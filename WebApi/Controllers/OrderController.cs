@@ -7,6 +7,7 @@ using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
+using Services.ConsignSales;
 using Services.Emails;
 using Services.OrderDetails;
 using Services.Orders;
@@ -26,10 +27,10 @@ namespace WebApi.Controllers
         private readonly ILogger<OrderController> _logger;
         private readonly IAccountService _accountService;
         private readonly IEmailService _emailService;
-
+        private readonly IConsignSaleService _consignSaleService;
         public OrderController(IOrderService orderService, IOrderDetailService orderDetailService, IVnPayService
                 vnPayService, ITransactionService transactionService, ILogger<OrderController> logger,
-            IAccountService accountService, IEmailService emailService)
+            IAccountService accountService, IEmailService emailService, IConsignSaleService consignSaleService)
         {
             _orderService = orderService;
             _orderDetailService = orderDetailService;
@@ -38,6 +39,7 @@ namespace WebApi.Controllers
             _accountService = accountService;
             _emailService = emailService;
             _logger = logger;
+            _consignSaleService = consignSaleService;
         }
 
         [HttpGet]
@@ -224,6 +226,7 @@ namespace WebApi.Controllers
             await _orderService.UpdateOrder(order);
             await _orderService.UpdateFashionItemStatus(order.OrderId);
             await _orderService.UpdateAdminBalance(order);
+            await _consignSaleService.UpdateConsignPrice(order.OrderId);
             await _emailService.SendEmailOrder(order);
 
             return Ok(new PayWithPointsResponse()

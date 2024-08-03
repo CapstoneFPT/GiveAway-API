@@ -51,73 +51,7 @@ namespace Repositories.FashionItems
             return await GenericDao<FashionItem>.Instance.AddAsync(request);
         }
 
-        // public async Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
-        //     AuctionFashionItemRequest request)
-        // {
-        //     var query = _giveAwayDbContext.FashionItems.AsQueryable()
-        //         .Select(x => new
-        //         {
-        //             FashionItem = x,
-        //             IsOrderedYet = CheckItemIsInOrder(x.ItemId, request.MemberId)
-        //         });
-        //
-        //     if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-        //         query = query.Where(x => EF.Functions.ILike(x.FashionItem.Name, $"%{request.SearchTerm}%"));
-        //     if (request.Status != null)
-        //     {
-        //         query = query.Where(f => request.Status.Contains(f.FashionItem.Status));
-        //     }
-        //
-        //     if (request.Type != null)
-        //     {
-        //         query = query.Where(f => request.Type.Contains(f.FashionItem.Type));
-        //     }
-        //
-        //     if (request.ShopId != null)
-        //     {
-        //         query = query.Where(f => f.FashionItem.ShopId.Equals(request.ShopId));
-        //     }
-        //
-        //     if (request.GenderType != null)
-        //     {
-        //         query = query.Where(f => f.FashionItem.Gender.Equals(request.GenderType));
-        //     }
-        //
-        //     var count = await query.CountAsync();
-        //     query = query.Skip((request.PageNumber - 1) * request.PageSize)
-        //         .Take(request.PageSize);
-        //
-        //     var items = await query.Select(x => new FashionItemDetailResponse()
-        //         {
-        //             ItemId = x.FashionItem.ItemId,
-        //             Name = x.FashionItem.Name,
-        //             Note = x.FashionItem.Note,
-        //             Description = x.FashionItem.Description,
-        //             Condition = x.FashionItem.Condition,
-        //             ShopAddress = x.FashionItem.Shop.Address,
-        //             Color = x.FashionItem.Color,
-        //             Brand = x.FashionItem.Brand != null ? x.FashionItem.Brand : "No Brand",
-        //             Status = x.FashionItem.Status,
-        //             Type = x.FashionItem.Type,
-        //             IsOrderedYet = x.IsOrderedYet,
-        //             SellingPrice = x.FashionItem.SellingPrice.Value,
-        //             ShopId = x.FashionItem.ShopId,
-        //             CategoryName = x.FashionItem.Category != null ? x.FashionItem.Category.Name : "N/A",
-        //             Gender = x.FashionItem.Gender,
-        //             Images = x.FashionItem.Images.Select(c => c.Url).ToList()
-        //         })
-        //         .AsNoTracking().ToListAsync();
-        //
-        //     var result = new PaginationResponse<FashionItemDetailResponse>
-        //     {
-        //         Items = items,
-        //         PageSize = request.PageSize,
-        //         TotalCount = count,
-        //         SearchTerm = request.SearchTerm,
-        //         PageNumber = request.PageNumber,
-        //     };
-        //     return result;
-        // }
+        
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemProjections<T>(
             int? page,

@@ -406,7 +406,8 @@ namespace Services.Orders
                 throw new StatusNotAvailableException();
             }
 
-            if (order.Status.Equals(OrderStatus.OnDelivery) && !order.PaymentMethod.Equals(PaymentMethod.COD))
+            if ((order.Status.Equals(OrderStatus.OnDelivery) || order.Status.Equals(OrderStatus.Pending))
+                && !order.PaymentMethod.Equals(PaymentMethod.COD))
             {
                 order.Member.Balance += order.TotalPrice;
                 var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));

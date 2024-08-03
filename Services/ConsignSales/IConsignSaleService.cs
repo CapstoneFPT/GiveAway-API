@@ -18,5 +18,6 @@ namespace Services.ConsignSales
         
         Task<Result<List<ConsignSaleDetailResponse>>> GetConsignSaleDetailsByConsignSaleId(Guid consignsaleId);
         Task<Result<ConsignSaleDetailResponse>> UpdateConsignSaleDetailForApprove(Guid consignSaleDetailid,ConfirmReceivedConsignRequest request);
+        Task UpdateConsignPrice(Guid orderId);
     }
 }

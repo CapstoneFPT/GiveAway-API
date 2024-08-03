@@ -11,6 +11,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
 using Repositories.ConsignSaleDetails;
 using Repositories.ConsignSales;
+using Repositories.Orders;
 using Services.Emails;
 
 namespace Services.ConsignSales
@@ -20,15 +21,18 @@ namespace Services.ConsignSales
         private readonly IConsignSaleRepository _consignSaleRepository;
         private readonly IAccountRepository _accountRepository;
         private readonly IConsignSaleDetailRepository _consignSaleDetailRepository;
+        private readonly IOrderRepository _orderRepository;
         private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
-            IConsignSaleDetailRepository consignSaleDetailRepository, IEmailService emailService, IMapper mapper)
+            IConsignSaleDetailRepository consignSaleDetailRepository
+            ,IOrderRepository orderRepository, IEmailService emailService, IMapper mapper)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
             _consignSaleDetailRepository = consignSaleDetailRepository;
+            _orderRepository = orderRepository;
             _emailService = emailService;
             _mapper = mapper;
         }
@@ -256,6 +260,32 @@ namespace Services.ConsignSales
             response.Messages = ["Success"];
             response.ResultStatus = ResultStatus.Success;
             return response;
+        }
+
+        public async Task UpdateConsignPrice(Guid orderId)
+        {
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
+            foreach (var detail in order.OrderDetails)
+            {
+                var consign =
+                    await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(detail.FashionItemId)));
+                if (consign != null)
+                {
+                    consign.SoldPrice += detail.UnitPrice;
+                    if (consign.SoldPrice < 1000000)
+                    {
+                        consign.ConsignorReceivedAmount = consign.SoldPrice * 74 / 100;
+                    }else if (consign.SoldPrice >= 1000000 && consign.SoldPrice <= 10000000)
+                    {
+                        consign.ConsignorReceivedAmount = consign.SoldPrice * 77 / 100;
+                    }
+                    else
+                    {
+                        consign.ConsignorReceivedAmount = consign.SoldPrice * 80 / 100;
+                    }
+                    await _consignSaleRepository.UpdateConsignSale(consign);
+                }
+            }
         }
     }
 }
