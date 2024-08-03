@@ -18,11 +18,11 @@ namespace BusinessObjects.Dtos.ConsignSales
         public List<AddFashionItemForConsignRequest> fashionItemForConsigns { get; set; } =
             new List<AddFashionItemForConsignRequest>();
 
-        [MaxLength(100, ErrorMessage = "Maximum length is 100 characters")]
+        /*[MaxLength(100, ErrorMessage = "Maximum length is 100 characters")]
         public string? ConsignorName { get; set; }
 
         [Phone(ErrorMessage = "Invalid phone number")]
-        public string? Phone { get; set; }
+        public string? Phone { get; set; }*/
     }
 
     public class CreateConsignSaleByShopRequest

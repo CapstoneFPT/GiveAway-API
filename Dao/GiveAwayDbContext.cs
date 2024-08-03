@@ -150,7 +150,10 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x=>x.BankAccounts)
             .WithOne(x=>x.Member)
             .HasForeignKey(x=>x.MemberId);
-
+        modelBuilder.Entity<Member>()
+            .HasMany(x=>x.Addresses)
+            .WithOne(x=>x.Member)
+            .HasForeignKey(x=>x.MemberId);
         #endregion
 
         #region Auction

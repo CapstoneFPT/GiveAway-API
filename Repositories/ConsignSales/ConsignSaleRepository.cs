@@ -30,11 +30,17 @@ namespace Repositories.ConsignSales
 
         public async Task<ConsignSaleResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
         {
+            var account = await _giveAwayDbContext.Members.AsQueryable()
+                .Include(c => c.Addresses)
+                .FirstOrDefaultAsync(c => c.AccountId == accountId);
             //tao moi 1 consign
             ConsignSale newConsign = new ConsignSale()
             {
-                ConsignorName = request.ConsignorName,
-                Phone = request.Phone,
+                ConsignorName = account.Fullname,
+                Phone = account.Phone,
+                Email = account.Email,
+                Address = account.Addresses.Where(c => c.IsDefault == true)
+                    .Select(c => c.Residence).FirstOrDefault() ?? "No Address Existed",
                 Type = request.Type,
                 CreatedDate = DateTime.UtcNow,
                 ConsignDuration = 60,

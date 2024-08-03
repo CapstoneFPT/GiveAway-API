@@ -11,7 +11,7 @@ public class Address
     public string Phone { set; get; }
     public string Residence { set; get; }
     public AddressType AddressType { set; get; }
-    public Account Member { set; get; }
+    public Member Member { set; get; }
     public Guid MemberId { set; get; }
     public bool IsDefault { set; get; }
     public DateTime CreatedDate { get; set; }

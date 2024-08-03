@@ -43,7 +43,9 @@ namespace Services.Emails
             /*string pathTon = Path.Combine("D:\\Captstone\\GiveAway-API\\Services\\MailTemplate\\", $"{templateName}.html");
             string pathLocal = Path.Combine("C:\\FPT_University_FULL\\CAPSTONE_API\\Services\\MailTemplate\\", $"{templateName}.html");*/
             string path = Path.Combine(_configuration.GetSection("EmailTemplateDirectory").Value, $"{templateName}.html");
-            return File.ReadAllText(path, Encoding.UTF8);
+            var template = File.ReadAllText(path, Encoding.UTF8);
+            template = template.Replace("[path]", _configuration.GetSection("RedirectDirectory").Value);
+            return template;
         }
 
         public async Task SendEmail(SendEmailRequest request)
@@ -108,6 +110,7 @@ namespace Services.Emails
             template = template.Replace($"[Phone Number]", order.Phone);
             template = template.Replace($"[Email]", order.Email);
             template = template.Replace($"[Address]", order.Address);
+            /*template = template.Replace("[path]", _configuration.GetSection("RedirectDirectory").Value);*/
             content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY";
             content.Body = template;
             await SendEmail(content);
@@ -157,9 +160,10 @@ namespace Services.Emails
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
                 template = template.Replace("[Type]", consignSale.Type.ToString());
                 template = template.Replace("[Created Date]", consignSale.CreatedDate.ToString("G"));
-                template = template.Replace("[Customer Name]", member.Fullname);
-                template = template.Replace("[Phone Number]", member.Phone);
-                template = template.Replace("[Email]", member.Email);
+                template = template.Replace("[Customer Name]", consignSale.Consginer);
+                template = template.Replace("[Phone Number]", consignSale.Phone);
+                template = template.Replace("[Email]", consignSale.Email);
+                template = template.Replace("[Address]", consignSale.Address);
                 if (consignSale.Status.Equals(ConsignSaleStatus.AwaitDelivery))
                 {
                     template = template.Replace("[Status]", "Approved");
@@ -173,7 +177,7 @@ namespace Services.Emails
                     template = template.Replace("[ConsignSale Duration]", "0 Day");
                 }
                 
-                content.Subject = $"[GIVEAWAY] CONSIGNSALE INVOICE FROM GIVEAWAY {consignSale.ConsignSaleCode}";
+                content.Subject = $"[GIVEAWAY] CONSIGNSALE INVOICE FROM GIVEAWAY";
                 content.Body = template;
 
                 await SendEmail(content);
@@ -200,6 +204,35 @@ namespace Services.Emails
             response.ResultStatus = ResultStatus.Success;
 
             return response;
+        }
+
+        public async Task<bool> SendEmailConsignSaleReceived(Guid consignId)
+        {
+            var consignSale = await _consignSaleRepository.GetConsignSaleById(consignId);
+            SendEmailRequest content = new SendEmailRequest();
+            if (consignSale.MemberId != null)
+            {
+                var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
+                content.To = member.Email;
+
+                var template = GetEmailTemplate("ConsignSaleReceivedMail");
+                template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
+                template = template.Replace("[Type]", consignSale.Type.ToString());
+                template = template.Replace("[Start Date]", consignSale.StartDate.GetValueOrDefault().ToString("G"));
+                template = template.Replace("[Customer Name]", consignSale.Consginer);
+                template = template.Replace("[Phone Number]", consignSale.Phone);
+                template = template.Replace("[Email]", consignSale.Email);
+                template = template.Replace("[Address]", consignSale.Address);
+                template = template.Replace("[Response]", "Thank you for trusting and using the consignment service at Give Away store.");
+                template = template.Replace("[End Date]", consignSale.EndDate.GetValueOrDefault().ToString("G"));
+                
+                content.Subject = $"[GIVEAWAY] RECEIVED CONSIGNSALE FROM GIVEAWAY";
+                content.Body = template;
+
+                await SendEmail(content);
+                return true;
+            }
+            return false;
         }
     }
 }

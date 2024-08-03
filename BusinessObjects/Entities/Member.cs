@@ -1,4 +1,6 @@
-﻿namespace BusinessObjects.Entities;
+﻿using System.Collections;
+
+namespace BusinessObjects.Entities;
 
 public class Member : Account
 {
@@ -11,4 +13,5 @@ public class Member : Account
     
     public ICollection<Feedback> Feedbacks = new List<Feedback>();
     public ICollection<Transaction> Transactions = new List<Transaction>();
+    public ICollection<Address> Addresses = new List<Address>();
 }
