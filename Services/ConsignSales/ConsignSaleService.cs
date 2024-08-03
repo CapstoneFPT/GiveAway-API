@@ -241,7 +241,8 @@ namespace Services.ConsignSales
 
             if (consignSaleDetail.FashionItem is AuctionFashionItem auctionFashionItem)
             {
-               auctionFashionItem.InitialPrice = request.SellingPrice; 
+               auctionFashionItem.InitialPrice = request.SellingPrice;
+               auctionFashionItem.Status = FashionItemStatus.PendingAuction;
             }
             else
             {
