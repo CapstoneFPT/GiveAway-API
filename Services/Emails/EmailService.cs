@@ -73,7 +73,7 @@ namespace Services.Emails
             string formattedLink = string.Format(appDomain + confirmationLink, user.AccountId, token);
 
             var template = GetEmailTemplate("VerifyAccountMail");
-            template = template.Replace($"[link]", /*formattedLink*/"https://zmsyzvwbtf.preview-postedstuff.com/templates/V2-Bpo4-08Nj-MN71/");
+            template = template.Replace($"[link]", formattedLink);
 
                 SendEmailRequest content = new SendEmailRequest
             {
