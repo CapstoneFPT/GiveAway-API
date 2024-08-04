@@ -151,15 +151,6 @@ namespace WebApi.Controllers
             return await _shopService.CreateFeedbackForShop(shopId, feedbackRequest);
         }
 
-        [HttpPut("{shopId}/orders/{orderId}/cancel")]
-        public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid shopId, [FromRoute] Guid orderId)
-        {
-            var result = await _orderService.CancelOrderByShop(shopId, orderId);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-            return Ok(result);
-        }
+        
     }
 }

@@ -401,7 +401,7 @@ namespace Services.Orders
             return response;
         }
 
-        public async Task<Result<string>> CancelOrderByShop(Guid shopId, Guid orderId)
+        public async Task<Result<string>> CancelOrderByAdmin(Guid orderId)
         {
             var response = new Result<string>();
             var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);

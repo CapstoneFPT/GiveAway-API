@@ -239,6 +239,16 @@ namespace WebApi.Controllers
             var result = await _orderService.ConfirmPendingOrder(orderId, orderdetailId);
             return Ok(result);
         }
+        [HttpPut("{orderId}/cancelbyadmin")]
+        public async Task<ActionResult<Result<string>>> CancelOrderByAdmin([FromRoute] Guid orderId)
+        {
+            var result = await _orderService.CancelOrderByAdmin(orderId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
+        }
     }
 
     public class VnPayPurchaseResponse
