@@ -22,8 +22,8 @@ namespace BusinessObjects.Dtos.ConsignSaleDetails
     {
         public Guid ConsignSaleDetailId { get; set; }
         public Guid FashionItemId { get; set; }
-        public int DealPrice { get; set; }
-        public int ConfirmedPrice { get; set;}
+        public decimal DealPrice { get; set; }
+        public decimal ConfirmedPrice { get; set;}
         public string ItemName { get; set; }
     }
 }
