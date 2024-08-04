@@ -98,17 +98,7 @@ namespace WebApi.Controllers
         }
 
 
-        [HttpGet("{shopId}/consignsales")]
-        public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId(
-            [FromRoute] Guid shopId, [FromQuery] ConsignSaleRequestForShop request)
-        {
-            var result = await _consignSaleService.GetAllConsignSalesByShopId(shopId, request);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-            return Ok(result);
-        }
+        
 
         [HttpPost("{shopId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,

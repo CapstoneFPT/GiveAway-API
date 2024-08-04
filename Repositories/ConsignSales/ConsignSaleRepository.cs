@@ -361,7 +361,7 @@ namespace Repositories.ConsignSales
             return consignResponse;
         }
 
-        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(Guid shopId,
+        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(
             ConsignSaleRequestForShop request)
         {
             var query = GenericDao<ConsignSale>.Instance.GetQueryable();
@@ -382,7 +382,11 @@ namespace Repositories.ConsignSales
             {
                 query = query.Where(f => f.EndDate <= request.EndDate);
             }
-            query = query.Where(c => c.ShopId == shopId);
+
+            if (request.ShopId.HasValue)
+            {
+                query = query.Where(c => c.ShopId == request.ShopId);
+            }
 
             var count = await query.CountAsync();
             query = query

@@ -19,7 +19,17 @@ namespace WebApi.Controllers
         {
             _consignsaleService = consignsaleService;
         }
+        [HttpGet]
+        public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId(
+            [FromQuery] ConsignSaleRequestForShop request)
+        {
+            var result = await _consignsaleService.GetAllConsignSalesByShopId(request);
 
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
+        }
         [HttpGet("{consignsaleId}")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> GetConsignSaleById([FromRoute] Guid consignsaleId)
         {

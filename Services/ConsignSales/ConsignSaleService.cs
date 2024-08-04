@@ -203,11 +203,11 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(Guid shopId,
+        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(
             ConsignSaleRequestForShop request)
         {
             var response = new Result<PaginationResponse<ConsignSaleResponse>>();
-            var listConsign = await _consignSaleRepository.GetAllConsignSaleByShopId(shopId, request);
+            var listConsign = await _consignSaleRepository.GetAllConsignSaleByShopId(request);
             if (listConsign.TotalCount == 0)
             {
                 response.Messages = ["You don't have any consignment"];
