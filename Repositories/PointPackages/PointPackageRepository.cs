@@ -37,19 +37,16 @@ public class PointPackageRepository : IPointPackageRepository
 
     public async Task AddPointsToBalance(Guid accountId, int amount)
     {
-        // var account = await _giveAwayDbContext.Accounts
-        //     .FirstOrDefaultAsync(x => x.AccountId == accountId);
-        //
-        // if (account == null)
-        // {
-        //     throw new AccountNotFoundException();
-        // }
-        // account.Balance += amount;
-        // _giveAwayDbContext.Accounts.Update(account);
-        // await _giveAwayDbContext.SaveChangesAsync();
-
-        await _giveAwayDbContext.Accounts.Where(x => x.AccountId == accountId).ExecuteUpdateAsync(s =>
-            s.SetProperty(account => account.Balance, account => account.Balance + amount));
+        var account = await _giveAwayDbContext.Accounts
+            .FirstOrDefaultAsync(x => x.AccountId == accountId);
+        
+        if (account == null)
+        {
+            throw new AccountNotFoundException();
+        }
+        account.Balance += amount;
+        _giveAwayDbContext.Accounts.Update(account);
+        await _giveAwayDbContext.SaveChangesAsync();
     }
 
     public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetPointPackages<T>(

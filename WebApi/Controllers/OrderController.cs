@@ -176,7 +176,7 @@ namespace WebApi.Controllers
                         await _orderService.UpdateAdminBalance(order);
                         await _emailService.SendEmailOrder(order);
 
-                        return Redirect("http://localhost:5173");
+                        return Redirect("https://giveawayproject.jettonetto.org");
                     }
                 }
                 catch (Exception e)
@@ -220,8 +220,8 @@ namespace WebApi.Controllers
 
             order.PaymentDate = DateTime.UtcNow;
             order.Status = OrderStatus.Pending;
+            order.Member.Balance -= order.TotalPrice;
 
-            await _accountService.DeductPoints(request.MemberId, order.TotalPrice);
             await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
             await _orderService.UpdateOrder(order);
             await _orderService.UpdateFashionItemStatus(order.OrderId);
