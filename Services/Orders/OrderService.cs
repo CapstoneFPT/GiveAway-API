@@ -504,6 +504,15 @@ namespace Services.Orders
             {
                 predicate = predicate.And(ord => ord.BidId == null);
             }
+
+            if (orderRequest.IsPointPackage == true)
+            {
+                predicate = predicate.And(or => or.OrderDetails.All(c => c.PointPackageId != null));
+            }
+            if (orderRequest.IsPointPackage == false)
+            {
+                predicate = predicate.And(or => or.OrderDetails.All(c => c.PointPackageId == null));
+            }
             (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
                 await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
                     orderRequest.PageSize, predicate, selector);
