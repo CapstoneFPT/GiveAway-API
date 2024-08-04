@@ -21,7 +21,16 @@ public class ErrorResponse
 public enum ErrorCode
 {
     UnverifiedAccount,
-    
+    AuctionClosed,
+    BankAccountNotSet,
+    ScheduledTimeOverlapped,
+    AuctionNotPending,
+    WithdrawNotFound,
+    DuplicateEmail,
+    DuplicatePhoneNumber,
+    UnauthorizedPayment,
+    MismatchPaymentMethod,
+    PointPackageNotFound
 }
 
 public enum ErrorType
@@ -30,5 +39,11 @@ public enum ErrorType
     InvalidRequestError,
     AuctionError,
     ConsignError,
-    FashionItemError
+    FashionItemError,
+    WithdrawError,
+    PointPackageError,
+    TransactionError,
+    OrderError,
+    PaymentError,
+    AccountError,
 }

@@ -220,8 +220,8 @@ namespace WebApi.Controllers
 
             order.PaymentDate = DateTime.UtcNow;
             order.Status = OrderStatus.Pending;
+            order.Member.Balance -= order.TotalPrice;
 
-            await _accountService.DeductPoints(request.MemberId, order.TotalPrice);
             await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
             await _orderService.UpdateOrder(order);
             await _orderService.UpdateFashionItemStatus(order.OrderId);
