@@ -120,7 +120,7 @@ namespace Repositories.FashionItems
                 .Include(c => c.FashionItems).ThenInclude(c => c.Images)
                 .SelectMany(c => c.FashionItems)
                 .AsNoTracking();
-
+            query = query.OrderByDescending(c => c.CreatedDate);
             if (request.Status != null)
             {
                 query = query.Where(f => request.Status.Contains(f.Status));

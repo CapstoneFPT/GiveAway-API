@@ -4,16 +4,18 @@ using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
+using Services.Emails;
 
 namespace Services.ConsignSales;
 
 public class ConsignEndingJob : IJob
 {
     private readonly IServiceProvider _serviceProvider;
-
-    public ConsignEndingJob(IServiceProvider serviceProvider)
+    private readonly IEmailService _emailService;
+    public ConsignEndingJob(IServiceProvider serviceProvider, IEmailService emailService)
     {
         _serviceProvider = serviceProvider;
+        _emailService = emailService;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -69,5 +71,6 @@ public class ConsignEndingJob : IJob
             throw;
         }
         await dbContext.SaveChangesAsync();
+        await _emailService.SendEmailConsignSaleEndedMail(consignId);
     }
 }

@@ -330,7 +330,7 @@ namespace Repositories.Auctions
             Expression<Func<Auction, T>> selector)
         {
             var query = GenericDao<Auction>.Instance.GetQueryable();
-
+            query = query.OrderByDescending(c => c.CreatedDate);
             if (predicate != null)
                 query = query.Where(predicate);
 

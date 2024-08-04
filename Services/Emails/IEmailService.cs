@@ -19,5 +19,6 @@ namespace Services.Emails
         Task<bool> SendEmailConsignSale(Guid consignSaleId);
         Task<Result<string>> SendMailForgetPassword(string email);
         Task<bool> SendEmailConsignSaleReceived(Guid consignId);
+        Task<bool> SendEmailConsignSaleEndedMail(Guid consignId);
     }
 }

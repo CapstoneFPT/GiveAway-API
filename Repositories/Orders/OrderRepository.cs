@@ -227,7 +227,7 @@ namespace Repositories.Orders
             Expression<Func<Order, T>> selector)
         {
             var query = _giveAwayDbContext.Orders.AsQueryable();
-
+            query = query.OrderByDescending(c => c.CreatedDate);
             if (predicate != null)
             {
                 query = query.Where(predicate);
