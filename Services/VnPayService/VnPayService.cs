@@ -23,7 +23,7 @@ public class VnPayService : IVnPayService
         _environment = environment;
     }
 
-    public string CreatePaymentUrl(Guid orderId, long amount, string orderInfo,string resourceName)
+    public string CreatePaymentUrl(Guid orderId, decimal amount, string orderInfo, string resourceName)
     {
         var tick = DateTime.Now.Ticks.ToString();
         var createdDate = DateTime.Now.ToString("yyyyMMddHHmmss");

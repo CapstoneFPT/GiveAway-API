@@ -6,13 +6,21 @@ using BusinessObjects.Utils;
 using Dao;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Repositories.Auctions
 {
     public class AuctionRepository : IAuctionRepository
     {
+        private readonly ILogger _logger;
+
+        public AuctionRepository(ILogger<AuctionRepository> logger)
+        {
+            _logger = logger;
+        }
+
         private static DateTime GetUtcDateTimeFromLocalDateTime(DateTime scheduledDate
-            ,TimeZoneInfo timeZone)
+            , TimeZoneInfo timeZone)
         {
             var localDateTime = TimeZoneInfo.ConvertTime(scheduledDate, TimeZoneInfo.Local, timeZone);
             var utcTime = TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZone);
@@ -47,6 +55,14 @@ namespace Repositories.Auctions
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
+            _logger.LogInformation(
+                @"CreateAuction
+Request Body: 
+{StepIncrementPercentage},
+{AuctionItemId}
+", request.StepIncrementPercentage,
+                request.AuctionItemId);
+
             var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable().Include(x => x.Category)
                 .Include(x => x.Images)
                 .Include(x => x.Shop)
@@ -64,7 +80,6 @@ namespace Repositories.Auctions
 
             if (auctionItem.Status != FashionItemStatus.PendingAuction)
             {
-                
             }
 
             var shop = await GenericDao<Shop>.Instance.GetQueryable()
@@ -80,7 +95,9 @@ namespace Repositories.Auctions
                 throw new ScheduledTimeOverlappedException();
             }
 
-            var timezone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+
+            decimal stepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100);
+            _logger.LogInformation("StepIncrement: {StepIncrement}", stepIncrement);
             var newAuction = new Auction
             {
                 AuctionFashionItemId = request.AuctionItemId,
@@ -88,7 +105,7 @@ namespace Repositories.Auctions
                 ShopId = request.ShopId,
                 DepositFee = request.DepositFee,
                 CreatedDate = DateTime.UtcNow,
-                StepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100),
+                StepIncrement = stepIncrement,
                 StartDate = request.StartTime,
                 EndDate = request.EndTime,
                 Status = AuctionStatus.Pending

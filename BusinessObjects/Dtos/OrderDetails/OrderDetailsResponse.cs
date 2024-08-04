@@ -6,7 +6,7 @@ public class OrderDetailsResponse
 {
     public string OrderCode { get; set; }
     public Guid OrderDetailId { get; set; }
-    public int UnitPrice { get; set; }
+    public decimal UnitPrice { get; set; }
     public DateTime? RefundExpirationDate { get; set; }
     public string ItemName { get; set; }
     public FashionItemType ItemType { get; set; }

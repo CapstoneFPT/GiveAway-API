@@ -6,5 +6,5 @@ namespace Services.VnPayService;
 public interface IVnPayService
 {
     VnPaymentResponse ProcessPayment(IQueryCollection collection);
-    string CreatePaymentUrl(Guid orderId, long amount, string orderInfo, string resourceName);
+    string CreatePaymentUrl(Guid orderId, decimal amount, string orderInfo, string resourceName);
 }

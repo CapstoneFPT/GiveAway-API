@@ -51,7 +51,7 @@ namespace Repositories.Orders
             var memberAccount = await GenericDao<Account>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(c => c.AccountId == accountId);
 
-            int totalPrice = 0;
+            decimal totalPrice = 0;
             Order order = new Order();
             order.MemberId = accountId;
 
@@ -440,7 +440,7 @@ namespace Repositories.Orders
                 .Where(c => orderRequest.ItemIds.Contains(c.ItemId)).ToListAsync();
 
 
-            int totalPrice = 0;
+            decimal totalPrice = 0;
 
             Order order = new Order();
             order.PurchaseType = PurchaseType.Offline;

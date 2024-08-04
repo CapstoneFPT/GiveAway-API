@@ -6,7 +6,7 @@ namespace BusinessObjects.Entities;
 public class Order
 {
     [Key] public Guid OrderId { get; set; }
-    public int TotalPrice { get; set; }
+    public decimal TotalPrice { get; set; }
     public string OrderCode { get; set; }
     public DateTime CreatedDate { get; set; }
     public PaymentMethod PaymentMethod { get; set; }

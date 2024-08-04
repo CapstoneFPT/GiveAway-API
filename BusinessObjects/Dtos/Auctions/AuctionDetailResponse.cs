@@ -13,7 +13,7 @@ public class AuctionDetailResponse
     public DateTime EndDate { get; set; }
     public int DepositFee { get; set; }
     public AuctionStatus Status { get; set; }
-    public int StepIncrement { get; set; }
+    public decimal StepIncrement { get; set; }
     public AuctionItemDetailResponse AuctionItem { get; set; }
 }
 
@@ -21,7 +21,7 @@ public class AuctionItemDetailResponse
 {
     public Guid ItemId { get; set; }
     public FashionItemType FashionItemType { get; set; }
-    public int SellingPrice { get; set; } 
+    public decimal SellingPrice { get; set; } 
     public string Name { get; set; }
     public string Note { get; set; }
     public FashionItemStatus Status { get; set; }
@@ -31,7 +31,7 @@ public class AuctionItemDetailResponse
     public SizeType Size { get; set; }
     public GenderType Gender { get; set; }
     public string Description { get; set; }
-    public int InitialPrice { get; set; }
+    public decimal InitialPrice { get; set; }
     public ShopAuctionDetailResponse Shop { get; set; }
     public List<AuctionItemImage> Images { get; set; } = [];
     public AuctionItemCategory Category { get; set; }

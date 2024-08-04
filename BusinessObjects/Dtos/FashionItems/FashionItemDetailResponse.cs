@@ -12,7 +12,7 @@ namespace BusinessObjects.Dtos.FashionItems
     {
         public Guid ItemId { get; set; }
         public FashionItemType Type { get; set; }
-        public int SellingPrice { get; set; }
+        public decimal SellingPrice { get; set; }
         public string Name { get; set; }
         public string? Note { get; set; }
         public string Description { get; set; }

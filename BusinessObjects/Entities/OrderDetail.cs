@@ -7,7 +7,7 @@ public class OrderDetail
 {
     [Key]
     public Guid OrderDetailId { get; set; }
-    public int UnitPrice { get; set; }
+    public decimal UnitPrice { get; set; }
     public Order Order { get; set; }
     public Guid OrderId { get; set; }
     public Refund? Refund { get; set; }

@@ -11,5 +11,5 @@ public class BidDetailResponse
     public int Amount { get; set; }
     public DateTime CreatedDate { get; set; }
     public bool IsWinning { get; set; }
-    public int NextAmount { get; set; }
+    public decimal NextAmount { get; set; }
 }

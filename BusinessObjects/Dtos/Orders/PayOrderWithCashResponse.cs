@@ -5,5 +5,5 @@ public class PayOrderWithCashResponse
     public Guid OrderId { get; set; }
     public int AmountGiven { get; set; }
     public OrderResponse Order { get; set; }
-    public int Change => AmountGiven - Order.TotalPrice;
+    public decimal Change => AmountGiven - Order.TotalPrice;
 }

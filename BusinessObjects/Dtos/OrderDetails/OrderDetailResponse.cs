@@ -10,7 +10,7 @@ namespace BusinessObjects.Dtos.OrderDetails
     public class OrderDetailResponse<T>
     {
         public Guid OrderDetailId { get; set; }
-        public int UnitPrice { get; set; }
+        public decimal UnitPrice { get; set; }
         public Guid OrderId { get; set; }
         public DateTime? RefundExpirationDate { get; set; }
         public T FashionItemDetail { get; set;}
