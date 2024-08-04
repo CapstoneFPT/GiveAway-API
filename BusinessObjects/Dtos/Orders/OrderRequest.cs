@@ -15,6 +15,7 @@ namespace BusinessObjects.Dtos.Orders
         public OrderStatus? Status { get; set; }
         public PaymentMethod? PaymentMethod { get; set; }
         public string? OrderCode { get; set; }
-        public bool IsFromAuction { get; set; } = false;
+        public bool? IsFromAuction { get; set; }
+        
     }
 }

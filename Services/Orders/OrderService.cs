@@ -500,6 +500,10 @@ namespace Services.Orders
             {
                 predicate = predicate.And(ord => ord.BidId != null);
             }
+            if (orderRequest.IsFromAuction == false)
+            {
+                predicate = predicate.And(ord => ord.BidId == null);
+            }
             (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
                 await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
                     orderRequest.PageSize, predicate, selector);

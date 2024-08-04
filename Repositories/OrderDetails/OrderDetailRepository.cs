@@ -37,7 +37,7 @@ namespace Repositories.OrderDetails
             OrderDetailRequest request)
         {
             var query = GenericDao<OrderDetail>.Instance.GetQueryable();
-            query = query.Where(c => c.OrderId == id);
+            query = query.Include(c => c.PointPackage).Where(c => c.OrderId == id);
             
             if (request.ShopId != null)
             {
@@ -47,8 +47,7 @@ namespace Repositories.OrderDetails
             query = query.Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize);
 
-            var order = await GenericDao<Order>.Instance.GetQueryable()
-                .FirstOrDefaultAsync(c => c.OrderId == id);
+            
             var items = await query
                 .ProjectTo<OrderDetailsResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().ToListAsync();
