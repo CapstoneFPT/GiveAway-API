@@ -5,7 +5,7 @@ namespace BusinessObjects.Dtos.ConsignSales;
 public class ConfirmReceivedConsignRequest
 {
    
-    public int SellingPrice { get; set; }
+    public decimal SellingPrice { get; set; }
     public Guid CategoryId { get; set; } 
     public string Description { get; set; }
 }

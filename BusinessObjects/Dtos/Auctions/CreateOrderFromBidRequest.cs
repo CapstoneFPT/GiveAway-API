@@ -4,7 +4,7 @@ namespace BusinessObjects.Dtos.Auctions;
 
 public class CreateOrderFromBidRequest
 {
-    public int TotalPrice { get; set; }
+    public decimal TotalPrice { get; set; }
     public string OrderCode { get; set; }
     public Guid BidId { get; set; }
     public Guid MemberId { get; set; }

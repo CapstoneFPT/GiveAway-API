@@ -15,7 +15,7 @@ namespace BusinessObjects.Dtos.Account.Response
         public string Phone { get; set; }
         public string Fullname { get; set; }
         public Roles Role { get; set; }
-        public int Balance { get; set; }
+        public decimal Balance { get; set; }
         public AccountStatus Status { get; set; }
     }
 }

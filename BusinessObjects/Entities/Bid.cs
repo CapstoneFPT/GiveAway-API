@@ -6,7 +6,7 @@ public class Bid
 {
     [Key]
     public Guid BidId { get; set; }
-    public int Amount { get; set; }
+    public decimal Amount { get; set; }
     public DateTime CreatedDate { get; set; }
     public Auction Auction { get; set; }
     public Guid AuctionId { get; set; }

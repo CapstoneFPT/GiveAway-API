@@ -18,7 +18,7 @@ public class ConsignSale
     public Account? Member { get; set; }
     public Guid? MemberId { get; set; }
     public ConsignSaleStatus Status { get; set; }
-    public int TotalPrice { get; set; }
+    public decimal TotalPrice { get; set; }
     public decimal SoldPrice { get; set; }
     public decimal ConsignorReceivedAmount { get; set; }
     public Transaction? Transaction { get; set; }

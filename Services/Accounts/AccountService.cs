@@ -122,7 +122,7 @@ namespace Services.Accounts
             return response;
         }
 
-        public async Task DeductPoints(Guid requestMemberId, int orderTotalPrice)
+        public async Task DeductPoints(Guid requestMemberId, decimal orderTotalPrice)
         {
             var member = await _account.GetAccountById(requestMemberId);
 

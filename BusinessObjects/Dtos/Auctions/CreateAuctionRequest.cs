@@ -14,8 +14,8 @@ public class CreateAuctionRequest : IValidatableObject
     public decimal StepIncrementPercentage { get; set; }
     
 
-    [Range(1, int.MaxValue, ErrorMessage = "Error: Minimum deposit must be greater than 0")]
-    public int DepositFee { get; set; }
+    [Range(0, (double)decimal.MaxValue, ErrorMessage = "Error: Minimum deposit must be greater than 0")]
+    public decimal DepositFee { get; set; }
 
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

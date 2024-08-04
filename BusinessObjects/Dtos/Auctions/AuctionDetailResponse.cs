@@ -11,7 +11,7 @@ public class AuctionDetailResponse
     public string Title { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public int DepositFee { get; set; }
+    public decimal DepositFee { get; set; }
     public AuctionStatus Status { get; set; }
     public decimal StepIncrement { get; set; }
     public AuctionItemDetailResponse AuctionItem { get; set; }

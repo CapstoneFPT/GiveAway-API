@@ -230,7 +230,7 @@ namespace Repositories.ConsignSales
             consign.StartDate = DateTime.UtcNow;
             consign.EndDate = DateTime.UtcNow.AddDays(60);
 
-            int totalprice = 0;
+            decimal totalprice = 0;
             
             foreach (var detail in consign.ConsignSaleDetails)
             {

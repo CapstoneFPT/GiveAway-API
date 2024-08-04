@@ -8,8 +8,8 @@ public class ConsignSaleDetail
     public Guid ConsignSaleDetailId { get; set; }
     public Guid ConsignSaleId { get; set; }
     public Guid FashionItemId { get; set; }
-    public int DealPrice { get; set; }
-    public int ConfirmedPrice { get; set; }
+    public decimal DealPrice { get; set; }
+    public decimal ConfirmedPrice { get; set; }
     public ConsignSale ConsignSale { get; set; }
     public FashionItem FashionItem { get; set; }
     public DateTime CreatedDate { get; set; }

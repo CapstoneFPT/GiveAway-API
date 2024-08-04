@@ -10,7 +10,7 @@ public class Auction
     public string Title { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public int DepositFee { get; set; }
+    public decimal DepositFee { get; set; }
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
     public decimal StepIncrement { get; set; }

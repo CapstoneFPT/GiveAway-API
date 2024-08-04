@@ -12,7 +12,7 @@ namespace BusinessObjects.Dtos.ConsignSales
         public string Name { get; set; }
         public string? Note { get; set; }
         public string Description { get; set; }
-        public int ConfirmedPrice { get; set; }
+        public decimal ConfirmedPrice { get; set; }
         public int Condition { get; set; }
         public Guid? CategoryId { get; set; }
         public SizeType Size { get; set; }

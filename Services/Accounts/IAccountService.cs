@@ -19,7 +19,7 @@ namespace Services.Accounts
         Task<Result<AccountResponse>> GetAccountById(Guid id);
         Task<Result<AccountResponse>> BanAccountById(Guid id);
         Task<Result<AccountResponse>> UpdateAccount(Guid id, UpdateAccountRequest request);
-        Task DeductPoints(Guid requestMemberId, int orderTotalPrice);
+        Task DeductPoints(Guid requestMemberId, decimal orderTotalPrice);
         Task<PaginationResponse<AccountResponse>> GetAccounts(GetAccountsRequest request);
         Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request);
         Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request);

@@ -15,8 +15,8 @@ namespace BusinessObjects.Dtos.ConsignSales
         public string Name { get; set; }
         public string? Note { get; set; }
         [Required]
-        [Range(0, int.MaxValue, ErrorMessage = "Please enter valid integer Number")]
-        public int DealPrice { get; set; }
+        [Range(0, (double)decimal.MaxValue, ErrorMessage = "Please enter valid integer Number")]
+        public decimal DealPrice { get; set; }
         
         public int Condition { get; set; }
         public SizeType Size { get; set; }

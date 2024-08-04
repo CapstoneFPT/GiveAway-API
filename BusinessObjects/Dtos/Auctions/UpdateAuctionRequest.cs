@@ -15,7 +15,7 @@ public class UpdateAuctionRequest :IValidatableObject
     public Guid? TimeslotId { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = "Error: Minimum deposit must be greater than 0")]
-    public int? DepositFee { get; set; }
+    public decimal? DepositFee { get; set; }
 
     public AuctionStatus Status { get; set; }
 
