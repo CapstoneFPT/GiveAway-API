@@ -34,10 +34,10 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.Login(loginRequest.Email, loginRequest.Password);
 
-        if (result.ResultStatus != ResultStatus.Success)
+        /*if (result.ResultStatus != ResultStatus.Success)
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
-        }
+        }*/
         
         return Ok(result);
     }
