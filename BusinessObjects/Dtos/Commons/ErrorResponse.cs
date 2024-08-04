@@ -4,6 +4,14 @@ namespace BusinessObjects.Dtos.Commons;
 
 public class ErrorResponse
 {
+    public ErrorResponse(string message, ErrorType type, HttpStatusCode statusCode, ErrorCode errorCode)
+    {
+        Message = message;
+        Type = type;
+        StatusCode = statusCode;
+        ErrorCode = errorCode;
+    }
+    
     public ErrorType Type { get; set; }
     public string Message { get; set; }
     public HttpStatusCode StatusCode { get; set; }
@@ -12,11 +20,15 @@ public class ErrorResponse
 
 public enum ErrorCode
 {
+    UnverifiedAccount,
     
 }
 
 public enum ErrorType
 {
     ApiError,
-    InvalidRequestError
+    InvalidRequestError,
+    AuctionError,
+    ConsignError,
+    FashionItemError
 }

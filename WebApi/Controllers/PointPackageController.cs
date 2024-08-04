@@ -117,8 +117,9 @@ public class PointPackageController : ControllerBase
                     return Redirect("https://giveawayproject.jettonetto.org");
                 }
 
-                await _pointPackageService.AddPointsToBalance(order.MemberId!.Value, amount: pointPackage!.Points);
+                // await _pointPackageService.AddPointsToBalance(order.MemberId!.Value, amount: pointPackage!.Points);
 
+                order.Member.Balance += pointPackage!.Points;
                 order.Status = OrderStatus.Completed;
                 order.PaymentDate = DateTime.UtcNow;
                 await _orderService.UpdateOrder(order);
