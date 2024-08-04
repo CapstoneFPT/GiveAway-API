@@ -176,7 +176,7 @@ namespace WebApi.Controllers
                         await _orderService.UpdateAdminBalance(order);
                         await _emailService.SendEmailOrder(order);
 
-                        return Redirect("http://localhost:5173");
+                        return Redirect("https://giveawayproject.jettonetto.org");
                     }
                 }
                 catch (Exception e)

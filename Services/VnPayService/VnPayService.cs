@@ -1,5 +1,7 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 namespace Services.VnPayService;
@@ -9,29 +11,42 @@ public class VnPayService : IVnPayService
     private readonly VnPayLibrary _vnPayLibrary;
     private readonly VnPaySettings _vnPaySettings;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IConfiguration _configuration;
+    private readonly IHostEnvironment _environment;
 
-    public VnPayService( IOptions<VnPaySettings> vnPaySettings, IHttpContextAccessor httpContextAccessor)
+    public VnPayService( IOptions<VnPaySettings> vnPaySettings, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IHostEnvironment environment)
     {
         _vnPayLibrary = new VnPayLibrary();
         _vnPaySettings = vnPaySettings.Value;
         _httpContextAccessor = httpContextAccessor;
+        _configuration = configuration;
+        _environment = environment;
     }
 
     public string CreatePaymentUrl(Guid orderId, long amount, string orderInfo,string resourceName)
     {
         var tick = DateTime.Now.Ticks.ToString();
+        var createdDate = DateTime.Now.ToString("yyyyMMddHHmmss");
+        var expiredDate = DateTime.Now.AddMinutes(15).ToString("yyyyMMddHHmmss");
+
+        if (_environment.IsProduction())
+        {
+            // Vietnam Time
+            createdDate = DateTime.Now.AddHours(7).ToString("yyyyMMddHHmmss");
+            expiredDate = DateTime.Now.AddHours(7).AddMinutes(15).ToString("yyyyMMddHHmmss");
+        }
         
         _vnPayLibrary.AddRequestData("vnp_Version", VnPayLibrary.VERSION);
         _vnPayLibrary.AddRequestData("vnp_Command", "pay");
         _vnPayLibrary.AddRequestData("vnp_TmnCode", _vnPaySettings.TmnCode);
         _vnPayLibrary.AddRequestData("vnp_Amount", (amount * 100).ToString());
-        _vnPayLibrary.AddRequestData("vnp_CreateDate", DateTime.UtcNow.ToString("yyyyMMddHHmmss"));
+        _vnPayLibrary.AddRequestData("vnp_CreateDate", createdDate);
         _vnPayLibrary.AddRequestData("vnp_CurrCode", "VND");
         _vnPayLibrary.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(_httpContextAccessor.HttpContext) != null ? Utils.GetIpAddress(_httpContextAccessor.HttpContext) : "172.18.0.3");
         _vnPayLibrary.AddRequestData("vnp_Locale", "vn");
         _vnPayLibrary.AddRequestData("vnp_OrderInfo", orderId.ToString());
         _vnPayLibrary.AddRequestData("vnp_OrderType", "other");
-        _vnPayLibrary.AddRequestData("vnp_ExpireDate", DateTime.UtcNow.AddMinutes(15).ToString("yyyyMMddHHmmss"));
+        _vnPayLibrary.AddRequestData("vnp_ExpireDate", expiredDate);
         _vnPayLibrary.AddRequestData("vnp_ReturnUrl", $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}/api/{resourceName}/payment-return");
         _vnPayLibrary.AddRequestData("vnp_TxnRef", tick);
         

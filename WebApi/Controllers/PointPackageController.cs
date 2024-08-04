@@ -114,7 +114,7 @@ public class PointPackageController : ControllerBase
                 {
                     _logger.LogWarning("Order already processed: {OrderId}", response.OrderId);
                  
-                    return Redirect("http://localhost:5173");
+                    return Redirect("https://giveawayproject.jettonetto.org");
                 }
 
                 await _pointPackageService.AddPointsToBalance(order.MemberId!.Value, amount: pointPackage!.Points);
@@ -127,7 +127,7 @@ public class PointPackageController : ControllerBase
                     "Point package purchase successful. OrderCode: {OrderId}, Points: {TotalPrice}", response.OrderId,
                     order.TotalPrice);
 
-                return Redirect("http://localhost:5173");
+                return Redirect("https://giveawayproject.jettonetto.org");
             }
             catch (Exception ex)
             {
