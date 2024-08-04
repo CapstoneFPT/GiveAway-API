@@ -105,7 +105,7 @@ namespace Services.Emails
             template = template.Replace($"[Quantity]", order.OrderDetails.Count().ToString());
             template = template.Replace($"[Payment Method]", order.PaymentMethod.ToString());
             template = template.Replace($"[Payment Date]", order.PaymentDate.GetValueOrDefault().ToString("G"));
-            template = template.Replace($"[Total Price]", order.TotalPrice.ToString());
+            template = template.Replace($"[Total Price]", order.TotalPrice.ToString("N0"));
             template = template.Replace($"[Recipient Name]", order.RecipientName);
             template = template.Replace($"[Phone Number]", order.Phone);
             template = template.Replace($"[Email]", order.Email);
@@ -227,6 +227,46 @@ namespace Services.Emails
                 template = template.Replace("[End Date]", consignSale.EndDate.GetValueOrDefault().ToString("G"));
                 
                 content.Subject = $"[GIVEAWAY] RECEIVED CONSIGNSALE FROM GIVEAWAY";
+                content.Body = template;
+
+                await SendEmail(content);
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> SendEmailConsignSaleEndedMail(Guid consignId)
+        {
+            var consignSale = await _consignSaleRepository.GetConsignSaleById(consignId);
+            SendEmailRequest content = new SendEmailRequest();
+            if (consignSale.MemberId != null)
+            {
+                var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
+                content.To = member.Email;
+
+                var template = GetEmailTemplate("ConsignSaleEndedMail");
+                template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
+                template = template.Replace("[Type]", consignSale.Type.ToString());
+                template = template.Replace("[Total Price]", consignSale.TotalPrice.ToString("N0"));
+                template = template.Replace("[Sold Price]", consignSale.SoldPrice.ToString("N0"));
+                template = template.Replace("[Amount Receive]", consignSale.MemberReceivedAmount.ToString("N0"));
+                template = template.Replace("[Phone Number]", consignSale.Phone);
+                template = template.Replace("[Email]", consignSale.Email);
+                template = template.Replace("[Address]", consignSale.Address);
+                template = template.Replace("[Response]", "Thank you for trusting and using the consignment service at Give Away store.");
+                if (consignSale.SoldPrice < 1000000)
+                {
+                    template = template.Replace("[Consignment Fee]", "26%");
+                }
+                else if(consignSale.SoldPrice >= 1000000 && consignSale.SoldPrice <= 10000000)
+                {
+                    template = template.Replace("[Consignment Fee]", "23%");
+                }
+                else
+                {
+                    template = template.Replace("[Consignment Fee]", "20%");
+                }
+                content.Subject = $"[GIVEAWAY] CONSIGNMENT ENDED FROM GIVEAWAY";
                 content.Body = template;
 
                 await SendEmail(content);

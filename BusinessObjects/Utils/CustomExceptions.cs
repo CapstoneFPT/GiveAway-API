@@ -87,3 +87,4 @@ public class ConsignSaleDetailsNotFoundException : Exception
 {
 }
 public class AddressNotFoundException : Exception{}
+public class OrderDetailNotFoundException : Exception{}

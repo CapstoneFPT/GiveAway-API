@@ -689,7 +689,7 @@ namespace Services.Orders
             await _accountRepository.UpdateAccount(account);
         }
 
-        public async Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId)
+        public async Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId, Guid orderdetailId)
         {
             var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
             if (order == null)
@@ -702,12 +702,23 @@ namespace Services.Orders
                 throw new StatusNotAvailableException();
             }
 
-            order.Status = OrderStatus.OnDelivery;
-            foreach (var item in order.OrderDetails.Select(c => c.FashionItem))
+            var orderDetail = order.OrderDetails.Where(c => c.OrderDetailId == orderdetailId).FirstOrDefault();
+            if (orderDetail == null)
             {
-                item.Status = FashionItemStatus.OnDelivery;
+                throw new OrderDetailNotFoundException();
             }
 
+            if (!orderDetail.FashionItem!.Status.Equals(FashionItemStatus.PendingForOrder))
+            {
+                throw new StatusNotAvailableException();
+            }
+            orderDetail.FashionItem.Status = FashionItemStatus.OnDelivery;
+            if (order.OrderDetails.All(c => c.FashionItem!.Status == FashionItemStatus.OnDelivery))
+            {
+                order.Status = OrderStatus.OnDelivery;
+                
+            }
+            
             await _orderRepository.UpdateOrder(order);
             await _emailService.SendEmailOrder(order);
             var response = new Result<OrderResponse>();
