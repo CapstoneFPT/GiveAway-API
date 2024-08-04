@@ -192,7 +192,7 @@ public class AuthService : IAuthService
                 return new Result<LoginResponse>()
                 {
                     ResultStatus = ResultStatus.NotFound,
-                    Messages = ["Account is not Found"]
+                    Messages = ["Account is Not Found"]
                 };
             }
             else if (admin != null)
@@ -232,7 +232,7 @@ public class AuthService : IAuthService
                 return new Result<LoginResponse>()
                 {
                     ResultStatus = ResultStatus.Error,
-                    Messages = ["Not Verified"]
+                    Messages = ["Account is Not Verified! Please verify your account"]
                 };
             }
 
