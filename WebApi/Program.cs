@@ -111,7 +111,9 @@ builder.Services.AddCors(options =>
                     "http://localhost:5173",
                     "http://localhost:80",
                     "https://giveawayproject.jettonetto.org:443", 
-                    "http://localhost:3000"
+                    "http://localhost:3000",
+                    "http://localhost:2052",
+                    "https://giveawayproject.jettonetto.org:2053"
                     )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
