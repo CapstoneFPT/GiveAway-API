@@ -20,6 +20,7 @@ public class OrderDetailsResponse
     public List<string>? ItemImage { get; set; }
     public FashionItemStatus? ItemStatus { get; set; }
     public string? ShopAddress { get; set; }
+    public Guid? ShopId { get; set; }
     public Guid? PointPackageId { get; set; }
     public DateTime CreatedDate { get; set; }
 }
