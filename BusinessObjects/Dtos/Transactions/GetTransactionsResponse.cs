@@ -6,6 +6,7 @@ public class GetTransactionsResponse
 {
     public Guid TransactionId { get; set; }
     public string? OrderCode { get; set; }
+    public string? ConsignSaleCode { get; set; }
     public decimal Amount { get; set; }
     public DateTime CreatedDate { get; set; }
     public TransactionType Type { get; set; }

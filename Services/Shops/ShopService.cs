@@ -86,10 +86,10 @@ namespace Services.Shops
                 CustomerName = transaction.Order!.RecipientName,
                 CustomerPhone = transaction.Order.Phone
             };
-
+            Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
             (List<TransactionResponse> Items, int Page, int PageSize, int Total) result =
                 await _transactionRepository.GetTransactionsProjection<TransactionResponse>(transactionRequest.Page,
-                    transactionRequest.PageSize, predicate, selector);
+                    transactionRequest.PageSize, predicate,orderBy, selector);
 
             return new PaginationResponse<TransactionResponse>()
             {

@@ -262,7 +262,7 @@ namespace Repositories.ConsignSales
 
         }
 
-        public async Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId,
+        public async Task<ConsignSaleResponse>  CreateConsignSaleByShop(Guid shopId,
             CreateConsignSaleByShopRequest request)
         {
             //tao moi 1 consign
@@ -313,6 +313,7 @@ namespace Repositories.ConsignSales
                     Brand = item.Brand,
                     Color = item.Color,
                     Size = item.Size,
+                    CreatedDate = DateTime.UtcNow,
                     Gender = item.Gender,
                 };
                 switch (request.Type)

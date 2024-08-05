@@ -38,13 +38,14 @@ namespace Repositories.Transactions
         public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetTransactionsProjection<T>(
             int? transactionRequestPage,
             int? transactionRequestPageSize, Expression<Func<Transaction, bool>>? predicate,
+            Expression<Func<Transaction, DateTime>> orderBy,
             Expression<Func<Transaction, T>>? selector)
         {
             var query = _giveAwayDbContext.Transactions.AsQueryable(); 
 
             if (predicate != null)
             {
-                query = query.Where(predicate);
+                query = query.OrderByDescending(orderBy).Where(predicate);
             }
 
             var total = await query.CountAsync();

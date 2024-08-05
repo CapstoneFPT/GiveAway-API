@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using LinqKit;
 using Repositories.Orders;
 using Repositories.Transactions;
 using Transaction = BusinessObjects.Entities.Transaction;
@@ -72,6 +75,58 @@ namespace Services.Transactions
                 Type = transactionType
             };
             return _transactionRepository.CreateTransaction(transaction);
+        }
+
+        public async Task<Result<PaginationResponse<TransactionResponse>>> GetAllTransaction(TransactionRequest transactionRequest)
+        {
+            try
+            {
+                Expression<Func<Transaction, bool>> predicate = transaction => true ;
+                if (transactionRequest.ShopId.HasValue)
+                {
+                    predicate = transaction => transaction.Order!.PurchaseType.Equals(PurchaseType.Offline) 
+                        && transaction.Order!.OrderDetails.FirstOrDefault()!.FashionItem!.ShopId == transactionRequest.ShopId;
+                }
+
+                if (transactionRequest.TransactionType.HasValue)
+                {
+                    predicate = predicate.And(c => c.Type.Equals(transactionRequest.TransactionType));
+                }
+                Expression<Func<Transaction, TransactionResponse>> selector = transaction => new TransactionResponse()
+                {
+                    TransactionId = transaction.TransactionId,
+                    TransactionType = transaction.Type,
+                    OrderId = transaction.OrderId,
+                    OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
+                    ConsignSaleId = transaction.ConsignSaleId,
+                    ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null,
+                    Amount = transaction.Amount,
+                    CreatedDate = transaction.CreatedDate,
+                    CustomerName = transaction.Order!.RecipientName != null ? transaction.Order!.RecipientName : transaction.ConsignSale!.ConsignorName,
+                    CustomerPhone = transaction.Order!.Phone != null ? transaction.Order!.Phone : transaction.ConsignSale!.Phone
+                };
+                Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
+                (List<TransactionResponse> Items, int Page, int PageSize, int Total) result =
+                    await _transactionRepository.GetTransactionsProjection<TransactionResponse>(transactionRequest.Page,
+                        transactionRequest.PageSize, predicate,orderBy, selector);
+                return new  Result<PaginationResponse<TransactionResponse>>()
+                {
+                    Data = new PaginationResponse<TransactionResponse>()
+                    {
+                        Items = result.Items,
+                        PageNumber = result.Page,
+                        PageSize = result.PageSize,
+                        TotalCount = result.Total
+                    },
+                    Messages = new []{"Result with " + result.Total + " transaction"},
+                    ResultStatus = ResultStatus.Success
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 

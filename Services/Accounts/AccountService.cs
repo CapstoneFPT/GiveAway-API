@@ -283,6 +283,7 @@ namespace Services.Accounts
                 predicate = predicate.And(x => request.Types.Contains(x.Type));
             }
 
+            Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
             Expression<Func<Transaction, GetTransactionsResponse>> selector = transaction =>
                 new GetTransactionsResponse()
                 {
@@ -292,12 +293,13 @@ namespace Services.Accounts
                     Type = transaction.Type,
                     CreatedDate = transaction.CreatedDate,
                     OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
+                    ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null
                 };
 
             (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await
                 _transactionRepository.GetTransactionsProjection<GetTransactionsResponse>(request.Page, request.PageSize,
-                    predicate, selector);
-
+                    predicate, orderBy, selector);
+ 
             return new PaginationResponse<GetTransactionsResponse>()
             {
                 Items = data.Items,

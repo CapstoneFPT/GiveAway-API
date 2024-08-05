@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Entities;
 
 namespace Services.Transactions
@@ -15,5 +16,6 @@ namespace Services.Transactions
             TransactionType transactionType);
 
         Task CreateTransactionFromPoints(Order order, Guid requestMemberId, TransactionType transactionType);
+        Task<Result<PaginationResponse<TransactionResponse>>> GetAllTransaction(TransactionRequest transactionRequest);
     }
 }

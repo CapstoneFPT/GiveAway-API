@@ -338,6 +338,18 @@ namespace Services.Orders
             {
                 predicate = predicate.And(ord => ord.BidId != null);
             }
+            if (request.IsFromAuction == false)
+            {
+                predicate = predicate.And(ord => ord.BidId == null);
+            }
+            if (request.IsPointPackage == true)
+            {
+                predicate = predicate.And(ord => ord.BidId != null);
+            }
+            if (request.IsFromAuction == true)
+            {
+                predicate = predicate.And(ord => ord.BidId != null);
+            }
             (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
                 await _orderRepository.GetOrdersProjection<OrderListResponse>(request.PageNumber,
                     request.PageSize, predicate, selector);
