@@ -15,7 +15,7 @@ namespace Repositories.AuctionDeposits
 
     
         public async Task<AuctionDepositDetailResponse> CreateDeposit(Guid auctionId,
-            CreateAuctionDepositRequest request)
+            CreateAuctionDepositRequest request, Guid transactionId)
         {
             var existingDeposit = await GenericDao<AuctionDeposit>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.AuctionId == auctionId && x.MemberId == request.MemberId);
@@ -39,21 +39,12 @@ namespace Repositories.AuctionDeposits
                 throw new InvalidOperationException("Member has already placed a deposit");
             }
 
-            var transaction = new Transaction
-            {
-                Amount = auction.DepositFee,
-                Type = TransactionType.AuctionDeposit,
-                MemberId = request.MemberId,
-                CreatedDate = DateTime.UtcNow
-            };
-
-            var transactionResult = await GenericDao<Transaction>.Instance.AddAsync(transaction);
 
             var deposit = new AuctionDeposit()
             {
                 MemberId = request.MemberId,
                 AuctionId = auctionId,
-                TransactionId = transactionResult.TransactionId,
+                TransactionId = transactionId,
                 CreatedDate = DateTime.UtcNow
             };
 
@@ -61,9 +52,9 @@ namespace Repositories.AuctionDeposits
             return new AuctionDepositDetailResponse
             {
                 Id = result.AuctionDepositId,
-                TransactionId = transactionResult.TransactionId,
+                TransactionId = transactionId,
                 AuctionId = auctionId,
-                Amount = transactionResult.Amount,
+                Amount = auction.DepositFee,
                 MemberId = request.MemberId,
             };
         }

@@ -276,9 +276,9 @@ namespace Services.Auctions
                 CreatedDate = DateTime.UtcNow,
                 VnPayTransactionNumber = "N/A"
             };
-            await _transactionRepository.CreateTransaction(transaction);
+            var transactionResult = await _transactionRepository.CreateTransaction(transaction);
 
-            var result = await _auctionDepositRepository.CreateDeposit(auctionId, request);
+            var result = await _auctionDepositRepository.CreateDeposit(auctionId, request,transactionResult.TransactionId);
             return result;
         }
 
