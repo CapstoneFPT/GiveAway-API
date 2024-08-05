@@ -42,6 +42,8 @@ public class AuctionEndingJob : IJob
         if (auctionToEnd.Bids.Count == 0)
         {
            Console.WriteLine("No bids");
+           auctionToEnd.AuctionFashionItem.Status = FashionItemStatus.Unavailable;
+           await dbContext.SaveChangesAsync();
            return;
         }
         

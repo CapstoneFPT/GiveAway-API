@@ -297,7 +297,7 @@ Request Body:
                 throw new AuctionItemNotFoundException();
             }
 
-            auctionItem.Status = FashionItemStatus.Available;
+            auctionItem.Status = FashionItemStatus.Unavailable;
 
             await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
             var result = await GenericDao<Auction>.Instance.UpdateAsync(toBeRejected);
