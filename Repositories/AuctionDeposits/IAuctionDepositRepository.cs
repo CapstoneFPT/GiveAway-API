@@ -12,7 +12,7 @@ namespace Repositories.AuctionDeposits
 {
     public interface IAuctionDepositRepository
     {
-        Task<AuctionDepositDetailResponse> CreateDeposit(Guid auctionId, CreateAuctionDepositRequest request);
+        Task<AuctionDepositDetailResponse> CreateDeposit(Guid auctionId, CreateAuctionDepositRequest request, Guid transactionId);
         Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request);
         Task<T?> GetSingleDeposit<T>(Expression<Func<AuctionDeposit, bool>>? predicate,
             Expression<Func<AuctionDeposit, T>>? selector);
