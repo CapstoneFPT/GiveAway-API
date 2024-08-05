@@ -74,6 +74,11 @@ public class AuctionEndingJob : IJob
                 AuctionFashionItemId = auctionToEnd.AuctionFashionItemId
             };
 
+            var address = await dbContext.Addresses.FirstOrDefaultAsync(x=>x.MemberId == orderRequest.MemberId && x.IsDefault);
+            
+            var member = await dbContext.Members.FirstOrDefaultAsync(x=>x.AccountId == orderRequest.MemberId);
+            
+            
             var newOrder = new Order()
             {
                 BidId = orderRequest.BidId,
@@ -81,6 +86,10 @@ public class AuctionEndingJob : IJob
                 PaymentMethod = orderRequest.PaymentMethod,
                 MemberId = orderRequest.MemberId,
                 TotalPrice = orderRequest.TotalPrice,
+                Address = address?.Residence,
+                RecipientName = address?.RecipientName,
+                Email = member!.Email,
+                Phone = address?.Phone,
                 CreatedDate = DateTime.UtcNow,
             };
             dbContext.Orders.Add(newOrder);
