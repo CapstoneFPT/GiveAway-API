@@ -228,7 +228,7 @@ namespace Repositories.ConsignSales
             
             consign.Status = ConsignSaleStatus.Received;
             consign.StartDate = DateTime.UtcNow;
-            consign.EndDate = DateTime.UtcNow.AddDays(60);
+            consign.EndDate = DateTime.UtcNow.AddMinutes(5);
 
             decimal totalprice = 0;
             
@@ -278,7 +278,7 @@ namespace Repositories.ConsignSales
                 Status = ConsignSaleStatus.Received,
                 ConsignSaleMethod = ConsignSaleMethod.Offline,
                 StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddDays(60),
+                EndDate = DateTime.UtcNow.AddMinutes(5),
                 TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice),
                 SoldPrice = 0,
                 ConsignorReceivedAmount = 0,

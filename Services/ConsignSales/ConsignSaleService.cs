@@ -178,7 +178,7 @@ namespace Services.ConsignSales
                 return response;
             }
             
-            
+            await ScheduleConsignEnding(consign);
             response.Data = consign;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
