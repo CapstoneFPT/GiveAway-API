@@ -79,5 +79,11 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("master-items")]
+        public async Task<IActionResult> CreateMasterItem([FromBody] CreateMasterItemRequest request)
+        {
+            return Ok("Master Item Created, but nothing has happened yet");
+        }
     }
 }

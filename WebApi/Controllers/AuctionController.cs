@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.AuctionDeposits;
+﻿using System.Net;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
@@ -27,8 +28,8 @@ public class AuctionController : ControllerBase
     #region Auctions
 
     [HttpPost]
-    [ProducesResponseType(statusCode: StatusCodes.Status201Created, type: typeof(AuctionDetailResponse))]
-    public async Task<ActionResult<AuctionDetailResponse>> CreateAuction([FromBody] CreateAuctionRequest request)
+    [ProducesResponseType<AuctionDetailResponse>((int)HttpStatusCode.Created)]
+    public async Task<IActionResult> CreateAuction([FromBody] CreateAuctionRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -41,22 +42,24 @@ public class AuctionController : ControllerBase
     }
 
     [HttpPut("{id}/approve")]
-    public async Task<ActionResult<AuctionDetailResponse>> ApproveAuction([FromRoute] Guid id)
+    [ProducesResponseType<AuctionDetailResponse>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> ApproveAuction([FromRoute] Guid id)
     {
         var result = await _auctionService.ApproveAuction(id);
         return Ok(result);
     }
 
     [HttpPut("{id}/reject")]
-    public async Task<ActionResult<AuctionDetailResponse>> RejectAuction([FromRoute] Guid id)
+    [ProducesResponseType<AuctionDetailResponse>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> RejectAuction([FromRoute] Guid id)
     {
         var result = await _auctionService.RejectAuction(id);
         return Ok(result);
     }
 
     [HttpGet]
-    [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(PaginationResponse<AuctionListResponse>))]
-    public async Task<ActionResult<PaginationResponse<AuctionListResponse>>> GetAuctions(
+    [ProducesResponseType<PaginationResponse<AuctionListResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAuctions(
         [FromQuery] GetAuctionsRequest request)
     {
         var result = await _auctionService.GetAuctionList(request);
@@ -66,7 +69,7 @@ public class AuctionController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
     [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<AuctionDetailResponse>> GetAuction([FromRoute] Guid id)
+    public async Task<IActionResult> GetAuction([FromRoute] Guid id)
     {
         var result = await _auctionService.GetAuction(id);
         if (result == null)
@@ -80,7 +83,7 @@ public class AuctionController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(statusCode: StatusCodes.Status204NoContent)]
     [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<AuctionDetailResponse>> DeleteAuction([FromRoute] Guid id)
+    public async Task<IActionResult> DeleteAuction([FromRoute] Guid id)
     {
         var result = await _auctionService.DeleteAuction(id);
         return NoContent();
@@ -107,7 +110,8 @@ public class AuctionController : ControllerBase
     #region Bids
 
     [HttpGet("{id}/bids")]
-    public async Task<ActionResult<PaginationResponse<BidListResponse>>> GetBids([FromRoute] Guid id,
+    [ProducesResponseType<PaginationResponse<BidListResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetBids([FromRoute] Guid id,
         [FromQuery] GetBidsRequest request)
     {
         var result = await _auctionService.GetBids(id, request);
@@ -115,7 +119,8 @@ public class AuctionController : ControllerBase
     }
 
     [HttpPost("{id}/bids/place_bid")]
-    public async Task<ActionResult<BidDetailResponse>> PlaceBid([FromRoute] Guid id,
+    [ProducesResponseType<BidDetailResponse>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> PlaceBid([FromRoute] Guid id,
         [FromBody] CreateBidRequest request)
     {
         if (!ModelState.IsValid)
@@ -127,34 +132,11 @@ public class AuctionController : ControllerBase
         return Ok(result);
     }
 
-    [HttpDelete("{id}/bids/{bidId}")]
-    public Task<ActionResult> DeleteBid([FromRoute] Guid id, [FromRoute] Guid bidId)
-    {
-        throw new NotImplementedException();
-    }
-
-    [HttpPut("{id}/bids/{bidId}")]
-    public async Task<ActionResult<BidDetailResponse>> UpdateBid([FromRoute] Guid id, [FromRoute] Guid bidId,
-        [FromBody] UpdateBidRequest request)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        throw new NotImplementedException();
-    }
-
-    [HttpGet("{id}/bids/{bidId}")]
-    public Task<ActionResult<BidDetailResponse>> GetBid([FromRoute] Guid id, [FromRoute] Guid bidId)
-    {
-        throw new NotImplementedException();
-    }
-
     #endregion
 
     [HttpGet("{id}/bids/latest")]
-    public async Task<ActionResult<BidDetailResponse>> GetLatestBid([FromRoute] Guid id)
+    [ProducesResponseType<BidDetailResponse>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetLatestBid([FromRoute] Guid id)
     {
         var result = await _auctionService.GetLargestBid(auctionId: id);
         return Ok(result);
@@ -163,7 +145,8 @@ public class AuctionController : ControllerBase
     #region AuctionDeposits
 
     [HttpGet("{auctionId}/deposits")]
-    public async Task<ActionResult<PaginationResponse<AuctionDepositListResponse>>> GetDeposits(
+    [ProducesResponseType<PaginationResponse<AuctionDepositListResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetDeposits(
         [FromRoute] Guid auctionId, [FromQuery] GetDepositsRequest request)
     {
         var result = await _auctionService.GetAuctionDeposits(auctionId, request);

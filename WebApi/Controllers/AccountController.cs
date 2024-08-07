@@ -40,7 +40,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginationResponse<AccountResponse>>> GetAccounts(
+    [ProducesResponseType<PaginationResponse<AccountResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAccounts(
         [FromQuery] GetAccountsRequest request)
     {
         var result = await _accountService.GetAccounts(request);
@@ -48,7 +49,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Result<AccountResponse>>> GetAccountById(Guid id)
+    [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAccountById(Guid id)
     {
         var result = await _accountService.GetAccountById(id);
 
@@ -59,7 +61,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPut("{id}/ban")]
-    public async Task<ActionResult<Result<AccountResponse>>> BanAccount([FromRoute] Guid id)
+    [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> BanAccount([FromRoute] Guid id)
     {
         var result = await _accountService.BanAccountById(id);
 
@@ -70,7 +73,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPut("{accountId}")]
-    public async Task<ActionResult<Result<AccountResponse>>> UpdateAccount([FromRoute] Guid accountId,
+    [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> UpdateAccount([FromRoute] Guid accountId,
         [FromBody] UpdateAccountRequest request)
     {
         var result = await _accountService.UpdateAccount(accountId, request);
@@ -82,7 +86,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/deliveries")]
-    public async Task<ActionResult<Result<List<DeliveryResponse>>>> GetAllDeliveriesByMemberId(
+    [ProducesResponseType<Result<List<DeliveryResponse>>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAllDeliveriesByMemberId(
         [FromRoute] Guid accountId)
     {
         var result = await _deliveryService.GetAllDeliveriesByMemberId(accountId);
@@ -94,7 +99,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/deliveries")]
-    public async Task<ActionResult<Result<DeliveryResponse>>> CreateDelivery([FromRoute] Guid accountId,
+    [ProducesResponseType<Result<DeliveryResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CreateDelivery([FromRoute] Guid accountId,
         [FromBody] DeliveryRequest deliveryRequest)
     {
         var result = await _deliveryService.CreateDelivery(accountId, deliveryRequest);
@@ -106,7 +112,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPut("{accountId}/deliveries/{deliveryId}")]
-    public async Task<ActionResult<Result<DeliveryResponse>>> UpdateDelivery([FromRoute] Guid deliveryId,
+    [ProducesResponseType<Result<DeliveryResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> UpdateDelivery([FromRoute] Guid deliveryId,
         [FromBody] UpdateDeliveryRequest deliveryRequest)
     {
         var result = await _deliveryService.UpdateDelivery(deliveryId, deliveryRequest);
@@ -118,7 +125,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpDelete("{accountId}/deliveries/{deliveryId}")]
-    public async Task<ActionResult<Result<string>>> DeleteDelivery([FromRoute] Guid deliveryId)
+    [ProducesResponseType<Result<string>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> DeleteDelivery([FromRoute] Guid deliveryId)
     {
         var result = await _deliveryService.DeleteDelivery(deliveryId);
 
@@ -129,7 +137,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/orders")]
-    public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrdersByAccountId(
+    [ProducesResponseType<Result<PaginationResponse<OrderResponse>>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetOrdersByAccountId(
         [FromRoute] Guid accountId, [FromQuery] OrderRequest request)
     {
         var result = await _orderService.GetOrdersByAccountId(accountId, request);
@@ -141,7 +150,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/orders")]
-    public async Task<ActionResult<Result<OrderResponse>>> CreateOrder([FromRoute] Guid accountId,
+    [ProducesResponseType<Result<OrderResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CreateOrder([FromRoute] Guid accountId,
         [FromBody] CartRequest cart)
     {
         var result = await _orderService.CreateOrder(accountId, cart);
@@ -153,7 +163,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/consignsales")]
-    public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSale(
+    [ProducesResponseType<Result<PaginationResponse<ConsignSaleResponse>>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetAllConsignSale(
         [FromRoute] Guid accountId, [FromQuery] ConsignSaleRequest request)
     {
         var result = await _consignSaleService.GetAllConsignSales(accountId, request);
@@ -165,7 +176,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/consignsales")]
-    public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSale([FromRoute] Guid accountId,
+    [ProducesResponseType<Result<ConsignSaleResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CreateConsignSale([FromRoute] Guid accountId,
         [FromBody] CreateConsignSaleRequest request)
     {
         var result = await _consignSaleService.CreateConsignSale(accountId, request);
@@ -177,7 +189,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/inquiries")]
-    public async Task<ActionResult<CreateInquiryResponse>> CreateInquiry([FromRoute] Guid accountId,
+    [ProducesResponseType<Result<CreateInquiryResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CreateInquiry([FromRoute] Guid accountId,
         [FromBody] CreateInquiryRequest request)
     {
         var result = await _accountService.CreateInquiry(accountId, request);
@@ -185,7 +198,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/withdraws")]
-    public async Task<ActionResult<CreateWithdrawResponse>> CreateWithdraw([FromRoute] Guid accountId,
+    [ProducesResponseType<Result<CreateWithdrawResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> CreateWithdraw([FromRoute] Guid accountId,
         [FromBody] CreateWithdrawRequest request)
     {
         var result = await _accountService.RequestWithdraw(accountId, request);
@@ -193,7 +207,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/withdraws")]
-    public async Task<ActionResult<PaginationResponse<GetWithdrawsResponse>>> GetWithdraws(
+    [ProducesResponseType<Result<PaginationResponse<GetWithdrawsResponse>>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetWithdraws(
         [FromRoute] Guid accountId,
         [FromQuery] GetWithdrawsRequest request)
     {
@@ -202,7 +217,8 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/transactions")]
-    public async Task<ActionResult<PaginationResponse<GetTransactionsResponse>>> GetTransactions([FromRoute] Guid accountId,
+    [ProducesResponseType<Result<PaginationResponse<GetTransactionsResponse>>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetTransactions([FromRoute] Guid accountId,
         [FromQuery] GetTransactionsRequest request)
     {
         var result = await _accountService.GetTransactions(accountId, request);
