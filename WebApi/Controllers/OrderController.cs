@@ -86,17 +86,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{OrderId}/confirm-deliveried")]
-        public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrderDelivered(
-            [FromRoute] Guid OrderId)
-        {
-            var result = await _orderService.ConfirmOrderDeliveried(OrderId);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-            return Ok(result);
-        }
+        
 
         [HttpPost("{orderId}/pay/vnpay")]
         public async Task<ActionResult<VnPayPurchaseResponse>> PurchaseOrder([FromRoute] Guid orderId,
@@ -234,12 +224,7 @@ namespace WebApi.Controllers
                 { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
         }
 
-        [HttpPut("{orderId}/orderdetails/{orderdetailId}/confirm-pending-order")]
-        public async Task<ActionResult<Result<OrderResponse>>> ConfirmPendingOrderDetailByShop([FromRoute] Guid orderId, [FromRoute] Guid orderdetailId)
-        {
-            var result = await _orderService.ConfirmPendingOrder(orderId, orderdetailId);
-            return Ok(result);
-        }
+        
         [HttpPut("{orderId}/cancelbyadmin")]
         public async Task<ActionResult<Result<string>>> CancelOrderByAdmin([FromRoute] Guid orderId)
         {
