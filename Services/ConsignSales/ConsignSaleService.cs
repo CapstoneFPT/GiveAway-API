@@ -30,7 +30,7 @@ namespace Services.ConsignSales
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
             IConsignSaleDetailRepository consignSaleDetailRepository
-            ,IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
+            , IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
             ISchedulerFactory schedulerFactory)
         {
             _consignSaleRepository = consignSaleRepository;
@@ -114,6 +114,7 @@ namespace Services.ConsignSales
                 .Build();
             await schedule.ScheduleJob(endJob, endTrigger);
         }
+
         public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId,
             CreateConsignSaleRequest request)
         {
@@ -177,7 +178,7 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-            
+
             await ScheduleConsignEnding(consign);
             response.Data = consign;
             response.ResultStatus = ResultStatus.Success;
@@ -251,7 +252,8 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleDetailResponse>> UpdateConsignSaleDetailForApprove(Guid consignSaleDetailId,ConfirmReceivedConsignRequest request)
+        public async Task<Result<ConsignSaleDetailResponse>> UpdateConsignSaleDetailForApprove(Guid consignSaleDetailId,
+            ConfirmReceivedConsignRequest request)
         {
             var response = new Result<ConsignSaleDetailResponse>();
             var consignSaleDetail =
@@ -275,9 +277,9 @@ namespace Services.ConsignSales
             {
                 consignSaleDetail.FashionItem.SellingPrice = request.SellingPrice;
             }*/
-            
+
             await _consignSaleDetailRepository.UpdateConsignSaleDetail(consignSaleDetail);
-            
+
             var result = _mapper.Map<ConsignSaleDetailResponse>(consignSaleDetail);
             response.Data = result;
             response.Messages = ["Success"];
@@ -290,24 +292,23 @@ namespace Services.ConsignSales
             var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
             foreach (var detail in order.OrderDetails)
             {
-                var consign =
-                    await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(detail.IndividualFashionItemId)));
-                if (consign != null)
-                {
-                    consign.SoldPrice += detail.UnitPrice;
-                    if (consign.SoldPrice < 1000000)
-                    {
-                        consign.ConsignorReceivedAmount = consign.SoldPrice * 74 / 100;
-                    }else if (consign.SoldPrice >= 1000000 && consign.SoldPrice <= 10000000)
-                    {
-                        consign.ConsignorReceivedAmount = consign.SoldPrice * 77 / 100;
-                    }
-                    else
-                    {
-                        consign.ConsignorReceivedAmount = consign.SoldPrice * 80 / 100;
-                    }
-                    await _consignSaleRepository.UpdateConsignSale(consign);
-                }
+                // var consign =
+                //     await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(detail.IndividualFashionItemId)));
+                // if (consign != null)
+                // {
+                //     consign.SoldPrice += detail.UnitPrice;
+                //     if (consign.SoldPrice < 1000000)
+                //     {
+                //         consign.ConsignorReceivedAmount = consign.SoldPrice * 74 / 100;
+                //     }else if (consign.SoldPrice >= 1000000 && consign.SoldPrice <= 10000000)
+                //     {
+                //         consign.ConsignorReceivedAmount = consign.SoldPrice * 77 / 100;
+                //     }
+                //     else
+                //     {
+                //         consign.ConsignorReceivedAmount = consign.SoldPrice * 80 / 100;
+                //     }
+                //     await _consignSaleRepository.UpdateConsignSale(consign);
             }
         }
     }

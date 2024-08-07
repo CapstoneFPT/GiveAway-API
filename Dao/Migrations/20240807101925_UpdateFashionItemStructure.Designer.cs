@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240807101925_UpdateFashionItemStructure")]
+    partial class UpdateFashionItemStructure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -405,6 +408,9 @@ namespace Dao.Migrations
                     b.Property<decimal>("DealPrice")
                         .HasColumnType("numeric");
 
+                    b.Property<Guid>("FashionItemId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Note")
                         .IsRequired()
                         .HasColumnType("text");
@@ -430,9 +436,6 @@ namespace Dao.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("varchar");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("MasterItemId")
                         .HasColumnType("uuid");
@@ -523,7 +526,7 @@ namespace Dao.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ConsignSaleDetailId")
+                    b.Property<Guid>("ConsignSaleDetailId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedDate")
@@ -556,8 +559,7 @@ namespace Dao.Migrations
 
                     b.HasKey("ItemId");
 
-                    b.HasIndex("ConsignSaleDetailId")
-                        .IsUnique();
+                    b.HasIndex("ConsignSaleDetailId");
 
                     b.HasIndex("ShopId");
 
@@ -612,9 +614,6 @@ namespace Dao.Migrations
 
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1146,8 +1145,10 @@ namespace Dao.Migrations
             modelBuilder.Entity("BusinessObjects.Entities.IndividualFashionItem", b =>
                 {
                     b.HasOne("BusinessObjects.Entities.ConsignSaleDetail", "ConsignSaleDetail")
-                        .WithOne("IndividualFashionItem")
-                        .HasForeignKey("BusinessObjects.Entities.IndividualFashionItem", "ConsignSaleDetailId");
+                        .WithMany()
+                        .HasForeignKey("ConsignSaleDetailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("BusinessObjects.Entities.Shop", "Shop")
                         .WithMany()
@@ -1321,9 +1322,6 @@ namespace Dao.Migrations
             modelBuilder.Entity("BusinessObjects.Entities.ConsignSaleDetail", b =>
                 {
                     b.Navigation("Images");
-
-                    b.Navigation("IndividualFashionItem")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.FashionItemVariation", b =>

@@ -39,7 +39,7 @@ public class GiveAwayDbContext : DbContext
     public GiveAwayDbContext(DbContextOptions<GiveAwayDbContext> options) : base(options)
     {
     }
-    
+
 
     public GiveAwayDbContext()
     {
@@ -121,9 +121,9 @@ public class GiveAwayDbContext : DbContext
             .HasOne(x => x.Transaction)
             .WithOne(x => x.Withdraw)
             .HasForeignKey<Transaction>(x => x.WithdrawId);
-        
+
         modelBuilder.Entity<Withdraw>()
-            .Property(x=>x.Status)
+            .Property(x => x.Status)
             .HasConversion(prop => prop.ToString(), s => (WithdrawStatus)Enum.Parse(typeof(WithdrawStatus), s))
             .HasColumnType("varchar").HasMaxLength(20);
 
@@ -136,7 +136,6 @@ public class GiveAwayDbContext : DbContext
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
 
-        
 
         modelBuilder.Entity<Member>()
             .HasMany(x => x.Transactions)
@@ -148,15 +147,16 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.AuctionDeposits)
             .WithOne(x => x.Member)
             .HasForeignKey(x => x.MemberId);
-        
+
         modelBuilder.Entity<Member>()
-            .HasMany(x=>x.BankAccounts)
-            .WithOne(x=>x.Member)
-            .HasForeignKey(x=>x.MemberId);
+            .HasMany(x => x.BankAccounts)
+            .WithOne(x => x.Member)
+            .HasForeignKey(x => x.MemberId);
         modelBuilder.Entity<Member>()
-            .HasMany(x=>x.Addresses)
-            .WithOne(x=>x.Member)
-            .HasForeignKey(x=>x.MemberId);
+            .HasMany(x => x.Addresses)
+            .WithOne(x => x.Member)
+            .HasForeignKey(x => x.MemberId);
+
         #endregion
 
         #region Auction
@@ -198,10 +198,85 @@ public class GiveAwayDbContext : DbContext
 
         #region FashionAuctionItem
 
-      modelBuilder.Entity<IndividualAuctionFashionItem>()
-          .HasMany(x=> x.Auctions)
-          .WithOne(x=>x.IndividualAuctionFashionItem)
-          .HasForeignKey(x=>x.IndividualAuctionFashionItemId);
+        #region MasterItem
+
+        modelBuilder.Entity<MasterFashionItem>().HasKey(x => x.ItemId);
+
+        modelBuilder.Entity<MasterFashionItem>()
+            .Property(x => x.Gender)
+            .HasConversion(prop => prop.ToString(), s => (GenderType)Enum.Parse(typeof(GenderType), s))
+            .HasColumnType("varchar").HasMaxLength(20);
+
+        modelBuilder.Entity<MasterFashionItem>()
+            .HasMany(x => x.Images)
+            .WithOne(x => x.MasterFashionItem)
+            .HasForeignKey(x => x.MasterFashionItemId);
+
+        modelBuilder.Entity<MasterFashionItem>()
+            .HasMany(x => x.Variations)
+            .WithOne(x => x.MasterItem)
+            .HasForeignKey(x => x.MasterItemId);
+        
+        modelBuilder.Entity<MasterFashionItem>()
+            .Property(x=>x.ItemCode)
+            .HasColumnType("varchar").HasMaxLength(20);
+
+        modelBuilder.Entity<MasterFashionItem>()
+            .Property(x => x.Name)
+            .HasColumnType("varchar")
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<MasterFashionItem>()
+            .Property(x => x.Brand)
+            .HasColumnType("varchar")
+            .HasMaxLength(50);
+
+        #endregion
+
+        #region Variation
+
+        modelBuilder.Entity<FashionItemVariation>().HasKey(x => x.VariationId);
+
+        modelBuilder.Entity<FashionItemVariation>()
+            .Property(x => x.Size)
+            .HasConversion(prop => prop.ToString(), s => (SizeType)Enum.Parse(typeof(SizeType), s))
+            .HasColumnType("varchar").HasMaxLength(20);
+
+        modelBuilder.Entity<FashionItemVariation>()
+            .HasMany(x => x.IndividualItems)
+            .WithOne(x => x.Variation)
+            .HasForeignKey(x => x.VariationId);
+
+        modelBuilder.Entity<FashionItemVariation>()
+            .Property(x => x.Condition)
+            .HasColumnType("varchar")
+            .HasMaxLength(30);
+
+        #endregion
+
+        modelBuilder.Entity<IndividualFashionItem>().HasKey(x => x.ItemId);
+
+
+        modelBuilder.Entity<IndividualFashionItem>()
+            .HasDiscriminator(x => x.Type)
+            .HasValue<IndividualFashionItem>(FashionItemType.ItemBase)
+            .HasValue<IndividualAuctionFashionItem>(FashionItemType.ConsignedForAuction)
+            .HasValue<IndividualConsignedForSaleFashionItem>(FashionItemType.ConsignedForSale);
+        
+        modelBuilder.Entity<IndividualFashionItem>()
+            .Property(x=>x.Type)
+            .HasConversion(prop => prop.ToString(), s => (FashionItemType)Enum.Parse(typeof(FashionItemType), s))
+            .HasColumnType("varchar").HasMaxLength(20);
+        
+        modelBuilder.Entity<IndividualFashionItem>()
+            .HasMany(x=>x.Images)
+            .WithOne(x=>x.IndividualFashionItem)
+            .HasForeignKey(x=>x.IndividualFashionItemId);
+
+        modelBuilder.Entity<IndividualAuctionFashionItem>()
+            .HasMany(x => x.Auctions)
+            .WithOne(x => x.IndividualAuctionFashionItem)
+            .HasForeignKey(x => x.IndividualAuctionFashionItemId);
 
         #endregion
 
@@ -261,7 +336,6 @@ public class GiveAwayDbContext : DbContext
 
         #region FashionItem
 
-
         #endregion
 
         #region Order
@@ -312,6 +386,7 @@ public class GiveAwayDbContext : DbContext
             .HasOne<Feedback>(x => x.Feedback)
             .WithOne(x => x.OrderDetail)
             .HasForeignKey<Feedback>(x => x.OrderDetailId);
+
         #endregion
 
         #region ConsignSale
@@ -352,10 +427,15 @@ public class GiveAwayDbContext : DbContext
         #region ConsignedSaleDetail
 
         modelBuilder.Entity<ConsignSaleDetail>().ToTable("ConsignSaleDetail").HasKey(x => x.ConsignSaleDetailId);
+        
+        modelBuilder.Entity<ConsignSaleDetail>()
+            .HasOne<IndividualFashionItem>(x=>x.IndividualFashionItem)
+            .WithOne(x=>x.ConsignSaleDetail)
+            .HasForeignKey<IndividualFashionItem>(x=>x.ConsignSaleDetailId);
+            
 
         #endregion
 
-      
 
         #region Transaction
 
@@ -400,10 +480,11 @@ public class GiveAwayDbContext : DbContext
             .HasMaxLength(20);
         modelBuilder.Entity<Refund>().Property(e => e.RefundPercentage).HasColumnType("numeric").HasMaxLength(100);
         modelBuilder.Entity<Refund>().Property(e => e.ResponseFromShop).HasColumnType("varchar").HasMaxLength(255);
-        modelBuilder.Entity<Refund>().HasMany(x=>x.Images)
-            .WithOne(x=>x.Refund)
-            .HasForeignKey(x=>x.RefundId)
+        modelBuilder.Entity<Refund>().HasMany(x => x.Images)
+            .WithOne(x => x.Refund)
+            .HasForeignKey(x => x.RefundId)
             .OnDelete(DeleteBehavior.Cascade);
+
         #endregion
 
         #region Feedback
@@ -411,7 +492,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Feedback>()
             .ToTable("Feedback")
             .HasKey(x => x.FeedbackId);
-        
+
         #endregion
     }
 }

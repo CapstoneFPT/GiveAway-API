@@ -1,10 +1,11 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Entities;
 
 public class MasterFashionItem
 {
-    public Guid Id { get; set; }
+    public Guid ItemId { get; set; }
     public string ItemCode { get; set; }
     public string Name { get; set; }
     public string Brand { get; set; }
@@ -12,6 +13,7 @@ public class MasterFashionItem
     public Guid CategoryId { get; set; }
     public GenderType Gender { get; set; }
     public Category Category { get; set; }
+    public DateTime CreatedDate { get; set; }
     public ICollection<Image> Images { get; set; } = [];
     public ICollection<FashionItemVariation> Variations { get; set; } = [];
 }
@@ -28,7 +30,8 @@ public class IndividualFashionItem
     public Shop Shop { get; set; }
     public FashionItemType Type { get; set; }
     public FashionItemVariation? Variation { get; set; }
-    public ConsignSaleDetail ConsignSaleDetail { get; set; }
+    public ConsignSaleDetail? ConsignSaleDetail { get; set; }
+    public Guid? ConsignSaleDetailId { get; set; }
     public DateTime CreatedDate { get; set; }
     public ICollection<Image> Images { get; set; } = [];
 }
@@ -42,6 +45,7 @@ public class FashionItemVariation
     public string Color { get; set; }
     public SizeType Size { get; set; }
     public int StockCount { get; set; }
+    public DateTime CreatedDate { get; set; }
     public MasterFashionItem MasterItem { get; set; }
     public ICollection<IndividualFashionItem> IndividualItems { get; set; } = [];
 }

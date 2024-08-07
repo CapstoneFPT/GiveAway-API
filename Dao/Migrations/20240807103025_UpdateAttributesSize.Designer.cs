@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240807103025_UpdateAttributesSize")]
+    partial class UpdateAttributesSize
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -556,8 +559,7 @@ namespace Dao.Migrations
 
                     b.HasKey("ItemId");
 
-                    b.HasIndex("ConsignSaleDetailId")
-                        .IsUnique();
+                    b.HasIndex("ConsignSaleDetailId");
 
                     b.HasIndex("ShopId");
 
@@ -1146,8 +1148,8 @@ namespace Dao.Migrations
             modelBuilder.Entity("BusinessObjects.Entities.IndividualFashionItem", b =>
                 {
                     b.HasOne("BusinessObjects.Entities.ConsignSaleDetail", "ConsignSaleDetail")
-                        .WithOne("IndividualFashionItem")
-                        .HasForeignKey("BusinessObjects.Entities.IndividualFashionItem", "ConsignSaleDetailId");
+                        .WithMany()
+                        .HasForeignKey("ConsignSaleDetailId");
 
                     b.HasOne("BusinessObjects.Entities.Shop", "Shop")
                         .WithMany()
@@ -1321,9 +1323,6 @@ namespace Dao.Migrations
             modelBuilder.Entity("BusinessObjects.Entities.ConsignSaleDetail", b =>
                 {
                     b.Navigation("Images");
-
-                    b.Navigation("IndividualFashionItem")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.FashionItemVariation", b =>

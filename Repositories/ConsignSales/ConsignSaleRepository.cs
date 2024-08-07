@@ -88,7 +88,6 @@ namespace Repositories.ConsignSales
                 {
                     ConfirmedPrice = 0,
                     DealPrice = item.DealPrice,
-                    FashionItemId = fashionItem.ItemId,
                     ConsignSaleId = newConsign.ConsignSaleId,
                     CreatedDate = DateTime.UtcNow
                 };
@@ -182,10 +181,10 @@ namespace Repositories.ConsignSales
                 consign.Status = ConsignSaleStatus.Rejected;
                 foreach (var consigndetail in consign.ConsignSaleDetails)
                 {
-                    var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                        .FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
-                    item.Status = FashionItemStatus.Rejected;
-                    await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
+                    // var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                    //     .FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
+                    // item.Status = FashionItemStatus.Rejected;
+                    // await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
                 }
             }
             else
@@ -331,7 +330,6 @@ namespace Repositories.ConsignSales
                 {
                     ConfirmedPrice = item.ConfirmedPrice,
                     DealPrice = 0,
-                    FashionItemId = fashionItem.ItemId,
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
                 await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);

@@ -225,8 +225,8 @@ namespace Services.FashionItems
                 {
                     item.Status = FashionItemStatus.Available;
                     await _fashionitemRepository.UpdateFashionItem(item);
-                    var consign =
-                        await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(item.ItemId)));
+                    // var consign =
+                    //     await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(item.ItemId)));
                     /*if (consign != null)
                     {
                         if (!consign.ConsignSaleDetails.Any(c => c.FashionItem.Status.Equals(FashionItemStatus.Unavailable)))
