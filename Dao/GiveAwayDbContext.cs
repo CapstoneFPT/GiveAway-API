@@ -10,6 +10,11 @@ public class GiveAwayDbContext : DbContext
 {
     public DbSet<Account> Accounts { get; set; }
     public DbSet<Inquiry> Inquiries { get; set; }
+    public DbSet<MasterFashionItem> MasterFashionItems { get; set; }
+    public DbSet<FashionItemVariation> FashionItemVariations { get; set; }
+    public DbSet<IndividualFashionItem> IndividualFashionItems { get; set; }
+    public DbSet<IndividualConsignedForSaleFashionItem> IndividualConsignedForSaleFashionItems { get; set; }
+    public DbSet<IndividualAuctionFashionItem> IndividualAuctionFashionItems { get; set; }
     public DbSet<ConsignSale> ConsignSales { get; set; }
     public DbSet<ConsignSaleDetail> ConsignSaleDetails { get; set; }
     public DbSet<Shop> Shops { get; set; }
@@ -58,7 +63,7 @@ public class GiveAwayDbContext : DbContext
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        return configuration.GetConnectionString("DefaultDB");
+        return configuration.GetConnectionString("DeployDB");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

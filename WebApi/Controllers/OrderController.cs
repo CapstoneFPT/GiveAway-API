@@ -60,6 +60,7 @@ namespace WebApi.Controllers
         {
             return await _orderDetailService.GetOrderDetailsByOrderId(OrderId, request);
         }
+        
 
         [HttpGet("orderdetails/{OrderdetailId}")]
         public async Task<ActionResult<Result<OrderDetailResponse<FashionItem>>>> GetOrderDetailById(
