@@ -91,7 +91,7 @@ namespace Repositories.FashionItems
         public async Task<IndividualFashionItem> GetFashionItemById(Guid id)
         {
             var query = await _giveAwayDbContext.IndividualFashionItems.AsQueryable()
-                .Include(c => c.Shop)
+                // .Include(c => c.Shop)
                 .Include(a => a.Variation.MasterItem.Category)
                 .Include(b => b.Images)
                 .FirstOrDefaultAsync(x => x.ItemId.Equals(id));
@@ -236,14 +236,15 @@ namespace Repositories.FashionItems
         public async Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> listItemId)
         {
             var listItemNotbelongshop = new List<Guid?>();
-            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                // .Include(c => c.Shop)
                 .Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
             foreach (IndividualFashionItem item in listItem)
             {
-                if (!item.ShopId.Equals(shopId))
-                {
-                    listItemNotbelongshop.Add(item.ItemId);
-                }
+                // if (!item.ShopId.Equals(shopId))
+                // {
+                //     listItemNotbelongshop.Add(item.ItemId);
+                // }
             }
 
             return listItemNotbelongshop;

@@ -60,7 +60,7 @@ namespace Repositories.ConsignSales
                 var fashionItem = new IndividualFashionItem()
                 {
                     Note = item.Note,
-                    ShopId = newConsign.ShopId,
+                    // ShopId = newConsign.ShopId,
                     Status = FashionItemStatus.PendingForConsignSale,
                 };
                 fashionItem.Type = request.Type switch
@@ -295,7 +295,7 @@ namespace Repositories.ConsignSales
                 {
                     SellingPrice = item.ConfirmedPrice,
                     Note = item.Note,
-                    ShopId = shopId,
+                    // ShopId = shopId,
                     Status = FashionItemStatus.Unavailable,
                 };
                 switch (request.Type)

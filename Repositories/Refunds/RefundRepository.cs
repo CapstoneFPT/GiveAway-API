@@ -89,7 +89,7 @@ namespace Repositories.Refunds
 
             if (request.ShopId != null)
             {
-                query = query.Where(c => c.OrderDetail.IndividualFashionItem.ShopId == request.ShopId);
+                // query = query.Where(c => c.OrderDetail.IndividualFashionItem.ShopId == request.ShopId);
             }
 
             query = query.OrderBy(c => c.CreatedDate);

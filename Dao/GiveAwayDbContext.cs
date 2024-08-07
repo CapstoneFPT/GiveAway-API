@@ -203,6 +203,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<MasterFashionItem>().HasKey(x => x.ItemId);
 
         modelBuilder.Entity<MasterFashionItem>()
+            .HasIndex(x => x.ItemCode)
+            .IsUnique();
+
+        modelBuilder.Entity<MasterFashionItem>()
             .Property(x => x.Gender)
             .HasConversion(prop => prop.ToString(), s => (GenderType)Enum.Parse(typeof(GenderType), s))
             .HasColumnType("varchar").HasMaxLength(20);
@@ -262,6 +266,10 @@ public class GiveAwayDbContext : DbContext
             .HasValue<IndividualFashionItem>(FashionItemType.ItemBase)
             .HasValue<IndividualAuctionFashionItem>(FashionItemType.ConsignedForAuction)
             .HasValue<IndividualConsignedForSaleFashionItem>(FashionItemType.ConsignedForSale);
+
+        modelBuilder.Entity<IndividualFashionItem>()
+            .HasIndex(x => x.ItemCode)
+            .IsUnique();
         
         modelBuilder.Entity<IndividualFashionItem>()
             .Property(x=>x.Type)
@@ -334,9 +342,7 @@ public class GiveAwayDbContext : DbContext
 
         #endregion
 
-        #region FashionItem
-
-        #endregion
+      
 
         #region Order
 

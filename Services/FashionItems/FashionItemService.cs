@@ -42,7 +42,7 @@ namespace Services.FashionItems
             var newdata = new IndividualFashionItem()
             {
                 Note = !string.IsNullOrEmpty(request.Note) ? request.Note : null,
-                ShopId = shopId,
+                // ShopId = shopId,
                 Type = FashionItemType.ItemBase,
                 Status = FashionItemStatus.Unavailable,
                 SellingPrice = request.SellingPrice,
@@ -83,12 +83,12 @@ namespace Services.FashionItems
                     Size = item.Variation.Size,
                     CategoryId = item.Variation.MasterItem.CategoryId,
                     CategoryName = item.Variation.MasterItem.Category.Name,
-                    ShopId = item.ShopId,
+                    // ShopId = item.ShopId,
                     Type = item.Type,
                     Status = item.Status,
                     Color = item.Variation.Color,
                     SellingPrice = item.SellingPrice ?? 0,
-                    ShopAddress = item.Shop.Address,
+                    // ShopAddress = item.Shop.Address,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
 
@@ -115,7 +115,7 @@ namespace Services.FashionItems
 
             if (request.ShopId.HasValue)
             {
-                predicate = predicate.And(item => item.ShopId == request.ShopId);
+                // predicate = predicate.And(item => item.ShopId == request.ShopId);
             }
 
             if (request.GenderType.HasValue)

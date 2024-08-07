@@ -28,7 +28,7 @@ public class RevenueRepository : IRevenueRepository
 
         if (shopId.HasValue)
         {
-            query = query.Where(od => od.IndividualFashionItem.ShopId == shopId.Value);
+            // query = query.Where(od => od.IndividualFashionItem.ShopId == shopId.Value);
         }
 
         return await query.SumAsync(od => od.UnitPrice);
@@ -65,7 +65,7 @@ public class RevenueRepository : IRevenueRepository
 
         if (shopId.HasValue)
         {
-            query = query.Where(od => od.IndividualFashionItem.ShopId == shopId.Value);
+            // query = query.Where(od => od.IndividualFashionItem.ShopId == shopId.Value);
         }
 
         return query.SumAsync(od => od.UnitPrice * ConsignPayoutPercentage);

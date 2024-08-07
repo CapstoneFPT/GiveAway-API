@@ -45,9 +45,10 @@ namespace Repositories.Orders
         public async Task<OrderResponse> CreateOrderHierarchy(Guid accountId,
             CartRequest cart)
         {
-            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                // .Include(c => c.Shop)
                 .Where(c => cart.ItemIds.Contains(c.ItemId)).ToListAsync();
-            var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
+            // var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
             var memberAccount = await GenericDao<Account>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(c => c.AccountId == accountId);
 
@@ -79,7 +80,8 @@ namespace Repositories.Orders
 
             foreach (var id in cart.ItemIds)
             {
-                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                    // .Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = order.OrderId;
@@ -301,7 +303,7 @@ namespace Repositories.Orders
             if (request.ShopId != null)
             {
                 listItemId = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                    .Where(c => c.ShopId == request.ShopId)
+                    // .Where(c => c.ShopId == request.ShopId)
                     .Select(c => c.ItemId).ToListAsync();
             }
             else
@@ -436,7 +438,8 @@ namespace Repositories.Orders
 
         public async Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
-            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                // .Include(c => c.Shop)
                 .Where(c => orderRequest.ItemIds.Contains(c.ItemId)).ToListAsync();
 
 
@@ -462,7 +465,8 @@ namespace Repositories.Orders
 
             foreach (var id in orderRequest.ItemIds)
             {
-                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                    // .Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);
 
                 OrderDetail orderDetail = new OrderDetail();

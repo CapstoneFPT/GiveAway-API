@@ -41,7 +41,7 @@ namespace Repositories.OrderDetails
             
             if (request.ShopId != null)
             {
-                query = query.Where(c => c.IndividualFashionItem.ShopId == request.ShopId);
+                // query = query.Where(c => c.IndividualFashionItem.ShopId == request.ShopId);
             }
             var count = await query.CountAsync();
             query = query.Skip((request.PageNumber - 1) * request.PageSize)

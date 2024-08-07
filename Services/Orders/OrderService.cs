@@ -174,22 +174,22 @@ namespace Services.Orders
                 throw new Exception("Can not update balance if order is not completed");
             }
 
-            var shopTotals = order.OrderDetails
-                .GroupBy(item => item.IndividualFashionItem.ShopId)
-                .Select(group =>
-                    new
-                    {
-                        ShopId = group.Key,
-                        Total = group.Sum(item => item.UnitPrice)
-                    });
-
-            foreach (var shopTotal in shopTotals)
-            {
-                var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopTotal.ShopId);
-                var staff = await _accountRepository.GetAccountById(shop!.StaffId);
-                staff.Balance += shopTotal.Total;
-                await _accountRepository.UpdateAccount(staff);
-            }
+            // var shopTotals = order.OrderDetails
+            //     .GroupBy(item => item.IndividualFashionItem.ShopId)
+            //     .Select(group =>
+            //         new
+            //         {
+            //             ShopId = group.Key,
+            //             Total = group.Sum(item => item.UnitPrice)
+            //         });
+            //
+            // foreach (var shopTotal in shopTotals)
+            // {
+            //     var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopTotal.ShopId);
+            //     var staff = await _accountRepository.GetAccountById(shop!.StaffId);
+            //     staff.Balance += shopTotal.Total;
+            //     await _accountRepository.UpdateAccount(staff);
+            // }
         }
 
         public async Task UpdateFashionItemStatus(Guid orderOrderId)
@@ -325,8 +325,8 @@ namespace Services.Orders
 
             if (request.ShopId.HasValue)
             {
-                predicate = predicate.And(order =>
-                    order.OrderDetails.Any(c => c.IndividualFashionItem.ShopId == request.ShopId.Value));
+                // predicate = predicate.And(order =>
+                //     order.OrderDetails.Any(c => c.IndividualFashionItem.ShopId == request.ShopId.Value));
             }
 
             if (request.PaymentMethod != null)
@@ -500,8 +500,8 @@ namespace Services.Orders
 
             if (orderRequest.ShopId.HasValue)
             {
-                predicate = predicate.And(order =>
-                    order.OrderDetails.Any(c => c.IndividualFashionItem.ShopId == orderRequest.ShopId.Value));
+                // predicate = predicate.And(order =>
+                //     order.OrderDetails.Any(c => c.IndividualFashionItem.ShopId == orderRequest.ShopId.Value));
             }
 
             if (orderRequest.PaymentMethod != null)

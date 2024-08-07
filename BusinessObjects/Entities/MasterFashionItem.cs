@@ -12,6 +12,8 @@ public class MasterFashionItem
     public string Description { get; set; }
     public Guid CategoryId { get; set; }
     public GenderType Gender { get; set; }
+    public Guid ShopId { get; set; }
+    public Shop Shop { get; set; }
     public Category Category { get; set; }
     public DateTime CreatedDate { get; set; }
     public ICollection<Image> Images { get; set; } = [];
@@ -26,8 +28,7 @@ public class IndividualFashionItem
     public string Note { get; set; }
     public decimal? SellingPrice { get; set; }
     public FashionItemStatus Status { get; set; }
-    public Guid ShopId { get; set; }
-    public Shop Shop { get; set; }
+
     public FashionItemType Type { get; set; }
     public FashionItemVariation? Variation { get; set; }
     public ConsignSaleDetail? ConsignSaleDetail { get; set; }

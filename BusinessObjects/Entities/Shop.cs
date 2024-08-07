@@ -11,6 +11,7 @@ public class Shop
    public Staff Staff { get; set; }
    public Guid StaffId { get; set; }
    public string Phone { get; set; }
+   public string ShopCode { get; set; }
    // public Point Location { get; set; }
    public DateTime CreatedDate { get; set; }
 }
