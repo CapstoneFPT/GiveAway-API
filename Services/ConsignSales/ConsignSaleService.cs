@@ -291,7 +291,7 @@ namespace Services.ConsignSales
             foreach (var detail in order.OrderDetails)
             {
                 var consign =
-                    await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(detail.FashionItemId)));
+                    await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(detail.IndividualFashionItemId)));
                 if (consign != null)
                 {
                     consign.SoldPrice += detail.UnitPrice;

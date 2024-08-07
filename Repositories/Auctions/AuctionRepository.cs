@@ -62,72 +62,72 @@ Request Body:
 {AuctionItemId}
 ", request.StepIncrementPercentage,
                 request.AuctionItemId);
-
-            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable().Include(x => x.Category)
-                .Include(x => x.Images)
-                .Include(x => x.Shop)
-                .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
-
-            if (auctionItem == null)
-            {
-                throw new AuctionItemNotFoundException();
-            }
-
-            // if (auctionItem.Status != FashionItemStatus.Available)
+            //
+            // var auctionItem = await GenericDao<IndividualAuctionFashionItem>.Instance.GetQueryable().Include(x => x.Category)
+            //     .Include(x => x.Images)
+            //     .Include(x => x.Shop)
+            //     .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId);
+            //
+            // if (auctionItem == null)
             // {
-            //     throw new AuctionItemNotAvailableForAuctioningException();
+            //     throw new AuctionItemNotFoundException();
             // }
-
-            if (auctionItem.Status != FashionItemStatus.PendingAuction)
-            {
-            }
-
-            var shop = await GenericDao<Shop>.Instance.GetQueryable()
-                .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
-
-            if (shop == null)
-            {
-                throw new ShopNotFoundException();
-            }
-
-            if (await IsDateTimeOverlapped(request.StartTime, request.EndTime))
-            {
-                throw new ScheduledTimeOverlappedException();
-            }
-
-
-            decimal stepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100);
-            _logger.LogInformation("StepIncrement: {StepIncrement}", stepIncrement);
-            var newAuction = new Auction
-            {
-                AuctionFashionItemId = request.AuctionItemId,
-                Title = request.Title,
-                ShopId = request.ShopId,
-                DepositFee = request.DepositFee,
-                CreatedDate = DateTime.UtcNow,
-                StepIncrement = stepIncrement,
-                StartDate = request.StartTime,
-                EndDate = request.EndTime,
-                Status = AuctionStatus.Pending
-            };
-            var auctionDetail = await GenericDao<Auction>.Instance.AddAsync(newAuction);
-
-            auctionItem.Status = FashionItemStatus.PendingAuction;
-            await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
-
-            auctionItem.Status = FashionItemStatus.AwaitingAuction;
-
-            await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
-
-            return new AuctionDetailResponse
-            {
-                AuctionId = auctionDetail.AuctionId,
-                StartDate = auctionDetail.StartDate,
-                EndDate = auctionDetail.EndDate,
-                Status = auctionDetail.Status,
-                DepositFee = auctionDetail.DepositFee,
-                StepIncrement = auctionDetail.StepIncrement,
-                Title = auctionDetail.Title,
+            //
+            // // if (auctionItem.Status != FashionItemStatus.Available)
+            // // {
+            // //     throw new AuctionItemNotAvailableForAuctioningException();
+            // // }
+            //
+            // if (auctionItem.Status != FashionItemStatus.PendingAuction)
+            // {
+            // }
+            //
+            // var shop = await GenericDao<Shop>.Instance.GetQueryable()
+            //     .FirstOrDefaultAsync(x => x.ShopId == request.ShopId);
+            //
+            // if (shop == null)
+            // {
+            //     throw new ShopNotFoundException();
+            // }
+            //
+            // if (await IsDateTimeOverlapped(request.StartTime, request.EndTime))
+            // {
+            //     throw new ScheduledTimeOverlappedException();
+            // }
+            //
+            //
+            // decimal stepIncrement = auctionItem.InitialPrice * (request.StepIncrementPercentage / 100);
+            // _logger.LogInformation("StepIncrement: {StepIncrement}", stepIncrement);
+            // var newAuction = new Auction
+            // {
+            //     IndividualAuctionFashionItemId = request.AuctionItemId,
+            //     Title = request.Title,
+            //     ShopId = request.ShopId,
+            //     DepositFee = request.DepositFee,
+            //     CreatedDate = DateTime.UtcNow,
+            //     StepIncrement = stepIncrement,
+            //     StartDate = request.StartTime,
+            //     EndDate = request.EndTime,
+            //     Status = AuctionStatus.Pending
+            // };
+            // var auctionDetail = await GenericDao<Auction>.Instance.AddAsync(newAuction);
+            //
+            // auctionItem.Status = FashionItemStatus.PendingAuction;
+            // await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
+            //
+            // auctionItem.Status = FashionItemStatus.AwaitingAuction;
+            //
+            // await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
+            //
+            // return new AuctionDetailResponse
+            // {
+            //     AuctionId = auctionDetail.AuctionId,
+            //     StartDate = auctionDetail.StartDate,
+            //     EndDate = auctionDetail.EndDate,
+            //     Status = auctionDetail.Status,
+            //     DepositFee = auctionDetail.DepositFee,
+            //     StepIncrement = auctionDetail.StepIncrement,
+            //     Title = auctionDetail.Title,
                 // AuctionItem = new AuctionItemDetailResponse()
                 // {
                 //     ItemId = auctionItem.ItemId,
@@ -153,6 +153,10 @@ Request Body:
                 //         CategoryName = auctionItem.Category.Name
                 //     }
                 // },
+            // };
+            return new AuctionDetailResponse()
+            {
+
             };
         }
 
@@ -163,10 +167,10 @@ Request Body:
 
             if (includeRelations)
             {
-                query = query.Include(x => x.AuctionFashionItem)
-                    .ThenInclude(x => x.Images)
-                    .Include(x => x.AuctionFashionItem).ThenInclude(x => x.Category)
-                    .Include(x => x.Shop);
+                query = query.Include(x => x.IndividualAuctionFashionItem)
+                    .ThenInclude(x => x.Images);
+                // .Include(x => x.IndividualAuctionFashionItem).ThenInclude(x => x.Category)
+                // .Include(x => x.Shop);
             }
 
             query = query.Where(x => x.AuctionId == id);
@@ -196,7 +200,7 @@ Request Body:
         public async Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request)
         {
             var toBeUpdated = await GenericDao<Auction>.Instance.GetQueryable()
-                .Include(x => x.AuctionFashionItem)
+                .Include(x => x.IndividualAuctionFashionItem)
                 .Include(x => x.Shop)
                 .FirstOrDefaultAsync(x => x.AuctionId == id);
 
@@ -227,7 +231,7 @@ Request Body:
 
             if (request.AuctionItemId.HasValue)
             {
-                var auctionFashionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable()
+                var auctionFashionItem = await GenericDao<IndividualAuctionFashionItem>.Instance.GetQueryable()
                     .FirstOrDefaultAsync(x => x.ItemId == request.AuctionItemId.Value);
 
                 if (auctionFashionItem is null)
@@ -235,7 +239,7 @@ Request Body:
                     throw new AuctionItemNotFoundException();
                 }
 
-                toBeUpdated.AuctionFashionItemId = request.AuctionItemId.Value;
+                toBeUpdated.IndividualAuctionFashionItemId = request.AuctionItemId.Value;
             }
 
             await GenericDao<Auction>.Instance.UpdateAsync(toBeUpdated);
@@ -289,8 +293,8 @@ Request Body:
             }
 
             toBeRejected.Status = AuctionStatus.Rejected;
-            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable()
-                .FirstOrDefaultAsync(x => x.ItemId == toBeRejected.AuctionFashionItemId);
+            var auctionItem = await GenericDao<IndividualAuctionFashionItem>.Instance.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ItemId == toBeRejected.IndividualAuctionFashionItemId);
 
             if (auctionItem == null)
             {
@@ -299,7 +303,7 @@ Request Body:
 
             auctionItem.Status = FashionItemStatus.Unavailable;
 
-            await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
+            await GenericDao<IndividualAuctionFashionItem>.Instance.UpdateAsync(auctionItem);
             var result = await GenericDao<Auction>.Instance.UpdateAsync(toBeRejected);
             return new RejectAuctionResponse()
             {

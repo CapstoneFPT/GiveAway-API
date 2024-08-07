@@ -10,6 +10,6 @@ namespace Repositories.AuctionItems
 {
     public interface IAuctionItemRepository
     {
-        Task<AuctionFashionItem> UpdateAuctionItemStatus(Guid auctionFashionItemId, FashionItemStatus fashionItemStatus);
+        Task<IndividualAuctionFashionItem> UpdateAuctionItemStatus(Guid auctionFashionItemId, FashionItemStatus fashionItemStatus);
     }
 }

@@ -57,18 +57,11 @@ namespace Repositories.ConsignSales
             //tao nhung~ mon do trong consign moi'
             foreach (var item in request.fashionItemForConsigns)
             {
-                FashionItem fashionItem = new FashionItem()
+                var fashionItem = new IndividualFashionItem()
                 {
-                    Name = item.Name,
                     Note = item.Note,
-                    Condition = item.Condition,
                     ShopId = newConsign.ShopId,
                     Status = FashionItemStatus.PendingForConsignSale,
-                    Brand = item.Brand,
-                    Color = item.Color,
-                    Size = item.Size,
-                    Gender = item.Gender,
-                    CreatedDate = DateTime.UtcNow
                 };
                 fashionItem.Type = request.Type switch
                 {
@@ -77,13 +70,13 @@ namespace Repositories.ConsignSales
                     ConsignSaleType.ForSale => FashionItemType.ItemBase
                 };
 
-                await GenericDao<FashionItem>.Instance.AddAsync(fashionItem);
+                await GenericDao<IndividualFashionItem>.Instance.AddAsync(fashionItem);
 
                 foreach (var image in item.Images)
                 {
                     var img = new Image()
                     {
-                        FashionItemId = fashionItem.ItemId,
+                        IndividualFashionItemId = fashionItem.ItemId,
                         Url = image
                     };
                     await GenericDao<Image>.Instance.AddAsync(img);
@@ -189,10 +182,10 @@ namespace Repositories.ConsignSales
                 consign.Status = ConsignSaleStatus.Rejected;
                 foreach (var consigndetail in consign.ConsignSaleDetails)
                 {
-                    var item = await GenericDao<FashionItem>.Instance.GetQueryable()
+                    var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                         .FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
                     item.Status = FashionItemStatus.Rejected;
-                    await GenericDao<FashionItem>.Instance.UpdateAsync(item);
+                    await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
                 }
             }
             else
@@ -299,21 +292,12 @@ namespace Repositories.ConsignSales
 
             foreach (var item in request.fashionItemForConsigns)
             {
-                FashionItem fashionItem = new FashionItem()
+                var fashionItem = new IndividualFashionItem()
                 {
                     SellingPrice = item.ConfirmedPrice,
-                    Name = item.Name,
                     Note = item.Note,
-                    Description = item.Description,
-                    Condition = item.Condition,
-                    CategoryId = item.CategoryId,
                     ShopId = shopId,
                     Status = FashionItemStatus.Unavailable,
-                    Brand = item.Brand,
-                    Color = item.Color,
-                    Size = item.Size,
-                    CreatedDate = DateTime.UtcNow,
-                    Gender = item.Gender,
                 };
                 switch (request.Type)
                 {
@@ -328,14 +312,14 @@ namespace Repositories.ConsignSales
                         break;
                 }
 
-                await GenericDao<FashionItem>.Instance.AddAsync(fashionItem);
+                await GenericDao<IndividualFashionItem>.Instance.AddAsync(fashionItem);
 
                 //them image tuong ung voi moi mon do
                 for (int i = 0; i < item.Images.Length; i++)
                 {
                     Image img = new Image()
                     {
-                        FashionItemId = fashionItem.ItemId,
+                        IndividualFashionItemId = fashionItem.ItemId,
                         Url = item.Images[i]
                     };
                     await GenericDao<Image>.Instance.AddAsync(img);

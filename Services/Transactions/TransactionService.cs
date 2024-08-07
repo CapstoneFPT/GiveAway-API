@@ -85,7 +85,7 @@ namespace Services.Transactions
                 if (transactionRequest.ShopId.HasValue)
                 {
                     predicate = transaction => transaction.Order!.PurchaseType.Equals(PurchaseType.Offline) 
-                        && transaction.Order!.OrderDetails.FirstOrDefault()!.FashionItem!.ShopId == transactionRequest.ShopId;
+                        && transaction.Order!.OrderDetails.FirstOrDefault()!.IndividualFashionItem!.ShopId == transactionRequest.ShopId;
                 }
 
                 if (transactionRequest.TransactionType.HasValue)

@@ -38,23 +38,14 @@ namespace Services.FashionItems
             FashionItemDetailRequest request)
         {
             var response = new Result<FashionItemDetailResponse>();
-            var item = new FashionItem();
-            var newdata = new FashionItem()
+            var item = new IndividualFashionItem();
+            var newdata = new IndividualFashionItem()
             {
-                Name = request.Name,
                 Note = !string.IsNullOrEmpty(request.Note) ? request.Note : null,
-                Description = request.Description,
-                Condition = request.Condition,
-                Brand = request.Brand,
-                Gender = request.Gender,
-                Size = request.Size,
-                CategoryId = request.CategoryId,
                 ShopId = shopId,
                 Type = FashionItemType.ItemBase,
                 Status = FashionItemStatus.Unavailable,
-                Color = request.Color,
                 SellingPrice = request.SellingPrice,
-                CreatedDate = DateTime.UtcNow,
             };
 
             var newItem = await _fashionitemRepository.AddFashionItem(newdata);
@@ -63,7 +54,7 @@ namespace Services.FashionItems
                 var newimage = new Image()
                 {
                     Url = img,
-                    FashionItemId = newItem.ItemId,
+                    IndividualFashionItemId = newItem.ItemId,
                     CreatedDate = DateTime.UtcNow
                 };
                 await _imageRepository.AddImage(newimage);
@@ -78,24 +69,24 @@ namespace Services.FashionItems
         public async Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetAllFashionItemPagination(
             AuctionFashionItemRequest request)
         {
-            Expression<Func<FashionItem, bool>> predicate = x => true;
-            Expression<Func<FashionItem, FashionItemDetailResponse>> selector = item => new
+            Expression<Func<IndividualFashionItem, bool>> predicate = x => true;
+            Expression<Func<IndividualFashionItem, FashionItemDetailResponse>> selector = item => new
                 FashionItemDetailResponse()
                 {
                     ItemId = item.ItemId,
-                    Name = item.Name,
+                    Name = item.Variation.MasterItem.Name,
                     Note = item.Note,
-                    Description = item.Description ?? string.Empty,
-                    Condition = item.Condition,
-                    Brand = item.Brand,
-                    Gender = item.Gender,
-                    Size = item.Size,
-                    CategoryId = item.CategoryId ?? Guid.Empty,
-                    CategoryName = item.Category != null ? item.Category.Name : string.Empty,
+                    Description = item.Variation.MasterItem.Description ?? string.Empty,
+                    Condition = item.Variation.Condition,
+                    Brand = item.Variation.MasterItem.Brand,
+                    Gender = item.Variation.MasterItem.Gender,
+                    Size = item.Variation.Size,
+                    CategoryId = item.Variation.MasterItem.CategoryId,
+                    CategoryName = item.Variation.MasterItem.Category.Name,
                     ShopId = item.ShopId,
                     Type = item.Type,
                     Status = item.Status,
-                    Color = item.Color,
+                    Color = item.Variation.Color,
                     SellingPrice = item.SellingPrice ?? 0,
                     ShopAddress = item.Shop.Address,
                     Images = item.Images.Select(x => x.Url).ToList()
@@ -103,7 +94,7 @@ namespace Services.FashionItems
 
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
-                predicate = predicate.And(item => EF.Functions.ILike(item.Name, $"%{request.SearchTerm}%"));
+                predicate = predicate.And(item => EF.Functions.ILike(item.Variation.MasterItem.Name, $"%{request.SearchTerm}%"));
             }
 
             if (request.Status != null)
@@ -119,7 +110,7 @@ namespace Services.FashionItems
             if (request.CategoryId.HasValue)
             {
                 var categoryIds = await _categoryRepository.GetAllChildrenCategoryIds(request.CategoryId.Value);
-                predicate = predicate.And(item => categoryIds.Contains(item.CategoryId.Value));
+                predicate = predicate.And(item => categoryIds.Contains(item.Variation.MasterItem.CategoryId));
             }
 
             if (request.ShopId.HasValue)
@@ -129,7 +120,7 @@ namespace Services.FashionItems
 
             if (request.GenderType.HasValue)
             {
-                predicate = predicate.And(item => item.Gender == request.GenderType);
+                predicate = predicate.And(item => item.Variation.MasterItem.Gender == request.GenderType);
             }
 
             (List<FashionItemDetailResponse> Items, int Page, int PageSize, int TotalCount) result =
@@ -196,15 +187,8 @@ namespace Services.FashionItems
 
             ;
             item.SellingPrice = request.SellingPrice.HasValue ? request.SellingPrice.Value : item.SellingPrice;
-            item.Name = request.Name ?? item.Name;
             item.Note = request.Note ?? item.Note;
             /*item.Value = request.Value.HasValue ? request.Value.Value : item.Value;*/
-            item.Condition = request.Condition.HasValue ? request.Condition.Value : item.Condition;
-            item.Brand = request.Brand ?? item.Brand;
-            item.Color = request.Color ?? item.Color;
-            item.Gender = request.Gender ?? item.Gender;
-            item.Size = request.Size ?? item.Size;
-            item.CategoryId = request.CategoryId ?? item.CategoryId;
             await _fashionitemRepository.UpdateFashionItem(item);
             response.Data =
                 _mapper.Map<FashionItemDetailResponse>(item);
@@ -270,15 +254,15 @@ namespace Services.FashionItems
             return response;
         }
 
-        public async Task<List<FashionItem>> GetRefundableItems()
+        public async Task<List<IndividualFashionItem>> GetRefundableItems()
         {
-            Expression<Func<FashionItem, bool>> predicate = x => x.Status == FashionItemStatus.Refundable;
+            Expression<Func<IndividualFashionItem, bool>> predicate = x => x.Status == FashionItemStatus.Refundable;
             var result = await _fashionitemRepository
                 .GetFashionItems(predicate);
             return result;
         }
 
-        public Task ChangeToSoldItems(List<FashionItem> refundableItems)
+        public Task ChangeToSoldItems(List<IndividualFashionItem> refundableItems)
         {
             foreach (var item in refundableItems)
             {

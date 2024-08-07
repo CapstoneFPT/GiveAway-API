@@ -28,7 +28,7 @@ namespace Repositories.FashionItems
             var result =
                     _giveAwayDbContext.OrderDetails
                         .Any(orderDetail =>
-                            orderDetail.FashionItemId == itemId && orderDetail.Order.MemberId == memberId &&
+                            orderDetail.IndividualFashionItemId == itemId && orderDetail.Order.MemberId == memberId &&
                             orderDetail.Order.Status == OrderStatus.AwaitingPayment)
                 ;
             return memberId.HasValue && result;
@@ -38,26 +38,26 @@ namespace Repositories.FashionItems
         {
             return await _giveAwayDbContext.OrderDetails
                 .Where(orderDetail =>
-                    itemIds.Contains(orderDetail.FashionItemId.Value) &&
+                    itemIds.Contains(orderDetail.IndividualFashionItemId.Value) &&
                     orderDetail.Order.MemberId == memberId &&
                     orderDetail.Order.Status == OrderStatus.AwaitingPayment)
-                .Select(orderDetail => orderDetail.FashionItemId.Value)
+                .Select(orderDetail => orderDetail.IndividualFashionItemId.Value)
                 .Distinct()
                 .ToListAsync();
         }
 
-        public async Task<FashionItem> AddFashionItem(FashionItem request)
+        public async Task<IndividualFashionItem> AddFashionItem(IndividualFashionItem request)
         {
-            return await GenericDao<FashionItem>.Instance.AddAsync(request);
+            return await GenericDao<IndividualFashionItem>.Instance.AddAsync(request);
         }
 
         
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemProjections<T>(
             int? page,
-            int? pageSize, Expression<Func<FashionItem, bool>>? predicate, Expression<Func<FashionItem, T>>? selector)
+            int? pageSize, Expression<Func<IndividualFashionItem, bool>>? predicate, Expression<Func<IndividualFashionItem, T>>? selector)
         {
-            var query = _giveAwayDbContext.FashionItems.AsQueryable();
+            var query = _giveAwayDbContext.IndividualFashionItems.AsQueryable();
 
             if (predicate != null)
             {
@@ -88,11 +88,11 @@ namespace Repositories.FashionItems
         }
 
 
-        public async Task<FashionItem> GetFashionItemById(Guid id)
+        public async Task<IndividualFashionItem> GetFashionItemById(Guid id)
         {
-            var query = await _giveAwayDbContext.FashionItems.AsQueryable()
+            var query = await _giveAwayDbContext.IndividualFashionItems.AsQueryable()
                 .Include(c => c.Shop)
-                .Include(a => a.Category)
+                .Include(a => a.Variation.MasterItem.Category)
                 .Include(b => b.Images)
                 .FirstOrDefaultAsync(x => x.ItemId.Equals(id));
             return query;
@@ -117,29 +117,29 @@ namespace Repositories.FashionItems
 
             var query = GenericDao<Category>.Instance.GetQueryable()
                 .Where(c => listCate.Contains(c.CategoryId))
-                .Include(c => c.FashionItems).ThenInclude(c => c.Images)
-                .SelectMany(c => c.FashionItems)
+                .Include(c => c.MasterFashionItems).ThenInclude(c => c.Images)
+                .SelectMany(c => c.MasterFashionItems)
                 .AsNoTracking();
-            query = query.OrderByDescending(c => c.CreatedDate);
-            if (request.Status != null)
-            {
-                query = query.Where(f => request.Status.Contains(f.Status));
-            }
-
-            if (request.Type != null)
-            {
-                query = query.Where(x => request.Type.Contains(x.Type));
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-            {
-                query = query.Where(f => EF.Functions.ILike(f.Name, $"%{request.SearchTerm}%"));
-            }
-
-            if (request.ShopId != null)
-            {
-                query = query.Where(f => f.ShopId.Equals(request.ShopId));
-            }
+            // query = query.OrderByDescending(c => c.CreatedDate);
+            // if (request.Status != null)
+            // {
+            //     query = query.Where(f => request.Status.Contains(f.));
+            // }
+            //
+            // if (request.Type != null)
+            // {
+            //     query = query.Where(x => request.Type.Contains(x.Type));
+            // }
+            //
+            // if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            // {
+            //     query = query.Where(f => EF.Functions.ILike(f.Name, $"%{request.SearchTerm}%"));
+            // }
+            //
+            // if (request.ShopId != null)
+            // {
+            //     query = query.Where(f => f.ShopId.Equals(request.ShopId));
+            // }
 
             var count = await query.CountAsync();
             var pageNum = request.PageNumber ?? -1;
@@ -152,34 +152,34 @@ namespace Repositories.FashionItems
                     .Take(pageSizeNum);
             }
 
-            var items = await query
-                .Select(
-                    f => new FashionItemDetailResponse
-                    {
-                        ItemId = f.ItemId,
-                        Type = f.Type,
-                        SellingPrice = f.SellingPrice.Value,
-                        Name = f.Name,
-                        Note = f.Note,
-                        Description = f.Description,
-                        Condition = f.Condition,
-                        ShopAddress = f.Shop.Address,
-                        ShopId = f.Shop.ShopId,
-                        /*Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,*/
-                        CategoryName = f.Category.Name,
-                        Size = f.Size,
-                        Color = f.Color,
-                        Brand = f.Brand,
-                        Gender = f.Gender,
-                        Status = f.Status,
-                        Images = f.Images.Select(c => c.Url).ToList()
-                    }
-                )
-                .ToListAsync();
+            // var items = await query
+            //     .Select(
+            //         f => new FashionItemDetailResponse
+            //         {
+            //             ItemId = f.,
+            //             Type = f.Type,
+            //             SellingPrice = f.SellingPrice.Value,
+            //             Name = f.Name,
+            //             Note = f.Note,
+            //             Description = f.Description,
+            //             Condition = f.Condition,
+            //             ShopAddress = f.Shop.Address,
+            //             ShopId = f.Shop.ShopId,
+            //             /*Consigner = f.ConsignSaleDetail.ConsignSale.Member.Fullname,*/
+            //             CategoryName = f.Category.Name,
+            //             Size = f.Size,
+            //             Color = f.Color,
+            //             Brand = f.Brand,
+            //             Gender = f.Gender,
+            //             Status = f.Status,
+            //             Images = f.Images.Select(c => c.Url).ToList()
+            //         }
+            //     )
+            //     .ToListAsync();
 
             var result = new PaginationResponse<FashionItemDetailResponse>
             {
-                Items = items,
+                Items = [],
                 PageSize = request.PageSize ?? -1,
                 TotalCount = count,
                 SearchTerm = request.SearchTerm,
@@ -190,14 +190,14 @@ namespace Repositories.FashionItems
             return result;
         }
 
-        public async Task BulkUpdate(List<FashionItem> fashionItems)
+        public async Task BulkUpdate(List<IndividualFashionItem> fashionItems)
         {
-            await GenericDao<FashionItem>.Instance.UpdateRange(fashionItems);
+            await GenericDao<IndividualFashionItem>.Instance.UpdateRange(fashionItems);
         }
 
-        public Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem, bool>> predicate)
+        public Task<List<IndividualFashionItem>> GetFashionItems(Expression<Func<IndividualFashionItem, bool>> predicate)
         {
-            var queryable = GenericDao<FashionItem>.Instance
+            var queryable = GenericDao<IndividualFashionItem>.Instance
                 .GetQueryable()
                 .Where(predicate);
 
@@ -206,14 +206,14 @@ namespace Repositories.FashionItems
             return result;
         }
 
-        public async Task UpdateFashionItems(List<FashionItem> fashionItems)
+        public async Task UpdateFashionItems(List<IndividualFashionItem> fashionItems)
         {
-            await GenericDao<FashionItem>.Instance.UpdateRange(fashionItems);
+            await GenericDao<IndividualFashionItem>.Instance.UpdateRange(fashionItems);
         }
 
-        public async Task<FashionItem> UpdateFashionItem(FashionItem fashionItem)
+        public async Task<IndividualFashionItem> UpdateFashionItem(IndividualFashionItem fashionItem)
         {
-            _giveAwayDbContext.FashionItems.Update(fashionItem);
+            _giveAwayDbContext.IndividualFashionItems.Update(fashionItem);
             await _giveAwayDbContext.SaveChangesAsync();
             return fashionItem;
         }
@@ -236,9 +236,9 @@ namespace Repositories.FashionItems
         public async Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> listItemId)
         {
             var listItemNotbelongshop = new List<Guid?>();
-            var listItem = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                 .Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
-            foreach (FashionItem item in listItem)
+            foreach (IndividualFashionItem item in listItem)
             {
                 if (!item.ShopId.Equals(shopId))
                 {

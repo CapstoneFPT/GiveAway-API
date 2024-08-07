@@ -28,7 +28,7 @@ public class AuctionStartingJob : IJob
         try
         {
             var auctionToStart = await dbContext.Auctions
-                .Include(auction => auction.AuctionFashionItem)
+                .Include(auction => auction.IndividualAuctionFashionItem)
                 .FirstOrDefaultAsync(x => x.AuctionId == auctionId);
 
             if (auctionToStart == null)
@@ -37,7 +37,7 @@ public class AuctionStartingJob : IJob
             }
 
             auctionToStart.Status = AuctionStatus.OnGoing;
-            auctionToStart.AuctionFashionItem.Status = FashionItemStatus.Bidding;
+            auctionToStart.IndividualAuctionFashionItem.Status = FashionItemStatus.Bidding;
 
 
             dbContext.Auctions.Update(auctionToStart);

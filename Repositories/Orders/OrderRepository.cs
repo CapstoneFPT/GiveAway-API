@@ -45,7 +45,7 @@ namespace Repositories.Orders
         public async Task<OrderResponse> CreateOrderHierarchy(Guid accountId,
             CartRequest cart)
         {
-            var listItem = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                 .Where(c => cart.ItemIds.Contains(c.ItemId)).ToListAsync();
             var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
             var memberAccount = await GenericDao<Account>.Instance.GetQueryable()
@@ -79,25 +79,25 @@ namespace Repositories.Orders
 
             foreach (var id in cart.ItemIds)
             {
-                var item = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = order.OrderId;
                 orderDetail.UnitPrice = item.SellingPrice.Value;
                 orderDetail.CreatedDate = DateTime.UtcNow;
-                orderDetail.FashionItemId = id;
+                orderDetail.IndividualFashionItemId = id;
 
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
                 if (cart.PaymentMethod.Equals(PaymentMethod.COD))
                 {
                     item.Status = FashionItemStatus.PendingForOrder;
-                    await GenericDao<FashionItem>.Instance.UpdateAsync(item);
+                    await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
                 }
 
                 var orderDetailResponse = new OrderDetailsResponse()
                 {
                     OrderDetailId = orderDetail.OrderDetailId,
-                    ItemName = item.Name,
+                    ItemName = item.Variation.MasterItem.Name,
                     UnitPrice = orderDetail.UnitPrice,
                     CreatedDate = orderDetail.CreatedDate
                 };
@@ -144,7 +144,7 @@ namespace Repositories.Orders
                 .GetQueryable()
                 .Include(c => c.Member)
                 .Include(order => order.OrderDetails)
-                .ThenInclude(orderDetail => orderDetail.FashionItem)
+                .ThenInclude(orderDetail => orderDetail.IndividualFashionItem)
                 .SingleOrDefaultAsync(predicate);
             return result;
         }
@@ -275,7 +275,7 @@ namespace Repositories.Orders
         {
             var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable()
                 .Where(c => c.Order.MemberId == memberId && c.Order.Status.Equals(OrderStatus.AwaitingPayment))
-                .Where(c => listItemId.Contains(c.FashionItemId)).ToListAsync();
+                .Where(c => listItemId.Contains(c.IndividualFashionItemId)).ToListAsync();
             return listorderdetail;
         }
 
@@ -284,7 +284,7 @@ namespace Repositories.Orders
             var listItemNotAvailable = new List<Guid?>();
             foreach (var itemId in listItemId)
             {
-                var item = await GenericDao<FashionItem>.Instance.GetQueryable()
+                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                     .FirstOrDefaultAsync(c => c.ItemId == itemId);
                 if (item is null || !item.Status.Equals(FashionItemStatus.Available))
                 {
@@ -300,27 +300,27 @@ namespace Repositories.Orders
             var listItemId = new List<Guid>();
             if (request.ShopId != null)
             {
-                listItemId = await GenericDao<FashionItem>.Instance.GetQueryable()
+                listItemId = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                     .Where(c => c.ShopId == request.ShopId)
                     .Select(c => c.ItemId).ToListAsync();
             }
             else
             {
-                listItemId = await GenericDao<FashionItem>.Instance.GetQueryable()
+                listItemId = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                     .Select(c => c.ItemId).ToListAsync();
             }
 
-            var listOrderdetail = new List<OrderDetailResponse<FashionItem>>();
+            var listOrderdetail = new List<OrderDetailResponse<IndividualFashionItem>>();
             foreach (var itemId in listItemId)
             {
                 var orderDetail = await GenericDao<OrderDetail>.Instance.GetQueryable()
-                    .FirstOrDefaultAsync(c => c.FashionItemId.Equals(itemId));
+                    .FirstOrDefaultAsync(c => c.IndividualFashionItemId.Equals(itemId));
                 if (orderDetail != null)
                 {
-                    var newOrderDetail = new OrderDetailResponse<FashionItem>();
+                    var newOrderDetail = new OrderDetailResponse<IndividualFashionItem>();
                     newOrderDetail.OrderId = orderDetail.OrderId;
                     newOrderDetail.UnitPrice = orderDetail.UnitPrice;
-                    newOrderDetail.FashionItemDetail = await GenericDao<FashionItem>.Instance.GetQueryable()
+                    newOrderDetail.FashionItemDetail = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                         .FirstOrDefaultAsync(c => c.ItemId == itemId);
 
                     listOrderdetail.Add(newOrderDetail);
@@ -388,13 +388,13 @@ namespace Repositories.Orders
 
         public async Task<OrderResponse> ConfirmOrderDelivered(Guid orderId)
         {
-            var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable().Include(c => c.FashionItem)
+            var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable().Include(c => c.IndividualFashionItem)
                 .Where(c => c.OrderId == orderId)
                 .AsNoTracking().ToListAsync();
 
             foreach (var orderDetail in listorderdetail)
             {
-                var fashionItem = orderDetail.FashionItem;
+                var fashionItem = orderDetail.IndividualFashionItem;
                 if (fashionItem != null && fashionItem.Status.Equals(FashionItemStatus.OnDelivery))
                 {
                     fashionItem.Status = FashionItemStatus.Refundable;
@@ -436,7 +436,7 @@ namespace Repositories.Orders
 
         public async Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
-            var listItem = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+            var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                 .Where(c => orderRequest.ItemIds.Contains(c.ItemId)).ToListAsync();
 
 
@@ -462,7 +462,7 @@ namespace Repositories.Orders
 
             foreach (var id in orderRequest.ItemIds)
             {
-                var item = await GenericDao<FashionItem>.Instance.GetQueryable().Include(c => c.Shop)
+                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable().Include(c => c.Shop)
                     .FirstOrDefaultAsync(c => c.ItemId == id);
 
                 OrderDetail orderDetail = new OrderDetail();
@@ -470,14 +470,14 @@ namespace Repositories.Orders
                 orderDetail.UnitPrice = item.SellingPrice.Value;
                 orderDetail.CreatedDate = DateTime.UtcNow;
 
-                orderDetail.FashionItemId = id;
+                orderDetail.IndividualFashionItemId = id;
 
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
                 item.Status = FashionItemStatus.OnDelivery;
-                await GenericDao<FashionItem>.Instance.UpdateAsync(item);
+                await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
 
                 var orderDetailResponse = await _giveAwayDbContext.OrderDetails.AsQueryable()
-                    .Where(c => c.FashionItemId == id)
+                    .Where(c => c.IndividualFashionItemId == id)
                     .ProjectTo<OrderDetailsResponse>(_mapper.ConfigurationProvider)
                     .AsNoTracking()
                     .FirstOrDefaultAsync();

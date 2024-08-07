@@ -13,8 +13,8 @@ public class Category
     public int Level { get; set; }
     public Category? Parent { get; set; }
 
-    public ICollection<Category> Children = new List<Category>();
-    public ICollection<FashionItem> FashionItems { get; set; }
+    public ICollection<Category> Children = [];
+    public ICollection<MasterFashionItem> MasterFashionItems { get; set; } = [];
     public CategoryStatus Status { get; set; }
     public DateTime CreatedDate { get; set; }
 }

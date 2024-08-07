@@ -31,9 +31,9 @@ namespace Services.OrderDetails
             _fashionItemRepository = fashionItemRepository;
         }
 
-        public async Task<Result<OrderDetailResponse<FashionItem>>> GetOrderDetailById(Guid orderId)
+        public async Task<Result<OrderDetailResponse<IndividualFashionItem>>> GetOrderDetailById(Guid orderId)
         {
-            var response = new Result<OrderDetailResponse<FashionItem>>();
+            var response = new Result<OrderDetailResponse<IndividualFashionItem>>();
             var listOrder = await _orderDetailRepository.GetOrderDetailById(orderId);
             if (listOrder is null)
             {
@@ -84,7 +84,7 @@ namespace Services.OrderDetails
                 throw new RefundExpiredException("There are items that ran out refund expiration");
             }
 
-            var fashionitemIds = orderDetail.Select(c => c.FashionItemId).ToList();
+            var fashionitemIds = orderDetail.Select(c => c.IndividualFashionItemId).ToList();
             var fashionitems = await _fashionItemRepository.GetFashionItems(c => fashionitemIds.Contains(c.ItemId));
             if (!fashionitems.Any(c => c.Status.Equals(FashionItemStatus.Refundable)))
             {
@@ -101,11 +101,11 @@ namespace Services.OrderDetails
 
         public async Task ChangeFashionItemsStatus(List<OrderDetail> orderDetails, FashionItemStatus fashionItemStatus)
         {
-            List<FashionItem> fashionItems = new List<FashionItem>();
+            List<IndividualFashionItem> fashionItems = [];
 
             foreach (var orderDetail in orderDetails)
             {
-                var fashionItem = await _fashionItemRepository.GetFashionItemById(orderDetail.FashionItemId!.Value);
+                var fashionItem = await _fashionItemRepository.GetFashionItemById(orderDetail.IndividualFashionItemId!.Value);
                 fashionItems.Add(fashionItem);
             }
 

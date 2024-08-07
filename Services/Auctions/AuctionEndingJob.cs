@@ -29,7 +29,7 @@ public class AuctionEndingJob : IJob
         var auctionId = context.JobDetail.JobDataMap.GetGuid("AuctionId");
 
         var auctionToEnd = await dbContext.Auctions
-            .Include(x => x.AuctionFashionItem)
+            .Include(x => x.IndividualAuctionFashionItem)
             .Include(x => x.Bids)
             .FirstOrDefaultAsync(x => x.AuctionId == auctionId);
 
@@ -42,7 +42,7 @@ public class AuctionEndingJob : IJob
         if (auctionToEnd.Bids.Count == 0)
         {
            Console.WriteLine("No bids");
-           auctionToEnd.AuctionFashionItem.Status = FashionItemStatus.Unavailable;
+           auctionToEnd.IndividualAuctionFashionItem.Status = FashionItemStatus.Unavailable;
            await dbContext.SaveChangesAsync();
            return;
         }
@@ -58,8 +58,8 @@ public class AuctionEndingJob : IJob
             }
             
             auctionToEnd.Status = AuctionStatus.Finished;
-            auctionToEnd.AuctionFashionItem.Status = FashionItemStatus.Won;
-            auctionToEnd.AuctionFashionItem.SellingPrice = winningBid.Amount;
+            auctionToEnd.IndividualAuctionFashionItem.Status = FashionItemStatus.Won;
+            auctionToEnd.IndividualAuctionFashionItem.SellingPrice = winningBid.Amount;
             dbContext.Auctions.Update(auctionToEnd);
 
             var orderRepository = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
@@ -71,7 +71,7 @@ public class AuctionEndingJob : IJob
                 PaymentMethod = PaymentMethod.Point,
                 TotalPrice = winningBid.Amount,
                 BidId = winningBid.BidId,
-                AuctionFashionItemId = auctionToEnd.AuctionFashionItemId
+                AuctionFashionItemId = auctionToEnd.IndividualAuctionFashionItemId
             };
 
             var address = await dbContext.Addresses.FirstOrDefaultAsync(x=>x.MemberId == orderRequest.MemberId && x.IsDefault);
@@ -98,7 +98,7 @@ public class AuctionEndingJob : IJob
             var orderDetail = new OrderDetail()
             {
                 OrderId = newOrder.OrderId,
-                FashionItemId = orderRequest.AuctionFashionItemId,
+                IndividualFashionItemId = orderRequest.AuctionFashionItemId,
                 UnitPrice = orderRequest.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
             };

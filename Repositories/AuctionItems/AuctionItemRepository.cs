@@ -13,10 +13,10 @@ namespace Repositories.AuctionItems
 {
     public class AuctionItemRepository : IAuctionItemRepository
     {
-        public async Task<AuctionFashionItem> UpdateAuctionItemStatus(Guid auctionFashionItemId,
+        public async Task<IndividualAuctionFashionItem> UpdateAuctionItemStatus(Guid auctionFashionItemId,
             FashionItemStatus fashionItemStatus)
         {
-            var auctionItem = await GenericDao<AuctionFashionItem>.Instance.GetQueryable()
+            var auctionItem = await GenericDao<IndividualAuctionFashionItem>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(x => x.ItemId == auctionFashionItemId);
             if (auctionItem is null)
             {
@@ -24,7 +24,7 @@ namespace Repositories.AuctionItems
             }
 
             auctionItem.Status = fashionItemStatus;
-            return await GenericDao<AuctionFashionItem>.Instance.UpdateAsync(auctionItem);
+            return await GenericDao<IndividualAuctionFashionItem>.Instance.UpdateAsync(auctionItem);
         }
     }
 }

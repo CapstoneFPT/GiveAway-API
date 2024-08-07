@@ -14,8 +14,8 @@ public class Auction
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
     public decimal StepIncrement { get; set; }
-    public AuctionFashionItem AuctionFashionItem { get; set; }
-    public Guid AuctionFashionItemId { get; set; }
+    public IndividualAuctionFashionItem IndividualAuctionFashionItem { get; set; }
+    public Guid IndividualAuctionFashionItemId { get; set; }
     public AuctionStatus Status { get; set; }
 
     public ICollection<AuctionDeposit> AuctionDeposits = new List<AuctionDeposit>();

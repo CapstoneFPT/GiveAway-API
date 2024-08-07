@@ -67,7 +67,7 @@ public class AuctionEndingService : BackgroundService
                     PaymentMethod = PaymentMethod.Point,
                     TotalPrice = winningBid.Amount,
                     BidId = winningBid.BidId,
-                    AuctionFashionItemId = auction.AuctionFashionItemId
+                    AuctionFashionItemId = auction.IndividualAuctionFashionItemId
                 };
 
                 var newOrder = new Order()
@@ -85,7 +85,7 @@ public class AuctionEndingService : BackgroundService
                 var orderDetail = new OrderDetail()
                 {
                     OrderId = newOrder.OrderId,
-                    FashionItemId = orderRequest.AuctionFashionItemId,
+                    IndividualFashionItemId = orderRequest.AuctionFashionItemId,
                     UnitPrice = orderRequest.TotalPrice,
                 };
 

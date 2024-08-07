@@ -14,7 +14,7 @@ namespace Services.OrderDetails
     public interface IOrderDetailService
     {
         Task<Result<PaginationResponse<OrderDetailsResponse>>> GetOrderDetailsByOrderId(Guid orderId, OrderDetailRequest request);
-        Task<Result<OrderDetailResponse<FashionItem>>> GetOrderDetailById(Guid orderId);
+        Task<Result<OrderDetailResponse<IndividualFashionItem>>> GetOrderDetailById(Guid orderId);
 
         Task<Result<RefundResponse>> RequestRefundToShop(CreateRefundRequest refundRequest);
 

@@ -75,7 +75,7 @@ namespace Services.Shops
         {
             Expression<Func<Transaction, bool>> predicate = transaction =>
                 transaction.Order!.PurchaseType == PurchaseType.Offline &&
-                transaction.Order!.OrderDetails.FirstOrDefault()!.FashionItem!.ShopId == shopId;
+                transaction.Order!.OrderDetails.FirstOrDefault()!.IndividualFashionItem!.ShopId == shopId;
 
             Expression<Func<Transaction, TransactionResponse>> selector = transaction => new TransactionResponse()
             {

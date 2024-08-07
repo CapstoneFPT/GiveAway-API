@@ -48,10 +48,10 @@ public class CompleteRefundableItemsService : BackgroundService
             var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
 
 
-            var refundableItems = await dbContext.OrderDetails.Include(x => x.FashionItem).Where(x =>
-                    x.FashionItem != null && x.FashionItem.Status == FashionItemStatus.Refundable &&
+            var refundableItems = await dbContext.OrderDetails.Include(x => x.IndividualFashionItem).Where(x =>
+                    x.IndividualFashionItem != null && x.IndividualFashionItem.Status == FashionItemStatus.Refundable &&
                     x.RefundExpirationDate < DateTime.UtcNow)
-                .Select(x => x.FashionItem)
+                .Select(x => x.IndividualFashionItem)
                 .ToListAsync();
 
             foreach (var refundableItem in refundableItems)
@@ -64,7 +64,7 @@ public class CompleteRefundableItemsService : BackgroundService
                 refundableItem.Status = FashionItemStatus.Sold;
 
 
-                dbContext.FashionItems.Update(refundableItem);
+                dbContext.IndividualFashionItems.Update(refundableItem);
             }
 
             await dbContext.SaveChangesAsync();

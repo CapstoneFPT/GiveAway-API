@@ -105,7 +105,7 @@ namespace Services.Auctions
                 PaymentMethod = PaymentMethod.Point,
                 TotalPrice = winningBid.Amount,
                 BidId = winningBid.Id,
-                AuctionFashionItemId = auction.AuctionFashionItemId
+                AuctionFashionItemId = auction.IndividualAuctionFashionItemId
             };
 
 
@@ -135,7 +135,7 @@ namespace Services.Auctions
                 await _auctionRepository.UpdateAuctionStatus(auctionId, AuctionStatus.OnGoing);
 
             var auctionFashionItemId = auctionUpdateResult
-                .AuctionFashionItemId;
+                .IndividualAuctionFashionItemId;
 
             await _auctionItemRepository
                 .UpdateAuctionItemStatus(auctionFashionItemId, FashionItemStatus.Bidding);
@@ -175,8 +175,8 @@ namespace Services.Auctions
                 EndDate = auction.EndDate,
                 Status = auction.Status,
                 DepositFee = auction.DepositFee,
-                ImageUrl = auction.AuctionFashionItem.Images.FirstOrDefault().Url,
-                AuctionItemId = auction.AuctionFashionItemId,
+                ImageUrl = auction.IndividualAuctionFashionItem.Images.FirstOrDefault().Url,
+                AuctionItemId = auction.IndividualAuctionFashionItemId,
                 ShopId = auction.ShopId
             };
 
@@ -212,30 +212,30 @@ namespace Services.Auctions
                 StepIncrement = result.StepIncrement,
                 AuctionItem = new AuctionItemDetailResponse()
                 {
-                    ItemId = result.AuctionFashionItemId,
-                    Name = result.AuctionFashionItem.Name,
-                    FashionItemType = result.AuctionFashionItem.Type,
-                    SellingPrice = result.AuctionFashionItem.SellingPrice ?? 0,
-                    InitialPrice = result.AuctionFashionItem.InitialPrice,
-                    Size = result.AuctionFashionItem.Size,
-                    Color = result.AuctionFashionItem.Color,
-                    Gender = result.AuctionFashionItem.Gender,
-                    Description = result.AuctionFashionItem.Description,
-                    Brand = result.AuctionFashionItem.Brand ?? "N/A",
-                    Condition = result.AuctionFashionItem.Condition,
-                    Note = result.AuctionFashionItem.Note,
+                    ItemId = result.IndividualAuctionFashionItemId,
+                    Name = result.IndividualAuctionFashionItem.Variation.MasterItem.Name,
+                    FashionItemType = result.IndividualAuctionFashionItem.Type,
+                    SellingPrice = result.IndividualAuctionFashionItem.SellingPrice ?? 0,
+                    InitialPrice = result.IndividualAuctionFashionItem.InitialPrice,
+                    Size = result.IndividualAuctionFashionItem.Variation.Size,
+                    Color = result.IndividualAuctionFashionItem.Variation.Color,
+                    Gender = result.IndividualAuctionFashionItem.Variation.MasterItem.Gender,
+                    Description = result.IndividualAuctionFashionItem.Variation.MasterItem.Description,
+                    Brand = result.IndividualAuctionFashionItem.Variation.MasterItem.Brand ?? "N/A",
+                    Condition = result.IndividualAuctionFashionItem.Variation.Condition ?? "N/A",
+                    Note = result.IndividualAuctionFashionItem.Note,
                     Category = new AuctionItemCategory()
                     {
-                        CategoryId = result.AuctionFashionItem.CategoryId.Value,
-                        CategoryName = result.AuctionFashionItem.Category.Name,
-                        Level = result.AuctionFashionItem.Category.Level
+                        CategoryId = result.IndividualAuctionFashionItem.Variation.MasterItem.CategoryId,
+                        CategoryName = result.IndividualAuctionFashionItem.Variation.MasterItem.Category.Name,
+                        Level = result.IndividualAuctionFashionItem.Variation.MasterItem.Category.Level
                     },
                     Shop = new ShopAuctionDetailResponse()
                     {
                         ShopId = result.Shop.ShopId,
                         Address = result.Shop.Address,
                     },
-                    Images = result.AuctionFashionItem.Images.Count > 0 ? result.AuctionFashionItem.Images.Select(
+                    Images = result.IndividualAuctionFashionItem.Images.Count > 0 ? result.IndividualAuctionFashionItem.Images.Select(
                         img => new AuctionItemImage()
                         {
                             ImageId = img.ImageId,

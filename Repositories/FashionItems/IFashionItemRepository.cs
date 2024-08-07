@@ -16,21 +16,21 @@ namespace Repositories.FashionItems
         // Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
         //     AuctionFashionItemRequest request);
 
-        Task<FashionItem> GetFashionItemById(Guid id);
-        Task<FashionItem> AddFashionItem(FashionItem request);
-        Task<FashionItem> UpdateFashionItem(FashionItem fashionItem);
+        Task<IndividualFashionItem> GetFashionItemById(Guid id);
+        Task<IndividualFashionItem> AddFashionItem(IndividualFashionItem request);
+        Task<IndividualFashionItem> UpdateFashionItem(IndividualFashionItem fashionItem);
 
         Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,
             AuctionFashionItemRequest request);
 
-        Task BulkUpdate(List<FashionItem> fashionItems);
-        Task<List<FashionItem>> GetFashionItems(Expression<Func<FashionItem, bool>> predicate);
-        Task UpdateFashionItems(List<FashionItem> fashionItems);
+        Task BulkUpdate(List<IndividualFashionItem> fashionItems);
+        Task<List<IndividualFashionItem>> GetFashionItems(Expression<Func<IndividualFashionItem, bool>> predicate);
+        Task UpdateFashionItems(List<IndividualFashionItem> fashionItems);
         Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> itemId);
 
         Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemProjections<T>(
             int? page,
-            int? pageSize, Expression<Func<FashionItem, bool>>? predicate, Expression<Func<FashionItem, T>>? selector);
+            int? pageSize, Expression<Func<IndividualFashionItem, bool>>? predicate, Expression<Func<IndividualFashionItem, T>>? selector);
 
         bool CheckItemIsInOrder(Guid itemId, Guid? memberId);
         Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);

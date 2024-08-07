@@ -92,7 +92,7 @@ namespace Services.Orders
             var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.ItemIds, accountId);
             if (checkOrderExisted.Count > 0)
             {
-                var listItemExisted = checkOrderExisted.Select(x => x.FashionItemId).ToList();
+                var listItemExisted = checkOrderExisted.Select(x => x.IndividualFashionItemId).ToList();
                 var orderResponse = new OrderResponse();
                 orderResponse.ListItemNotAvailable = listItemExisted;
                 response.Data = orderResponse;
@@ -124,7 +124,7 @@ namespace Services.Orders
                     new OrderDetail()
                     {
                         OrderId = orderResult.OrderId,
-                        FashionItemId = orderRequest.AuctionFashionItemId,
+                        IndividualFashionItemId = orderRequest.AuctionFashionItemId,
                         UnitPrice = orderRequest.TotalPrice,
                         CreatedDate = DateTime.UtcNow,
                     }
@@ -175,7 +175,7 @@ namespace Services.Orders
             }
 
             var shopTotals = order.OrderDetails
-                .GroupBy(item => item.FashionItem!.ShopId)
+                .GroupBy(item => item.IndividualFashionItem.ShopId)
                 .Select(group =>
                     new
                     {
@@ -195,8 +195,8 @@ namespace Services.Orders
         public async Task UpdateFashionItemStatus(Guid orderOrderId)
         {
             var orderDetails = await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderOrderId);
-            orderDetails.ForEach(x => x.FashionItem!.Status = FashionItemStatus.PendingForOrder);
-            var fashionItems = orderDetails.Select(x => x.FashionItem).ToList();
+            orderDetails.ForEach(x => x.IndividualFashionItem.Status = FashionItemStatus.PendingForOrder);
+            var fashionItems = orderDetails.Select(x => x.IndividualFashionItem).ToList();
             await _fashionItemRepository.BulkUpdate(fashionItems!);
         }
 
@@ -326,7 +326,7 @@ namespace Services.Orders
             if (request.ShopId.HasValue)
             {
                 predicate = predicate.And(order =>
-                    order.OrderDetails.Any(c => c.FashionItem.ShopId == request.ShopId.Value));
+                    order.OrderDetails.Any(c => c.IndividualFashionItem.ShopId == request.ShopId.Value));
             }
 
             if (request.PaymentMethod != null)
@@ -402,7 +402,7 @@ namespace Services.Orders
             }
 
             order.Status = OrderStatus.Cancelled;
-            foreach (var item in order.OrderDetails.Select(c => c.FashionItem))
+            foreach (var item in order.OrderDetails.Select(c => c.IndividualFashionItem))
             {
                 item.Status = FashionItemStatus.Available;
             }
@@ -451,7 +451,7 @@ namespace Services.Orders
                 throw new StatusNotAvailableException();
             }
             order.Status = OrderStatus.Cancelled;
-            foreach (var item in order.OrderDetails.Select(c => c.FashionItem))
+            foreach (var item in order.OrderDetails.Select(c => c.IndividualFashionItem))
             {
                 item.Status = FashionItemStatus.Unavailable;
             }
@@ -501,7 +501,7 @@ namespace Services.Orders
             if (orderRequest.ShopId.HasValue)
             {
                 predicate = predicate.And(order =>
-                    order.OrderDetails.Any(c => c.FashionItem.ShopId == orderRequest.ShopId.Value));
+                    order.OrderDetails.Any(c => c.IndividualFashionItem.ShopId == orderRequest.ShopId.Value));
             }
 
             if (orderRequest.PaymentMethod != null)
@@ -643,7 +643,7 @@ namespace Services.Orders
             foreach (var itemOrderDetail in listorderDetail)
             {
                 itemOrderDetail.RefundExpirationDate = DateTime.UtcNow;
-                itemOrderDetail.FashionItem.Status = FashionItemStatus.Refundable;
+                itemOrderDetail.IndividualFashionItem.Status = FashionItemStatus.Refundable;
             }
 
             await _orderDetailRepository.UpdateRange(listorderDetail);
@@ -651,7 +651,7 @@ namespace Services.Orders
             Expression<Func<OrderDetail, OrderDetailsResponse>> selector = x => new OrderDetailsResponse()
             {
                 OrderDetailId = x.OrderDetailId,
-                ItemName = x.FashionItem!.Name,
+                ItemName = x.IndividualFashionItem.Variation.MasterItem.Name,
                 UnitPrice = x.UnitPrice,
                 RefundExpirationDate = x.RefundExpirationDate
             };
@@ -733,12 +733,12 @@ namespace Services.Orders
                 throw new OrderDetailNotFoundException();
             }
 
-            if (!orderDetail.FashionItem!.Status.Equals(FashionItemStatus.PendingForOrder))
+            if (!orderDetail.IndividualFashionItem!.Status.Equals(FashionItemStatus.PendingForOrder))
             {
                 throw new StatusNotAvailableException();
             }
-            orderDetail.FashionItem.Status = FashionItemStatus.OnDelivery;
-            if (order.OrderDetails.All(c => c.FashionItem!.Status == FashionItemStatus.OnDelivery))
+            orderDetail.IndividualFashionItem.Status = FashionItemStatus.OnDelivery;
+            if (order.OrderDetails.All(c => c.IndividualFashionItem!.Status == FashionItemStatus.OnDelivery))
             {
                 order.Status = OrderStatus.OnDelivery;
                 

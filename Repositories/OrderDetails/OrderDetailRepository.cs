@@ -41,7 +41,7 @@ namespace Repositories.OrderDetails
             
             if (request.ShopId != null)
             {
-                query = query.Where(c => c.FashionItem.ShopId == request.ShopId);
+                query = query.Where(c => c.IndividualFashionItem.ShopId == request.ShopId);
             }
             var count = await query.CountAsync();
             query = query.Skip((request.PageNumber - 1) * request.PageSize)
@@ -65,21 +65,21 @@ namespace Repositories.OrderDetails
         public async Task<List<OrderDetail>> GetOrderDetails(Expression<Func<OrderDetail, bool>> predicate)
         {
             var result = await GenericDao<OrderDetail>.Instance.GetQueryable()
-                .Include(x => x.FashionItem)
+                .Include(x => x.IndividualFashionItem)
                 .Where(predicate)
                 .ToListAsync();
             return result;
         }
 
 
-        public async Task<OrderDetailResponse<FashionItem>> GetOrderDetailById(Guid id)
+        public async Task<OrderDetailResponse<IndividualFashionItem>> GetOrderDetailById(Guid id)
         {
             var query = await GenericDao<OrderDetail>.Instance.GetQueryable()
                 .Where(c => c.OrderDetailId == id)
-                .Select(x => new OrderDetailResponse<FashionItem>
+                .Select(x => new OrderDetailResponse<IndividualFashionItem>
                 {
                     OrderDetailId = id,
-                    FashionItemDetail = x.FashionItem,
+                    FashionItemDetail = x.IndividualFashionItem,
                     OrderId = x.OrderId,
                     UnitPrice = x.UnitPrice,
                     RefundExpirationDate = x.RefundExpirationDate,
@@ -93,12 +93,12 @@ namespace Repositories.OrderDetails
             
 
             var fashionItem = await GenericDao<OrderDetail>.Instance.GetQueryable()
-                .Include(c => c.FashionItem)
+                .Include(c => c.IndividualFashionItem)
                 .Where(c => c.OrderDetailId == refundRequest.OrderDetailIds)
-                .Select(c => c.FashionItem)
+                .Select(c => c.IndividualFashionItem)
                 .FirstOrDefaultAsync();
             fashionItem.Status = FashionItemStatus.PendingForRefund;
-            await GenericDao<FashionItem>.Instance.UpdateAsync(fashionItem);
+            await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(fashionItem);
             var refund = new Refund()
             {
                 OrderDetailId = refundRequest.OrderDetailIds,
@@ -113,7 +113,7 @@ namespace Repositories.OrderDetails
             {
                 var newImg = new Image()
                 {
-                    FashionItemId = fashionItem.ItemId,
+                    IndividualFashionItemId = fashionItem.ItemId,
                     RefundId = refund.RefundId,
                     CreatedDate = DateTime.UtcNow,
                     Url = img,

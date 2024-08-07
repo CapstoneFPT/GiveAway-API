@@ -28,7 +28,7 @@ public class AuctionStartingService : BackgroundService
             var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
             var auctionToStart = await dbContext.Auctions
                 .Where(a => a.StartDate <= DateTime.UtcNow && a.Status == AuctionStatus.Approved)
-                .Include(auction => auction.AuctionFashionItem)
+                .Include(auction => auction.IndividualAuctionFashionItem)
                 .ToListAsync(stoppingToken);
 
             foreach (var auction in auctionToStart)
@@ -36,7 +36,7 @@ public class AuctionStartingService : BackgroundService
                 try
                 {
                     auction.Status = AuctionStatus.OnGoing;
-                    auction.AuctionFashionItem.Status = FashionItemStatus.Bidding;
+                    auction.IndividualAuctionFashionItem.Status = FashionItemStatus.Bidding;
 
 
                     _logger.LogInformation("Auction {AuctionId} has been started", auction);

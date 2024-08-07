@@ -56,16 +56,16 @@ public class OrderCancelingService : BackgroundService
                 order.Status = OrderStatus.Cancelled;
                 dbContext.Orders.Update(order);
 
-                var orderDetails = await dbContext.OrderDetails.Include(x => x.FashionItem)
+                var orderDetails = await dbContext.OrderDetails.Include(x => x.IndividualFashionItem)
                     .Where(x => x.OrderId == order.OrderId).ToListAsync();
 
                 foreach (var orderDetail in orderDetails)
                 {
-                    if (orderDetail.FashionItem == null)
+                    if (orderDetail.IndividualFashionItem == null)
                     {
                         throw new FashionItemNotFoundException();
                     }
-                    orderDetail.FashionItem.Status = FashionItemStatus.Available;
+                    orderDetail.IndividualFashionItem.Status = FashionItemStatus.Available;
                     dbContext.OrderDetails.Update(orderDetail);
                 }
             }

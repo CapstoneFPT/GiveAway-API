@@ -20,12 +20,10 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Shop> Shops { get; set; }
     public DbSet<Withdraw> Withdraws { get; set; }
     public DbSet<BankAccount> BankAccounts { get; set; }
-    public DbSet<FashionItem> FashionItems { get; set; }
     public DbSet<Image> Images { get; set; }
     public DbSet<Auction> Auctions { get; set; }
     public DbSet<Address> Addresses { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }
-    public DbSet<AuctionFashionItem> AuctionFashionItems { get; set; }
     public DbSet<Member> Members { get; set; }
     public DbSet<Staff> Staffs { get; set; }
     public DbSet<Admin> Admins { get; set; }
@@ -63,7 +61,7 @@ public class GiveAwayDbContext : DbContext
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        return configuration.GetConnectionString("DeployDB");
+        return configuration.GetConnectionString("DefaultDB");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -200,8 +198,10 @@ public class GiveAwayDbContext : DbContext
 
         #region FashionAuctionItem
 
-        modelBuilder.Entity<AuctionFashionItem>().HasMany(x => x.Auctions).WithOne(x => x.AuctionFashionItem)
-            .HasForeignKey(x => x.AuctionFashionItemId);
+      modelBuilder.Entity<IndividualAuctionFashionItem>()
+          .HasMany(x=> x.Auctions)
+          .WithOne(x=>x.IndividualAuctionFashionItem)
+          .HasForeignKey(x=>x.IndividualAuctionFashionItemId);
 
         #endregion
 
@@ -261,39 +261,6 @@ public class GiveAwayDbContext : DbContext
 
         #region FashionItem
 
-        modelBuilder.Entity<FashionItem>().ToTable("FashionItem").HasKey(e => e.ItemId);
-
-        modelBuilder.Entity<FashionItem>().HasDiscriminator(e => e.Type)
-            .HasValue<FashionItem>(FashionItemType.ItemBase)
-            .HasValue<ConsignedForSaleFashionItem>(FashionItemType.ConsignedForSale)
-            .HasValue<AuctionFashionItem>(FashionItemType.ConsignedForAuction);
-
-        modelBuilder.Entity<FashionItem>().Property(e => e.Name).HasColumnType("varchar").HasMaxLength(50);
-        modelBuilder.Entity<FashionItem>().Property(e => e.Note).HasColumnType("varchar").HasMaxLength(100);
-        modelBuilder.Entity<FashionItem>().Property(e => e.Condition).HasColumnType("numeric").HasMaxLength(100);
-
-        modelBuilder.Entity<FashionItem>().Property(e => e.Status)
-            .HasConversion(prop => prop.ToString(), s => (FashionItemStatus)Enum.Parse(typeof(FashionItemStatus), s))
-            .HasColumnType("varchar").HasMaxLength(20);
-
-        modelBuilder.Entity<FashionItem>().Property(x => x.Type)
-            .HasConversion(prop => prop.ToString(), s => (FashionItemType)Enum.Parse(typeof(FashionItemType), s))
-            .HasColumnType("varchar").HasMaxLength(100);
-
-        modelBuilder.Entity<FashionItem>()
-            .Property(x => x.Gender)
-            .HasConversion(prop => prop.ToString(), s => (GenderType)Enum.Parse(typeof(GenderType), s))
-            .HasColumnType("varchar")
-            .HasMaxLength(20);
-
-        modelBuilder.Entity<FashionItem>()
-            .Property(x => x.Size)
-            .HasConversion(prop => prop.ToString(), s => (SizeType)Enum.Parse(typeof(SizeType), s))
-            .HasColumnType("varchar")
-            .HasMaxLength(5);
-        
-        /*modelBuilder.Entity<FashionItem>().HasOne(x => x.ConsignSaleDetail).WithOne(x => x.FashionItem)
-            .HasForeignKey<ConsignSaleDetail>(x => x.FashionItemId).OnDelete(DeleteBehavior.Cascade);*/
 
         #endregion
 

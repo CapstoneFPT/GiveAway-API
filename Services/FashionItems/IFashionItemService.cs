@@ -14,8 +14,8 @@ namespace Services.FashionItems
         Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId, UpdateFashionItemRequest request);
         Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetItemByCategoryHierarchy(Guid categoryId, AuctionFashionItemRequest request);
         Task<Result<FashionItemDetailResponse>> CheckFashionItemAvailability(Guid itemId);
-        Task<List<FashionItem>> GetRefundableItems();
-        Task ChangeToSoldItems(List<FashionItem> refundableItems);
+        Task<List<IndividualFashionItem>> GetRefundableItems();
+        Task ChangeToSoldItems(List<IndividualFashionItem> refundableItems);
         Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId, UpdateFashionItemStatusRequest request);
     }
 }

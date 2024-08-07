@@ -17,7 +17,7 @@ namespace Repositories.Bids
      
         public async Task<BidDetailResponse?> CreateBid(Guid id, CreateBidRequest request)
         {
-            var auction = await GenericDao<Auction>.Instance.GetQueryable().Include(x => x.AuctionFashionItem)
+            var auction = await GenericDao<Auction>.Instance.GetQueryable().Include(x => x.IndividualAuctionFashionItem)
                 .FirstOrDefaultAsync(x => x.AuctionId == id);
 
             if (auction == null)
@@ -54,7 +54,7 @@ namespace Repositories.Bids
 
             var currentBidRequired = latestBid != null
                 ? latestBid.Amount + auction.StepIncrement
-                : auction.AuctionFashionItem.InitialPrice;
+                : auction.IndividualAuctionFashionItem.InitialPrice;
 
             if (request.Amount < currentBidRequired)
             {

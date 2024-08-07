@@ -12,12 +12,13 @@ public class MasterFashionItem
     public Guid CategoryId { get; set; }
     public GenderType Gender { get; set; }
     public Category Category { get; set; }
+    public ICollection<Image> Images { get; set; } = [];
     public ICollection<FashionItemVariation> Variations { get; set; } = [];
 }
 
 public class IndividualFashionItem
 {
-    public Guid Id { get; set; }
+    public Guid ItemId { get; set; }
     public string ItemCode { get; set; }
     public Guid VariationId { get; set; }
     public string Note { get; set; }
@@ -26,14 +27,15 @@ public class IndividualFashionItem
     public Guid ShopId { get; set; }
     public Shop Shop { get; set; }
     public FashionItemType Type { get; set; }
-    public FashionItemVariation Variation { get; set; }
+    public FashionItemVariation? Variation { get; set; }
     public ConsignSaleDetail ConsignSaleDetail { get; set; }
+    public DateTime CreatedDate { get; set; }
     public ICollection<Image> Images { get; set; } = [];
 }
 
 public class FashionItemVariation
 {
-    public Guid Id { get; set; }
+    public Guid VariationId { get; set; }
     public Guid MasterItemId { get; set; }
     public string Condition { get; set; }
     public decimal Price { get; set; }
@@ -51,4 +53,5 @@ public class IndividualConsignedForSaleFashionItem : IndividualFashionItem
 public class IndividualAuctionFashionItem : IndividualFashionItem
 {
     public decimal? InitialPrice { get; set; }
+    public ICollection<Auction> Auctions { get; set; } = [];
 }

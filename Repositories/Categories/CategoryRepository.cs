@@ -81,13 +81,13 @@ namespace Repositories.Categories
         {
             IQueryable<Guid> relevantCategoryIds;
             var categoryDao = _giveAwayDbContext.Set<Category>();
-            var fashionItemDao = _giveAwayDbContext.Set<FashionItem>();
+            var fashionItemDao = _giveAwayDbContext.Set<IndividualFashionItem>();
 
             if (shopId.HasValue)
             {
                 relevantCategoryIds = fashionItemDao
                     .Where(fi => fi.ShopId == shopId.Value)
-                    .Select(fi => fi.CategoryId.Value)
+                    .Select(fi => fi.Variation.MasterItem.CategoryId)
                     .Distinct();
             }
             else
@@ -198,9 +198,9 @@ namespace Repositories.Categories
             IQueryable<Category> relevantCategories;
             if (shopId.HasValue)
             {
-                relevantCategories = GenericDao<FashionItem>.Instance.GetQueryable()
+                relevantCategories = GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                     .Where(x => x.ShopId == shopId.Value)
-                    .Select(x => x.Category).Where(x => x.Level == 4 && x.Status.Equals(CategoryStatus.Available))
+                    .Select(x => x.Variation.MasterItem.Category).Where(x => x.Level == 4 && x.Status.Equals(CategoryStatus.Available))
                     .Distinct();
             }
             else

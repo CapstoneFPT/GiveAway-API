@@ -116,8 +116,10 @@ public static class DependencyInjectionExtensions
     public static IServiceCollection AddDao(this IServiceCollection serviceCollection)
     {
         serviceCollection.AddScoped<GenericDao<Account>>();
-        serviceCollection.AddScoped<GenericDao<FashionItem>>();
-        serviceCollection.AddScoped<GenericDao<AuctionFashionItem>>();
+        serviceCollection.AddScoped<GenericDao<MasterFashionItem>>();
+        serviceCollection.AddScoped<GenericDao<FashionItemVariation>>();
+        serviceCollection.AddScoped<GenericDao<IndividualFashionItem>>();
+        serviceCollection.AddScoped<GenericDao<IndividualAuctionFashionItem>>();
         serviceCollection.AddScoped<GenericDao<Auction>>();
         serviceCollection.AddScoped<GenericDao<AuctionDeposit>>();
         serviceCollection.AddScoped<GenericDao<Bid>>();
