@@ -263,7 +263,7 @@ namespace Services.ConsignSales
             }
 
             consignSaleDetail.ConfirmedPrice = request.SellingPrice;
-            consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
+            /*consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
             consignSaleDetail.FashionItem.Description = request.Description;
 
             if (consignSaleDetail.FashionItem is AuctionFashionItem auctionFashionItem)
@@ -274,7 +274,7 @@ namespace Services.ConsignSales
             else
             {
                 consignSaleDetail.FashionItem.SellingPrice = request.SellingPrice;
-            }
+            }*/
             
             await _consignSaleDetailRepository.UpdateConsignSaleDetail(consignSaleDetail);
             

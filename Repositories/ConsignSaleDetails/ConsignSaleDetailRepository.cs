@@ -35,8 +35,6 @@ public class ConsignSaleDetailRepository : IConsignSaleDetailRepository
     {
         var result = await GenericDao<ConsignSaleDetail>.Instance
             .GetQueryable()
-            .Include(c => c.FashionItem)
-            .ThenInclude(c => c.Category)
             .SingleOrDefaultAsync(predicate);
         return result;
     }

@@ -35,7 +35,7 @@ public class RevenueRepository : IRevenueRepository
     }
 
 
-    public async Task<decimal> GetConsignSaleRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
+    public async Task<decimal?> GetConsignSaleRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
     {
         var query = GenericDao<ConsignSaleDetail>.Instance
                 .GetQueryable()

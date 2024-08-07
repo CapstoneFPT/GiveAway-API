@@ -292,8 +292,8 @@ public class GiveAwayDbContext : DbContext
             .HasColumnType("varchar")
             .HasMaxLength(5);
         
-        modelBuilder.Entity<FashionItem>().HasOne(x => x.ConsignSaleDetail).WithOne(x => x.FashionItem)
-            .HasForeignKey<ConsignSaleDetail>(x => x.FashionItemId).OnDelete(DeleteBehavior.Cascade);
+        /*modelBuilder.Entity<FashionItem>().HasOne(x => x.ConsignSaleDetail).WithOne(x => x.FashionItem)
+            .HasForeignKey<ConsignSaleDetail>(x => x.FashionItemId).OnDelete(DeleteBehavior.Cascade);*/
 
         #endregion
 

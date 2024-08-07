@@ -9,8 +9,9 @@ public class ConsignSaleDetail
     public Guid ConsignSaleId { get; set; }
     public Guid FashionItemId { get; set; }
     public decimal DealPrice { get; set; }
-    public decimal ConfirmedPrice { get; set; }
+    public string Note { get; set; }
+    public decimal? ConfirmedPrice { get; set; }
     public ConsignSale ConsignSale { get; set; }
-    public FashionItem FashionItem { get; set; }
     public DateTime CreatedDate { get; set; }
+    public ICollection<Image> Images { get; set; } = [];
 }

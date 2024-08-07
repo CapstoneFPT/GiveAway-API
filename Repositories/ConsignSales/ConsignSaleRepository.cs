@@ -181,7 +181,7 @@ namespace Repositories.ConsignSales
         public async Task<ConsignSaleResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                .Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)
+                .Include(c => c.ConsignSaleDetails)
                 .Where(c => c.ConsignSaleId == consignId)
                 .FirstOrDefaultAsync();
             if (status.Equals(ConsignSaleStatus.Rejected))
@@ -198,7 +198,7 @@ namespace Repositories.ConsignSales
             else
             {
                 consign.Status = ConsignSaleStatus.AwaitDelivery;
-                consign.TotalPrice = consign.ConsignSaleDetails.Sum(c => c.ConfirmedPrice);
+                /*consign.TotalPrice = consign.ConsignSaleDetails.Sum(c => c.ConfirmedPrice);*/
             }
 
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
@@ -218,7 +218,6 @@ namespace Repositories.ConsignSales
         {   
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleDetails!)
-                .ThenInclude(cd => cd.FashionItem)
                 .FirstOrDefaultAsync(c => c.ConsignSaleId == consignId);
 
             if (consign == null)
@@ -232,14 +231,14 @@ namespace Repositories.ConsignSales
 
             decimal totalprice = 0;
             
-            foreach (var detail in consign.ConsignSaleDetails)
+            /*foreach (var detail in consign.ConsignSaleDetails)
             {
                 if (detail.FashionItem != null)
                 {
                     detail.FashionItem.Status = FashionItemStatus.Unavailable;
                     totalprice += detail.ConfirmedPrice;
                 }
-            }
+            }*/
             
             consign.TotalPrice = totalprice;
             if (consign.Type.Equals(ConsignSaleType.ForSale))
@@ -419,7 +418,6 @@ namespace Repositories.ConsignSales
             var result = await GenericDao<ConsignSale>.Instance
                 .GetQueryable()
                 .Include(cons => cons.ConsignSaleDetails)
-                .ThenInclude(consDetail => consDetail.FashionItem)
                 .SingleOrDefaultAsync(predicate);
             return result;
         }

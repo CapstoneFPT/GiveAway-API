@@ -243,14 +243,14 @@ namespace Services.FashionItems
                     await _fashionitemRepository.UpdateFashionItem(item);
                     var consign =
                         await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(item.ItemId)));
-                    if (consign != null)
+                    /*if (consign != null)
                     {
                         if (!consign.ConsignSaleDetails.Any(c => c.FashionItem.Status.Equals(FashionItemStatus.Unavailable)))
                         {
                             consign.Status = ConsignSaleStatus.OnSale;
                             await _consignSaleRepository.UpdateConsignSale(consign);
                         }
-                    }
+                    }*/
                     response.Messages = ["This item status has successfully changed to available"];
                     response.Data = _mapper.Map<FashionItemDetailResponse>(item);
                     response.ResultStatus = ResultStatus.Success;

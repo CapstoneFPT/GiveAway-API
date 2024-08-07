@@ -21,6 +21,7 @@ public class IndividualFashionItem
     public string ItemCode { get; set; }
     public Guid VariationId { get; set; }
     public string Note { get; set; }
+    public decimal? SellingPrice { get; set; }
     public FashionItemStatus Status { get; set; }
     public Guid ShopId { get; set; }
     public Shop Shop { get; set; }
