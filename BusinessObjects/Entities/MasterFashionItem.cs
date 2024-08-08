@@ -12,11 +12,12 @@ public class MasterFashionItem
     public string Description { get; set; }
     public Guid CategoryId { get; set; }
     public GenderType Gender { get; set; }
-    public Guid ShopId { get; set; }
-    public Shop Shop { get; set; }
     public Category Category { get; set; }
     public DateTime CreatedDate { get; set; }
+    public bool IsUniversal { get; set; }
     public ICollection<Image> Images { get; set; } = [];
+    public ICollection<MasterFashionItemShop> MasterFashionItemShops { get; set; } = [];
+    public ICollection<Shop> Shops { get; set; } = [];
     public ICollection<FashionItemVariation> Variations { get; set; } = [];
 }
 

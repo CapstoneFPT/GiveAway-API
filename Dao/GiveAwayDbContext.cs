@@ -48,7 +48,7 @@ public class GiveAwayDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql(GetConnectionString());
+        optionsBuilder.UseNpgsql(GetConnectionString(), builder => builder.UseNetTopologySuite());
         optionsBuilder.LogTo(Console.WriteLine);
         optionsBuilder.EnableSensitiveDataLogging();
     }
@@ -201,6 +201,11 @@ public class GiveAwayDbContext : DbContext
         #region MasterItem
 
         modelBuilder.Entity<MasterFashionItem>().HasKey(x => x.ItemId);
+
+        modelBuilder.Entity<MasterFashionItem>()
+            .HasMany(x => x.Shops)
+            .WithMany(x => x.MasterFashionItems)
+            .UsingEntity<MasterFashionItemShop>();
 
         modelBuilder.Entity<MasterFashionItem>()
             .HasIndex(x => x.ItemCode)
@@ -460,6 +465,10 @@ public class GiveAwayDbContext : DbContext
         #endregion
 
         #region Shop
+
+        modelBuilder.Entity<Shop>()
+            .Property(x => x.Location)
+            .HasColumnType("geography(Point)");
 
         #endregion
 
