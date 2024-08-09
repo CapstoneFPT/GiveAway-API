@@ -16,5 +16,7 @@ jobs:
       uses: actions/checkout@v2 
  
     - name: Build
+      env: 
+        GHN_API_TOKEN: ${{ secrets.GIAO_HANG_NHANH_TOKEN }}
       run: docker compose up --build -d
  
