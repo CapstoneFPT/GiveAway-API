@@ -30,7 +30,12 @@ public enum ErrorCode
     DuplicatePhoneNumber,
     UnauthorizedPayment,
     MismatchPaymentMethod,
-    PointPackageNotFound
+    PointPackageNotFound,
+    ExternalServiceError,
+    Unauthorized,
+    DeserializationError,
+    UnknownError,
+    NetworkError
 }
 
 public enum ErrorType

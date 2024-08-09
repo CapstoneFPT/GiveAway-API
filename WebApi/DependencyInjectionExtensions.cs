@@ -37,6 +37,7 @@ using Services.ConsignSales;
 using Services.Deliveries;
 using Services.Emails;
 using Services.FashionItems;
+using Services.GiaoHangNhanh;
 using Services.Images;
 using Services.Inquiries;
 using Services.OrderDetails;
@@ -82,6 +83,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IRevenueService, RevenueService>();
         serviceCollection.AddScoped<IRefundService, RefundService>();
         serviceCollection.AddScoped<IWithdrawService, WithdrawService>();
+        serviceCollection.AddScoped<IGiaoHangNhanhService, GiaoHangNhanhService>();
         serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }

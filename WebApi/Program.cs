@@ -16,6 +16,7 @@ using Microsoft.OpenApi.Models;
 using Prometheus;
 using Quartz;
 using Services.Auctions;
+using Services.GiaoHangNhanh;
 using Services.Orders;
 using Services.VnPayService;
 using WebApi;
@@ -27,6 +28,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddHttpClient<IGiaoHangNhanhService, GiaoHangNhanhService>();
 builder.Services.AddServices();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
