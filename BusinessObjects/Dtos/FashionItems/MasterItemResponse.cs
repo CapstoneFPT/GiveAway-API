@@ -14,6 +14,8 @@ public class MasterItemResponse
     public GenderType Gender { get; set; }
     public DateTime CreatedDate { get; set; }
     public bool IsUniversal { get; set; }
-    public string[] Images { get; set; } = [];
-    public Guid[] ShopId { get; set; } = [];
+    public List<string> Images { get; set; } = [];
+    public Guid ShopId { get; set; }
+    public ItemVariationResponse? ItemVariationResponse { get; set; }
+    public PaginationResponse<ItemVariationResponse>? ListItemVariationResponses { get; set; }
 }

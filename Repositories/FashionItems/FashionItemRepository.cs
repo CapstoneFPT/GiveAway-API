@@ -29,6 +29,87 @@ namespace Repositories.FashionItems
             string prefixInStock = new string($"CS-{shopCode}-{itemCode}");
             return prefixInStock;
         }
+
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetMasterItemProjections<T>(int? page, int? pageSize, Expression<Func<MasterFashionItem, bool>>? predicate, Expression<Func<MasterFashionItem, T>>? selector)
+        {
+            var query = _giveAwayDbContext.MasterFashionItems.AsQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            var count = await query.CountAsync();
+
+            var pageNum = page ?? -1;
+            var pageSizeNum = pageSize ?? -1;
+
+            if (pageNum > 0 && pageSizeNum > 0)
+            {
+                query = query.Skip((pageNum - 1) * pageSizeNum).Take(pageSizeNum);
+            }
+
+            List<T> items = new List<T>();
+            if (selector != null)
+            {
+                items = await query.Select(selector).ToListAsync();
+            }
+            else
+            {
+                items = await query.Cast<T>().ToListAsync();
+            }
+
+            return (items, pageNum, pageSizeNum, count);
+        }
+
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemVariationProjections<T>(int? page, int? pageSize, Expression<Func<FashionItemVariation, bool>>? predicate, Expression<Func<FashionItemVariation, T>>? selector)
+        {
+            var query = _giveAwayDbContext.FashionItemVariations.AsQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            var count = await query.CountAsync();
+
+            var pageNum = page ?? -1;
+            var pageSizeNum = pageSize ?? -1;
+
+            if (pageNum > 0 && pageSizeNum > 0)
+            {
+                query = query.Skip((pageNum - 1) * pageSizeNum).Take(pageSizeNum);
+            }
+
+            List<T> items = new List<T>();
+            if (selector != null)
+            {
+                items = await query.Select(selector).ToListAsync();
+            }
+            else
+            {
+                items = await query.Cast<T>().ToListAsync();
+            }
+
+            return (items, pageNum, pageSizeNum, count);
+        }
+
+        public async Task<MasterFashionItem?> GetSingleMasterItem(Expression<Func<MasterFashionItem, bool>> predicate)
+        {
+            return await GenericDao<MasterFashionItem>.Instance.GetQueryable()
+                .Include(c => c.Images)
+                .Include(c => c.Shop)
+                .Where(predicate)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<FashionItemVariation?> GetSingleFashionItemVariation(Expression<Func<FashionItemVariation?, bool>> predicate)
+        {
+            return await GenericDao<FashionItemVariation>.Instance.GetQueryable()
+                .Where(predicate)
+                .FirstOrDefaultAsync();
+        }
+
         public bool CheckItemIsInOrder(Guid itemId, Guid? memberId)
         {
             var result =
@@ -71,19 +152,9 @@ namespace Repositories.FashionItems
             var individualItems = await _giveAwayDbContext.IndividualFashionItems
                 .Where(item => item.Variation!.MasterItemId == masterItemId)
                 .ToListAsync();
-            if (individualItems.Count == 0)
-            {
-                 prefix = new string($"{masterItem.ItemCode}{itemNumber}");
-            }
-            else
-            {
-                foreach (var variation in masterItem.Variations)
-                {
-                    totalItemNumber += variation.IndividualItems.Count;
-                }
-                totalItemNumber += 1;
-                prefix = new string($"{masterItem.ItemCode}{totalItemNumber}");
-            }
+            totalItemNumber = individualItems.Count + 1;
+            prefix = new string($"{masterItem.ItemCode}{totalItemNumber}");
+            
             return prefix;
         }
 
@@ -96,11 +167,8 @@ namespace Repositories.FashionItems
         {
             return await GenericDao<MasterFashionItem>.Instance.AddAsync(request);
         }
-
-        public async Task<List<MasterFashionItemShop>> AddRangeMasterFashionItemShop(List<MasterFashionItemShop> request)
-        {
-            return await GenericDao<MasterFashionItemShop>.Instance.AddRange(request);
-        }
+        
+        
 
         public async Task<FashionItemVariation> AddSingleFashionItemVariation(FashionItemVariation request)
         {
@@ -108,7 +176,7 @@ namespace Repositories.FashionItems
         }
 
 
-        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemProjections<T>(
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetIndividualItemProjections<T>(
             int? page,
             int? pageSize, Expression<Func<IndividualFashionItem, bool>>? predicate, Expression<Func<IndividualFashionItem, T>>? selector)
         {
@@ -151,6 +219,11 @@ namespace Repositories.FashionItems
                 .Include(b => b.Images)
                 .FirstOrDefaultAsync(x => x.ItemId.Equals(id));
             return query;
+        }
+
+        public async Task<FashionItemVariation> UpdateFashionItemVariation(FashionItemVariation fashionItemVariation)
+        {
+            return await GenericDao<FashionItemVariation>.Instance.UpdateAsync(fashionItemVariation);
         }
 
         public async Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,

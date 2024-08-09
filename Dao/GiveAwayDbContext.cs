@@ -202,14 +202,9 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<MasterFashionItem>().HasKey(x => x.ItemId);
 
-        modelBuilder.Entity<MasterFashionItem>()
-            .HasMany(x => x.Shops)
-            .WithMany(x => x.MasterFashionItems)
-            .UsingEntity<MasterFashionItemShop>();
+        
 
-        modelBuilder.Entity<MasterFashionItem>()
-            .HasIndex(x => x.ItemCode)
-            .IsUnique();
+        
 
         modelBuilder.Entity<MasterFashionItem>()
             .Property(x => x.Gender)
@@ -280,7 +275,10 @@ public class GiveAwayDbContext : DbContext
             .Property(x=>x.Type)
             .HasConversion(prop => prop.ToString(), s => (FashionItemType)Enum.Parse(typeof(FashionItemType), s))
             .HasColumnType("varchar").HasMaxLength(20);
-        
+        modelBuilder.Entity<IndividualFashionItem>()
+            .Property(x=>x.Status)
+            .HasConversion(prop => prop.ToString(), s => (FashionItemStatus)Enum.Parse(typeof(FashionItemStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<IndividualFashionItem>()
             .HasMany(x=>x.Images)
             .WithOne(x=>x.IndividualFashionItem)
@@ -469,7 +467,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Shop>()
             .Property(x => x.Location)
             .HasColumnType("geography(Point)");
-
+        modelBuilder.Entity<Shop>()
+            .HasMany(x => x.MasterFashionItems)
+            .WithOne(x => x.Shop)
+            .HasForeignKey(x => x.ShopId);
         #endregion
 
         #region PointPackage

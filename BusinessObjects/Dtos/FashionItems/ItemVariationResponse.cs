@@ -13,17 +13,6 @@ public class ItemVariationResponse
     public int StockCount { get; set; }
     public DateTime CreatedDate { get; set; }
     public List<IndividualItemResponse> IndividualItems { get; set; }
+    public PaginationResponse<IndividualItemResponse> IndividualItemsPagination { get; set; }
 }
 
-public class IndividualItemResponse
-{
-    public Guid ItemId { get; set; }
-    public string ItemCode { get; set; }
-    public Guid VariationId { get; set; }
-    public string Note { get; set; }
-    public decimal SellingPrice { get; set; }
-    public FashionItemStatus Status { get; set; }
-    public FashionItemType Type { get; set; }
-    public DateTime CreatedDate { get; set; }
-    public string[] Images { get; set; }
-}

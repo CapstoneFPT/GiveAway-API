@@ -15,6 +15,6 @@ public class Shop
    public Point Location { get; set; }
    public DateTime CreatedDate { get; set; }
 
-   public ICollection<MasterFashionItemShop> MasterFashionItemShops { get; set; } = [];
+ 
    public ICollection<MasterFashionItem> MasterFashionItems { get; set; } = [];
 }

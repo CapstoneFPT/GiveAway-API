@@ -114,8 +114,8 @@ namespace Repositories
                 /*.ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))*/
                 .ReverseMap();
             CreateMap<MasterFashionItem, MasterItemResponse>()
-                .ForMember(dest => dest.ShopId, opt => opt.MapFrom(src => src.MasterFashionItemShops.Select(c => c.ShopId).ToList()))
-                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.Select(c => c.Url).ToList()))
+                .ForMember(dest => dest.ShopId, opt => opt.MapFrom(src => src.ShopId))
+                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.Select(c => c.Url)))
                 .ReverseMap();
             CreateMap<FashionItemVariation, ItemVariationResponse>()
                 .ForMember(dest => dest.IndividualItems, opt => opt.MapFrom(src => src.IndividualItems))

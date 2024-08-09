@@ -4,7 +4,7 @@ namespace BusinessObjects.Dtos.FashionItems;
 
 public class CreateItemVariationRequest
 {
-    public Guid MasterItemId { get; set; }
+    
     public string Condition { get; set; }
     public decimal Price { get; set; }
     public string Color { get; set; }

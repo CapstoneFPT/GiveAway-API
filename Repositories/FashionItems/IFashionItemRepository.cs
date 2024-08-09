@@ -19,10 +19,10 @@ namespace Repositories.FashionItems
         Task<IndividualFashionItem> GetFashionItemById(Guid id);
         Task<IndividualFashionItem> AddInvidualFashionItem(IndividualFashionItem request);
         Task<MasterFashionItem> AddSingleMasterFashionItem(MasterFashionItem request);
-        Task<List<MasterFashionItemShop>> AddRangeMasterFashionItemShop(List<MasterFashionItemShop> request);
+        // Task<List<MasterFashionItemShop>> AddRangeMasterFashionItemShop(List<MasterFashionItemShop> request);
         Task<FashionItemVariation> AddSingleFashionItemVariation(FashionItemVariation request);
         Task<IndividualFashionItem> UpdateFashionItem(IndividualFashionItem fashionItem);
-
+        Task<FashionItemVariation> UpdateFashionItemVariation(FashionItemVariation fashionItemVariation);
         Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,
             AuctionFashionItemRequest request);
 
@@ -31,10 +31,17 @@ namespace Repositories.FashionItems
         Task UpdateFashionItems(List<IndividualFashionItem> fashionItems);
         Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> itemId);
 
-        Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemProjections<T>(
+        Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetIndividualItemProjections<T>(
             int? page,
             int? pageSize, Expression<Func<IndividualFashionItem, bool>>? predicate, Expression<Func<IndividualFashionItem, T>>? selector);
-
+        Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetMasterItemProjections<T>(
+            int? page,
+            int? pageSize, Expression<Func<MasterFashionItem, bool>>? predicate, Expression<Func<MasterFashionItem, T>>? selector);
+        Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemVariationProjections<T>(
+            int? page,
+            int? pageSize, Expression<Func<FashionItemVariation, bool>>? predicate, Expression<Func<FashionItemVariation, T>>? selector);
+        Task<MasterFashionItem?> GetSingleMasterItem(Expression<Func<MasterFashionItem?, bool>> predicate);
+        Task<FashionItemVariation?> GetSingleFashionItemVariation(Expression<Func<FashionItemVariation?, bool>> predicate);
         bool CheckItemIsInOrder(Guid itemId, Guid? memberId);
         Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);
         string GenerateMasterItemCode(string itemCode);

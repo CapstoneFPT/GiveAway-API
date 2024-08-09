@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,39 @@ namespace WebApi.Controllers
             _fashionItemService = fashionItemService;
         }
 
+        [HttpGet("master-items")]
+        [ProducesResponseType<Result<PaginationResponse<MasterItemResponse>>>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> GetAllMasterItemPagination([FromQuery] MasterItemRequest request)
+        {
+            var result = await _fashionItemService.GetAllMasterItemPagination(request);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
+        }
+        [HttpGet("{masteritemId}/item-variants")]
+        [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> GetAllItemVariationPagination([FromRoute] Guid masteritemId,[FromQuery] ItemVariationRequest request)
+        {
+            var result = await _fashionItemService.GetAllFashionItemVariationPagination(masteritemId, request);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
+        }
+        [HttpGet("{variationId}/individual-items")]
+        [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> GetAllIndividualItemPagination([FromRoute] Guid variationId,[FromQuery] IndividualItemRequest request)
+        {
+            var result = await _fashionItemService.GetIndividualItemPagination(variationId, request);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
+        }
         [HttpGet]
         public async Task<ActionResult<Result<PaginationResponse<FashionItemDetailResponse>>>>
             GetAllFashionItemsPagination([FromQuery] AuctionFashionItemRequest request)
@@ -90,11 +124,22 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("item-variants")]
+        [HttpPost("{masteritemId}/item-variants")]
         [ProducesResponseType<Result<ItemVariationResponse>>((int)HttpStatusCode.OK)]
-        public async Task<IActionResult> CreateItemVariation([FromBody] CreateItemVariationRequest request)
+        public async Task<IActionResult> CreateItemVariation([FromRoute]Guid masteritemId,[FromBody] CreateItemVariationRequest request)
         {
-            var result = await _fashionItemService.CreateItemVariation(request);
+            var result = await _fashionItemService.CreateItemVariation(masteritemId, request);
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            return Ok(result);
+        }
+
+        [HttpPost("{variationId}/individual-items")]
+        [ProducesResponseType<Result<List<IndividualItemResponse>>>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> CreateIndividualItems([FromRoute] Guid variationId,
+            List<CreateIndividualItemRequest> request)
+        {
+            var result = await _fashionItemService.CreateIndividualItems(variationId, request);
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             return Ok(result);
