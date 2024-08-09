@@ -18,5 +18,6 @@ namespace Services.Shops
         
         Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(Guid shopId, TransactionRequest transactionRequest);
         Task<FeedbackResponse> CreateFeedbackForShop(Guid shopId, CreateFeedbackRequest feedbackRequest);
+        Task<DotNext.Result<CreateShopResponse, ErrorCode>> CreateShop(CreateShopRequest request);
     }
 }

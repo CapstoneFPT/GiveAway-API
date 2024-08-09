@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
@@ -164,6 +165,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("ghnshops")]
+        [Obsolete("Use CreateShop instead")]
         [ProducesResponseType<GHNApiResponse<GHNShopCreateResponse>>((int)HttpStatusCode.OK)]
         public async Task<IActionResult> CreateGhnShop([FromBody] GHNShopCreateRequest request)
         {
@@ -183,5 +185,40 @@ namespace WebApi.Controllers
                         HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError))
             };
         }
+
+        [HttpPost]
+        [ProducesResponseType<CreateShopResponse>((int) HttpStatusCode.OK)]
+        public async Task<IActionResult> CreateShop([FromBody] CreateShopRequest request)
+        {
+           var result = await _shopService.CreateShop(request);
+
+           if (result.IsSuccessful)
+           {
+               return Ok(result.Value);
+           }
+           
+           return result.Error switch
+           {
+               ErrorCode.Unauthorized => Unauthorized(new ErrorResponse(
+                   "Unauthorized access to External Service",
+                   ErrorType.ApiError, 
+                   HttpStatusCode.Unauthorized, 
+                   ErrorCode.Unauthorized)),
+               
+               ErrorCode.ServerError => StatusCode(500, new ErrorResponse(
+                   "Unexpected error from server", 
+                   ErrorType.ApiError,
+                   HttpStatusCode.InternalServerError,
+                   ErrorCode.ServerError)),
+               
+               _ => StatusCode(500, new ErrorResponse(
+                   "Unexpected error from server", 
+                       ErrorType.ApiError,
+                       HttpStatusCode.InternalServerError, 
+                       ErrorCode.ExternalServiceError))
+           };
+        }
     }
+
+  
 }
