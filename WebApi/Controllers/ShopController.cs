@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.ConsignSales;
 using Services.FashionItems;
+using Services.GiaoHangNhanh;
 using Services.Orders;
 using Services.Refunds;
 using Services.Shops;
@@ -28,16 +29,18 @@ namespace WebApi.Controllers
         private readonly IOrderService _orderService;
         private readonly IConsignSaleService _consignSaleService;
         private readonly IRefundService _refundService;
+        private readonly IGiaoHangNhanhService _giaoHangNhanhService;
 
         public ShopController(IFashionItemService fashionItemService, IShopService shopService,
             IOrderService orderService, IConsignSaleService consignSaleService,
-            IRefundService refundService)
+            IRefundService refundService, IGiaoHangNhanhService giaoHangNhanhService)
         {
             _fashionItemService = fashionItemService;
             _shopService = shopService;
             _orderService = orderService;
             _consignSaleService = consignSaleService;
             _refundService = refundService;
+            _giaoHangNhanhService = giaoHangNhanhService;
         }
 
         [HttpPost("{shopId}/fashionitems")]
@@ -98,8 +101,6 @@ namespace WebApi.Controllers
         }
 
 
-        
-
         [HttpPost("{shopId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,
             [FromBody] CreateConsignSaleByShopRequest consignRequest)
@@ -141,6 +142,46 @@ namespace WebApi.Controllers
             return await _shopService.CreateFeedbackForShop(shopId, feedbackRequest);
         }
 
-        
+        [HttpGet("ghnshops")]
+        [ProducesResponseType<GHNApiResponse<List<GHNShop>>>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> GetGhnShops()
+        {
+            var result = await _giaoHangNhanhService.GetShops();
+
+            if (result.IsSuccessful)
+            {
+                return Ok(result.Value);
+            }
+
+            return result.Error switch
+            {
+                ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized access to GiaoHangNhanh API",
+                    ErrorType.ApiError, HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Unexpected error from GiaoHangNhanh API", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError))
+            };
+        }
+
+        [HttpPost("ghnshops")]
+        [ProducesResponseType<GHNApiResponse<GHNShopCreateResponse>>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> CreateGhnShop([FromBody] GHNShopCreateRequest request)
+        {
+            var result = await _giaoHangNhanhService.CreateShop(request);
+            
+            if (result.IsSuccessful)
+            {
+                return Ok(result.Value);
+            }
+            
+            return result.Error switch
+            {
+                ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized access to GiaoHangNhanh API",
+                    ErrorType.ApiError, HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Unexpected error from GiaoHangNhanh API", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError))
+            };
+        }
     }
 }
