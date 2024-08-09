@@ -6,6 +6,7 @@ using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using DotNext.Collections.Generic;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Categories;
@@ -48,7 +49,7 @@ namespace Services.FashionItems
                 SellingPrice = request.SellingPrice,
             };
 
-            var newItem = await _fashionitemRepository.AddFashionItem(newdata);
+            var newItem = await _fashionitemRepository.AddInvidualFashionItem(newdata);
             foreach (string img in request.Images)
             {
                 var newimage = new Image()
@@ -285,6 +286,105 @@ namespace Services.FashionItems
                 Data = _mapper.Map<FashionItemDetailResponse>(item),
                 ResultStatus = ResultStatus.Success,
                 Messages = ["Update Successfully"]
+            };
+        }
+
+        public async Task<Result<MasterItemResponse>> CreateMasterItemByAdmin(CreateMasterItemRequest masterItemRequest)
+        {
+            var masterItem = new MasterFashionItem()
+            {
+                Name = masterItemRequest.Name,
+                Gender = masterItemRequest.Gender,
+                Brand = masterItemRequest.Brand ?? "No Brand",
+                Description = masterItemRequest.Description,
+                ItemCode = _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.ItemCode.ToUpper()),
+                CategoryId = masterItemRequest.CategoryId,
+                IsUniversal = true,
+                CreatedDate = DateTime.UtcNow
+            };
+            await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
+            var imgForMaster = new List<Image>();
+            foreach (var image in masterItemRequest.Images)
+            {
+                var newImage = new Image()
+                {
+                    Url = image,
+                    CreatedDate = DateTime.UtcNow,
+                    MasterFashionItemId = masterItem.ItemId,
+                };
+                imgForMaster.Add(newImage);
+            }
+            await _imageRepository.AddRangeImage(imgForMaster);
+            var masterItemShop = new List<MasterFashionItemShop>();
+            foreach (var shop in masterItemRequest.ShopId)
+            {
+                var itemShop = new MasterFashionItemShop()
+                {
+                    ShopId = shop,
+                    MasterFashionItemId = masterItem.ItemId
+                };
+                masterItemShop.Add(itemShop);
+            }
+
+            await _fashionitemRepository.AddRangeMasterFashionItemShop(masterItemShop);
+            return new Result<MasterItemResponse>()
+            {
+                Data = _mapper.Map<MasterItemResponse>(masterItem),
+                ResultStatus = ResultStatus.Success,
+                Messages = new []{"Add successfully"}
+            };
+        }
+
+        public async Task<Result<ItemVariationResponse>> CreateItemVariation(CreateItemVariationRequest variationRequest)
+        {
+            var itemVariation = new FashionItemVariation()
+            {
+                Color = variationRequest.Color,
+                Condition = variationRequest.Condition,
+                CreatedDate = DateTime.UtcNow,
+                Size = variationRequest.Size,
+                StockCount = variationRequest.IndividualItems.Length,
+                MasterItemId = variationRequest.MasterItemId,
+                Price = variationRequest.Price
+            };
+            var itemVariationResponse = await _fashionitemRepository.AddSingleFashionItemVariation(itemVariation);
+            var individualItemsResponse = new List<IndividualFashionItem>();
+            foreach (var individualItem in variationRequest.IndividualItems)
+            {
+                var dataIndividualItem = new IndividualFashionItem()
+                {
+                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(itemVariation.MasterItemId),
+                    SellingPrice = individualItem.SellingPrice,
+                    Note = individualItem.Note,
+                    VariationId = itemVariation.VariationId,
+                    Status = FashionItemStatus.Unavailable,
+                    Type = FashionItemType.ItemBase,
+                    CreatedDate = DateTime.UtcNow
+                };
+                dataIndividualItem = await _fashionitemRepository.AddInvidualFashionItem(dataIndividualItem);
+                
+                var individualItemImages = new List<Image>();
+                foreach (var image in individualItem.Images)
+                {
+                    var dataImage = new Image()
+                    {
+                        Url = image,
+                        CreatedDate = DateTime.UtcNow,
+                        IndividualFashionItemId = dataIndividualItem.ItemId,
+                    };
+                    individualItemImages.Add(dataImage);
+                }
+                await _imageRepository.AddRangeImage(individualItemImages);
+                dataIndividualItem.Images = individualItemImages;
+                individualItemsResponse.Add(dataIndividualItem);
+            }
+
+            itemVariationResponse.IndividualItems = individualItemsResponse;
+            return new Result<ItemVariationResponse>()
+            {
+                Data = _mapper.Map<ItemVariationResponse>(itemVariationResponse),
+                ResultStatus = ResultStatus.Success,
+                Messages = new []{"Add new variation successfully"}
             };
         }
     }

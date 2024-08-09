@@ -17,7 +17,10 @@ namespace Repositories.FashionItems
         //     AuctionFashionItemRequest request);
 
         Task<IndividualFashionItem> GetFashionItemById(Guid id);
-        Task<IndividualFashionItem> AddFashionItem(IndividualFashionItem request);
+        Task<IndividualFashionItem> AddInvidualFashionItem(IndividualFashionItem request);
+        Task<MasterFashionItem> AddSingleMasterFashionItem(MasterFashionItem request);
+        Task<List<MasterFashionItemShop>> AddRangeMasterFashionItemShop(List<MasterFashionItemShop> request);
+        Task<FashionItemVariation> AddSingleFashionItemVariation(FashionItemVariation request);
         Task<IndividualFashionItem> UpdateFashionItem(IndividualFashionItem fashionItem);
 
         Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,
@@ -34,5 +37,7 @@ namespace Repositories.FashionItems
 
         bool CheckItemIsInOrder(Guid itemId, Guid? memberId);
         Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);
+        string GenerateMasterItemCode(string itemCode);
+        Task<string> GenerateIndividualItemCode(Guid masterItemId);
     }
 }

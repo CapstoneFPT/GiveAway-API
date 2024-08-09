@@ -15,14 +15,20 @@ namespace Repositories.FashionItems
     {
         private readonly IMapper _mapper;
         private readonly GiveAwayDbContext _giveAwayDbContext;
-
+        private static HashSet<string> generatedStrings = new HashSet<string>();
+        private static readonly string? num = null;
+        /*private readonly string prefixInStock;*/
         public FashionItemRepository(
             IMapper mapper, GiveAwayDbContext dbContext)
         {
             _mapper = mapper;
             _giveAwayDbContext = dbContext;
         }
-
+        public string GenerateItemCodeForShop(string shopCode, string itemCode)
+        {
+            string prefixInStock = new string($"CS-{shopCode}-{itemCode}");
+            return prefixInStock;
+        }
         public bool CheckItemIsInOrder(Guid itemId, Guid? memberId)
         {
             var result =
@@ -46,12 +52,61 @@ namespace Repositories.FashionItems
                 .ToListAsync();
         }
 
-        public async Task<IndividualFashionItem> AddFashionItem(IndividualFashionItem request)
+        public string GenerateMasterItemCode(string itemCode)
+        {
+            string prefixInStock = new string($"IS-GAS-{itemCode}");
+            return prefixInStock;
+        }
+
+        public async Task<string> GenerateIndividualItemCode(Guid masterItemId)
+        {
+            int itemNumber = 1;
+            int totalItemNumber = 0;
+            var masterItem = await _giveAwayDbContext.MasterFashionItems.AsQueryable()
+                .Include(c => c.Variations)
+                .ThenInclude(c => c.IndividualItems)
+                .Where(c => c.ItemId == masterItemId)
+                .FirstOrDefaultAsync();
+            string prefix = new string($"{masterItem.ItemCode}{itemNumber}");
+            var individualItems = await _giveAwayDbContext.IndividualFashionItems
+                .Where(item => item.Variation!.MasterItemId == masterItemId)
+                .ToListAsync();
+            if (individualItems.Count == 0)
+            {
+                 prefix = new string($"{masterItem.ItemCode}{itemNumber}");
+            }
+            else
+            {
+                foreach (var variation in masterItem.Variations)
+                {
+                    totalItemNumber += variation.IndividualItems.Count;
+                }
+                totalItemNumber += 1;
+                prefix = new string($"{masterItem.ItemCode}{totalItemNumber}");
+            }
+            return prefix;
+        }
+
+        public async Task<IndividualFashionItem> AddInvidualFashionItem(IndividualFashionItem request)
         {
             return await GenericDao<IndividualFashionItem>.Instance.AddAsync(request);
         }
 
-        
+        public async Task<MasterFashionItem> AddSingleMasterFashionItem(MasterFashionItem request)
+        {
+            return await GenericDao<MasterFashionItem>.Instance.AddAsync(request);
+        }
+
+        public async Task<List<MasterFashionItemShop>> AddRangeMasterFashionItemShop(List<MasterFashionItemShop> request)
+        {
+            return await GenericDao<MasterFashionItemShop>.Instance.AddRange(request);
+        }
+
+        public async Task<FashionItemVariation> AddSingleFashionItemVariation(FashionItemVariation request)
+        {
+            return await GenericDao<FashionItemVariation>.Instance.AddAsync(request);
+        }
+
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemProjections<T>(
             int? page,

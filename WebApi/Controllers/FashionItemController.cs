@@ -81,9 +81,23 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("master-items")]
+        [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
         public async Task<IActionResult> CreateMasterItem([FromBody] CreateMasterItemRequest request)
         {
-            return Ok("Master Item Created, but nothing has happened yet");
+            var result = await _fashionItemService.CreateMasterItemByAdmin(request);
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            return Ok(result);
+        }
+
+        [HttpPost("item-variants")]
+        [ProducesResponseType<Result<ItemVariationResponse>>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> CreateItemVariation([FromBody] CreateItemVariationRequest request)
+        {
+            var result = await _fashionItemService.CreateItemVariation(request);
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            return Ok(result);
         }
     }
 }

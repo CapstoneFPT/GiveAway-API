@@ -87,6 +87,7 @@ public class AccountController : ControllerBase
 
     [HttpGet("{accountId}/deliveries")]
     [ProducesResponseType<Result<List<DeliveryResponse>>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> GetAllDeliveriesByMemberId(
         [FromRoute] Guid accountId)
     {

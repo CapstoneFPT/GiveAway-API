@@ -18,5 +18,10 @@ namespace Repositories.Images
         {
             await GenericDao<Image>.Instance.AddAsync(image);
         }
+
+        public async Task AddRangeImage(List<Image> images)
+        {
+            await GenericDao<Image>.Instance.AddRange(images);
+        }
     }
 }

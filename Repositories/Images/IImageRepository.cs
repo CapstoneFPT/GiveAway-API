@@ -10,5 +10,6 @@ namespace Repositories.Images
     public interface IImageRepository
     {
         Task AddImage(Image image);
+        Task AddRangeImage(List<Image> images);
     }
 }
