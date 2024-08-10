@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Runtime.CompilerServices;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
@@ -145,6 +146,7 @@ namespace WebApi.Controllers
 
         [HttpGet("ghnshops")]
         [ProducesResponseType<GHNApiResponse<List<GHNShop>>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetGhnShops()
         {
             var result = await _giaoHangNhanhService.GetShops();
@@ -158,6 +160,7 @@ namespace WebApi.Controllers
             {
                 ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized access to GiaoHangNhanh API",
                     ErrorType.ApiError, HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
+                
                 _ => StatusCode(500,
                     new ErrorResponse("Unexpected error from GiaoHangNhanh API", ErrorType.ApiError,
                         HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError))
@@ -180,6 +183,7 @@ namespace WebApi.Controllers
             {
                 ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized access to GiaoHangNhanh API",
                     ErrorType.ApiError, HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
+                
                 _ => StatusCode(500,
                     new ErrorResponse("Unexpected error from GiaoHangNhanh API", ErrorType.ApiError,
                         HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError))
@@ -188,6 +192,7 @@ namespace WebApi.Controllers
 
         [HttpPost]
         [ProducesResponseType<CreateShopResponse>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> CreateShop([FromBody] CreateShopRequest request)
         {
            var result = await _shopService.CreateShop(request);
@@ -218,6 +223,7 @@ namespace WebApi.Controllers
                        ErrorCode.ExternalServiceError))
            };
         }
+        
     }
 
   

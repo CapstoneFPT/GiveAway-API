@@ -250,6 +250,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+        
     }
 
     public class VnPayPurchaseResponse

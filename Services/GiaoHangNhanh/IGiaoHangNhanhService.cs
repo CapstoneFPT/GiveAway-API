@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 using BusinessObjects.Dtos.Commons;
 using DotNext;
 using Microsoft.AspNetCore.Http;
@@ -20,6 +21,9 @@ public interface IGiaoHangNhanhService
 
     Task<Result<GHNApiResponse<GHNShopCreateResponse>, ErrorCode>> CreateShop(
         GHNShopCreateRequest request);
+
+    Task<Result<GHNApiResponse<GHNShippingFee>, ErrorCode>> CalculateShippingFee(
+        CalculateShippingRequest request);
 }
 
 public class GiaoHangNhanhService : IGiaoHangNhanhService
@@ -297,4 +301,99 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
                 .UnknownError);
         }
     }
+
+    public async Task<Result<GHNApiResponse<GHNShippingFee>, ErrorCode>> CalculateShippingFee(
+        CalculateShippingRequest request)
+    {
+        var url = "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee";
+
+        try
+        {
+            var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, url + QueryString.Create(
+                new[]
+                {
+                    new KeyValuePair<string, string?>("from_district_id", request.FromDistrictId.ToString()),
+                    new KeyValuePair<string, string?>("to_district_id", request.ToDistrictId.ToString()),
+                    new KeyValuePair<string, string?>("weight", request.Weight.ToString()),
+                    new KeyValuePair<string, string?>("service_id", request.ServiceId.ToString()),
+                    new KeyValuePair<string, string?>("service_type_id", request.ServiceTypeId.ToString()),
+                }
+            )));
+
+            switch (response.StatusCode)
+            {
+                case HttpStatusCode.OK:
+                    var content = await response.Content.ReadFromJsonAsync<GHNApiResponse<GHNShippingFee>>();
+
+                    if (content == null)
+                    {
+                        _logger.LogWarning("Null content from GiaoHangNhanh API despite OK status");
+                        return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode
+                            .DeserializationError);
+                    }
+
+                    return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(content);
+
+                case HttpStatusCode.Unauthorized:
+                    return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode
+                        .Unauthorized);
+                default:
+                    _logger.LogWarning("Unexpected status code {StatusCode} from GiaoHangNhanh API",
+                        response.StatusCode);
+                    return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode
+                        .ExternalServiceError);
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            _logger.LogError(e, "Network error when accessing GiaoHangNhanh API");
+            return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode
+                .NetworkError);
+        }
+        catch (JsonException e)
+        {
+            _logger.LogError(e, "Error deserializing response from GiaoHangNhanh API");
+            return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode
+                .DeserializationError);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Unexpected error when fetching provinces from GiaoHangNhanh API");
+            return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode
+                .UnknownError);
+        }
+    }
+}
+
+public class GHNShippingFee
+{
+    public decimal Total { get; set; }
+    [JsonPropertyName("service_fee")] public decimal ServiceFee { get; set; }
+}
+
+public class ShippingFeeResult
+{
+    public decimal ShippingFee { get; set; } = 0;
+    public ShippingLocation ShopLocation { get; set; }
+    public ShippingLocation ShippingDestination { get; set; }
+}
+
+public class ShippingLocation
+{
+    public string Address { get; set; }
+    public int DistrictId { get; set; }
+    public int WardCode { get; set; }
+}
+
+public class CalculateShippingRequest
+{
+    [JsonPropertyName("from_district_id")] public int FromDistrictId { get; set; }
+
+    [JsonPropertyName("to_district_id")] public int ToDistrictId { get; set; }
+
+    public int Weight { get; set; } = 100;
+
+    [JsonPropertyName("service_id")] public int ServiceId { get; set; } = 53320;
+
+    [JsonPropertyName("service_type_id")] public int ServiceTypeId { get; set; } = 2;
 }
