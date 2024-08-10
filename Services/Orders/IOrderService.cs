@@ -18,7 +18,7 @@ namespace Services.Orders
         Task<Result<string>> CancelOrder(Guid orderId);
         Task<Result<string>> CancelOrderByAdmin(Guid orderId);
         Task<Result<PaginationResponse<OrderListResponse>>> GetOrders(OrderRequest orderRequest);
-        Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId, Guid shopId);
+        Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId);
         Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
         Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderById(Guid orderId);
@@ -33,6 +33,6 @@ namespace Services.Orders
         Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId, PayOrderWithCashRequest request);
         
         Task UpdateAdminBalance(Order order);
-        Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId ,Guid shopId);
+        Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId ,Guid orderdetailId);
     }
 }
