@@ -158,12 +158,7 @@ public class AuthService : IAuthService
 
             var user = await _accountRepository.Register(account);
 
-            Shop shop = new Shop();
-            shop.ShopId = Guid.Empty;
-            shop.Address = request.Address;
-            shop.Phone = request.ShopPhone;
-            shop.StaffId = account.AccountId;
-            await _shopRepository.CreateShop(shop);
+            
 
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create staff successfully"];

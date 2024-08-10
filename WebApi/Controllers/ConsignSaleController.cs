@@ -73,8 +73,8 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("consignsaledetails/{consignsaledetailId}/update-for-approve")]
-        public async Task<ActionResult<Result<ConsignSaleDetailResponse>>> UpdateConsignSaleDetailForApprove([FromRoute] Guid consignsaledetailId,
+        [HttpPost("consignsaledetails/{consignsaledetailId}/create-item")]
+        public async Task<ActionResult<Result<ConsignSaleDetailResponse>>> CreateItemFromConsignSaleDetail([FromRoute] Guid consignsaledetailId,
             [FromBody] ConfirmReceivedConsignRequest request)
         {
             var result = await _consignsaleService.UpdateConsignSaleDetailForApprove(consignsaledetailId,request);
