@@ -84,12 +84,12 @@ namespace Services.FashionItems
                     Size = item.Variation.Size,
                     CategoryId = item.Variation.MasterItem.CategoryId,
                     CategoryName = item.Variation.MasterItem.Category.Name,
-                    /*ShopId = item.Variation.MasterItem.MasterFashionItemShops.,*/
+                    ShopId = item.Variation.MasterItem.ShopId,
                     Type = item.Type,
                     Status = item.Status,
                     Color = item.Variation.Color,
                     SellingPrice = item.SellingPrice ?? 0,
-                    // ShopAddress = item.Shop.Address,
+                    ShopAddress = item.Variation.MasterItem.Shop.Address,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
 
@@ -116,7 +116,7 @@ namespace Services.FashionItems
 
             if (request.ShopId.HasValue)
             {
-                // predicate = predicate.And(item => item.ShopId == request.ShopId);
+                predicate = predicate.And(item => item.Variation.MasterItem.ShopId == request.ShopId);
             }
 
             if (request.GenderType.HasValue)

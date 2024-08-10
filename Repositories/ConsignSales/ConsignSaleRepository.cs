@@ -36,60 +36,34 @@ namespace Repositories.ConsignSales
             //tao moi 1 consign
             ConsignSale newConsign = new ConsignSale()
             {
-                ConsignorName = account.Fullname,
-                Phone = account.Phone,
-                Email = account.Email,
-                Address = account.Addresses.Where(c => c.IsDefault == true)
-                    .Select(c => c.Residence).FirstOrDefault() ?? "No Address Existed",
+                ConsignorName = request.ConsignorName,
+                Phone = request.Phone,
+                Email = account!.Email,
+                Address = request.Address,
                 Type = request.Type,
                 CreatedDate = DateTime.UtcNow,
                 ConsignDuration = 60,
                 ShopId = request.ShopId,
                 MemberId = accountId,
                 Status = ConsignSaleStatus.Pending,
-                TotalPrice = request.fashionItemForConsigns.Sum(c => c.DealPrice),
+                TotalPrice = request.ConsignDetailRequests.Sum(c => c.DealPrice),
                 ConsignSaleMethod = ConsignSaleMethod.Online,
                 ConsignSaleCode = await GenerateUniqueString(),
             };
             await GenericDao<ConsignSale>.Instance.AddAsync(newConsign);
 
 
-            //tao nhung~ mon do trong consign moi'
-            foreach (var item in request.fashionItemForConsigns)
+            //tao nhung consign detail do trong consign moi'
+            foreach (var item in request.ConsignDetailRequests)
             {
-                var fashionItem = new IndividualFashionItem()
-                {
-                    Note = item.Note,
-                    // ShopId = newConsign.ShopId,
-                    Status = FashionItemStatus.PendingForConsignSale,
-                };
-                fashionItem.Type = request.Type switch
-                {
-                    ConsignSaleType.ConsignedForSale => FashionItemType.ConsignedForSale,
-                    ConsignSaleType.ConsignedForAuction => FashionItemType.ConsignedForAuction,
-                    ConsignSaleType.ForSale => FashionItemType.ItemBase
-                };
-
-                await GenericDao<IndividualFashionItem>.Instance.AddAsync(fashionItem);
-
-                foreach (var image in item.Images)
-                {
-                    var img = new Image()
-                    {
-                        IndividualFashionItemId = fashionItem.ItemId,
-                        Url = image
-                    };
-                    await GenericDao<Image>.Instance.AddAsync(img);
-                }
-
-
                 //tao moi consigndetail tuong ung voi mon do
                 ConsignSaleDetail consignDetail = new ConsignSaleDetail()
                 {
                     ConfirmedPrice = 0,
                     DealPrice = item.DealPrice,
                     ConsignSaleId = newConsign.ConsignSaleId,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow,
+                    Note = item.Note
                 };
                 await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);
             }
