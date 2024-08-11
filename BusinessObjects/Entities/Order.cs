@@ -17,13 +17,13 @@ public class Order
     public Guid? BidId { get; set; }
     public Bid? Bid { get; set; }
     public OrderStatus Status { get; set; }
-
-
     public PurchaseType PurchaseType { get; set; }
     public ICollection<Transaction> Transaction { get; set; } = [];
     public string? RecipientName { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
+    public int? GhnDistrictId { get; set; }
+    public int? GhnWardCode { get; set; }
     public string? Email { get; set; }
 
     public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();

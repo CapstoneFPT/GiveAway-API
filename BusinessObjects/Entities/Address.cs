@@ -9,6 +9,8 @@ public class Address
     public Guid AddressId { set; get; }
     public string RecipientName { set; get; }
     public string Phone { set; get; }
+    public int? GhnDistrictId { set; get; }
+    public int? GhnWardCode { set; get; }
     public string Residence { set; get; }
     public AddressType AddressType { set; get; }
     public Member Member { set; get; }
