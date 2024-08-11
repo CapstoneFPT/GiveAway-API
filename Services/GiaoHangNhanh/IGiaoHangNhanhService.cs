@@ -24,6 +24,9 @@ public interface IGiaoHangNhanhService
 
     Task<Result<GHNApiResponse<GHNShippingFee>, ErrorCode>> CalculateShippingFee(
         CalculateShippingRequest request);
+
+    Task<string> BuildAddress(int ghnProvinceId, int ghnDistrictId, int ghnWardCode,
+        string address);
 }
 
 public class GiaoHangNhanhService : IGiaoHangNhanhService
@@ -362,6 +365,31 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
             return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode
                 .UnknownError);
         }
+    }
+
+    public async Task<string> BuildAddress(int ghnProvinceId, int ghnDistrictId, int ghnWardCode,
+        string address)
+    {
+        var ghnProvinceResponse = await GetProvinces()
+            ;
+        var ghnDistrictResponse = await
+            GetDistricts(ghnProvinceId);
+        var ghnWardResponse = await
+            GetWards(ghnDistrictId);
+
+        var province = ghnProvinceResponse
+            .Value
+            .Data?.Find(x => x.ProvinceId == ghnProvinceId);
+
+        var district = ghnDistrictResponse
+            .Value
+            .Data?.Find(x => x.DistrictId == ghnDistrictId);
+
+        var ward = ghnWardResponse
+            .Value
+            .Data?.Find(x => x.WardCode == ghnWardCode);
+
+        return $"{address}, ${ward?.WardName}, ${district?.DistrictName}, ${province?.ProvinceName}";
     }
 }
 

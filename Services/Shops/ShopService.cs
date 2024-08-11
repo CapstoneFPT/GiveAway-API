@@ -141,25 +141,33 @@ namespace Services.Shops
                 .Data!
                 .Shops
                 .Find(x => x.Id == ghnResult.Value.Data!.ShopId);
-
-            var shop = new Shop()
-            {
-                Phone = request.Phone,
-                Address = request.Address,
-                CreatedDate = DateTime.UtcNow,
-                Location = new Point(10.835655304770324, 106.80765455517754), //Who cares about the location anyway,
-                ShopCode = Guid.NewGuid().ToString(),
-                GhnShopId = ghnResult.Value.Data!.ShopId,
-                GhnWardCode = ghnShop!.WardCode,
-                GhnDistrictId = ghnShop.DistrictId,
-                StaffId = request.StaffId
-            };
             try
             {
+                if (!int.TryParse(request.WardCode, out int wardCode))
+                    return new Result<CreateShopResponse, ErrorCode>(ErrorCode.InvalidInput);
+                
+                
+                var shop = new Shop()
+                {
+                    Phone = request.Phone,
+                    Address = await _giaoHangNhanhService.BuildAddress(request.ProvinceId, request.DistrictId,
+                        wardCode,
+                        request.Address),
+                    CreatedDate = DateTime.UtcNow,
+                    Location = new Point(10.835655304770324,
+                        106.80765455517754), //Who cares about the location anyway,
+                    ShopCode = Guid.NewGuid().ToString(),
+                    GhnShopId = ghnResult.Value.Data!.ShopId,
+                    GhnWardCode = ghnShop!.WardCode,
+                    GhnDistrictId = ghnShop.DistrictId,
+                    StaffId = request.StaffId
+                };
+
                 var createdShop = await _shopRepository.CreateShop(shop);
                 return new Result<CreateShopResponse, ErrorCode>(new CreateShopResponse()
                 {
                 });
+
             }
             catch (DbCustomException e)
             {
@@ -167,6 +175,8 @@ namespace Services.Shops
                 return new Result<CreateShopResponse, ErrorCode>(ErrorCode.ServerError);
             }
         }
+
+    
 
         public Task<FeedbackResponse> CreateFeedbackForShop(Guid shopId, CreateFeedbackRequest feedbackRequest)
         {
@@ -181,6 +191,7 @@ namespace Services.Shops
         [Required] public string Address { get; set; }
         [Required] public string WardCode { get; set; }
         [Required] public int DistrictId { get; set; }
+        [Required] public int ProvinceId { get; set; }
         [Required] public Guid StaffId { get; set; }
     }
 
