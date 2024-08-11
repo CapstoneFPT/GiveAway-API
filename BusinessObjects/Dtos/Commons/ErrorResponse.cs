@@ -36,7 +36,8 @@ public enum ErrorCode
     DeserializationError,
     UnknownError,
     NetworkError,
-    ServerError
+    ServerError,
+    InvalidInput
 }
 
 public enum ErrorType
