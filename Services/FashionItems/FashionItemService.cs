@@ -527,6 +527,11 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => request.Size.Contains(item.Size));
             }
 
+            if (request.Condition != null)
+            {
+                predicate = predicate.And(item => item.Condition.Equals(request.Condition));
+            }
+
             (List<ItemVariationResponse> Items, int Page, int PageSize, int TotalCount) result =
                 await _fashionitemRepository.GetFashionItemVariationProjections(request.PageNumber, request.PageSize, predicate,
                     selector);
