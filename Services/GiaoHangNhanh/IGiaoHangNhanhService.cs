@@ -7,6 +7,7 @@ using DotNext;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Repositories.Shops;
 using GHNProvinceResponse = BusinessObjects.Dtos.Commons.GHNProvinceResponse;
 using JsonException = System.Text.Json.JsonException;
 
@@ -34,15 +35,17 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
     private readonly HttpClient _httpClient;
     private readonly ILogger<GiaoHangNhanhService> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IShopRepository _shopRepository;
 
     private readonly string _apiToken;
 
     public GiaoHangNhanhService(HttpClient httpClient, ILogger<GiaoHangNhanhService> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,IShopRepository shopRepository)
     {
         _httpClient = httpClient;
         _logger = logger;
         _configuration = configuration;
+        _shopRepository = shopRepository;
 
         _apiToken = configuration["GiaoHangNhanh:ApiToken"];
         _httpClient.DefaultRequestHeaders.Add("Token", _apiToken);
@@ -259,7 +262,7 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
                     new KeyValuePair<string, string?>("ward_code", request.WardCode),
                     new KeyValuePair<string, string?>("address", request.Address),
                     new KeyValuePair<string, string?>("phone", request.Phone),
-                    new KeyValuePair<string, string?>("name", request.Name),
+                    new KeyValuePair<string, string?>("name", await _shopRepository.GenerateShopCode()),
                 })));
 
 
@@ -389,7 +392,7 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
             .Value
             .Data?.Find(x => x.WardCode == ghnWardCode);
 
-        return $"{address}, ${ward?.WardName}, ${district?.DistrictName}, ${province?.ProvinceName}";
+        return $"{address}, {ward?.WardName}, {district?.DistrictName}, {province?.ProvinceName}";
     }
 }
 

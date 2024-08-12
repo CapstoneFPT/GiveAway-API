@@ -8,16 +8,17 @@ using System.Threading.Tasks;
 using BusinessObjects.Dtos.Feedbacks;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Transactions;
+using DotNext;
 
 namespace Services.Shops
 {
     public interface IShopService
     {
-        Task<Result<List<ShopDetailResponse>>> GetAllShop();
-        Task<Result<ShopDetailResponse>> GetShopById(Guid shopid);
+        Task<BusinessObjects.Dtos.Commons.Result<List<ShopDetailResponse>>> GetAllShop();
+        Task<BusinessObjects.Dtos.Commons.Result<ShopDetailResponse>> GetShopById(Guid shopid);
         
         Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(Guid shopId, TransactionRequest transactionRequest);
         Task<FeedbackResponse> CreateFeedbackForShop(Guid shopId, CreateFeedbackRequest feedbackRequest);
-        Task<DotNext.Result<CreateShopResponse, ErrorCode>> CreateShop(CreateShopRequest request);
+        Task<Result<CreateShopResponse, ErrorCode>> CreateShop(CreateShopRequest request);
     }
 }
