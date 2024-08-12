@@ -307,17 +307,14 @@ namespace Services.FashionItems
                 };
                 masterItem.ShopId = shopId;
                 masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
-                var imgForMaster = new List<Image>();
-                foreach (var image in masterItemRequest.Images)
-                {
-                    var newImage = new Image()
-                    {
-                        Url = image,
-                        CreatedDate = DateTime.UtcNow,
-                        MasterFashionItemId = masterItem.MasterItemId,
-                    };
-                    imgForMaster.Add(newImage);
-                }
+                
+                var imgForMaster = masterItemRequest.Images.Select(
+                    image => new Image() 
+                        { Url = image
+                            , CreatedDate = DateTime.UtcNow
+                            , MasterFashionItemId = masterItem.MasterItemId, 
+                        }).ToList();
+                
                 await _imageRepository.AddRangeImage(imgForMaster);
                 masterItem.Images = imgForMaster;
                 listMasterItemResponse.Add(masterItem);
@@ -441,7 +438,7 @@ namespace Services.FashionItems
             Expression<Func<MasterFashionItem, MasterItemResponse>> selector = item => new
                 MasterItemResponse()
                 {
-                    ItemId = item.MasterItemId,
+                    MasterItemId = item.MasterItemId,
                     Name = item.Name,
                     Description = item.Description,
                     ItemCode = item.MasterItemCode,

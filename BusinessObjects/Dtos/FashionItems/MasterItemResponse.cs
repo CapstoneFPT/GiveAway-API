@@ -5,7 +5,7 @@ namespace BusinessObjects.Dtos.FashionItems;
 
 public class MasterItemResponse
 {
-    public Guid ItemId { get; set; }
+    public Guid MasterItemId { get; set; }
     public string ItemCode { get; set; }
     public string Name { get; set; }
     public string Brand { get; set; }
