@@ -75,9 +75,9 @@ namespace WebApi.Controllers
 
         [HttpPost("consignsaledetails/{consignsaledetailId}/create-item")]
         public async Task<ActionResult<Result<ConsignSaleDetailResponse>>> CreateItemFromConsignSaleDetail([FromRoute] Guid consignsaledetailId,
-            [FromBody] ConfirmReceivedConsignRequest request)
+            [FromBody] CreateItemFromConsignDetailRequest detailRequest)
         {
-            var result = await _consignsaleService.UpdateConsignSaleDetailForApprove(consignsaledetailId,request);
+            var result = await _consignsaleService.CreateItemFromConsignSaleDetail(consignsaledetailId,detailRequest);
             if (result.ResultStatus != ResultStatus.Success)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);

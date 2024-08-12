@@ -160,7 +160,7 @@ namespace Services.FashionItems
         public async Task<Result<FashionItemDetailResponse>> GetFashionItemById(Guid id)
         {
             var response = new Result<FashionItemDetailResponse>();
-            var item = await _fashionitemRepository.GetFashionItemById(id);
+            var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == id);
             if (item == null)
             {
                 response.Messages = ["Item is not existed"];
@@ -178,7 +178,7 @@ namespace Services.FashionItems
             UpdateFashionItemRequest request)
         {
             var response = new Result<FashionItemDetailResponse>();
-            var item = await _fashionitemRepository.GetFashionItemById(itemId);
+            var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == itemId);
             if (item is null)
             {
                 response.Messages = ["Item is not found"];
@@ -219,7 +219,7 @@ namespace Services.FashionItems
         public async Task<Result<FashionItemDetailResponse>> CheckFashionItemAvailability(Guid itemId)
         {
             var response = new Result<FashionItemDetailResponse>();
-            var item = await _fashionitemRepository.GetFashionItemById(itemId);
+            var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == itemId);
             if (item != null)
             {
                 if (item.Status.Equals(FashionItemStatus.Unavailable))
@@ -276,7 +276,7 @@ namespace Services.FashionItems
         public async Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId,
             UpdateFashionItemStatusRequest request)
         {
-            var item = await _fashionitemRepository.GetFashionItemById(itemId);
+            var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == itemId);
 
             item.Status = request.Status;
 

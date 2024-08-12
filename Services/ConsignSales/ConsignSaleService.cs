@@ -252,8 +252,8 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleDetailResponse>> UpdateConsignSaleDetailForApprove(Guid consignSaleDetailId,
-            ConfirmReceivedConsignRequest request)
+        public async Task<Result<ConsignSaleDetailResponse>> CreateItemFromConsignSaleDetail(Guid consignSaleDetailId,
+            CreateItemFromConsignDetailRequest detailRequest)
         {
             var response = new Result<ConsignSaleDetailResponse>();
             var consignSaleDetail =
@@ -264,7 +264,7 @@ namespace Services.ConsignSales
                 throw new ConsignSaleDetailsNotFoundException();
             }
 
-            consignSaleDetail.ConfirmedPrice = request.SellingPrice;
+            consignSaleDetail.ConfirmedPrice = detailRequest.SellingPrice;
             /*consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
             consignSaleDetail.FashionItem.Description = request.Description;
 

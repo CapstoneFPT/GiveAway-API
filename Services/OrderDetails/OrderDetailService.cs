@@ -105,7 +105,7 @@ namespace Services.OrderDetails
 
             foreach (var orderDetail in orderDetails)
             {
-                var fashionItem = await _fashionItemRepository.GetFashionItemById(orderDetail.IndividualFashionItemId!.Value);
+                var fashionItem = await _fashionItemRepository.GetFashionItemById(c => c.ItemId == orderDetail.IndividualFashionItemId!.Value);
                 fashionItems.Add(fashionItem);
             }
 
