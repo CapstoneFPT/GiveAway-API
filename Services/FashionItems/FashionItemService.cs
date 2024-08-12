@@ -300,7 +300,7 @@ namespace Services.FashionItems
                     Gender = masterItemRequest.Gender,
                     Brand = masterItemRequest.Brand ?? "No Brand",
                     Description = masterItemRequest.Description,
-                    MasterItemCode = _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.ItemCode.ToUpper()),
+                    MasterItemCode = await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.ItemCode),
                     CategoryId = masterItemRequest.CategoryId,
                     IsConsignment = true,
                     CreatedDate = DateTime.UtcNow

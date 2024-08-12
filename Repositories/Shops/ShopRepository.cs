@@ -18,10 +18,11 @@ namespace Repositories.Shops
     public class ShopRepository : IShopRepository
     {
         private readonly IMapper _mapper;
-
-        public ShopRepository(IMapper mapper)
+        private readonly GiveAwayDbContext _giveAwayDbContext;
+        public ShopRepository(IMapper mapper, GiveAwayDbContext giveAwayDbContext)
         {
             _mapper = mapper;
+            _giveAwayDbContext = giveAwayDbContext;
         }
 
         public async Task<Shop> CreateShop(Shop shop)
@@ -63,6 +64,16 @@ namespace Repositories.Shops
                 .GetQueryable()
                 .SingleOrDefaultAsync(predicate);
             return result;
+        }
+
+        public async Task<string> GenerateShopCode()
+        {
+            int totalShopCode = 0;
+            var listShop = await _giveAwayDbContext.Shops.AsQueryable()
+                .ToListAsync();
+            totalShopCode = listShop.Count + 1;
+            string prefixInStock = new string($"GAS{totalShopCode}");
+            return prefixInStock;
         }
     }
 }

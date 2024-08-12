@@ -16,5 +16,6 @@ namespace Repositories.Shops
         Task<ShopDetailResponse> GetShopByAccountId(Guid id);
         Task<ShopDetailResponse> GetShopById(Guid id);
         Task<Shop?> GetSingleShop(Expression<Func<Shop, bool>> predicate);
+        Task<string> GenerateShopCode();
     }
 }
