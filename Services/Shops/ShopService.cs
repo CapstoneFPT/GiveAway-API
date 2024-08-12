@@ -114,7 +114,6 @@ namespace Services.Shops
         {
             var ghnRequest = new GHNShopCreateRequest()
             {
-                Name = request.Name,
                 Phone = request.Phone,
                 Address = request.Address,
                 WardCode = request.WardCode,
@@ -127,6 +126,8 @@ namespace Services.Shops
             {
                 return new Result<CreateShopResponse, ErrorCode>(ghnResult.Error);
             }
+
+            await Task.Delay(2000);
 
             var ghnShops = await _giaoHangNhanhService
                 .GetShops();
@@ -145,8 +146,8 @@ namespace Services.Shops
             {
                 if (!int.TryParse(request.WardCode, out int wardCode))
                     return new Result<CreateShopResponse, ErrorCode>(ErrorCode.InvalidInput);
-                
-                
+
+
                 var shop = new Shop()
                 {
                     Phone = request.Phone,
@@ -155,8 +156,8 @@ namespace Services.Shops
                         request.Address),
                     CreatedDate = DateTime.UtcNow,
                     Location = new Point(10.835655304770324,
-                        106.80765455517754), //Who cares about the location anyway,
-                    ShopCode = Guid.NewGuid().ToString(),
+                        106.80765455517754),
+                    ShopCode = await _shopRepository.GenerateShopCode(),
                     GhnShopId = ghnResult.Value.Data!.ShopId,
                     GhnWardCode = ghnShop!.WardCode,
                     GhnDistrictId = ghnShop.DistrictId,
@@ -166,17 +167,26 @@ namespace Services.Shops
                 var createdShop = await _shopRepository.CreateShop(shop);
                 return new Result<CreateShopResponse, ErrorCode>(new CreateShopResponse()
                 {
+                    ShopId = createdShop.ShopId,
+                    StaffId = createdShop.StaffId,
+                    ShopCode = createdShop.ShopCode,
+                    Address = createdShop.Address,
+                    Phone = createdShop.Phone,
+                    Name = createdShop.ShopCode
                 });
-
             }
             catch (DbCustomException e)
             {
                 _logger.LogError(e, "Error while creating shop");
                 return new Result<CreateShopResponse, ErrorCode>(ErrorCode.ServerError);
             }
+            catch (NullReferenceException e)
+            {
+                _logger.LogError(e,"Error while creating shop");
+                return new Result<CreateShopResponse, ErrorCode>(ErrorCode.ServerError);
+            }
         }
 
-    
 
         public Task<FeedbackResponse> CreateFeedbackForShop(Guid shopId, CreateFeedbackRequest feedbackRequest)
         {
@@ -186,7 +196,6 @@ namespace Services.Shops
 
     public class CreateShopRequest
     {
-        [Required] public string Name { get; set; }
         [Required] [Phone] public string Phone { get; set; }
         [Required] public string Address { get; set; }
         [Required] public string WardCode { get; set; }
@@ -197,5 +206,11 @@ namespace Services.Shops
 
     public class CreateShopResponse
     {
+        public Guid ShopId { get; set; }
+        public string ShopCode { get; set; }
+        public string Address { get; set; }
+        public string Phone { get; set; }
+        public string Name { get; set; }
+        public Guid StaffId { get; set; }
     }
 }
