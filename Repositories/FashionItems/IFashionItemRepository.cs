@@ -16,7 +16,7 @@ namespace Repositories.FashionItems
         // Task<PaginationResponse<FashionItemDetailResponse>> GetAllFashionItemPagination(
         //     AuctionFashionItemRequest request);
 
-        Task<IndividualFashionItem> GetFashionItemById(Guid id);
+        Task<IndividualFashionItem> GetFashionItemById(Expression<Func<IndividualFashionItem, bool>> predicate);
         Task<IndividualFashionItem> AddInvidualFashionItem(IndividualFashionItem request);
         Task<MasterFashionItem> AddSingleMasterFashionItem(MasterFashionItem request);
         // Task<List<MasterFashionItemShop>> AddRangeMasterFashionItemShop(List<MasterFashionItemShop> request);

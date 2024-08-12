@@ -67,10 +67,10 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Result<FashionItemDetailResponse>>> GetFashionItemById([FromRoute] Guid id)
+        [HttpGet("{itemId}")]
+        public async Task<ActionResult<Result<FashionItemDetailResponse>>> GetFashionItemById([FromRoute] Guid itemId)
         {
-            var result = await _fashionItemService.GetFashionItemById(id);
+            var result = await _fashionItemService.GetFashionItemById(itemId);
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
