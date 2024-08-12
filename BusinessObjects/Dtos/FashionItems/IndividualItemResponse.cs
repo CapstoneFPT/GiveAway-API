@@ -12,5 +12,6 @@ public class IndividualItemResponse
     public FashionItemStatus Status { get; set; }
     public FashionItemType Type { get; set; }
     public DateTime CreatedDate { get; set; }
+    public bool IsOrderedYet { get; set; }
     public List<string> Images { get; set; }
 }

@@ -128,7 +128,7 @@ namespace Services.FashionItems
                 await _fashionitemRepository.GetIndividualItemProjections(request.PageNumber, request.PageSize, predicate,
                     selector);
             
-            await CheckItemsInOrder(result.Items, request.MemberId);
+            // await CheckItemsInOrder(result.Items, request.MemberId);
             
             return new Result<PaginationResponse<FashionItemDetailResponse>>()
             {
@@ -143,7 +143,7 @@ namespace Services.FashionItems
             };
         }
 
-        private async Task CheckItemsInOrder(List<FashionItemDetailResponse> items, Guid? memberId)
+        private async Task CheckItemsInOrder(List<IndividualItemResponse> items, Guid? memberId)
         {
             if (memberId.HasValue)
             {
@@ -594,7 +594,7 @@ namespace Services.FashionItems
             (List<IndividualItemResponse> Items, int Page, int PageSize, int TotalCount) result =
                 await _fashionitemRepository.GetIndividualItemProjections(request.PageNumber, request.PageSize, predicate,
                     selector);
-            
+            await CheckItemsInOrder(result.Items, request.MemberId);
             Expression<Func<FashionItemVariation, bool>> predicate2 = variation => variation.VariationId == variationId;
             var variation = await _fashionitemRepository.GetSingleFashionItemVariation(predicate2);
             var variationResponse = _mapper.Map<ItemVariationResponse>(variation);
@@ -606,7 +606,7 @@ namespace Services.FashionItems
                 TotalCount = result.TotalCount
             };
             
-            Expression<Func<MasterFashionItem, bool>> predicate3 = masterItem => masterItem.MasterItemId == variation.MasterItemId;
+            Expression<Func<MasterFashionItem, bool>> predicate3 = masterItem => masterItem.MasterItemId == variation!.MasterItemId;
             var masterItem = await _fashionitemRepository.GetSingleMasterItem(predicate3);
             var masterItemResponse = _mapper.Map<MasterItemResponse>(masterItem);
             masterItemResponse.ItemVariationResponse = variationResponse;

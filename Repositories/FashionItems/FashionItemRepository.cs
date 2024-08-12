@@ -106,6 +106,7 @@ namespace Repositories.FashionItems
         public async Task<FashionItemVariation?> GetSingleFashionItemVariation(Expression<Func<FashionItemVariation?, bool>> predicate)
         {
             return await GenericDao<FashionItemVariation>.Instance.GetQueryable()
+                .Include(c => c.MasterItem)
                 .Where(predicate)
                 .FirstOrDefaultAsync();
         }

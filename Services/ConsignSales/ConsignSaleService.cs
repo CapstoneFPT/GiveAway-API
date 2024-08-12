@@ -263,7 +263,7 @@ namespace Services.ConsignSales
             {
                 throw new ConsignSaleDetailsNotFoundException();
             }
-
+        
             consignSaleDetail.ConfirmedPrice = detailRequest.SellingPrice;
             /*consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
             consignSaleDetail.FashionItem.Description = request.Description;
