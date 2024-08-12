@@ -300,9 +300,9 @@ namespace Services.FashionItems
                     Gender = masterItemRequest.Gender,
                     Brand = masterItemRequest.Brand ?? "No Brand",
                     Description = masterItemRequest.Description,
-                    ItemCode = _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.ItemCode.ToUpper()),
+                    MasterItemCode = _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.ItemCode.ToUpper()),
                     CategoryId = masterItemRequest.CategoryId,
-                    IsUniversal = true,
+                    IsConsignment = true,
                     CreatedDate = DateTime.UtcNow
                 };
                 masterItem.ShopId = shopId;
@@ -314,7 +314,7 @@ namespace Services.FashionItems
                     {
                         Url = image,
                         CreatedDate = DateTime.UtcNow,
-                        MasterFashionItemId = masterItem.ItemId,
+                        MasterFashionItemId = masterItem.MasterItemId,
                     };
                     imgForMaster.Add(newImage);
                 }
@@ -402,7 +402,7 @@ namespace Services.FashionItems
                     Status = FashionItemStatus.Unavailable,
                     Type = FashionItemType.ItemBase,
                     SellingPrice = individual.SellingPrice,
-                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.ItemId),
+                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemId),
                 };
                 dataIndividual = await _fashionitemRepository.AddInvidualFashionItem(dataIndividual);
                 
@@ -441,15 +441,15 @@ namespace Services.FashionItems
             Expression<Func<MasterFashionItem, MasterItemResponse>> selector = item => new
                 MasterItemResponse()
                 {
-                    ItemId = item.ItemId,
+                    ItemId = item.MasterItemId,
                     Name = item.Name,
                     Description = item.Description,
-                    ItemCode = item.ItemCode,
+                    ItemCode = item.MasterItemCode,
                     CreatedDate = item.CreatedDate,
                     Brand = item.Brand,
                     Gender = item.Gender,
                     CategoryId = item.CategoryId,
-                    IsUniversal = item.IsUniversal,
+                    IsUniversal = item.IsConsignment,
                     ShopId = item.ShopId,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
@@ -460,7 +460,7 @@ namespace Services.FashionItems
             }
             if (!string.IsNullOrEmpty(request.SearchItemCode))
             {
-                predicate = predicate.And(item => EF.Functions.ILike(item.ItemCode, $"%{request.SearchItemCode.ToUpper()}%"));
+                predicate = predicate.And(item => EF.Functions.ILike(item.MasterItemCode, $"%{request.SearchItemCode.ToUpper()}%"));
             }
             if (request.CategoryId.HasValue)
             {
@@ -534,7 +534,7 @@ namespace Services.FashionItems
                 await _fashionitemRepository.GetFashionItemVariationProjections(request.PageNumber, request.PageSize, predicate,
                     selector);
 
-            Expression<Func<MasterFashionItem, bool>> predicate2 = masterItem => masterItem.ItemId == masteritemId;
+            Expression<Func<MasterFashionItem, bool>> predicate2 = masterItem => masterItem.MasterItemId == masteritemId;
             var masterItem = await _fashionitemRepository.GetSingleMasterItem(predicate2);
             var masterItemResponse = _mapper.Map<MasterItemResponse>(masterItem);
             masterItemResponse.ListItemVariationResponses = new PaginationResponse<ItemVariationResponse>()
@@ -606,7 +606,7 @@ namespace Services.FashionItems
                 TotalCount = result.TotalCount
             };
             
-            Expression<Func<MasterFashionItem, bool>> predicate3 = masterItem => masterItem.ItemId == variation.MasterItemId;
+            Expression<Func<MasterFashionItem, bool>> predicate3 = masterItem => masterItem.MasterItemId == variation.MasterItemId;
             var masterItem = await _fashionitemRepository.GetSingleMasterItem(predicate3);
             var masterItemResponse = _mapper.Map<MasterItemResponse>(masterItem);
             masterItemResponse.ItemVariationResponse = variationResponse;

@@ -146,14 +146,14 @@ namespace Repositories.FashionItems
             var masterItem = await _giveAwayDbContext.MasterFashionItems.AsQueryable()
                 .Include(c => c.Variations)
                 .ThenInclude(c => c.IndividualItems)
-                .Where(c => c.ItemId == masterItemId)
+                .Where(c => c.MasterItemId == masterItemId)
                 .FirstOrDefaultAsync();
-            string prefix = new string($"{masterItem.ItemCode}{itemNumber}");
+            string prefix = new string($"{masterItem.MasterItemCode}{itemNumber}");
             var individualItems = await _giveAwayDbContext.IndividualFashionItems
                 .Where(item => item.Variation!.MasterItemId == masterItemId)
                 .ToListAsync();
             totalItemNumber = individualItems.Count + 1;
-            prefix = new string($"{masterItem.ItemCode}{totalItemNumber}");
+            prefix = new string($"{masterItem.MasterItemCode}{totalItemNumber}");
             
             return prefix;
         }

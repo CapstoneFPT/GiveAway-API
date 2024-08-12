@@ -200,7 +200,7 @@ public class GiveAwayDbContext : DbContext
 
         #region MasterItem
 
-        modelBuilder.Entity<MasterFashionItem>().HasKey(x => x.ItemId);
+        modelBuilder.Entity<MasterFashionItem>().HasKey(x => x.MasterItemId);
 
         
 
@@ -222,7 +222,7 @@ public class GiveAwayDbContext : DbContext
             .HasForeignKey(x => x.MasterItemId);
         
         modelBuilder.Entity<MasterFashionItem>()
-            .Property(x=>x.ItemCode)
+            .Property(x=>x.MasterItemCode)
             .HasColumnType("varchar").HasMaxLength(20);
 
         modelBuilder.Entity<MasterFashionItem>()

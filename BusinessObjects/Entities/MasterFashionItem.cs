@@ -5,8 +5,8 @@ namespace BusinessObjects.Entities;
 
 public class MasterFashionItem
 {
-    public Guid ItemId { get; set; }
-    public string ItemCode { get; set; }
+    public Guid MasterItemId { get; set; }
+    public string MasterItemCode { get; set; }
     public string Name { get; set; }
     public string Brand { get; set; }
     public string Description { get; set; }
@@ -14,7 +14,7 @@ public class MasterFashionItem
     public GenderType Gender { get; set; }
     public Category Category { get; set; }
     public DateTime CreatedDate { get; set; }
-    public bool IsUniversal { get; set; }
+    public bool IsConsignment { get; set; }
     public ICollection<Image> Images { get; set; } = [];
     
     public Shop Shop { get; set; }
