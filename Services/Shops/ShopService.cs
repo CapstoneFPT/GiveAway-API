@@ -127,6 +127,8 @@ namespace Services.Shops
                 return new Result<CreateShopResponse, ErrorCode>(ghnResult.Error);
             }
 
+            // Give time for GiaoHangNhanh to update their data
+            // So don't remove this line 
             await Task.Delay(2000);
 
             var ghnShops = await _giaoHangNhanhService
