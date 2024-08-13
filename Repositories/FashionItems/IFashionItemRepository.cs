@@ -45,7 +45,7 @@ namespace Repositories.FashionItems
         bool CheckItemIsInOrder(Guid itemId, Guid? memberId);
         Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);
         Task<string> GenerateMasterItemCode(string itemCode);
-        Task<string> GenerateIndividualItemCode(Guid masterItemId);
+        Task<string> GenerateIndividualItemCode(string masterItemCode);
         Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode);
     }
 }

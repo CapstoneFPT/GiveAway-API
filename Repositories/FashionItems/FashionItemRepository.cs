@@ -146,21 +146,16 @@ namespace Repositories.FashionItems
             return prefixInStock;
         }
 
-        public async Task<string> GenerateIndividualItemCode(Guid masterItemId)
+        public async Task<string> GenerateIndividualItemCode(string masterItemCode)
         {
             int itemNumber = 1;
             int totalItemNumber = 0;
-            var masterItem = await _giveAwayDbContext.MasterFashionItems.AsQueryable()
-                .Include(c => c.Variations)
-                .ThenInclude(c => c.IndividualItems)
-                .Where(c => c.MasterItemId == masterItemId)
-                .FirstOrDefaultAsync();
-            string prefix = new string($"{masterItem.MasterItemCode}{itemNumber}");
+            
             var individualItems = await _giveAwayDbContext.IndividualFashionItems
-                .Where(item => item.Variation!.MasterItemId == masterItemId)
+                .Where(item => item.ItemCode.Contains(masterItemCode))
                 .ToListAsync();
             totalItemNumber = individualItems.Count + 1;
-            prefix = new string($"{masterItem.MasterItemCode}{totalItemNumber}");
+            string prefix = new string($"{masterItemCode}{totalItemNumber}");
             
             return prefix;
         }

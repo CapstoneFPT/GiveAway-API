@@ -428,11 +428,12 @@ namespace Services.FashionItems
             };
             var itemVariationResponse = await _fashionitemRepository.AddSingleFashionItemVariation(itemVariation);
             var individualItemsResponse = new List<IndividualFashionItem>();
+            var masterItem = await _fashionitemRepository.GetSingleMasterItem(c => c.MasterItemId == masteritemId);
             foreach (var individualItem in variationRequest.IndividualItems)
             {
                 var dataIndividualItem = new IndividualFashionItem()
                 {
-                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(itemVariation.MasterItemId),
+                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemCode),
                     SellingPrice = individualItem.SellingPrice,
                     Note = individualItem.Note,
                     VariationId = itemVariation.VariationId,
@@ -488,7 +489,7 @@ namespace Services.FashionItems
                     Status = FashionItemStatus.Unavailable,
                     Type = FashionItemType.ItemBase,
                     SellingPrice = individual.SellingPrice,
-                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemId),
+                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemCode),
                 };
                 dataIndividual = await _fashionitemRepository.AddInvidualFashionItem(dataIndividual);
 

@@ -12,5 +12,6 @@ public class ItemVariationResponse
     public SizeType Size { get; set; }
     public int StockCount { get; set; }
     public DateTime CreatedDate { get; set; }
+    public List<IndividualItemListResponse> IndividualItems { get; set; }
 }
 

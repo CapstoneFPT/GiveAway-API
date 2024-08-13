@@ -31,11 +31,11 @@ namespace Repositories
             CreateMap<UpdateDeliveryRequest, Address>() 
                 .ReverseMap();
             CreateMap<FashionItemDetailRequest, IndividualFashionItem>() .ReverseMap();
-            CreateMap<IndividualFashionItem, FashionItemDetailResponse>()
-                /*.ForMember(a => a.Consigner, opt => opt.MapFrom(a => a.ConsignSaleDetail.ConsignSale.Member.Fullname))*/
-                .ForMember(a => a.CategoryName, opt => opt.MapFrom(a => a.Variation.MasterItem.Category.Name))
-                // .ForMember(a => a.ShopAddress, opt => opt.MapFrom(a => a.Shop.Address))
-                .ForMember(a => a.Images, opt => opt.MapFrom(a => a.Images.Select(c => c.Url)))
+            CreateMap<IndividualFashionItem, IndividualItemListResponse>()
+                .ForMember(a => a.Condition, opt => opt.MapFrom(a => a.Variation!.Condition))
+                .ForMember(a => a.Size, opt => opt.MapFrom(a => a.Variation!.Size))
+                .ForMember(a => a.Color, opt => opt.MapFrom(a => a.Variation!.Color))
+                .ForMember(a => a.Image, opt => opt.MapFrom(a => a.Images.Select(c => c.Url).First()))
                 .ReverseMap();
             CreateMap<PaginationResponse<IndividualFashionItem>, PaginationResponse<FashionItemDetailResponse>>();
             CreateMap<Order, OrderResponse>()
@@ -116,6 +116,9 @@ namespace Repositories
             CreateMap<MasterFashionItem, MasterItemResponse>()
                 .ForMember(dest => dest.ShopId, opt => opt.MapFrom(src => src.ShopId))
                 .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.Select(c => c.Url)))
+                .ReverseMap();
+            CreateMap<FashionItemVariation, ItemVariationResponse>()
+                .ForMember(dest => dest.IndividualItems, opt => opt.MapFrom(src => src.IndividualItems))
                 .ReverseMap();
         }
     }
