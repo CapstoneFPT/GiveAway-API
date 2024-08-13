@@ -8,7 +8,7 @@ namespace Services.FashionItems
 {
     public interface IFashionItemService
     {
-        Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetAllFashionItemPagination(AuctionFashionItemRequest request);
+        Task<PaginationResponse<FashionItemList>> GetAllFashionItemPagination(FashionItemListRequest request);
         Task<Result<FashionItemDetailResponse>> GetFashionItemById(Guid id);
         Task<Result<FashionItemDetailResponse>> AddFashionItem(Guid shopId, FashionItemDetailRequest request);
         Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId, UpdateFashionItemRequest request);

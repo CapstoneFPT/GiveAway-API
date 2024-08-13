@@ -613,7 +613,7 @@ namespace Services.Orders
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
-
+        
         public async Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId,
             PayOrderWithCashRequest request)
         {

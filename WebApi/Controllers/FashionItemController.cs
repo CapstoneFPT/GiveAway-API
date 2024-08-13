@@ -33,32 +33,37 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+
         [HttpGet("{masteritemId}/item-variants")]
         [ProducesResponseType<PaginationResponse<ItemVariationListResponse>>((int)HttpStatusCode.OK)]
-        public async Task<IActionResult> GetAllItemVariationPagination([FromRoute] Guid masteritemId,[FromQuery] ItemVariationRequest request)
+        public async Task<IActionResult> GetAllItemVariationPagination([FromRoute] Guid masteritemId,
+            [FromQuery] ItemVariationRequest request)
         {
             var result = await _fashionItemService.GetAllFashionItemVariationPagination(masteritemId, request);
 
 
             return Ok(result);
         }
+
         [HttpGet("{variationId}/individual-items")]
         [ProducesResponseType<PaginationResponse<IndividualItemListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> GetAllIndividualItemPagination([FromRoute] Guid variationId,[FromQuery] IndividualItemRequest request)
+        public async Task<IActionResult> GetAllIndividualItemPagination([FromRoute] Guid variationId,
+            [FromQuery] IndividualItemRequest request)
         {
             var result = await _fashionItemService.GetIndividualItemPagination(variationId, request);
-            
+
             return Ok(result);
         }
+
         [HttpGet]
+        [ProducesResponseType<PaginationResponse<FashionItemList>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult<Result<PaginationResponse<FashionItemDetailResponse>>>>
-            GetAllFashionItemsPagination([FromQuery] AuctionFashionItemRequest request)
+            GetAllFashionItemsPagination([FromQuery] FashionItemListRequest request)
         {
             var result = await _fashionItemService.GetAllFashionItemPagination(request);
 
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
 
             return Ok(result);
         }
@@ -122,7 +127,8 @@ namespace WebApi.Controllers
 
         [HttpPost("{masteritemId}/item-variants")]
         [ProducesResponseType<Result<ItemVariationResponse>>((int)HttpStatusCode.OK)]
-        public async Task<IActionResult> CreateItemVariation([FromRoute]Guid masteritemId,[FromBody] CreateItemVariationRequest request)
+        public async Task<IActionResult> CreateItemVariation([FromRoute] Guid masteritemId,
+            [FromBody] CreateItemVariationRequest request)
         {
             var result = await _fashionItemService.CreateItemVariation(masteritemId, request);
             if (result.ResultStatus != ResultStatus.Success)

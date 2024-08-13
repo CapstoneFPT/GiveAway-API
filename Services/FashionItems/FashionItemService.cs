@@ -67,44 +67,51 @@ namespace Services.FashionItems
             return response;
         }
 
-        public async Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetAllFashionItemPagination(
-            AuctionFashionItemRequest request)
+        public async Task<PaginationResponse<FashionItemList>> GetAllFashionItemPagination(
+            FashionItemListRequest request)
         {
             Expression<Func<IndividualFashionItem, bool>> predicate = x => true;
-            Expression<Func<IndividualFashionItem, FashionItemDetailResponse>> selector = item => new
-                FashionItemDetailResponse()
+            Expression<Func<IndividualFashionItem, FashionItemList>> selector = item => new
+                FashionItemList()
                 {
                     ItemId = item.ItemId,
                     Name = item.Variation.MasterItem.Name,
                     Note = item.Note,
-                    Description = item.Variation.MasterItem.Description ?? string.Empty,
+                    CategoryId = item.Variation.MasterItem.CategoryId,
                     Condition = item.Variation.Condition,
                     Brand = item.Variation.MasterItem.Brand,
                     Gender = item.Variation.MasterItem.Gender,
                     Size = item.Variation.Size,
-                    CategoryId = item.Variation.MasterItem.CategoryId,
-                    CategoryName = item.Variation.MasterItem.Category.Name,
-                    ShopId = item.Variation.MasterItem.ShopId,
                     Type = item.Type,
                     Status = item.Status,
                     Color = item.Variation.Color,
                     SellingPrice = item.SellingPrice ?? 0,
-                    ShopAddress = item.Variation.MasterItem.Shop.Address,
-                    Images = item.Images.Select(x => x.Url).ToList()
+                    Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
+                    MasterItemId = item.Variation.MasterItemId,
+                    ShopId = item.Variation.MasterItem.ShopId,
+                    ItemCode = item.ItemCode,
+                    VariationId = item.VariationId
                 };
 
-            if (!string.IsNullOrEmpty(request.SearchTerm))
+            if (!string.IsNullOrEmpty(request.ItemCode))
             {
                 predicate = predicate.And(item =>
-                    EF.Functions.ILike(item.Variation.MasterItem.Name, $"%{request.SearchTerm}%"));
+                    EF.Functions.ILike(item.Variation.MasterItem.Name, $"%{request.Name}%"));
             }
 
-            if (request.Status != null)
+            if (!string.IsNullOrEmpty(request.ItemCode))
+            {
+                predicate = predicate.And(item => EF.Functions.ILike(item.ItemCode, $"%{request.ItemCode}%"));
+            }
+            
+            
+
+            if (request.Status.Length > 0)
             {
                 predicate = predicate.And(item => request.Status.Contains(item.Status));
             }
 
-            if (request.Type != null)
+            if (request.Type.Length > 0)
             {
                 predicate = predicate.And(item => request.Type.Contains(item.Type));
             }
@@ -120,29 +127,73 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => item.Variation.MasterItem.ShopId == request.ShopId);
             }
 
-            if (request.GenderType.HasValue)
+            if (request.Gender.HasValue)
             {
-                predicate = predicate.And(item => item.Variation.MasterItem.Gender == request.GenderType);
+                predicate = predicate.And(item => item.Variation.MasterItem.Gender == request.Gender);
             }
 
-            (List<FashionItemDetailResponse> Items, int Page, int PageSize, int TotalCount) result =
+            if (request.MinPrice.HasValue)
+            {
+               predicate = predicate.And(item => item.SellingPrice >= request.MinPrice); 
+            }
+            
+            if (request.MaxPrice.HasValue)
+            {
+                predicate = predicate.And(item => item.SellingPrice <= request.MaxPrice);
+            }
+
+            if (request.Color != null)
+            {
+               predicate = predicate.And(item => item.Variation.Color == request.Color); 
+            }
+
+            if (request.Size != 0)
+            {
+                predicate = predicate.And(item => item.Variation.Size == request.Size);
+            }
+
+            if (!string.IsNullOrEmpty(request.Condition))
+            {
+               predicate = predicate.And(item => EF.Functions.ILike(item.Variation.Condition, $"%{request.Condition}%")); 
+            }
+
+            (List<FashionItemList> Items, int Page, int PageSize, int TotalCount) result =
                 await _fashionitemRepository.GetIndividualItemProjections(request.PageNumber, request.PageSize,
                     predicate,
                     selector);
 
-            // await CheckItemsInOrder(result.Items, request.MemberId);
 
-            return new Result<PaginationResponse<FashionItemDetailResponse>>()
+            if (request.SortBy != null)
             {
-                Data = new PaginationResponse<FashionItemDetailResponse>()
-                {
-                    Items = result.Items,
-                    PageSize = result.PageSize,
-                    PageNumber = result.Page,
-                    TotalCount = result.TotalCount
-                },
-                ResultStatus = ResultStatus.Success
+                result.Items = request.SortDescending
+                    ? result.Items.OrderByDescending(x => x.GetType().GetProperty(request.SortBy)?.GetValue(x)).ToList()
+                    : result.Items.OrderBy(x => x.GetType().GetProperty(request.SortBy)?.GetValue(x)).ToList();
+            }
+
+            await CheckFashionItemsInOrder(result.Items, request.MemberId);
+
+            return new PaginationResponse<FashionItemList>()
+            {
+                Items = result.Items,
+                PageNumber = result.Page,
+                PageSize = result.PageSize,
+                TotalCount = result.TotalCount,
+                SearchTerm = request.ItemCode,
+                OrderBy = request.SortBy,
             };
+        }
+
+        private async Task CheckFashionItemsInOrder(List<FashionItemList> items, Guid? memberId)
+        {
+            if (memberId.HasValue)
+            {
+                var itemsId = items.Select(x => x.ItemId).ToList();
+                var orderItems = await _fashionitemRepository.GetOrderedItems(itemsId, memberId.Value);
+                foreach (var item in items)
+                {
+                    item.IsOrderedYet = orderItems.Contains(item.ItemId);
+                }
+            }
         }
 
         private async Task CheckItemsInOrder(List<IndividualItemListResponse> items, Guid? memberId)

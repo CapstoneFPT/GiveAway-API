@@ -184,7 +184,8 @@ namespace Repositories.FashionItems
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetIndividualItemProjections<T>(
             int? page,
-            int? pageSize, Expression<Func<IndividualFashionItem, bool>>? predicate, Expression<Func<IndividualFashionItem, T>>? selector)
+            int? pageSize, Expression<Func<IndividualFashionItem, bool>>? predicate, Expression<Func<IndividualFashionItem, T>>? selector
+            )
         {
             var query = _giveAwayDbContext.IndividualFashionItems.AsQueryable();
 
@@ -195,6 +196,7 @@ namespace Repositories.FashionItems
 
             var count = await query.CountAsync();
 
+            
             var pageNum = page ?? -1;
             var pageSizeNum = pageSize ?? -1;
 
@@ -384,5 +386,11 @@ namespace Repositories.FashionItems
 
             return listItemNotbelongshop;
         }
+    }
+
+    public class SortOptions
+    {
+        public string SortBy { get; set; }
+        public bool IsAscending { get; set; }
     }
 }
