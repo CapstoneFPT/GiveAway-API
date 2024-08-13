@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240812151017_AddDescriptionForFashionItem")]
+    partial class AddDescriptionForFashionItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -537,11 +540,16 @@ namespace Dao.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("ItemCode")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Note")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<decimal?>("SellingPrice")
@@ -624,6 +632,7 @@ namespace Dao.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Gender")

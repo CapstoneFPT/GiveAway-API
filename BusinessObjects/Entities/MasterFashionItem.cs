@@ -9,7 +9,7 @@ public class MasterFashionItem
     public string MasterItemCode { get; set; }
     public string Name { get; set; }
     public string Brand { get; set; }
-    public string Description { get; set; }
+    public string? Description { get; set; }
     public Guid CategoryId { get; set; }
     public GenderType Gender { get; set; }
     public Category Category { get; set; }
@@ -27,7 +27,7 @@ public class IndividualFashionItem
     public Guid ItemId { get; set; }
     public string ItemCode { get; set; }
     public Guid VariationId { get; set; }
-    public string Note { get; set; }
+    public string? Note { get; set; }
     public decimal? SellingPrice { get; set; }
     public FashionItemStatus Status { get; set; }
 

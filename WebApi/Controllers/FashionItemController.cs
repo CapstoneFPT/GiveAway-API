@@ -23,7 +23,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("master-items")]
-        [ProducesResponseType<Result<PaginationResponse<MasterItemResponse>>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<PaginationResponse<MasterItemListResponse>>((int)HttpStatusCode.OK)]
         public async Task<IActionResult> GetAllMasterItemPagination([FromQuery] MasterItemRequest request)
         {
             var result = await _fashionItemService.GetAllMasterItemPagination(request);
@@ -34,25 +34,21 @@ namespace WebApi.Controllers
             return Ok(result);
         }
         [HttpGet("{masteritemId}/item-variants")]
-        [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<PaginationResponse<ItemVariationListResponse>>((int)HttpStatusCode.OK)]
         public async Task<IActionResult> GetAllItemVariationPagination([FromRoute] Guid masteritemId,[FromQuery] ItemVariationRequest request)
         {
             var result = await _fashionItemService.GetAllFashionItemVariationPagination(masteritemId, request);
 
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
 
             return Ok(result);
         }
         [HttpGet("{variationId}/individual-items")]
-        [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<PaginationResponse<IndividualItemListResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetAllIndividualItemPagination([FromRoute] Guid variationId,[FromQuery] IndividualItemRequest request)
         {
             var result = await _fashionItemService.GetIndividualItemPagination(variationId, request);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
+            
             return Ok(result);
         }
         [HttpGet]
@@ -135,7 +131,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{variationId}/individual-items")]
-        [ProducesResponseType<Result<List<IndividualItemResponse>>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<Result<List<IndividualItemListResponse>>>((int)HttpStatusCode.OK)]
         public async Task<IActionResult> CreateIndividualItems([FromRoute] Guid variationId,
             List<CreateIndividualItemRequest> request)
         {

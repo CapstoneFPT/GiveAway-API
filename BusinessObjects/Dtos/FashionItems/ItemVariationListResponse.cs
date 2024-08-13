@@ -1,8 +1,8 @@
-using BusinessObjects.Dtos.Commons;
+﻿using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Dtos.FashionItems;
 
-public class ItemVariationResponse
+public class ItemVariationListResponse
 {
     public Guid VariationId { get; set; }
     public Guid MasterItemId { get; set; }
@@ -13,4 +13,3 @@ public class ItemVariationResponse
     public int StockCount { get; set; }
     public DateTime CreatedDate { get; set; }
 }
-

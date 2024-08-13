@@ -81,7 +81,7 @@ namespace Repositories.FashionItems
                 query = query.Skip((pageNum - 1) * pageSizeNum).Take(pageSizeNum);
             }
 
-            List<T> items = new List<T>();
+            List<T> items = [];
             if (selector != null)
             {
                 items = await query.Select(selector).ToListAsync();
