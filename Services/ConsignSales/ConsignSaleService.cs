@@ -14,6 +14,7 @@ using Repositories.Accounts;
 using Repositories.ConsignSaleDetails;
 using Repositories.ConsignSales;
 using Repositories.FashionItems;
+using Repositories.Images;
 using Repositories.Orders;
 using Repositories.Schedules;
 using Services.Emails;
@@ -30,11 +31,12 @@ namespace Services.ConsignSales
         private readonly IMapper _mapper;
         private readonly ISchedulerFactory _schedulerFactory;
         private readonly IFashionItemRepository _fashionItemRepository;
+        private readonly IImageRepository _imageRepository;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
             IConsignSaleDetailRepository consignSaleDetailRepository
             , IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
-            ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository)
+            ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository, IImageRepository imageRepository)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
@@ -44,6 +46,7 @@ namespace Services.ConsignSales
             _mapper = mapper;
             _schedulerFactory = schedulerFactory;
             _fashionItemRepository = fashionItemRepository;
+            _imageRepository = imageRepository;
         }
 
         public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
@@ -256,10 +259,10 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleDetailResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignSaleDetailId,
-            CreateMasterItemRequest detailRequest)
+        public async Task<Result<MasterItemResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignSaleDetailId,
+            CreateMasterItemForConsignRequest detailRequest)
         {
-            var response = new Result<ConsignSaleDetailResponse>();
+            var response = new Result<MasterItemResponse>();
             var consignSaleDetail =
                 await _consignSaleDetailRepository.GetSingleConsignSaleDetail(c =>
                     c.ConsignSaleDetailId == consignSaleDetailId);
@@ -277,25 +280,37 @@ namespace Services.ConsignSales
                 Gender = detailRequest.Gender,
                 ShopId = consignSaleDetail.ConsignSale.ShopId,
                 CategoryId = detailRequest.CategoryId,
-                MasterItemCode = await _fashionItemRepository.GenerateConsignMasterItemCode(detailRequest.MasterItemCode,consignSaleDetail.ConsignSale.Shop.ShopCode)
+                MasterItemCode = await _fashionItemRepository.GenerateConsignMasterItemCode(detailRequest.MasterItemCode,consignSaleDetail.ConsignSale.Shop.ShopCode),
+                CreatedDate = DateTime.UtcNow
             };
-            
-            /*consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
-            consignSaleDetail.FashionItem.Description = request.Description;
 
-            if (consignSaleDetail.FashionItem is AuctionFashionItem auctionFashionItem)
+            await _fashionItemRepository.AddSingleMasterFashionItem(masterItem);
+
+            /*if (consignSaleDetail.IndividualFashionItem is IndividualAuctionFashionItem auctionFashionItem)
             {
-               auctionFashionItem.InitialPrice = request.SellingPrice;
+               auctionFashionItem.InitialPrice = detailRequest.SellingPrice;
                auctionFashionItem.Status = FashionItemStatus.PendingAuction;
             }
             else
             {
                 consignSaleDetail.FashionItem.SellingPrice = request.SellingPrice;
             }*/
-
-            await _consignSaleDetailRepository.UpdateConsignSaleDetail(consignSaleDetail);
-
-            var result = _mapper.Map<ConsignSaleDetailResponse>(consignSaleDetail);
+            var listImage = new List<Image>();
+            foreach (var image in detailRequest.Images)
+            {
+                var dataImage = new Image()
+                {
+                    Url = image,
+                    CreatedDate = DateTime.UtcNow,
+                    MasterFashionItemId = masterItem.MasterItemId
+                };
+                listImage.Add(dataImage);
+            }
+    
+            await _imageRepository.AddRangeImage(listImage);
+            masterItem.Images = listImage;
+            
+            var result = _mapper.Map<MasterItemResponse>(masterItem);
             response.Data = result;
             response.Messages = ["Success"];
             response.ResultStatus = ResultStatus.Success;

@@ -400,7 +400,7 @@ namespace Services.FashionItems
                     MasterItemCode =
                         await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
                     CategoryId = masterItemRequest.CategoryId,
-                    IsConsignment = true,
+                    IsConsignment = false,
                     CreatedDate = DateTime.UtcNow
                 };
                 masterItem.ShopId = shopId;
@@ -551,7 +551,7 @@ namespace Services.FashionItems
                     Brand = item.Brand,
                     Gender = item.Gender,
                     CategoryId = item.CategoryId,
-                    IsUniversal = item.IsConsignment,
+                    IsConsignment = item.IsConsignment,
                     ShopId = item.ShopId,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
@@ -723,7 +723,7 @@ namespace Services.FashionItems
         public string Brand { get; set; }
         public GenderType Gender { get; set; }
         public Guid CategoryId { get; set; }
-        public bool IsUniversal { get; set; }
+        public bool IsConsignment { get; set; }
         public Guid ShopId { get; set; }
         public List<string> Images { get; set; } = [];
     }

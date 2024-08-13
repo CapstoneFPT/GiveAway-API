@@ -142,7 +142,7 @@ namespace Repositories.FashionItems
                 .Where(c => c.MasterItemCode.Contains(itemCode))
                 .Select(c => c.MasterItemCode).ToListAsync();
             totalMasterCode = listMasterItemCode.Count + 1;
-            string prefixInStock = new string($"IS-GAS-{itemCode.ToUpper()}{totalMasterCode}");
+            string prefixInStock = new string($"IS-GAS-{itemCode.ToUpper()}-{totalMasterCode}");
             return prefixInStock;
         }
 
@@ -155,7 +155,7 @@ namespace Repositories.FashionItems
                 .Where(item => item.ItemCode.Contains(masterItemCode))
                 .ToListAsync();
             totalItemNumber = individualItems.Count + 1;
-            string prefix = new string($"{masterItemCode}{totalItemNumber}");
+            string prefix = new string($"{masterItemCode}-{totalItemNumber}");
             
             return prefix;
         }
@@ -167,7 +167,7 @@ namespace Repositories.FashionItems
                 .Where(c => c.MasterItemCode.Contains(itemCode))
                 .Select(c => c.MasterItemCode).ToListAsync();
             totalMasterCode = listMasterItemCode.Count + 1;
-            string prefixInStock = new string($"CS-{shopCode}-{itemCode.ToUpper()}{totalMasterCode}");
+            string prefixInStock = new string($"CS-{shopCode}-{itemCode.ToUpper()}-{totalMasterCode}");
             return prefixInStock;
         }
 
