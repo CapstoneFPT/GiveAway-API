@@ -149,7 +149,7 @@ namespace Services.FashionItems
                predicate = predicate.And(item => item.Variation != null && item.Variation.Color == request.Color); 
             }
 
-            if (request.Size != 0)
+            if (request.Size != null)
             {
                 predicate = predicate.And(item => item.Variation != null && item.Variation.Size == request.Size);
             }
