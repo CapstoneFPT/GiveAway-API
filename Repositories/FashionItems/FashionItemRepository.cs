@@ -99,6 +99,7 @@ namespace Repositories.FashionItems
             return await GenericDao<MasterFashionItem>.Instance.GetQueryable()
                 .Include(c => c.Images)
                 .Include(c => c.Shop)
+                .Include(x=>x.Category)
                 .Where(predicate)
                 .FirstOrDefaultAsync();
         }

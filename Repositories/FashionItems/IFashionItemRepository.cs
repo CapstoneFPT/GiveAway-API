@@ -40,7 +40,7 @@ namespace Repositories.FashionItems
         Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemVariationProjections<T>(
             int? page,
             int? pageSize, Expression<Func<FashionItemVariation, bool>>? predicate, Expression<Func<FashionItemVariation, T>>? selector);
-        Task<MasterFashionItem?> GetSingleMasterItem(Expression<Func<MasterFashionItem?, bool>> predicate);
+        Task<MasterFashionItem?> GetSingleMasterItem(Expression<Func<MasterFashionItem, bool>> predicate);
         Task<FashionItemVariation?> GetSingleFashionItemVariation(Expression<Func<FashionItemVariation?, bool>> predicate);
         bool CheckItemIsInOrder(Guid itemId, Guid? memberId);
         Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);

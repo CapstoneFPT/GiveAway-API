@@ -28,5 +28,7 @@ namespace Services.FashionItems
             ItemVariationRequest request);
         Task<PaginationResponse<IndividualItemListResponse>> GetIndividualItemPagination(Guid variationId,
             IndividualItemRequest request);
+
+        Task<DotNext.Result<MasterItemDetailResponse, ErrorCode>> GetMasterItemById(Guid id);
     }
 }

@@ -37,7 +37,8 @@ public enum ErrorCode
     UnknownError,
     NetworkError,
     ServerError,
-    InvalidInput
+    InvalidInput,
+    NotFound
 }
 
 public enum ErrorType

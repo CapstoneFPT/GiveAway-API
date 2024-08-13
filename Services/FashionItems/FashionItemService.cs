@@ -3,9 +3,11 @@ using AutoMapper;
 using AutoMapper.Internal;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.AuctionItems;
+using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using DotNext;
 using DotNext.Collections.Generic;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
@@ -35,10 +37,10 @@ namespace Services.FashionItems
             _consignSaleRepository = consignSaleRepository;
         }
 
-        public async Task<Result<FashionItemDetailResponse>> AddFashionItem(Guid shopId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> AddFashionItem(Guid shopId,
             FashionItemDetailRequest request)
         {
-            var response = new Result<FashionItemDetailResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>();
             var item = new IndividualFashionItem();
             var newdata = new IndividualFashionItem()
             {
@@ -75,20 +77,20 @@ namespace Services.FashionItems
                 FashionItemList()
                 {
                     ItemId = item.ItemId,
-                    Name = item.Variation.MasterItem.Name,
-                    Note = item.Note,
-                    CategoryId = item.Variation.MasterItem.CategoryId,
-                    Condition = item.Variation.Condition,
-                    Brand = item.Variation.MasterItem.Brand,
-                    Gender = item.Variation.MasterItem.Gender,
-                    Size = item.Variation.Size,
+                    Name = item.Variation != null ? item.Variation.MasterItem.Name : string.Empty,
+                    Note = item.Note ?? string.Empty,
+                    CategoryId = item.Variation != null ? item.Variation.MasterItem.CategoryId : Guid.Empty,
+                    Condition = item.Variation != null ? item.Variation.Condition : string.Empty,
+                    Brand = item.Variation != null ? item.Variation.MasterItem.Brand : string.Empty,
+                    Gender = item.Variation != null ? item.Variation.MasterItem.Gender : 0,
+                    Size = item.Variation != null ? item.Variation.Size : 0,
                     Type = item.Type,
                     Status = item.Status,
-                    Color = item.Variation.Color,
+                    Color = item.Variation != null ? item.Variation.Color : string.Empty,
                     SellingPrice = item.SellingPrice ?? 0,
                     Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
-                    MasterItemId = item.Variation.MasterItemId,
-                    ShopId = item.Variation.MasterItem.ShopId,
+                    MasterItemId = item.Variation != null ? item.Variation.MasterItemId : Guid.Empty,
+                    ShopId = item.Variation != null ? item.Variation.MasterItem.ShopId : Guid.Empty,
                     ItemCode = item.ItemCode,
                     VariationId = item.VariationId
                 };
@@ -96,7 +98,7 @@ namespace Services.FashionItems
             if (!string.IsNullOrEmpty(request.ItemCode))
             {
                 predicate = predicate.And(item =>
-                    EF.Functions.ILike(item.Variation.MasterItem.Name, $"%{request.Name}%"));
+                    item.Variation != null && EF.Functions.ILike(item.Variation.MasterItem.Name, $"%{request.Name}%"));
             }
 
             if (!string.IsNullOrEmpty(request.ItemCode))
@@ -119,17 +121,17 @@ namespace Services.FashionItems
             if (request.CategoryId.HasValue)
             {
                 var categoryIds = await _categoryRepository.GetAllChildrenCategoryIds(request.CategoryId.Value);
-                predicate = predicate.And(item => categoryIds.Contains(item.Variation.MasterItem.CategoryId));
+                predicate = predicate.And(item => item.Variation != null && categoryIds.Contains(item.Variation.MasterItem.CategoryId));
             }
 
             if (request.ShopId.HasValue)
             {
-                predicate = predicate.And(item => item.Variation.MasterItem.ShopId == request.ShopId);
+                predicate = predicate.And(item => item.Variation != null && item.Variation.MasterItem.ShopId == request.ShopId);
             }
 
             if (request.Gender.HasValue)
             {
-                predicate = predicate.And(item => item.Variation.MasterItem.Gender == request.Gender);
+                predicate = predicate.And(item => item.Variation != null && item.Variation.MasterItem.Gender == request.Gender);
             }
 
             if (request.MinPrice.HasValue)
@@ -144,17 +146,17 @@ namespace Services.FashionItems
 
             if (request.Color != null)
             {
-               predicate = predicate.And(item => item.Variation.Color == request.Color); 
+               predicate = predicate.And(item => item.Variation != null && item.Variation.Color == request.Color); 
             }
 
             if (request.Size != 0)
             {
-                predicate = predicate.And(item => item.Variation.Size == request.Size);
+                predicate = predicate.And(item => item.Variation != null && item.Variation.Size == request.Size);
             }
 
             if (!string.IsNullOrEmpty(request.Condition))
             {
-               predicate = predicate.And(item => EF.Functions.ILike(item.Variation.Condition, $"%{request.Condition}%")); 
+               predicate = predicate.And(item => item.Variation != null && EF.Functions.ILike(item.Variation.Condition, $"%{request.Condition}%")); 
             }
 
             (List<FashionItemList> Items, int Page, int PageSize, int TotalCount) result =
@@ -196,6 +198,36 @@ namespace Services.FashionItems
             }
         }
 
+        public async Task<DotNext.Result<MasterItemDetailResponse, ErrorCode>> GetMasterItemById(Guid id)
+        {
+            var masterItem = await _fashionitemRepository.GetSingleMasterItem(x=>x.MasterItemId == id);
+
+            if (masterItem == null)
+            {
+                return new Result<MasterItemDetailResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            return new Result<MasterItemDetailResponse, ErrorCode>(
+                new MasterItemDetailResponse()
+                {
+                    MasterItemId = masterItem.MasterItemId,
+                    Brand = masterItem.Brand,
+                    Gender = masterItem.Gender,
+                    CategoryId = masterItem.CategoryId,
+                    IsConsignment = masterItem.IsConsignment,
+                    Description = masterItem.Description,
+                    MasterItemCode = masterItem.MasterItemCode,
+                    Name = masterItem.Name,
+                    CategoryName = masterItem.Category.Name,
+                    Images = masterItem.Images.Select(x => new FashionItemImage()
+                    {
+                        ImageId = x.ImageId,
+                        ImageUrl = x.Url
+                    }).ToList(),
+                });
+
+        }
+
         private async Task CheckItemsInOrder(List<IndividualItemListResponse> items, Guid? memberId)
         {
             if (memberId.HasValue)
@@ -210,9 +242,9 @@ namespace Services.FashionItems
             }
         }
 
-        public async Task<Result<FashionItemDetailResponse>> GetFashionItemById(Guid id)
+        public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> GetFashionItemById(Guid id)
         {
-            var response = new Result<FashionItemDetailResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>();
             var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == id);
             if (item == null)
             {
@@ -227,10 +259,10 @@ namespace Services.FashionItems
             return response;
         }
 
-        public async Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId,
             UpdateFashionItemRequest request)
         {
-            var response = new Result<FashionItemDetailResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>();
             var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == itemId);
             if (item is null)
             {
@@ -251,10 +283,10 @@ namespace Services.FashionItems
             return response;
         }
 
-        public async Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetItemByCategoryHierarchy(
+        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<FashionItemDetailResponse>>> GetItemByCategoryHierarchy(
             Guid categoryId, AuctionFashionItemRequest request)
         {
-            var response = new Result<PaginationResponse<FashionItemDetailResponse>>();
+            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<FashionItemDetailResponse>>();
             var items = await _fashionitemRepository.GetItemByCategoryHierarchy(categoryId, request);
             if (items.TotalCount > 0)
             {
@@ -269,9 +301,9 @@ namespace Services.FashionItems
             return response;
         }
 
-        public async Task<Result<FashionItemDetailResponse>> CheckFashionItemAvailability(Guid itemId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CheckFashionItemAvailability(Guid itemId)
         {
-            var response = new Result<FashionItemDetailResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>();
             var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == itemId);
             if (item != null)
             {
@@ -326,7 +358,7 @@ namespace Services.FashionItems
             return _fashionitemRepository.UpdateFashionItems(refundableItems);
         }
 
-        public async Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId,
             UpdateFashionItemStatusRequest request)
         {
             var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == itemId);
@@ -334,7 +366,7 @@ namespace Services.FashionItems
             item.Status = request.Status;
 
             await _fashionitemRepository.UpdateFashionItem(item);
-            return new Result<FashionItemDetailResponse?>
+            return new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse?>
             {
                 Data = _mapper.Map<FashionItemDetailResponse>(item),
                 ResultStatus = ResultStatus.Success,
@@ -342,7 +374,7 @@ namespace Services.FashionItems
             };
         }
 
-        public async Task<Result<List<MasterItemResponse>>> CreateMasterItemByAdmin(
+        public async Task<BusinessObjects.Dtos.Commons.Result<List<MasterItemResponse>>> CreateMasterItemByAdmin(
             CreateMasterItemRequest masterItemRequest)
         {
             var listMasterItemResponse = new List<MasterFashionItem>();
@@ -373,7 +405,7 @@ namespace Services.FashionItems
                 listMasterItemResponse.Add(masterItem);
             }
 
-            return new Result<List<MasterItemResponse>>()
+            return new BusinessObjects.Dtos.Commons.Result<List<MasterItemResponse>>()
             {
                 Data = _mapper.Map<List<MasterItemResponse>>(listMasterItemResponse),
                 ResultStatus = ResultStatus.Success,
@@ -381,7 +413,7 @@ namespace Services.FashionItems
             };
         }
 
-        public async Task<Result<ItemVariationResponse>> CreateItemVariation(Guid masteritemId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<ItemVariationResponse>> CreateItemVariation(Guid masteritemId,
             CreateItemVariationRequest variationRequest)
         {
             var itemVariation = new FashionItemVariation()
@@ -428,7 +460,7 @@ namespace Services.FashionItems
             }
 
             itemVariationResponse.IndividualItems = individualItemsResponse;
-            return new Result<ItemVariationResponse>()
+            return new BusinessObjects.Dtos.Commons.Result<ItemVariationResponse>()
             {
                 Data = _mapper.Map<ItemVariationResponse>(itemVariationResponse),
                 ResultStatus = ResultStatus.Success,
@@ -436,7 +468,7 @@ namespace Services.FashionItems
             };
         }
 
-        public async Task<Result<List<IndividualItemListResponse>>> CreateIndividualItems(Guid variationId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>> CreateIndividualItems(Guid variationId,
             List<CreateIndividualItemRequest> requests)
         {
             var individualItems = new List<IndividualFashionItem>();
@@ -481,7 +513,7 @@ namespace Services.FashionItems
             fashionItemVariation.StockCount += individualItems.Count;
             await _fashionitemRepository.UpdateFashionItemVariation(fashionItemVariation);
 
-            return new Result<List<IndividualItemListResponse>>()
+            return new BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>()
             {
                 Data = _mapper.Map<List<IndividualItemListResponse>>(individualItems),
                 ResultStatus = ResultStatus.Success,
@@ -489,7 +521,7 @@ namespace Services.FashionItems
             };
         }
 
-        public async Task<Result<PaginationResponse<MasterItemListResponse>>> GetAllMasterItemPagination(
+        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<MasterItemListResponse>>> GetAllMasterItemPagination(
             MasterItemRequest request)
         {
             Expression<Func<MasterFashionItem, bool>> predicate = x => true;
@@ -540,7 +572,7 @@ namespace Services.FashionItems
                 await _fashionitemRepository.GetMasterItemProjections(request.PageNumber, request.PageSize, predicate,
                     selector);
 
-            return new Result<PaginationResponse<MasterItemListResponse>>()
+            return new BusinessObjects.Dtos.Commons.Result<PaginationResponse<MasterItemListResponse>>()
             {
                 Data = new PaginationResponse<MasterItemListResponse>()
                 {

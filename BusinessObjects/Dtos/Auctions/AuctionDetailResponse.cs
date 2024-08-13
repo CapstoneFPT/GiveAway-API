@@ -33,7 +33,7 @@ public class AuctionItemDetailResponse
     public string Description { get; set; }
     public decimal? InitialPrice { get; set; }
     public ShopAuctionDetailResponse Shop { get; set; }
-    public List<AuctionItemImage> Images { get; set; } = [];
+    public List<FashionItemImage> Images { get; set; } = [];
     public AuctionItemCategory Category { get; set; }
 }
 
@@ -44,7 +44,7 @@ public class AuctionItemCategory
     public int Level { get; set; }
 }
 
-public class AuctionItemImage
+public class FashionItemImage
 {
     public Guid ImageId { get; set; }
     public string ImageUrl { get; set; }

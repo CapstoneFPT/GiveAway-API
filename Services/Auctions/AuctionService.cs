@@ -236,7 +236,7 @@ namespace Services.Auctions
                         Address = result.Shop.Address,
                     },
                     Images = result.IndividualAuctionFashionItem.Images.Count > 0 ? result.IndividualAuctionFashionItem.Images.Select(
-                        img => new AuctionItemImage()
+                        img => new FashionItemImage()
                         {
                             ImageId = img.ImageId,
                             ImageUrl = img.Url

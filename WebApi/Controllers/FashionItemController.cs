@@ -45,6 +45,24 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [HttpGet("master-items/{masterItemId}")]
+        [ProducesResponseType<MasterItemDetailResponse>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> GetMasterItemDetail([FromRoute] Guid masterItemId)
+        {
+            var result = await _fashionItemService.GetMasterItemById(masterItemId);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => NotFound(result),
+                    _ => StatusCode((int)HttpStatusCode.InternalServerError, result)
+                };
+            }
+
+            return Ok(result.Value);
+        }
+
         [HttpGet("{variationId}/individual-items")]
         [ProducesResponseType<PaginationResponse<IndividualItemListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -138,6 +156,7 @@ namespace WebApi.Controllers
 
         [HttpPost("{variationId}/individual-items")]
         [ProducesResponseType<Result<List<IndividualItemListResponse>>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> CreateIndividualItems([FromRoute] Guid variationId,
             List<CreateIndividualItemRequest> request)
         {
