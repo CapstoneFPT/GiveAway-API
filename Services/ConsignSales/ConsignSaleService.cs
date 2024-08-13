@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Email;
+using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -12,6 +13,7 @@ using Quartz;
 using Repositories.Accounts;
 using Repositories.ConsignSaleDetails;
 using Repositories.ConsignSales;
+using Repositories.FashionItems;
 using Repositories.Orders;
 using Repositories.Schedules;
 using Services.Emails;
@@ -27,11 +29,12 @@ namespace Services.ConsignSales
         private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
         private readonly ISchedulerFactory _schedulerFactory;
+        private readonly IFashionItemRepository _fashionItemRepository;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
             IConsignSaleDetailRepository consignSaleDetailRepository
             , IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
-            ISchedulerFactory schedulerFactory)
+            ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
@@ -40,6 +43,7 @@ namespace Services.ConsignSales
             _emailService = emailService;
             _mapper = mapper;
             _schedulerFactory = schedulerFactory;
+            _fashionItemRepository = fashionItemRepository;
         }
 
         public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
@@ -252,8 +256,8 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleDetailResponse>> CreateItemFromConsignSaleDetail(Guid consignSaleDetailId,
-            CreateItemFromConsignDetailRequest detailRequest)
+        public async Task<Result<ConsignSaleDetailResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignSaleDetailId,
+            CreateMasterItemRequest detailRequest)
         {
             var response = new Result<ConsignSaleDetailResponse>();
             var consignSaleDetail =
@@ -263,8 +267,19 @@ namespace Services.ConsignSales
             {
                 throw new ConsignSaleDetailsNotFoundException();
             }
-        
-            consignSaleDetail.ConfirmedPrice = detailRequest.SellingPrice;
+
+            var masterItem = new MasterFashionItem()
+            {
+                Brand = detailRequest.Brand,
+                Description = detailRequest.Description,
+                Name = detailRequest.Name,
+                IsConsignment = true,
+                Gender = detailRequest.Gender,
+                ShopId = consignSaleDetail.ConsignSale.ShopId,
+                CategoryId = detailRequest.CategoryId,
+                MasterItemCode = await _fashionItemRepository.GenerateConsignMasterItemCode(detailRequest.MasterItemCode,consignSaleDetail.ConsignSale.Shop.ShopCode)
+            };
+            
             /*consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
             consignSaleDetail.FashionItem.Description = request.Description;
 

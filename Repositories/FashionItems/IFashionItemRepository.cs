@@ -46,5 +46,6 @@ namespace Repositories.FashionItems
         Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);
         Task<string> GenerateMasterItemCode(string itemCode);
         Task<string> GenerateIndividualItemCode(Guid masterItemId);
+        Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode);
     }
 }

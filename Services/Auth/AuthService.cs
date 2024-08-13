@@ -249,7 +249,15 @@ public class AuthService : IAuthService
             };
             if (account.Role.Equals(Roles.Staff))
             {
-                var shop = await _shopRepository.GetShopByAccountId(account.AccountId);
+                var shop = await _shopRepository.GetSingleShop(c => c.StaffId == account.AccountId);
+                if (shop == null)
+                {
+                    return new Result<LoginResponse>()
+                    {
+                        Messages = ["Your shop account is not created!"],
+                        ResultStatus = ResultStatus.Error
+                    };
+                }
                 data.ShopId = shop.ShopId;
             }
 

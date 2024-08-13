@@ -164,6 +164,17 @@ namespace Repositories.FashionItems
             return prefix;
         }
 
+        public async Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode)
+        {
+            int totalMasterCode = 0;
+            var listMasterItemCode = await _giveAwayDbContext.MasterFashionItems.AsQueryable()
+                .Where(c => c.MasterItemCode.Contains(itemCode))
+                .Select(c => c.MasterItemCode).ToListAsync();
+            totalMasterCode = listMasterItemCode.Count + 1;
+            string prefixInStock = new string($"CS-{shopCode}-{itemCode.ToUpper()}{totalMasterCode}");
+            return prefixInStock;
+        }
+
         public async Task<IndividualFashionItem> AddInvidualFashionItem(IndividualFashionItem request)
         {
             return await GenericDao<IndividualFashionItem>.Instance.AddAsync(request);
