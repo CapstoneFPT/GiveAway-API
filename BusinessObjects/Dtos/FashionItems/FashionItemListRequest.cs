@@ -21,4 +21,5 @@ public class FashionItemListRequest
     public string? Name { get; set; }
     public Guid? CategoryId { get; set; }
     public Guid? ShopId { get; set; }
+    public Guid? MasterItemId { get; set; }
 }

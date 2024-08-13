@@ -154,6 +154,11 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => item.Variation != null && item.Variation.Size == request.Size);
             }
 
+            if (request.MasterItemId != null)
+            {
+                predicate = predicate.And(item => item.Variation != null && item.Variation.MasterItemId == request.MasterItemId);
+            }
+
             if (!string.IsNullOrEmpty(request.Condition))
             {
                predicate = predicate.And(item => item.Variation != null && EF.Functions.ILike(item.Variation.Condition, $"%{request.Condition}%")); 
