@@ -405,7 +405,7 @@ public class GHNShippingFee
 public class ShippingFeeResult
 {
     public decimal ShippingFee { get; set; } = 0;
-    public ShippingLocation ShopLocation { get; set; }
+    public ShippingLocation[] ShopLocation { get; set; }
     public ShippingLocation ShippingDestination { get; set; }
 }
 

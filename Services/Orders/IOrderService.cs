@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Entities;
+using Services.GiaoHangNhanh;
 
 namespace Services.Orders
 {
@@ -34,5 +35,8 @@ namespace Services.Orders
         
         Task UpdateAdminBalance(Order order);
         Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId ,Guid orderdetailId);
+
+        Task<DotNext.Result<ShippingFeeResult, ErrorCode>> CalculateShippingFee(List<Guid> itemIds,
+            int destinationDistrictId);
     }
 }

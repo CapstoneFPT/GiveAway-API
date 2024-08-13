@@ -393,6 +393,11 @@ namespace Repositories.FashionItems
 
             return listItemNotbelongshop;
         }
+        
+        public IQueryable<IndividualFashionItem> GetQueryable()
+        {
+            return GenericDao<IndividualFashionItem>.Instance.GetQueryable();
+        }
     }
 
     public class SortOptions

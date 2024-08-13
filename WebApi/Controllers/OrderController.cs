@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.ConsignSales;
 using Services.Emails;
+using Services.GiaoHangNhanh;
 using Services.OrderDetails;
 using Services.Orders;
 using Services.Transactions;
@@ -28,6 +29,7 @@ namespace WebApi.Controllers
         private readonly IAccountService _accountService;
         private readonly IEmailService _emailService;
         private readonly IConsignSaleService _consignSaleService;
+
         public OrderController(IOrderService orderService, IOrderDetailService orderDetailService, IVnPayService
                 vnPayService, ITransactionService transactionService, ILogger<OrderController> logger,
             IAccountService accountService, IEmailService emailService, IConsignSaleService consignSaleService)
@@ -60,7 +62,7 @@ namespace WebApi.Controllers
         {
             return await _orderDetailService.GetOrderDetailsByOrderId(OrderId, request);
         }
-        
+
 
         [HttpGet("orderdetails/{OrderdetailId}")]
         public async Task<ActionResult<Result<OrderDetailResponse<IndividualFashionItem>>>> GetOrderDetailById(
@@ -235,11 +237,13 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{orderId}/orderdetails/{orderdetailId}/confirm-pending-order")]
-        public async Task<ActionResult<Result<OrderResponse>>> ConfirmPendingOrderDetailByShop([FromRoute] Guid orderId, [FromRoute] Guid orderdetailId)
+        public async Task<ActionResult<Result<OrderResponse>>> ConfirmPendingOrderDetailByShop([FromRoute] Guid orderId,
+            [FromRoute] Guid orderdetailId)
         {
             var result = await _orderService.ConfirmPendingOrder(orderId, orderdetailId);
             return Ok(result);
         }
+
         [HttpPut("{orderId}/cancelbyadmin")]
         public async Task<ActionResult<Result<string>>> CancelOrderByAdmin([FromRoute] Guid orderId)
         {
@@ -250,7 +254,30 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-        
+
+        [HttpGet("calculate-shipping-fee")]
+        [ProducesResponseType<ShippingFeeResult>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CalculateShippingFee([FromQuery] List<Guid> itemIds,
+            [FromQuery] int destinationDistrictId)
+        {
+            var result = await _orderService.CalculateShippingFee(itemIds, destinationDistrictId);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.ExternalServiceError => StatusCode(500,
+                        new ErrorResponse("External Service Error", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Unexpected error from server", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ServerError))
+                };
+            }
+
+            return Ok(result.Value);
+        }
     }
 
     public class VnPayPurchaseResponse
