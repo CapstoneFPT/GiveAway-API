@@ -23,11 +23,11 @@ public interface IGiaoHangNhanhService
     Task<Result<GHNApiResponse<GHNShopCreateResponse>, ErrorCode>> CreateShop(
         GHNShopCreateRequest request);
 
-    Task<Result<GHNApiResponse<GHNShippingFee>, ErrorCode>> CalculateShippingFee(
-        CalculateShippingRequest request);
-
     Task<string> BuildAddress(int ghnProvinceId, int ghnDistrictId, int ghnWardCode,
         string address);
+
+    Task<Result<GHNApiResponse<GHNShippingFee>, ErrorCode>> CalculateShippingFee(
+        CalculateShippingRequest request);
 }
 
 public class GiaoHangNhanhService : IGiaoHangNhanhService

@@ -23,7 +23,7 @@ namespace Services.FashionItems
         Task<Result<List<IndividualItemListResponse>>> CreateIndividualItems(Guid variationId,
             List<CreateIndividualItemRequest> requests);
 
-        Task<Result<PaginationResponse<MasterItemListResponse>>> GetAllMasterItemPagination(MasterItemRequest request);
+        Task<PaginationResponse<MasterItemListResponse>> GetAllMasterItemPagination(MasterItemRequest request);
         Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(Guid masterItemId,
             ItemVariationRequest request);
         Task<PaginationResponse<IndividualItemListResponse>> GetIndividualItemPagination(Guid variationId,

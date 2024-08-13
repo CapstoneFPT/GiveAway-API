@@ -24,12 +24,10 @@ namespace WebApi.Controllers
 
         [HttpGet("master-items")]
         [ProducesResponseType<PaginationResponse<MasterItemListResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetAllMasterItemPagination([FromQuery] MasterItemRequest request)
         {
             var result = await _fashionItemService.GetAllMasterItemPagination(request);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
 
             return Ok(result);
         }

@@ -23,6 +23,7 @@ using BusinessObjects.Utils;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Refunds;
+using Services.GiaoHangNhanh;
 
 namespace Services.Orders
 {
@@ -751,6 +752,12 @@ namespace Services.Orders
             response.Messages = new[] { "Confirm order successfully. Order has to be ready for customer " };
             response.Data = _mapper.Map<OrderResponse>(order);
             return response;
+        }
+
+        public async Task<DotNext.Result<ShippingFeeResult, ErrorCode>> CalculateShippingFee(List<Guid> itemIds,
+            int destinationDistrictId)
+        {
+            return null;
         }
     }
 }
