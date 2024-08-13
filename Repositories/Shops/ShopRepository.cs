@@ -75,5 +75,16 @@ namespace Repositories.Shops
             string prefixInStock = new string($"GAS{totalShopCode}");
             return prefixInStock;
         }
+
+        public Task<List<Shop>> GetShopEntities(Expression<Func<Shop, bool>>? predicate)
+        {
+            var query = _giveAwayDbContext.Shops.AsQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+            return query.ToListAsync();
+        }
     }
 }
