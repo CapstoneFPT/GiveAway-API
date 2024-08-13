@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Email;
+using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -252,8 +253,8 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleDetailResponse>> CreateItemFromConsignSaleDetail(Guid consignSaleDetailId,
-            CreateItemFromConsignDetailRequest detailRequest)
+        public async Task<Result<ConsignSaleDetailResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignSaleDetailId,
+            CreateMasterItemRequest detailRequest)
         {
             var response = new Result<ConsignSaleDetailResponse>();
             var consignSaleDetail =
@@ -263,8 +264,19 @@ namespace Services.ConsignSales
             {
                 throw new ConsignSaleDetailsNotFoundException();
             }
-        
-            consignSaleDetail.ConfirmedPrice = detailRequest.SellingPrice;
+
+            var masterItem = new MasterFashionItem()
+            {
+                Brand = detailRequest.Brand,
+                Description = detailRequest.Description,
+                Name = detailRequest.Name,
+                IsConsignment = true,
+                Gender = detailRequest.Gender,
+                ShopId = consignSaleDetail.ConsignSale.ShopId,
+                CategoryId = detailRequest.CategoryId,
+                MasterItemCode = await _
+            };
+            
             /*consignSaleDetail.FashionItem.CategoryId = request.CategoryId;
             consignSaleDetail.FashionItem.Description = request.Description;
 

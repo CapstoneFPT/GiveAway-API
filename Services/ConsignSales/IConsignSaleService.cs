@@ -1,6 +1,7 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
+using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +18,7 @@ namespace Services.ConsignSales
         Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(ConsignSaleRequestForShop request);
         
         Task<Result<List<ConsignSaleDetailResponse>>> GetConsignSaleDetailsByConsignSaleId(Guid consignsaleId);
-        Task<Result<ConsignSaleDetailResponse>> CreateItemFromConsignSaleDetail(Guid consignSaleDetailid, CreateItemFromConsignDetailRequest detailRequest);
+        Task<Result<ConsignSaleDetailResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignSaleDetailid, CreateMasterItemRequest detailRequest);
         Task UpdateConsignPrice(Guid orderId);
     }
 }

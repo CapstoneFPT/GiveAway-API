@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleDetails;
 using BusinessObjects.Dtos.ConsignSales;
+using BusinessObjects.Dtos.FashionItems;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -73,11 +74,11 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("consignsaledetails/{consignsaledetailId}/create-item")]
-        public async Task<ActionResult<Result<ConsignSaleDetailResponse>>> CreateItemFromConsignSaleDetail([FromRoute] Guid consignsaledetailId,
-            [FromBody] CreateItemFromConsignDetailRequest detailRequest)
+        [HttpPost("consignsaledetails/{consignsaledetailId}/create-masteritem")]
+        public async Task<ActionResult<Result<ConsignSaleDetailResponse>>> CreateMasterItemFromConsignSaleDetail([FromRoute] Guid consignsaledetailId,
+            [FromBody] CreateMasterItemRequest detailRequest)
         {
-            var result = await _consignsaleService.CreateItemFromConsignSaleDetail(consignsaledetailId,detailRequest);
+            var result = await _consignsaleService.CreateMasterItemFromConsignSaleDetail(consignsaledetailId,detailRequest);
             if (result.ResultStatus != ResultStatus.Success)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
