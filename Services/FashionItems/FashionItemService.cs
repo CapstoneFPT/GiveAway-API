@@ -7,6 +7,7 @@ using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using DotNext;
 using DotNext.Collections.Generic;
 using LinqKit;
@@ -69,7 +70,7 @@ namespace Services.FashionItems
             return response;
         }
 
-        public async Task<PaginationResponse<FashionItemList>> GetAllFashionItemPagination(
+        public async Task<PaginationResponse<FashionItemList>>  GetAllFashionItemPagination(
             FashionItemListRequest request)
         {
             Expression<Func<IndividualFashionItem, bool>> predicate = x => true;
@@ -429,13 +430,17 @@ namespace Services.FashionItems
             Guid masteritemId,
             CreateItemVariationRequest variationRequest)
         {
+            if (variationRequest.IndividualItems.Length > variationRequest.StockCount)
+            {
+                throw new OverStockException("You have added item more than permitted quantity in stock");
+            }
             var itemVariation = new FashionItemVariation()
             {
                 Color = variationRequest.Color,
                 Condition = variationRequest.Condition,
                 CreatedDate = DateTime.UtcNow,
                 Size = variationRequest.Size,
-                StockCount = variationRequest.IndividualItems.Length,
+                StockCount = variationRequest.StockCount,
                 MasterItemId = masteritemId,
                 Price = variationRequest.Price
             };
@@ -493,6 +498,10 @@ namespace Services.FashionItems
             Expression<Func<FashionItemVariation, bool>> expression = variation =>
                 variation.VariationId == variationId;
             var fashionItemVariation = await _fashionitemRepository.GetSingleFashionItemVariation(expression);
+            if ((fashionItemVariation.IndividualItems.Count + requests.Count) > fashionItemVariation.StockCount)
+            {
+                throw new OverStockException("You have added item more than permitted quantity in stock");
+            }
             foreach (var individual in requests)
             {
                 var dataIndividual = new IndividualFashionItem()

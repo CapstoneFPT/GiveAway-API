@@ -61,17 +61,13 @@ namespace Services.ConsignSales
 
             if (!consign.Status.Equals(ConsignSaleStatus.Pending))
             {
-                response.Messages = ["This consign is not allowed to approval"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new StatusNotAvailableWithMessageException("This consign is not pending for approval");
             }
 
             if (!request.Status.Equals(ConsignSaleStatus.AwaitDelivery) &&
                 !request.Status.Equals(ConsignSaleStatus.Rejected))
             {
-                response.Messages = ["Status not available"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new StatusNotAvailableException();
             }
 
             response.Data = await _consignSaleRepository.ApprovalConsignSale(consignId, request.Status);
@@ -84,7 +80,7 @@ namespace Services.ConsignSales
         public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId)
         {
             var response = new Result<ConsignSaleResponse>();
-            var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
+            var consign = await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleId == consignId);
             if (consign == null)
             {
                 throw new ConsignSaleNotFoundException();
@@ -92,9 +88,9 @@ namespace Services.ConsignSales
 
             if (!consign.Status.Equals(ConsignSaleStatus.AwaitDelivery))
             {
-                throw new StatusNotAvailableException();
+                throw new StatusNotAvailableWithMessageException("This consign is not awaiting for delivery");
             }
-
+            
             var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
             await ScheduleConsignEnding(result);
             await _emailService.SendEmailConsignSaleReceived(consignId);

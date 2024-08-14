@@ -82,9 +82,12 @@ public class RefundNoFoundException : Exception
 public class StatusNotAvailableException : Exception
 {
 }
+public class StatusNotAvailableWithMessageException(string message) : Exception(message){}
 
 public class ConsignSaleDetailsNotFoundException : Exception
 {
 }
 public class AddressNotFoundException : Exception{}
 public class OrderDetailNotFoundException : Exception{}
+public class MissingFeatureException(string message) : Exception(message){}
+public class OverStockException(string message) : Exception(message){}

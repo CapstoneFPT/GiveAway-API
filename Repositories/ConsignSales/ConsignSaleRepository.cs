@@ -190,22 +190,25 @@ namespace Repositories.ConsignSales
             {
                 throw new ConsignSaleNotFoundException();
             }
-            
-            consign.Status = ConsignSaleStatus.Received;
-            consign.StartDate = DateTime.UtcNow;
-            consign.EndDate = DateTime.UtcNow.AddMinutes(5);
 
-            decimal totalprice = 0;
-            
+            var consignSaleDetailIds = consign.ConsignSaleDetails.Select(d => d.ConsignSaleDetailId).ToList();
+
+            var listItemInConsign = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                .Where(c => consignSaleDetailIds.Contains(c.ConsignSaleDetailId!.Value)).ToListAsync();
             /*foreach (var detail in consign.ConsignSaleDetails)
             {
-                if (detail.FashionItem != null)
-                {
-                    detail.FashionItem.Status = FashionItemStatus.Unavailable;
-                    totalprice += detail.ConfirmedPrice;
-                }
+                var individualItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                    .Where(c => c.)
             }*/
-            
+            if (listItemInConsign.Count < consign.ConsignSaleDetails.Count)
+            {
+                throw new MissingFeatureException("You should create enough item for consign");
+            }
+            consign.Status = ConsignSaleStatus.Received;
+            consign.StartDate = DateTime.UtcNow;
+            consign.EndDate = DateTime.UtcNow.AddDays(1);
+
+            decimal totalprice = 0;
             consign.TotalPrice = totalprice;
             if (consign.Type.Equals(ConsignSaleType.ForSale))
             {

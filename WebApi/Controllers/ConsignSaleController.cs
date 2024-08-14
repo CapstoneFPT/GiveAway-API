@@ -61,6 +61,8 @@ namespace WebApi.Controllers
 
 
         [HttpPut("{consignSaleId}/confirm-received")]
+        [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> ConfirmReceivedConsignFromShop(
             [FromRoute] Guid consignSaleId)
         {

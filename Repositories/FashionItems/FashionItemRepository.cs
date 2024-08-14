@@ -36,7 +36,7 @@ namespace Repositories.FashionItems
 
             if (predicate != null)
             {
-                query = query.Where(predicate);
+                query = query.Where(predicate).DistinctBy(c => c.MasterItemCode);
             }
 
             var count = await query.CountAsync();
@@ -108,6 +108,7 @@ namespace Repositories.FashionItems
         {
             return await GenericDao<FashionItemVariation>.Instance.GetQueryable()
                 .Include(c => c.MasterItem)
+                .Include(c => c.IndividualItems)
                 .Where(predicate)
                 .FirstOrDefaultAsync();
         }
@@ -142,7 +143,7 @@ namespace Repositories.FashionItems
                 .Where(c => c.MasterItemCode.Contains(itemCode))
                 .Select(c => c.MasterItemCode).ToListAsync();
             totalMasterCode = listMasterItemCode.Count + 1;
-            string prefixInStock = new string($"IS-GAS-{itemCode.ToUpper()}-{totalMasterCode}");
+            string prefixInStock = new string($"IS-GAS-{itemCode.ToUpper()}{totalMasterCode}");
             return prefixInStock;
         }
 
@@ -167,7 +168,7 @@ namespace Repositories.FashionItems
                 .Where(c => c.MasterItemCode.Contains(itemCode))
                 .Select(c => c.MasterItemCode).ToListAsync();
             totalMasterCode = listMasterItemCode.Count + 1;
-            string prefixInStock = new string($"CS-{shopCode}-{itemCode.ToUpper()}-{totalMasterCode}");
+            string prefixInStock = new string($"CS-{shopCode}-{itemCode.ToUpper()}{totalMasterCode}");
             return prefixInStock;
         }
 

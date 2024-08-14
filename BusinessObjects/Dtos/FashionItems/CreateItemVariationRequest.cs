@@ -9,6 +9,7 @@ public class CreateItemVariationRequest
     public decimal Price { get; set; }
     public string Color { get; set; }
     public SizeType Size { get; set; }
+    public int StockCount { get; set; }
     public CreateIndividualItemRequest[] IndividualItems { get; set; }
 }
 
