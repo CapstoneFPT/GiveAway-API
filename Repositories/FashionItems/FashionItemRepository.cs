@@ -36,7 +36,7 @@ namespace Repositories.FashionItems
 
             if (predicate != null)
             {
-                query = query.Where(predicate).DistinctBy(c => c.MasterItemCode);
+                query = query.Where(predicate);
             }
 
             var count = await query.CountAsync();
