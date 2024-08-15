@@ -771,7 +771,7 @@ public class OrderService : IOrderService
     {
         var shippingFee = 0m;
         var shopLocation = new HashSet<ShippingLocation>();
-        var shops = _fashionItemRepository.GetQueryable()
+        var shops = _fashionItemRepository.GetIndividualQueryable()
             .Include(x => x.Variation)
             .ThenInclude(x => x.MasterItem)
             .ThenInclude(x => x.Shop)

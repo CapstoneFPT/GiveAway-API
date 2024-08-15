@@ -395,10 +395,16 @@ namespace Repositories.FashionItems
             return listItemNotbelongshop;
         }
         
-        public IQueryable<IndividualFashionItem> GetQueryable()
+        public IQueryable<IndividualFashionItem> GetIndividualQueryable()
         {
             return GenericDao<IndividualFashionItem>.Instance.GetQueryable();
         }
+
+        public IQueryable<MasterFashionItem> GetMasterQueryable()
+        {
+            return _giveAwayDbContext.MasterFashionItems.AsQueryable();
+        }
+        
     }
 
     public class SortOptions

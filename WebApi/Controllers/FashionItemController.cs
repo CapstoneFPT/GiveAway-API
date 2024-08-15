@@ -32,6 +32,16 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [HttpGet("master-items/frontpage")]
+        [ProducesResponseType<PaginationResponse<MasterItemListResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetAllMasterItemPaginationFrontpage([FromQuery] FrontPageMasterItemRequest request)
+        {
+            var result = await _fashionItemService.GetMasterItemFrontPage(request);
+            return Ok(result);
+        }
+            
+        
         [HttpGet("{masteritemId}/item-variants")]
         [ProducesResponseType<PaginationResponse<ItemVariationListResponse>>((int)HttpStatusCode.OK)]
         public async Task<IActionResult> GetAllItemVariationPagination([FromRoute] Guid masteritemId,

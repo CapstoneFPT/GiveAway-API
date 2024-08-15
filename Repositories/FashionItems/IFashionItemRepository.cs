@@ -47,6 +47,7 @@ namespace Repositories.FashionItems
         Task<string> GenerateMasterItemCode(string itemCode);
         Task<string> GenerateIndividualItemCode(string masterItemCode);
         Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode);
-        IQueryable<IndividualFashionItem> GetQueryable();
+        IQueryable<IndividualFashionItem> GetIndividualQueryable();
+        IQueryable<MasterFashionItem> GetMasterQueryable();
     }
 }

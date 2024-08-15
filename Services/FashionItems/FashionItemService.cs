@@ -70,7 +70,7 @@ namespace Services.FashionItems
             return response;
         }
 
-        public async Task<PaginationResponse<FashionItemList>>  GetAllFashionItemPagination(
+        public async Task<PaginationResponse<FashionItemList>> GetAllFashionItemPagination(
             FashionItemListRequest request)
         {
             Expression<Func<IndividualFashionItem, bool>> predicate = x => true;
@@ -434,6 +434,7 @@ namespace Services.FashionItems
             {
                 throw new OverStockException("You have added item more than permitted quantity in stock");
             }
+
             var itemVariation = new FashionItemVariation()
             {
                 Color = variationRequest.Color,
@@ -502,6 +503,7 @@ namespace Services.FashionItems
             {
                 throw new OverStockException("You have added item more than permitted quantity in stock");
             }
+
             foreach (var individual in requests)
             {
                 var dataIndividual = new IndividualFashionItem()
@@ -554,7 +556,7 @@ namespace Services.FashionItems
                 {
                     MasterItemId = item.MasterItemId,
                     Name = item.Name,
-                    Description = item.Description,
+                    Description = item.Description ?? string.Empty,
                     ItemCode = item.MasterItemCode,
                     CreatedDate = item.CreatedDate,
                     Brand = item.Brand,
@@ -602,6 +604,68 @@ namespace Services.FashionItems
                 PageNumber = result.Page,
                 PageSize = result.PageSize,
                 TotalCount = result.TotalCount
+            };
+        }
+
+        public async Task<PaginationResponse<MasterItemListResponse>> GetMasterItemFrontPage(
+            FrontPageMasterItemRequest request)
+        {
+            var query = _fashionitemRepository.GetMasterQueryable();
+
+            if (!string.IsNullOrEmpty(request.SearchTerm))
+            {
+                query = query.Where(item => EF.Functions.ILike(item.Name, $"%{request.SearchTerm}%"));
+            }
+
+            if (request.CategoryId.HasValue)
+            {
+                var categoryIds = await _categoryRepository.GetAllChildrenCategoryIds(request.CategoryId.Value);
+                query = query.Where(item => categoryIds.Contains(item.CategoryId));
+            }
+
+            if (request.GenderType.HasValue)
+            {
+                query = query.Where(item => item.Gender == request.GenderType);
+            }
+
+            var groupedQuery = query
+                .GroupBy(m => new
+                {
+                    m.MasterItemCode,
+                    m.Name,
+                    m.Brand,
+                    m.Gender,
+                    m.CategoryId,
+                    m.IsConsignment,
+                })
+                .Select(g => new MasterItemListResponse
+                {
+                    MasterItemId = g.First().MasterItemId,
+                    Name = g.First().Name,
+                    Description = g.First().Description ?? string.Empty,
+                    ItemCode = g.First().MasterItemCode,
+                    Brand = g.First().Brand,
+                    Gender = g.First().Gender,
+                    CategoryId = g.First().CategoryId,
+                    IsConsignment = g.First().IsConsignment,
+                    StockCount = g.Sum(m =>
+                        m.Variations.Sum(v => v.IndividualItems.Count(i => i.Status == FashionItemStatus.Available))),
+                    Images = g.First().Images.Select(i => i.Url).ToList()
+                });
+
+            var totalCount = await groupedQuery.CountAsync();
+
+            var items = await groupedQuery
+                .Skip(((request.PageNumber ?? 1) - 1) * (request.PageSize ?? 10))
+                .Take(request.PageSize ?? 10)
+                .ToListAsync();
+
+            return new PaginationResponse<MasterItemListResponse>
+            {
+                Items = items,
+                PageNumber = request.PageNumber ?? 1,
+                PageSize = request.PageSize ?? 10,
+                TotalCount = totalCount
             };
         }
 
@@ -720,20 +784,5 @@ namespace Services.FashionItems
                 TotalCount = result.TotalCount
             };
         }
-    }
-
-    public class MasterItemListResponse
-    {
-        public Guid MasterItemId { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string ItemCode { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public string Brand { get; set; }
-        public GenderType Gender { get; set; }
-        public Guid CategoryId { get; set; }
-        public bool IsConsignment { get; set; }
-        public Guid ShopId { get; set; }
-        public List<string> Images { get; set; } = [];
     }
 }

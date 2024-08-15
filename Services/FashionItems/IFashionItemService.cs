@@ -30,5 +30,8 @@ namespace Services.FashionItems
             IndividualItemRequest request);
 
         Task<DotNext.Result<MasterItemDetailResponse, ErrorCode>> GetMasterItemById(Guid id);
+
+        Task<PaginationResponse<MasterItemListResponse>> GetMasterItemFrontPage(
+            FrontPageMasterItemRequest request);
     }
 }
