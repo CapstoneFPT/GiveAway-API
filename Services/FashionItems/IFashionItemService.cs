@@ -33,5 +33,7 @@ namespace Services.FashionItems
 
         Task<PaginationResponse<MasterItemListResponse>> GetMasterItemFrontPage(
             FrontPageMasterItemRequest request);
+
+        Task<DotNext.Result<MasterItemDetailResponse,ErrorCode>> FindMasterItem(FindMasterItemRequest request);
     }
 }

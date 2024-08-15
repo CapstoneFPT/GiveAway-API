@@ -40,6 +40,27 @@ namespace WebApi.Controllers
             var result = await _fashionItemService.GetMasterItemFrontPage(request);
             return Ok(result);
         }
+
+        [HttpGet("master-items/find")]
+        [ProducesResponseType<MasterItemDetailResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> FindMasterItem([FromQuery] FindMasterItemRequest request)
+        {
+          var result = await _fashionItemService.FindMasterItem(request);
+
+          if (!result.IsSuccessful)
+          {
+              return result.Error
+                  switch
+                  {
+                      ErrorCode.NotFound => NotFound(new ErrorResponse("Master Item Not Found",ErrorType.FashionItemError,HttpStatusCode.NotFound,ErrorCode.NotFound)),
+                      _ => StatusCode((int)HttpStatusCode.InternalServerError, 
+                          new ErrorResponse("Unknown Error",ErrorType.ApiError,HttpStatusCode.InternalServerError,ErrorCode.UnknownError))
+                  };
+          }
+
+          return Ok(result.Value);
+        }
             
         
         [HttpGet("{masteritemId}/item-variants")]
@@ -70,6 +91,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+        
 
         [HttpGet("{variationId}/individual-items")]
         [ProducesResponseType<PaginationResponse<IndividualItemListResponse>>((int)HttpStatusCode.OK)]

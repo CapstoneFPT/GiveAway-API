@@ -682,6 +682,65 @@ namespace Services.FashionItems
             };
         }
 
+        public async Task<Result<MasterItemDetailResponse, ErrorCode>> FindMasterItem(FindMasterItemRequest request)
+        {
+            if (request.Name is null && request.MasterItemCode is null && request.MasterItemId == null)
+            {
+                return new Result<MasterItemDetailResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+            
+            var queryable = _fashionitemRepository.GetMasterQueryable();
+
+            Expression<Func<MasterFashionItem, bool>> predicate = item => true;
+            Expression<Func<MasterFashionItem, MasterItemDetailResponse>> selector = item =>
+                new MasterItemDetailResponse()
+                {
+                    MasterItemId = item.MasterItemId,
+                    Name = item.Name,
+                    Description = item.Description,
+                    MasterItemCode = item.MasterItemCode,
+                    Brand = item.Brand,
+                    Gender = item.Gender,
+                    CategoryId = item.CategoryId,
+                    IsConsignment = item.IsConsignment,
+                    CreatedDate = item.CreatedDate,
+                    CategoryName = item.Category.Name,
+                    StockCount = item.Variations
+                        .Sum(x => x.IndividualItems
+                            .Count(fashionItem => fashionItem
+                                .Status == FashionItemStatus.Available)),
+                    Images = item.Images.Select(x => new FashionItemImage()
+                    {
+                        ImageId = x.ImageId,
+                        ImageUrl = x.Url
+                    }).ToList()
+                };
+
+            if (!string.IsNullOrEmpty(request.MasterItemCode))
+            {
+                predicate = predicate.And(item => item.MasterItemCode == request.MasterItemCode);
+            }
+
+            if (!string.IsNullOrEmpty(request.Name))
+            {
+                predicate = predicate.And(item => item.Name == request.Name);
+            }
+
+            if (request.MasterItemId.HasValue)
+            {
+                predicate = predicate.And(item => item.MasterItemId == request.MasterItemId);
+            }
+
+            var result = await queryable
+                .Where(predicate)
+                .Select(selector)
+                .FirstOrDefaultAsync();
+
+            return result == null
+                ? new Result<MasterItemDetailResponse, ErrorCode>(ErrorCode.NotFound)
+                : new Result<MasterItemDetailResponse, ErrorCode>(result);
+        }
+
         public async Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(
             Guid masterItemId, ItemVariationRequest request)
         {

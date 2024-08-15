@@ -15,5 +15,6 @@ public class MasterItemDetailResponse
     public GenderType Gender { get; set; }
     public DateTime CreatedDate { get; set; }
     public bool IsConsignment { get; set; }
+    public int StockCount { get; set; }
     public ICollection<FashionItemImage> Images { get; set; } = [];
 }
