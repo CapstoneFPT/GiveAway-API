@@ -12,6 +12,7 @@ using DotNext;
 using DotNext.Collections.Generic;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Repositories.Categories;
 using Repositories.ConsignSales;
 using Repositories.FashionItems;
@@ -96,10 +97,18 @@ namespace Services.FashionItems
                     VariationId = item.VariationId
                 };
 
-            if (!string.IsNullOrEmpty(request.ItemCode))
+            if (!string.IsNullOrEmpty(request.Name))
             {
                 predicate = predicate.And(item =>
                     item.Variation != null && EF.Functions.ILike(item.Variation.MasterItem.Name, $"%{request.Name}%"));
+            }
+
+            if (!string.IsNullOrEmpty(request.MasterItemCode))
+            {
+                predicate = predicate
+                    .And(item =>
+                        item.Variation != null &&
+                        EF.Functions.ILike(item.Variation.MasterItem.MasterItemCode, $"%{request.MasterItemCode}%"));
             }
 
             if (!string.IsNullOrEmpty(request.ItemCode))
@@ -564,6 +573,10 @@ namespace Services.FashionItems
                     CategoryId = item.CategoryId,
                     IsConsignment = item.IsConsignment,
                     ShopId = item.ShopId,
+                    StockCount = item.Variations
+                        .Sum(x => x.IndividualItems
+                            .Count(fashionItem => fashionItem
+                                .Status == FashionItemStatus.Available)),
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
 
