@@ -174,8 +174,7 @@ namespace Services.FashionItems
 
             if (!string.IsNullOrEmpty(request.Condition))
             {
-                predicate = predicate.And(item =>
-                    item.Variation != null && EF.Functions.ILike(item.Variation.Condition, $"%{request.Condition}%"));
+                predicate = predicate.And(item => item.Variation != null && item.Variation.Condition == request.Condition);
             }
 
             (List<FashionItemList> Items, int Page, int PageSize, int TotalCount) result =
