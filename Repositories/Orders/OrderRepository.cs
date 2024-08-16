@@ -46,18 +46,21 @@ namespace Repositories.Orders
             CartRequest cart)
         {
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                // .Include(c => c.Shop)
+                .Include(c => c.Variation)
+                .ThenInclude(c => c.MasterItem)
                 .Where(c => cart.ItemIds.Contains(c.ItemId)).ToListAsync();
-            // var shopIds = listItem.Select(c => c.ShopId).Distinct().ToList();
+            /*var shopIds = listItem.Select(c => c.Variation.MasterItem.ShopId).Distinct().ToList();*/
             var memberAccount = await GenericDao<Account>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(c => c.AccountId == accountId);
 
-            decimal totalPrice = 0;
+            
             Order order = new Order();
             order.MemberId = accountId;
 
             order.PaymentMethod = cart.PaymentMethod;
             order.Address = cart.Address;
+            order.GhnDistrictId = cart.GhnDistrictId;
+            order.GhnWardCode = cart.GhnWardCode;
             order.PurchaseType = PurchaseType.Online;
             order.RecipientName = cart.RecipientName;
             order.Phone = cart.Phone;
@@ -72,63 +75,64 @@ namespace Repositories.Orders
             }
 
             order.CreatedDate = DateTime.UtcNow;
-            order.TotalPrice = totalPrice;
+            order.TotalPrice = listItem.Sum(c => c.SellingPrice!.Value);
             order.OrderCode = GenerateUniqueString();
 
             var result = await GenericDao<Order>.Instance.AddAsync(order);
             var listOrderDetailResponse = new List<OrderDetailsResponse>();
 
-            foreach (var id in cart.ItemIds)
+            foreach (var individualItem in listItem)
             {
-                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                    // .Include(c => c.Shop)
-                    .FirstOrDefaultAsync(c => c.ItemId == id);
+                /*var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                    .Include(c => c.Variation)
+                    .ThenInclude(x => x.MasterItem)
+                    .FirstOrDefaultAsync(c => c.ItemId == individualId);*/
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = order.OrderId;
-                orderDetail.UnitPrice = item.SellingPrice.Value;
+                orderDetail.UnitPrice = individualItem.SellingPrice!.Value;
                 orderDetail.CreatedDate = DateTime.UtcNow;
-                orderDetail.IndividualFashionItemId = id;
+                orderDetail.IndividualFashionItemId = individualItem.ItemId;
 
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
                 if (cart.PaymentMethod.Equals(PaymentMethod.COD))
                 {
-                    item.Status = FashionItemStatus.PendingForOrder;
-                    await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
+                    individualItem.Status = FashionItemStatus.PendingForOrder;
+                    await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(individualItem);
                 }
 
                 var orderDetailResponse = new OrderDetailsResponse()
                 {
                     OrderDetailId = orderDetail.OrderDetailId,
-                    ItemName = item.Variation.MasterItem.Name,
+                    ItemName = individualItem.Variation!.MasterItem.Name,
                     UnitPrice = orderDetail.UnitPrice,
                     CreatedDate = orderDetail.CreatedDate
                 };
-                totalPrice += orderDetail.UnitPrice;
+                /*totalPrice += orderDetail.UnitPrice;*/
 
 
                 listOrderDetailResponse.Add(orderDetailResponse);
             }
 
-            order.TotalPrice = totalPrice;
-            var resultUpdate = await GenericDao<Order>.Instance.UpdateAsync(result);
+            /*order.TotalPrice = totalPrice;
+            var resultUpdate = await GenericDao<Order>.Instance.UpdateAsync(result);*/
 
 
             var orderResponse = new OrderResponse()
             {
-                OrderId = resultUpdate.OrderId,
+                OrderId = result.OrderId,
                 Quantity = listOrderDetailResponse.Count,
-                TotalPrice = resultUpdate.TotalPrice,
-                OrderCode = resultUpdate.OrderCode,
-                CreatedDate = resultUpdate.CreatedDate,
-                MemberId = resultUpdate.MemberId,
-                PaymentMethod = resultUpdate.PaymentMethod,
-                PurchaseType = resultUpdate.PurchaseType,
-                Address = resultUpdate.Address,
-                RecipientName = resultUpdate.RecipientName,
-                ContactNumber = resultUpdate.Phone,
+                TotalPrice = result.TotalPrice,
+                OrderCode = result.OrderCode,
+                CreatedDate = result.CreatedDate,
+                MemberId = result.MemberId,
+                PaymentMethod = result.PaymentMethod,
+                PurchaseType = result.PurchaseType,
+                Address = result.Address,
+                RecipientName = result.RecipientName,
+                ContactNumber = result.Phone,
                 CustomerName = memberAccount.Fullname,
-                Email = resultUpdate.Email,
-                Status = resultUpdate.Status,
+                Email = result.Email,
+                Status = result.Status,
                 OrderDetailItems = listOrderDetailResponse,
             };
             return orderResponse;

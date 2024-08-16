@@ -33,15 +33,20 @@ namespace Repositories.OrderDetails
             return await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
         }
 
-        public async Task<PaginationResponse<OrderDetailsResponse>> GetAllOrderDetailByOrderId(Guid id,
+        public async Task<PaginationResponse<OrderDetailsResponse>> GetAllOrderDetailByOrderId(Guid orderId,
             OrderDetailRequest request)
         {
             var query = GenericDao<OrderDetail>.Instance.GetQueryable();
-            query = query.Include(c => c.PointPackage).Where(c => c.OrderId == id);
+            query = query.Include(c => c.PointPackage)
+                .Include(c => c.IndividualFashionItem)
+                .ThenInclude(c => c.Variation)
+                .ThenInclude(c => c.MasterItem)
+                .ThenInclude(c => c.Shop)
+                .Where(c => c.OrderId == orderId);
             
             if (request.ShopId != null)
             {
-                // query = query.Where(c => c.IndividualFashionItem.ShopId == request.ShopId);
+                query = query.Where(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId);
             }
             var count = await query.CountAsync();
             query = query.Skip((request.PageNumber - 1) * request.PageSize)
