@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Utils;
+using Services.GiaoHangNhanh;
 
 namespace Services.Deliveries
 {
@@ -17,13 +18,15 @@ namespace Services.Deliveries
     {
         private readonly IDeliveryRepository _deliveryRepository;
         private readonly IAccountRepository _accountRepository;
+        private readonly IGiaoHangNhanhService _giaoHangNhanhService;
         private readonly IMapper _mapper;
 
-        public DeliveryService(IDeliveryRepository delivery, IMapper mapper, IAccountRepository accountRepository)
+        public DeliveryService(IDeliveryRepository delivery, IMapper mapper, IAccountRepository accountRepository, IGiaoHangNhanhService giaoHangNhanhService)
         {
             _deliveryRepository = delivery;
             _mapper = mapper;
             _accountRepository = accountRepository;
+            _giaoHangNhanhService = giaoHangNhanhService;
         }
 
         public async Task<Result<DeliveryResponse>> CreateDelivery(Guid accountId, DeliveryRequest deliveryRequest)
@@ -47,8 +50,23 @@ namespace Services.Deliveries
             {
                 delivery.IsDefault = false;
             }
-            var request = _mapper.Map(deliveryRequest, delivery);
-            response.Data = _mapper.Map<DeliveryResponse>(await _deliveryRepository.CreateDelivery(delivery));
+
+            var request = new Address()
+            {
+                MemberId = accountId,
+                CreatedDate = DateTime.UtcNow,
+                IsDefault = delivery.IsDefault,
+                Phone = deliveryRequest.Phone,
+                Residence = await _giaoHangNhanhService.BuildAddress(
+                    deliveryRequest.GhnProvinceId,
+                    deliveryRequest.GhnDistrictId, 
+                    deliveryRequest.GhnWardCode, 
+                    deliveryRequest.Residence),
+                AddressType = deliveryRequest.AddressType,
+                RecipientName = deliveryRequest.RecipientName,
+                GhnDistrictId = deliveryRequest.GhnDistrictId,
+            };
+            response.Data = _mapper.Map<DeliveryResponse>(await _deliveryRepository.CreateDelivery(request));
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
             return response;
