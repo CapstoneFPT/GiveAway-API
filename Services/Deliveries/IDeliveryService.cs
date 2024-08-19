@@ -14,5 +14,6 @@ namespace Services.Deliveries
         Task<Result<DeliveryListResponse>> CreateDelivery(Guid accountId, DeliveryRequest deliveryRequest);
         Task<Result<DeliveryListResponse>> UpdateDelivery(Guid deliveryId, UpdateDeliveryRequest deliveryRequest);
         Task<Result<string>> DeleteDelivery(Guid deliveryId);
+        Task<DotNext.Result<DeliveryListResponse, ErrorCode>> SetAddressAsDefault(Guid deliveryId);
     }
 }

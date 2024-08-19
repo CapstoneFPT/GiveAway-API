@@ -1,7 +1,9 @@
 using System.Net;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Deliveries;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Services.Deliveries;
 using Services.GiaoHangNhanh;
 
 namespace WebApi.Controllers;
@@ -11,10 +13,12 @@ namespace WebApi.Controllers;
 public class AddressController : ControllerBase
 {
     private readonly IGiaoHangNhanhService _giaoHangNhanhService;
+    private readonly IDeliveryService _deliveryService;
 
-    public AddressController(IGiaoHangNhanhService giaoHangNhanhService)
+    public AddressController(IGiaoHangNhanhService giaoHangNhanhService, IDeliveryService deliveryService)
     {
         _giaoHangNhanhService = giaoHangNhanhService;
+        _deliveryService = deliveryService;
     }
 
     [HttpGet("provinces")]
@@ -87,6 +91,34 @@ public class AddressController : ControllerBase
     public async Task<IActionResult> GetWards([FromQuery] int districtId)
     {
         var result = await _giaoHangNhanhService.GetWards(districtId);
+        
+        if (result.IsSuccessful)
+        {
+            return Ok(result.Value);
+        }
+        
+        return result.Error switch
+        {
+            ErrorCode.DeserializationError => StatusCode((int)HttpStatusCode.InternalServerError,
+                new ErrorResponse("Deserialization error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                    ErrorCode.DeserializationError)),
+            ErrorCode.Unauthorized => StatusCode((int)HttpStatusCode.Unauthorized,
+                new ErrorResponse("Unauthorized", ErrorType.ApiError, HttpStatusCode.Unauthorized,
+                    ErrorCode.Unauthorized)),
+            _ => StatusCode((int)HttpStatusCode.InternalServerError,
+                new ErrorResponse("Invalid request", ErrorType.InvalidRequestError, HttpStatusCode.BadRequest,
+                    ErrorCode.UnknownError))
+        };
+    }
+
+    [HttpPatch("{addressId}/set-default")]
+    [ProducesResponseType<DeliveryListResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.BadRequest)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
+    public async Task<IActionResult> SetDefaultAddress([FromRoute] Guid addressId)
+    {
+        var result = await _deliveryService.SetAddressAsDefault(addressId);
         
         if (result.IsSuccessful)
         {

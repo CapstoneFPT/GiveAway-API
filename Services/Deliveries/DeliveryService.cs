@@ -157,5 +157,40 @@ namespace Services.Deliveries
             response.Messages = ["Update successfully"];
             return response;
         }
+
+        public async Task<DotNext.Result<DeliveryListResponse, ErrorCode>> SetAddressAsDefault(Guid deliveryId)
+        {
+           var toBeUpdated = await _deliveryRepository.GetDeliveryById(deliveryId);
+
+           if (toBeUpdated == null)
+           {
+               return new DotNext.Result<DeliveryListResponse, ErrorCode>(ErrorCode.NotFound);
+           }
+           toBeUpdated.IsDefault = true;
+           var result = await _deliveryRepository.UpdateDelivery(toBeUpdated);
+           
+           var allAddresses = await _deliveryRepository.GetDeliveryByMemberId(toBeUpdated.MemberId);
+           
+           var otherAddresses = allAddresses.Where(x=>x.AddressId != toBeUpdated.AddressId).ToList();
+           
+           foreach (var address in otherAddresses)
+           {
+               address.IsDefault = false;
+           }
+           
+           await _deliveryRepository.UpdateRange(otherAddresses);
+           
+           return new DotNext.Result<DeliveryListResponse, ErrorCode>(new DeliveryListResponse()
+           {
+               AddressId = result.AddressId,
+               IsDefault = result.IsDefault,
+               Phone = result.Phone,
+               RecipientName = result.RecipientName,
+               AddressType = result.AddressType,
+               GhnProvinceId = result.GhnProvinceId ?? 0,
+               GhnDistrictId = result.GhnDistrictId ?? 0,
+               GhnWardCode = result.GhnWardCode ?? 0
+           });
+        } 
     }
 }
