@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Utils;
+using Services.GiaoHangNhanh;
 
 namespace Services.Deliveries
 {
@@ -17,18 +18,20 @@ namespace Services.Deliveries
     {
         private readonly IDeliveryRepository _deliveryRepository;
         private readonly IAccountRepository _accountRepository;
+        private readonly IGiaoHangNhanhService _giaoHangNhanhService;
         private readonly IMapper _mapper;
 
-        public DeliveryService(IDeliveryRepository delivery, IMapper mapper, IAccountRepository accountRepository)
+        public DeliveryService(IDeliveryRepository delivery, IMapper mapper, IAccountRepository accountRepository, IGiaoHangNhanhService giaoHangNhanhService)
         {
             _deliveryRepository = delivery;
             _mapper = mapper;
             _accountRepository = accountRepository;
+            _giaoHangNhanhService = giaoHangNhanhService;
         }
 
-        public async Task<Result<DeliveryResponse>> CreateDelivery(Guid accountId, DeliveryRequest deliveryRequest)
+        public async Task<Result<DeliveryListResponse>> CreateDelivery(Guid accountId, DeliveryRequest deliveryRequest)
         {
-            var response = new Result<DeliveryResponse>();
+            var response = new Result<DeliveryListResponse>();
             var list = await _deliveryRepository.GetDeliveryByMemberId(accountId);
             if(list.Count >= 5)
             {
@@ -47,8 +50,23 @@ namespace Services.Deliveries
             {
                 delivery.IsDefault = false;
             }
-            var request = _mapper.Map(deliveryRequest, delivery);
-            response.Data = _mapper.Map<DeliveryResponse>(await _deliveryRepository.CreateDelivery(delivery));
+
+            var request = new Address()
+            {
+                MemberId = accountId,
+                CreatedDate = DateTime.UtcNow,
+                IsDefault = delivery.IsDefault,
+                Phone = deliveryRequest.Phone,
+                Residence = await _giaoHangNhanhService.BuildAddress(
+                    deliveryRequest.GhnProvinceId,
+                    deliveryRequest.GhnDistrictId, 
+                    deliveryRequest.GhnWardCode, 
+                    deliveryRequest.Residence),
+                AddressType = deliveryRequest.AddressType,
+                RecipientName = deliveryRequest.RecipientName,
+                GhnDistrictId = deliveryRequest.GhnDistrictId,
+            };
+            response.Data = _mapper.Map<DeliveryListResponse>(await _deliveryRepository.CreateDelivery(request));
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
             return response;
@@ -68,9 +86,9 @@ namespace Services.Deliveries
             return response;
         }
 
-        public async Task<Result<List<DeliveryResponse>>> GetAllDeliveriesByMemberId(Guid memberId)
+        public async Task<Result<List<DeliveryListResponse>>> GetAllDeliveriesByMemberId(Guid memberId)
         {
-            var response = new Result<List<DeliveryResponse>>();
+            var response = new Result<List<DeliveryListResponse>>();
             if(await _accountRepository.GetAccountById(memberId) is null)
             {
                 throw new AccountNotFoundException();
@@ -78,20 +96,20 @@ namespace Services.Deliveries
             var list = await _deliveryRepository.GetDeliveryByMemberId(memberId);
             if(list == null)
             {
-                response.Data = new List<DeliveryResponse>();
+                response.Data = new List<DeliveryListResponse>();
                 response.Messages = ["Empty! Please create one"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
-            response.Data = _mapper.Map<List<DeliveryResponse>>(list);
+            response.Data = _mapper.Map<List<DeliveryListResponse>>(list);
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Choose one to receive delivery"];
             return response;
         }
 
-        public async Task<Result<DeliveryResponse>> UpdateDelivery(Guid deliveryId, UpdateDeliveryRequest deliveryRequest)
+        public async Task<Result<DeliveryListResponse>> UpdateDelivery(Guid deliveryId, UpdateDeliveryRequest deliveryRequest)
         {
-            var response = new Result<DeliveryResponse>();
+            var response = new Result<DeliveryListResponse>();
             var delivery = await _deliveryRepository.GetDeliveryById(deliveryId);
             if(delivery == null)
             {
@@ -100,7 +118,7 @@ namespace Services.Deliveries
                 return response;
             }
             var newdata = _mapper.Map(deliveryRequest, delivery);
-            response.Data = _mapper.Map<DeliveryResponse>(await _deliveryRepository.UpdateDelivery(newdata));
+            response.Data = _mapper.Map<DeliveryListResponse>(await _deliveryRepository.UpdateDelivery(newdata));
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Update successfully"];
             return response;

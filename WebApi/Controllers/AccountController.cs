@@ -86,7 +86,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/deliveries")]
-    [ProducesResponseType<Result<List<DeliveryResponse>>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<Result<List<DeliveryListResponse>>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> GetAllDeliveriesByMemberId(
         [FromRoute] Guid accountId)
@@ -100,7 +100,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/deliveries")]
-    [ProducesResponseType<Result<DeliveryResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<Result<DeliveryListResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateDelivery([FromRoute] Guid accountId,
         [FromBody] DeliveryRequest deliveryRequest)
     {
@@ -113,7 +113,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpPut("{accountId}/deliveries/{deliveryId}")]
-    [ProducesResponseType<Result<DeliveryResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<Result<DeliveryListResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateDelivery([FromRoute] Guid deliveryId,
         [FromBody] UpdateDeliveryRequest deliveryRequest)
     {

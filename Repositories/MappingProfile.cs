@@ -22,8 +22,8 @@ namespace Repositories
             CreateMap<Account, AccountResponse>()
                 .ReverseMap();
             CreateMap<UpdateAccountRequest, Account>() .ReverseMap();
-            CreateMap<Address, DeliveryResponse>() 
-                .ForMember(a => a.Buyername, opt => opt.MapFrom(a => a.Member.Fullname))
+            CreateMap<Address, DeliveryListResponse>() 
+                .ForMember(a => a.AccountName, opt => opt.MapFrom(a => a.Member.Fullname))
                 .ReverseMap();
             CreateMap<DeliveryRequest, Address>() 
                 .ForMember(a => a.Residence, opt => opt.MapFrom(a => a.Residence))

@@ -10,9 +10,9 @@ namespace Services.Deliveries
 {
     public interface IDeliveryService
     {
-        Task<Result<List<DeliveryResponse>>> GetAllDeliveriesByMemberId(Guid memberId);
-        Task<Result<DeliveryResponse>> CreateDelivery(Guid accountId, DeliveryRequest deliveryRequest);
-        Task<Result<DeliveryResponse>> UpdateDelivery(Guid deliveryId, UpdateDeliveryRequest deliveryRequest);
+        Task<Result<List<DeliveryListResponse>>> GetAllDeliveriesByMemberId(Guid memberId);
+        Task<Result<DeliveryListResponse>> CreateDelivery(Guid accountId, DeliveryRequest deliveryRequest);
+        Task<Result<DeliveryListResponse>> UpdateDelivery(Guid deliveryId, UpdateDeliveryRequest deliveryRequest);
         Task<Result<string>> DeleteDelivery(Guid deliveryId);
     }
 }
