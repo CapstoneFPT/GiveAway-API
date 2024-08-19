@@ -382,14 +382,16 @@ namespace Repositories.FashionItems
         {
             var listItemNotbelongshop = new List<Guid?>();
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                // .Include(c => c.Shop)
+                .Include(c => c.Variation)
+                .ThenInclude(C => C.MasterItem)
+                .ThenInclude(c => c.Shop)
                 .Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
             foreach (IndividualFashionItem item in listItem)
             {
-                // if (!item.ShopId.Equals(shopId))
-                // {
-                //     listItemNotbelongshop.Add(item.ItemId);
-                // }
+                if (!item.Variation!.MasterItem.ShopId.Equals(shopId))
+                {
+                    listItemNotbelongshop.Add(item.ItemId);
+                }
             }
 
             return listItemNotbelongshop;

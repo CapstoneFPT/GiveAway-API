@@ -460,32 +460,32 @@ namespace Repositories.Orders
 
 
             order.CreatedDate = DateTime.UtcNow;
-            order.TotalPrice = totalPrice;
+            order.TotalPrice = listItem.Sum(c => c.SellingPrice!.Value);
             order.OrderCode = GenerateUniqueString();
 
-            var orderresult = await CreateOrder(order);
+            await CreateOrder(order);
 
             var listOrderDetailResponse = new List<OrderDetailsResponse>();
 
-            foreach (var id in orderRequest.ItemIds)
+            foreach (var item in listItem)
             {
-                var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                    // .Include(c => c.Shop)
-                    .FirstOrDefaultAsync(c => c.ItemId == id);
+                /*var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                    .Include(c => c.Shop)
+                    .FirstOrDefaultAsync(c => c.ItemId == id);*/
 
                 OrderDetail orderDetail = new OrderDetail();
-                orderDetail.OrderId = orderresult.OrderId;
-                orderDetail.UnitPrice = item.SellingPrice.Value;
+                orderDetail.OrderId = order.OrderId;
+                orderDetail.UnitPrice = item.SellingPrice!.Value;
                 orderDetail.CreatedDate = DateTime.UtcNow;
 
-                orderDetail.IndividualFashionItemId = id;
+                orderDetail.IndividualFashionItemId = item.ItemId;
 
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
                 item.Status = FashionItemStatus.OnDelivery;
                 await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
 
                 var orderDetailResponse = await _giveAwayDbContext.OrderDetails.AsQueryable()
-                    .Where(c => c.IndividualFashionItemId == id)
+                    .Where(c => c.IndividualFashionItemId == item.ItemId)
                     .ProjectTo<OrderDetailsResponse>(_mapper.ConfigurationProvider)
                     .AsNoTracking()
                     .FirstOrDefaultAsync();
@@ -494,24 +494,24 @@ namespace Repositories.Orders
                 listOrderDetailResponse.Add(orderDetailResponse);
             }
 
-            orderresult.TotalPrice = totalPrice;
-            var orderresultUpdate = await GenericDao<Order>.Instance.UpdateAsync(orderresult);
+            /*orderresult.TotalPrice = totalPrice;
+            var orderresultUpdate = await GenericDao<Order>.Instance.UpdateAsync(orderresult);*/
 
 
             var orderResponse = new OrderResponse()
             {
-                OrderId = orderresultUpdate.OrderId,
+                OrderId = order.OrderId,
                 Quantity = listOrderDetailResponse.Count,
-                TotalPrice = orderresultUpdate.TotalPrice,
-                CreatedDate = orderresultUpdate.CreatedDate,
-                Address = orderresultUpdate.Address,
-                ContactNumber = orderresultUpdate.Phone,
-                RecipientName = orderresultUpdate.RecipientName,
-                Email = orderresultUpdate.Email,
-                PaymentMethod = orderresultUpdate.PaymentMethod,
-                PurchaseType = orderresultUpdate.PurchaseType,
-                OrderCode = orderresultUpdate.OrderCode,
-                Status = orderresultUpdate.Status,
+                TotalPrice = order.TotalPrice,
+                CreatedDate = order.CreatedDate,
+                Address = order.Address,
+                ContactNumber = order.Phone,
+                RecipientName = order.RecipientName,
+                Email = order.Email,
+                PaymentMethod = order.PaymentMethod,
+                PurchaseType = order.PurchaseType,
+                OrderCode = order.OrderCode,
+                Status = order.Status,
                 OrderDetailItems = listOrderDetailResponse
             };
             return orderResponse;
