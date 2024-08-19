@@ -17,5 +17,6 @@ public class Address
     public Guid MemberId { set; get; }
     public bool IsDefault { set; get; }
     public DateTime CreatedDate { get; set; }
+    public int? GhnProvinceId { get; set; }
 }
 

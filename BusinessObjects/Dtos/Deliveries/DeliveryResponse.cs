@@ -15,6 +15,7 @@ namespace BusinessObjects.Dtos.Deliveries
         public string AddressType { set; get; }
         public int GhnDistrictId { get; set; }
         public int GhnWardCode { get; set; }
+        public int GhnProvinceId { get; set; }
         public string AccountName { set; get; }
         public bool IsDefault { get; set; }
         public DateTime CreatedDate { get; set; }

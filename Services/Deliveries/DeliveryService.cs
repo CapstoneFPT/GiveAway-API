@@ -65,6 +65,8 @@ namespace Services.Deliveries
                 AddressType = deliveryRequest.AddressType,
                 RecipientName = deliveryRequest.RecipientName,
                 GhnDistrictId = deliveryRequest.GhnDistrictId,
+                GhnWardCode = deliveryRequest.GhnWardCode,
+                GhnProvinceId = deliveryRequest.GhnProvinceId
             };
             response.Data = _mapper.Map<DeliveryListResponse>(await _deliveryRepository.CreateDelivery(request));
             response.ResultStatus = ResultStatus.Success;
