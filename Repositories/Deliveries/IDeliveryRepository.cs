@@ -12,7 +12,8 @@ namespace Repositories.Deliveries
         Task<List<Address>> GetDeliveryByMemberId(Guid id);
         Task<Address> CreateDelivery(Address address);
         Task<Address> UpdateDelivery(Address address);
-        Task<Address> GetDeliveryById(Guid id);
+        Task<Address?> GetDeliveryById(Guid id);
         Task DeleteDelivery(Address address);
+        Task UpdateRange(List<Address> list);
     }
 }

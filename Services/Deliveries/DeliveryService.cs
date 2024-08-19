@@ -21,7 +21,8 @@ namespace Services.Deliveries
         private readonly IGiaoHangNhanhService _giaoHangNhanhService;
         private readonly IMapper _mapper;
 
-        public DeliveryService(IDeliveryRepository delivery, IMapper mapper, IAccountRepository accountRepository, IGiaoHangNhanhService giaoHangNhanhService)
+        public DeliveryService(IDeliveryRepository delivery, IMapper mapper, IAccountRepository accountRepository,
+            IGiaoHangNhanhService giaoHangNhanhService)
         {
             _deliveryRepository = delivery;
             _mapper = mapper;
@@ -33,12 +34,13 @@ namespace Services.Deliveries
         {
             var response = new Result<DeliveryListResponse>();
             var list = await _deliveryRepository.GetDeliveryByMemberId(accountId);
-            if(list.Count >= 5)
+            if (list.Count >= 5)
             {
                 response.Messages = ["Maxium deliveries! Please delete or update"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
+
             var delivery = new Address();
             delivery.MemberId = accountId;
             delivery.CreatedDate = DateTime.UtcNow;
@@ -59,8 +61,8 @@ namespace Services.Deliveries
                 Phone = deliveryRequest.Phone,
                 Residence = await _giaoHangNhanhService.BuildAddress(
                     deliveryRequest.GhnProvinceId,
-                    deliveryRequest.GhnDistrictId, 
-                    deliveryRequest.GhnWardCode, 
+                    deliveryRequest.GhnDistrictId,
+                    deliveryRequest.GhnWardCode,
                     deliveryRequest.Residence),
                 AddressType = deliveryRequest.AddressType,
                 RecipientName = deliveryRequest.RecipientName,
@@ -82,6 +84,7 @@ namespace Services.Deliveries
             {
                 throw new AddressNotFoundException();
             }
+
             await _deliveryRepository.DeleteDelivery(delivery);
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Delete successfully"];
@@ -91,36 +94,65 @@ namespace Services.Deliveries
         public async Task<Result<List<DeliveryListResponse>>> GetAllDeliveriesByMemberId(Guid memberId)
         {
             var response = new Result<List<DeliveryListResponse>>();
-            if(await _accountRepository.GetAccountById(memberId) is null)
+            if (await _accountRepository.GetAccountById(memberId) is null)
             {
                 throw new AccountNotFoundException();
             }
+
             var list = await _deliveryRepository.GetDeliveryByMemberId(memberId);
-            if(list == null)
+            if (list == null)
             {
                 response.Data = new List<DeliveryListResponse>();
                 response.Messages = ["Empty! Please create one"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
+
             response.Data = _mapper.Map<List<DeliveryListResponse>>(list);
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Choose one to receive delivery"];
             return response;
         }
 
-        public async Task<Result<DeliveryListResponse>> UpdateDelivery(Guid deliveryId, UpdateDeliveryRequest deliveryRequest)
+        public async Task<Result<DeliveryListResponse>> UpdateDelivery(Guid deliveryId,
+            UpdateDeliveryRequest deliveryRequest)
         {
             var response = new Result<DeliveryListResponse>();
-            var delivery = await _deliveryRepository.GetDeliveryById(deliveryId);
-            if(delivery == null)
+            var toBeUpdated = await _deliveryRepository.GetDeliveryById(deliveryId);
+
+            if (toBeUpdated == null)
             {
                 response.Messages = ["Delivery is not existed"];
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-            var newdata = _mapper.Map(deliveryRequest, delivery);
-            response.Data = _mapper.Map<DeliveryListResponse>(await _deliveryRepository.UpdateDelivery(newdata));
+
+
+            toBeUpdated.Residence = deliveryRequest.Residence ?? toBeUpdated.Residence;
+            toBeUpdated.Phone = deliveryRequest.Phone ?? toBeUpdated.Phone;
+            toBeUpdated.RecipientName = deliveryRequest.RecipientName ?? toBeUpdated.RecipientName;
+            toBeUpdated.AddressType = deliveryRequest.AddressType ?? toBeUpdated.AddressType;
+            toBeUpdated.GhnProvinceId = deliveryRequest.GhnProvinceId ?? toBeUpdated.GhnProvinceId;
+            toBeUpdated.GhnDistrictId = deliveryRequest.GhnDistrictId ?? toBeUpdated.GhnDistrictId;
+            toBeUpdated.GhnWardCode = deliveryRequest.GhnWardCode ?? toBeUpdated.GhnWardCode;
+            toBeUpdated.IsDefault = deliveryRequest.IsDefault;
+            response.Data = _mapper.Map<DeliveryListResponse>(await _deliveryRepository.UpdateDelivery(toBeUpdated));
+            
+            
+            if (deliveryRequest.IsDefault)
+            {
+                var list = await _deliveryRepository.GetDeliveryByMemberId(toBeUpdated.MemberId);
+               
+                var otherAddresses = list.Where(x=>x.AddressId != toBeUpdated.AddressId).ToList();
+                foreach (var address in otherAddresses)
+                {
+                    address.IsDefault = false;
+                }
+                
+                await _deliveryRepository.UpdateRange(otherAddresses);
+            }
+
+
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Update successfully"];
             return response;

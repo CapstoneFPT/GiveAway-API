@@ -1,16 +1,18 @@
 using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Dtos.Deliveries;
 
 public class UpdateDeliveryRequest
 {
-    [Required]
-    public string RecipientName { set; get; }
-    [Required, Phone]
-    public string Phone { set; get; }
-    [Required]
-    public string Residence { set; get; }
-    [Required]
-    public string AddressType { set; get; }
-    public string IsDefult { get; set; }
+    public string? RecipientName { set; get; }
+    [Phone] public string? Phone { set; get; }
+
+    public AddressType? AddressType { set; get; }
+
+    public int? GhnProvinceId { set; get; }
+    public int? GhnDistrictId { set; get; }
+    public int? GhnWardCode { set; get; }
+    public string? Residence { set; get; }
+    public bool IsDefault { get; set; }
 }

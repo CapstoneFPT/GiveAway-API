@@ -22,7 +22,12 @@ namespace Repositories.Deliveries
             await GenericDao<Address>.Instance.DeleteAsync(address);
         }
 
-        public async Task<Address> GetDeliveryById(Guid id)
+        public Task UpdateRange(List<Address> list)
+        {
+            return GenericDao<Address>.Instance.UpdateRange(list);
+        }
+
+        public async Task<Address?> GetDeliveryById(Guid id)
         {
             return await GenericDao<Address>.Instance.GetQueryable().Include(c => c.Member).FirstOrDefaultAsync(c => c.AddressId.Equals(id));
         }
