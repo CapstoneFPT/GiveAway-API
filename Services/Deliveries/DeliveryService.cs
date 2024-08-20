@@ -128,7 +128,13 @@ namespace Services.Deliveries
             }
 
 
-            toBeUpdated.Residence = deliveryRequest.Residence ?? toBeUpdated.Residence;
+            toBeUpdated.Residence = string.IsNullOrEmpty(deliveryRequest.Residence) 
+                ? await _giaoHangNhanhService.BuildAddress(
+                    deliveryRequest.GhnProvinceId.Value,
+                    deliveryRequest.GhnDistrictId.Value, 
+                    deliveryRequest.GhnWardCode.Value,
+                    deliveryRequest.Residence)
+                : toBeUpdated.Residence;
             toBeUpdated.Phone = deliveryRequest.Phone ?? toBeUpdated.Phone;
             toBeUpdated.RecipientName = deliveryRequest.RecipientName ?? toBeUpdated.RecipientName;
             toBeUpdated.AddressType = deliveryRequest.AddressType ?? toBeUpdated.AddressType;
@@ -137,18 +143,18 @@ namespace Services.Deliveries
             toBeUpdated.GhnWardCode = deliveryRequest.GhnWardCode ?? toBeUpdated.GhnWardCode;
             toBeUpdated.IsDefault = deliveryRequest.IsDefault;
             response.Data = _mapper.Map<DeliveryListResponse>(await _deliveryRepository.UpdateDelivery(toBeUpdated));
-            
-            
+
+
             if (deliveryRequest.IsDefault)
             {
                 var list = await _deliveryRepository.GetDeliveryByMemberId(toBeUpdated.MemberId);
-               
-                var otherAddresses = list.Where(x=>x.AddressId != toBeUpdated.AddressId).ToList();
+
+                var otherAddresses = list.Where(x => x.AddressId != toBeUpdated.AddressId).ToList();
                 foreach (var address in otherAddresses)
                 {
                     address.IsDefault = false;
                 }
-                
+
                 await _deliveryRepository.UpdateRange(otherAddresses);
             }
 
@@ -160,37 +166,38 @@ namespace Services.Deliveries
 
         public async Task<DotNext.Result<DeliveryListResponse, ErrorCode>> SetAddressAsDefault(Guid deliveryId)
         {
-           var toBeUpdated = await _deliveryRepository.GetDeliveryById(deliveryId);
+            var toBeUpdated = await _deliveryRepository.GetDeliveryById(deliveryId);
 
-           if (toBeUpdated == null)
-           {
-               return new DotNext.Result<DeliveryListResponse, ErrorCode>(ErrorCode.NotFound);
-           }
-           toBeUpdated.IsDefault = true;
-           var result = await _deliveryRepository.UpdateDelivery(toBeUpdated);
-           
-           var allAddresses = await _deliveryRepository.GetDeliveryByMemberId(toBeUpdated.MemberId);
-           
-           var otherAddresses = allAddresses.Where(x=>x.AddressId != toBeUpdated.AddressId).ToList();
-           
-           foreach (var address in otherAddresses)
-           {
-               address.IsDefault = false;
-           }
-           
-           await _deliveryRepository.UpdateRange(otherAddresses);
-           
-           return new DotNext.Result<DeliveryListResponse, ErrorCode>(new DeliveryListResponse()
-           {
-               AddressId = result.AddressId,
-               IsDefault = result.IsDefault,
-               Phone = result.Phone,
-               RecipientName = result.RecipientName,
-               AddressType = result.AddressType,
-               GhnProvinceId = result.GhnProvinceId ?? 0,
-               GhnDistrictId = result.GhnDistrictId ?? 0,
-               GhnWardCode = result.GhnWardCode ?? 0
-           });
-        } 
+            if (toBeUpdated == null)
+            {
+                return new DotNext.Result<DeliveryListResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            toBeUpdated.IsDefault = true;
+            var result = await _deliveryRepository.UpdateDelivery(toBeUpdated);
+
+            var allAddresses = await _deliveryRepository.GetDeliveryByMemberId(toBeUpdated.MemberId);
+
+            var otherAddresses = allAddresses.Where(x => x.AddressId != toBeUpdated.AddressId).ToList();
+
+            foreach (var address in otherAddresses)
+            {
+                address.IsDefault = false;
+            }
+
+            await _deliveryRepository.UpdateRange(otherAddresses);
+
+            return new DotNext.Result<DeliveryListResponse, ErrorCode>(new DeliveryListResponse()
+            {
+                AddressId = result.AddressId,
+                IsDefault = result.IsDefault,
+                Phone = result.Phone,
+                RecipientName = result.RecipientName,
+                AddressType = result.AddressType,
+                GhnProvinceId = result.GhnProvinceId ?? 0,
+                GhnDistrictId = result.GhnDistrictId ?? 0,
+                GhnWardCode = result.GhnWardCode ?? 0
+            });
+        }
     }
 }
