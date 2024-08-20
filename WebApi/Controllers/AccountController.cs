@@ -190,7 +190,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/inquiries")]
-    [ProducesResponseType<Result<CreateInquiryResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<CreateInquiryResponse>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateInquiry([FromRoute] Guid accountId,
         [FromBody] CreateInquiryRequest request)
     {
@@ -199,7 +199,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/withdraws")]
-    [ProducesResponseType<Result<CreateWithdrawResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<CreateWithdrawResponse>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateWithdraw([FromRoute] Guid accountId,
         [FromBody] CreateWithdrawRequest request)
     {
@@ -208,7 +208,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/withdraws")]
-    [ProducesResponseType<Result<PaginationResponse<GetWithdrawsResponse>>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<PaginationResponse<GetWithdrawsResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetWithdraws(
         [FromRoute] Guid accountId,
         [FromQuery] GetWithdrawsRequest request)
