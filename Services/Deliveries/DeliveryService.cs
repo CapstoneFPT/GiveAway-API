@@ -128,7 +128,7 @@ namespace Services.Deliveries
             }
 
 
-            toBeUpdated.Residence = string.IsNullOrEmpty(deliveryRequest.Residence)
+            toBeUpdated.Residence = !string.IsNullOrEmpty(deliveryRequest.Residence)
                 ? await _giaoHangNhanhService.BuildAddress(
                     deliveryRequest.GhnProvinceId.Value,
                     deliveryRequest.GhnDistrictId.Value,
