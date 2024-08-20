@@ -128,13 +128,18 @@ namespace Services.Deliveries
             }
 
 
-            toBeUpdated.Residence = string.IsNullOrEmpty(deliveryRequest.Residence) 
+            toBeUpdated.Residence = string.IsNullOrEmpty(deliveryRequest.Residence)
                 ? await _giaoHangNhanhService.BuildAddress(
                     deliveryRequest.GhnProvinceId.Value,
-                    deliveryRequest.GhnDistrictId.Value, 
+                    deliveryRequest.GhnDistrictId.Value,
                     deliveryRequest.GhnWardCode.Value,
                     deliveryRequest.Residence)
-                : toBeUpdated.Residence;
+                : await _giaoHangNhanhService.BuildAddress(
+                    deliveryRequest.GhnProvinceId.Value,
+                    deliveryRequest.GhnDistrictId.Value,
+                    deliveryRequest.GhnWardCode.Value, 
+                    toBeUpdated.Residence);
+            
             toBeUpdated.Phone = deliveryRequest.Phone ?? toBeUpdated.Phone;
             toBeUpdated.RecipientName = deliveryRequest.RecipientName ?? toBeUpdated.RecipientName;
             toBeUpdated.AddressType = deliveryRequest.AddressType ?? toBeUpdated.AddressType;
