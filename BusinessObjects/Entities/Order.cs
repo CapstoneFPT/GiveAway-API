@@ -25,6 +25,8 @@ public class Order
     public int? GhnDistrictId { get; set; }
     public int? GhnWardCode { get; set; }
     public string? Email { get; set; }
+    public int? GhnProvinceId { get; set; }
+    public AddressType? AddressType { get; set; }
 
     public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();
 }

@@ -13,8 +13,10 @@ namespace BusinessObjects.Dtos.Orders
         public PaymentMethod PaymentMethod { get; set; }
         [Required]
         public string Address { get; set; }
-        public int GhnDistrictId { get; set; }
-        public int GhnWardCode { get; set; }
+        public int? GhnDistrictId { get; set; }
+        public int? GhnWardCode { get; set; }
+        public int? GhnProvinceId { get; set; }
+        public AddressType? AddressType { get; set; }
         public string RecipientName { get; set; }
         [Phone]
         public string? Phone { get; set; }

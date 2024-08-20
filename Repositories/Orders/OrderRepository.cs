@@ -61,8 +61,11 @@ namespace Repositories.Orders
             order.Address = cart.Address;
             order.GhnDistrictId = cart.GhnDistrictId;
             order.GhnWardCode = cart.GhnWardCode;
+            order.GhnProvinceId = cart.GhnProvinceId;
+            order.AddressType = cart.AddressType;
             order.PurchaseType = PurchaseType.Online;
             order.RecipientName = cart.RecipientName;
+            order.AddressType = cart.AddressType;
             order.Phone = cart.Phone;
             order.Email = memberAccount.Email;
             if (cart.PaymentMethod.Equals(PaymentMethod.COD))
