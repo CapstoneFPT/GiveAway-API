@@ -270,6 +270,7 @@ namespace WebApi.Controllers
                     ErrorCode.ExternalServiceError => StatusCode(500,
                         new ErrorResponse("External Service Error", ErrorType.ApiError,
                             HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError)),
+                    ErrorCode.UnsupportedShipping => StatusCode(400, new ErrorResponse("Shipping is not supported for this address",ErrorType.ShippingError,HttpStatusCode.BadRequest,ErrorCode.UnsupportedShipping)),
                     _ => StatusCode(500,
                         new ErrorResponse("Unexpected error from server", ErrorType.ApiError,
                             HttpStatusCode.InternalServerError, ErrorCode.ServerError))

@@ -134,6 +134,11 @@ public enum PurchaseType
     Offline
 }
 
+public enum GhnErrorCode
+{
+    GHN_ERR81
+}
+
 public enum ConsignSaleType
 {
     ConsignedForSale,

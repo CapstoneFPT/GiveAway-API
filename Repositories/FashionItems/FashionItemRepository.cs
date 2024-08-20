@@ -399,7 +399,7 @@ namespace Repositories.FashionItems
         
         public IQueryable<IndividualFashionItem> GetIndividualQueryable()
         {
-            return GenericDao<IndividualFashionItem>.Instance.GetQueryable();
+            return _giveAwayDbContext.IndividualFashionItems.AsQueryable();
         }
 
         public IQueryable<MasterFashionItem> GetMasterQueryable()
