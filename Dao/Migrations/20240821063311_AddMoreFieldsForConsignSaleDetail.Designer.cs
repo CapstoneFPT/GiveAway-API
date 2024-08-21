@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240821063311_AddMoreFieldsForConsignSaleDetail")]
+    partial class AddMoreFieldsForConsignSaleDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -406,18 +409,15 @@ namespace Dao.Migrations
 
                     b.Property<string>("Brand")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar");
+                        .HasColumnType("text");
 
                     b.Property<string>("Color")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar");
+                        .HasColumnType("text");
 
                     b.Property<string>("Condition")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar");
+                        .HasColumnType("text");
 
                     b.Property<decimal?>("ConfirmedPrice")
                         .HasColumnType("numeric");
@@ -437,13 +437,10 @@ namespace Dao.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("varchar");
+                        .HasColumnType("text");
 
-                    b.Property<string>("Size")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("varchar");
+                    b.Property<int>("Size")
+                        .HasColumnType("integer");
 
                     b.HasKey("ConsignSaleDetailId");
 

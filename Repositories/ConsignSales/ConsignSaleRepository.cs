@@ -62,6 +62,12 @@ namespace Repositories.ConsignSales
                     ConfirmedPrice = 0,
                     DealPrice = item.DealPrice,
                     ConsignSaleId = newConsign.ConsignSaleId,
+                    Brand = item.Brand,
+                    Color = item.Color,
+                    Size = item.Size,
+                    ProductName = item.ProductName,
+                    Condition = item.Condition,
+                    Images = item.Images.Select(x=> new Image()).ToList(),
                     CreatedDate = DateTime.UtcNow,
                     Note = item.Note
                 };

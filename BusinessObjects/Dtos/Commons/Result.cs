@@ -134,6 +134,15 @@ public enum PurchaseType
     Offline
 }
 
+public enum ItemCondition
+{
+    Never_Worn_W_Tag,
+    Never_Worn,
+    Very_Good,
+    Good,
+    Fair
+}
+
 public enum GhnErrorCode
 {
     GHN_ERR81
