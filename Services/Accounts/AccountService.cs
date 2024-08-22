@@ -16,8 +16,10 @@ using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Repositories.BankAccounts;
 using Repositories.Inquiries;
 using Repositories.Transactions;
 using Repositories.Withdraws;
@@ -30,6 +32,7 @@ namespace Services.Accounts
         private readonly IInquiryRepository _inquiryRepository;
         private readonly IWithdrawRepository _withdrawRepository;
         private readonly ITransactionRepository _transactionRepository;
+        private readonly IBankAccountRepository _bankAccountRepository;
         private readonly IMapper _mapper;
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
@@ -42,10 +45,10 @@ namespace Services.Accounts
             _transactionRepository = transactionRepository;
         }
 
-        public async Task<Result<AccountResponse>> BanAccountById(Guid id)
+        public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> BanAccountById(Guid id)
         {
             var user = await _account.GetAccountById(id);
-            var response = new Result<AccountResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<AccountResponse>();
             if (user == null)
             {
                 response.Messages = ["User does not existed"];
@@ -72,9 +75,9 @@ namespace Services.Accounts
             }
         }
 
-        public async Task<Result<AccountResponse>> GetAccountById(Guid id)
+        public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> GetAccountById(Guid id)
         {
-            var response = new Result<AccountResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<AccountResponse>();
             var user = await _account.GetAccountById(id);
             if (user == null)
             {
@@ -97,9 +100,10 @@ namespace Services.Accounts
             return _mapper.Map<List<AccountResponse>>(list);
         }
 
-        public async Task<Result<AccountResponse>> UpdateAccount(Guid id, UpdateAccountRequest request)
+        public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> UpdateAccount(Guid id,
+            UpdateAccountRequest request)
         {
-            var response = new Result<AccountResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<AccountResponse>();
             var user = await _account.GetAccountById(id);
             if (user == null)
             {
@@ -191,7 +195,6 @@ namespace Services.Accounts
         {
             var inquiry = new Inquiry()
             {
-                
                 Message = request.Message,
                 MemberId = accountId,
                 Status = InquiryStatus.Processing,
@@ -204,7 +207,7 @@ namespace Services.Accounts
             {
                 InquiryId = result.InquiryId,
                 MemberId = result.MemberId,
-                
+
                 Fullname = account.Fullname,
                 Email = account.Email,
                 Phone = account.Phone,
@@ -249,7 +252,7 @@ namespace Services.Accounts
 
             account.Balance -= request.Amount;
             await _account.UpdateAccount(account);
-            
+
             var transaction = new Transaction
             {
                 Amount = result.Amount,
@@ -297,9 +300,10 @@ namespace Services.Accounts
                 };
 
             (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await
-                _transactionRepository.GetTransactionsProjection<GetTransactionsResponse>(request.Page, request.PageSize,
+                _transactionRepository.GetTransactionsProjection<GetTransactionsResponse>(request.Page,
+                    request.PageSize,
                     predicate, orderBy, selector);
- 
+
             return new PaginationResponse<GetTransactionsResponse>()
             {
                 Items = data.Items,
@@ -343,6 +347,33 @@ namespace Services.Accounts
                 PageNumber = data.Page,
                 TotalCount = data.TotalCount
             };
+        }
+
+        public async Task<Result<List<BankAccountsListResponse>, ErrorCode>> GetBankAccounts(Guid accountId)
+        {
+            Expression<Func<BankAccount, bool>> predicate = bankAccount => bankAccount.MemberId == accountId;
+            Expression<Func<BankAccount, BankAccountsListResponse>> selector = bankAccount =>
+                new BankAccountsListResponse()
+                {
+                    BankAccountId = bankAccount.BankAccountId,
+                    BankAccountName = bankAccount.BankAccountName ?? "N/A",
+                    BankAccountNumber = bankAccount.BankAccountNumber ?? "N/A", BankName = bankAccount.Bank ?? "N/A",
+                    IsDefault = bankAccount.IsDefault
+                };
+
+            try
+            {
+                var result = await _bankAccountRepository.GetQueryable()
+                    .Where(predicate)
+                    .Select(selector)
+                    .ToListAsync();
+
+                return new Result<List<BankAccountsListResponse>, ErrorCode>(result);
+            }
+            catch (Exception e)
+            {
+                return new Result<List<BankAccountsListResponse>, ErrorCode>(ErrorCode.ServerError);
+            }
         }
     }
 }

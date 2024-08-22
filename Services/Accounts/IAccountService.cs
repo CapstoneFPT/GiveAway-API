@@ -10,20 +10,22 @@ using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
+using DotNext;
 
 namespace Services.Accounts
 {
     public interface IAccountService
     {
         Task<List<AccountResponse>> GetAllAccounts();
-        Task<Result<AccountResponse>> GetAccountById(Guid id);
-        Task<Result<AccountResponse>> BanAccountById(Guid id);
-        Task<Result<AccountResponse>> UpdateAccount(Guid id, UpdateAccountRequest request);
+        Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> GetAccountById(Guid id);
+        Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> BanAccountById(Guid id);
+        Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> UpdateAccount(Guid id, UpdateAccountRequest request);
         Task DeductPoints(Guid requestMemberId, decimal orderTotalPrice);
         Task<PaginationResponse<AccountResponse>> GetAccounts(GetAccountsRequest request);
         Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request);
         Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request);
         Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId, GetTransactionsRequest request);
         Task<PaginationResponse<GetWithdrawsResponse>> GetWithdraws(Guid accountId, GetWithdrawsRequest request);
+        Task<Result<List<BankAccountsListResponse>, ErrorCode>> GetBankAccounts(Guid accountId);
     }
 }

@@ -217,6 +217,29 @@ public class AccountController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{accountId}/bankaccounts")]
+    [ProducesResponseType<List<BankAccountsListResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetBankAccounts([FromRoute] Guid accountId)
+    {
+        DotNext.Result<List<BankAccountsListResponse>,ErrorCode> result = await _accountService.GetBankAccounts(accountId);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                ErrorCode.NetworkError => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.NetworkError)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Internal server error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.UnknownError))
+            };
+        }
+        return Ok(result.Value);
+    }
+    
+
     [HttpGet("{accountId}/transactions")]
     [ProducesResponseType<PaginationResponse<GetTransactionsResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetTransactions([FromRoute] Guid accountId,
