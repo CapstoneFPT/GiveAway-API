@@ -467,7 +467,6 @@ namespace Services.Accounts
                 {
                     if (otherBankAccounts.Count == 0)
                         return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.NoBankAccountLeft);
-                    
                 }
 
                 await _bankAccountRepository.UpdateBankAccount(existedBankAccount);
@@ -538,6 +537,56 @@ namespace Services.Accounts
             catch (Exception e)
             {
                 return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        public async Task<Result<UpdateBankAccountResponse, ErrorCode>> SetDefaultBankAccount(Guid accountId,
+            Guid bankAccountId)
+        {
+            var existedBankAccount = await _bankAccountRepository
+                .GetQueryable()
+                .FirstOrDefaultAsync(x => x.BankAccountId == bankAccountId);
+
+            if (existedBankAccount == null)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            if (existedBankAccount.MemberId != accountId)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
+            }
+
+            try
+            {
+                var otherBankAccounts = await _bankAccountRepository
+                    .GetQueryable()
+                    .Where(x =>
+                        x.BankAccountId != bankAccountId
+                        && x.IsDefault)
+                    .ToListAsync();
+
+                foreach (var otherBankAccount in otherBankAccounts)
+                {
+                    otherBankAccount.IsDefault = false;
+                }
+
+                await _bankAccountRepository.UpdateRange(otherBankAccounts);
+                existedBankAccount.IsDefault = true;
+                await _bankAccountRepository.UpdateBankAccount(existedBankAccount);
+                return new Result<UpdateBankAccountResponse, ErrorCode>(new UpdateBankAccountResponse
+                {
+                    BankAccountId = existedBankAccount.BankAccountId,
+                    BankName = existedBankAccount.Bank ?? "N/A",
+                    BankAccountName = existedBankAccount.BankAccountName ?? "N/A",
+                    BankAccountNumber = existedBankAccount.BankAccountNumber ?? "N/A",
+                    IsDefault = existedBankAccount.IsDefault,
+                    MemberId = accountId
+                });
+            }
+            catch (Exception e)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
             }
         }
 

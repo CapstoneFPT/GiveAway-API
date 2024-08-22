@@ -30,5 +30,6 @@ namespace Services.Accounts
         Task<Result<CreateBankAccountResponse,ErrorCode>> CreateBankAccount(Guid accountId, CreateBankAccountRequest request);
         Task<Result<UpdateBankAccountResponse,ErrorCode>> UpdateBankAccount(Guid accountId, Guid bankAccountId, UpdateBankAccountRequest request);
         Task<Result<DeleteBankAccountResponse,ErrorCode>> DeleteBankAccount(Guid accountId, Guid bankAccountId);
+        Task<Result<UpdateBankAccountResponse, ErrorCode>> SetDefaultBankAccount(Guid accountId, Guid bankAccountId);
     }
 }

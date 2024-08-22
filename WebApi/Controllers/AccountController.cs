@@ -9,6 +9,7 @@ using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.ConsignSales;
@@ -325,6 +326,37 @@ public class AccountController : ControllerBase
                 ErrorCode.NoBankAccountLeft => BadRequest(new ErrorResponse(
                     "You can't delete the only bank account left", ErrorType.ApiError, HttpStatusCode.BadRequest,
                     ErrorCode.NoBankAccountLeft)),
+                ErrorCode.ServerError => StatusCode(500,
+                    new ErrorResponse("Error deleting bank account", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                ErrorCode.NetworkError => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.NetworkError)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Error deleting bank account", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError,
+                        ErrorCode.UnknownError))
+            };
+        }
+
+        return Ok(result.Value);
+    }
+    
+    [HttpPatch("{accountId}/bankaccounts/{bankAccountId}/set-default")]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> SetDefaultBankAccount([FromRoute] Guid accountId, [FromRoute] Guid bankAccountId)
+    {
+        DotNext.Result<UpdateBankAccountResponse, ErrorCode> result =
+            await _accountService.SetDefaultBankAccount(accountId, bankAccountId);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                ErrorCode.NotFound => NotFound(new ErrorResponse("Bank account not found", ErrorType.ApiError,
+                    HttpStatusCode.NotFound, ErrorCode.NotFound)),
+                ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized", ErrorType.ApiError,
+                    HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
                 ErrorCode.ServerError => StatusCode(500,
                     new ErrorResponse("Error deleting bank account", ErrorType.ApiError,
                         HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
