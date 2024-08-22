@@ -9,7 +9,6 @@ using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.ConsignSales;
@@ -248,6 +247,33 @@ public class AccountController : ControllerBase
         [FromBody] CreateBankAccountRequest request)
     {
         DotNext.Result<CreateBankAccountResponse,ErrorCode> result = await _accountService.CreateBankAccount(accountId, request);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                ErrorCode.ServerError => StatusCode(500,
+                    new ErrorResponse("Error saving bank account", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                ErrorCode.NetworkError => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.NetworkError)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Error saving bank account", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.UnknownError))
+            };
+        }
+        
+        return Ok(result.Value);
+    }
+    
+    [HttpPut("{accountId}/bankaccounts/{bankAccountId}")]
+    [ProducesResponseType<UpdateBankAccountResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> UpdateBankAccount([FromRoute] Guid accountId, [FromRoute] Guid bankAccountId,
+        [FromBody] UpdateBankAccountRequest request)
+    {
+        DotNext.Result<UpdateBankAccountResponse,ErrorCode> result = await _accountService.UpdateBankAccount(accountId, bankAccountId, request);
 
         if (!result.IsSuccessful)
         {

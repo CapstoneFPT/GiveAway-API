@@ -28,5 +28,6 @@ namespace Services.Accounts
         Task<PaginationResponse<GetWithdrawsResponse>> GetWithdraws(Guid accountId, GetWithdrawsRequest request);
         Task<Result<List<BankAccountsListResponse>, ErrorCode>> GetBankAccounts(Guid accountId);
         Task<Result<CreateBankAccountResponse,ErrorCode>> CreateBankAccount(Guid accountId, CreateBankAccountRequest request);
+        Task<Result<UpdateBankAccountResponse,ErrorCode>> UpdateBankAccount(Guid accountId, Guid bankAccountId, UpdateBankAccountRequest request);
     }
 }

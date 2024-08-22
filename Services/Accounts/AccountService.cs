@@ -416,6 +416,70 @@ namespace Services.Accounts
             }
         }
 
+        public async Task<Result<UpdateBankAccountResponse, ErrorCode>> UpdateBankAccount(Guid accountId,
+            Guid bankAccountId, UpdateBankAccountRequest request)
+        {
+            var existedBankAccount = await _bankAccountRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.BankAccountId == bankAccountId);
+
+            if (existedBankAccount == null)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            if (existedBankAccount.MemberId != accountId)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
+            }
+
+            if (request is { BankName: not null, BankAccountName: not null, BankAccountNumber: not null } &&
+                await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
+            }
+
+            existedBankAccount.Bank = request.BankName ?? existedBankAccount.Bank;
+            existedBankAccount.BankAccountName = request.BankAccountName ?? existedBankAccount.BankAccountName;
+            existedBankAccount.BankAccountNumber = request.BankAccountNumber ?? existedBankAccount.BankAccountNumber;
+            existedBankAccount.IsDefault = request.IsDefault ?? existedBankAccount.IsDefault;
+
+
+            try
+            {
+                if (existedBankAccount.IsDefault)
+                {
+                    var otherBankAccounts = await _bankAccountRepository
+                        .GetQueryable()
+                        .Where(x =>
+                            x.MemberId == accountId
+                            && x.BankAccountId != bankAccountId
+                            && x.IsDefault)
+                        .ToListAsync();
+
+                    foreach (var otherBankAccount in otherBankAccounts)
+                    {
+                        otherBankAccount.IsDefault = false;
+                    }
+
+                    await _bankAccountRepository.UpdateRange(otherBankAccounts);
+                }
+
+                await _bankAccountRepository.UpdateBankAccount(existedBankAccount);
+                return new Result<UpdateBankAccountResponse, ErrorCode>(new UpdateBankAccountResponse
+                {
+                    BankAccountId = existedBankAccount.BankAccountId,
+                    BankName = existedBankAccount.Bank ?? "N/A",
+                    BankAccountName = existedBankAccount.BankAccountName ?? "N/A",
+                    BankAccountNumber = existedBankAccount.BankAccountNumber ?? "N/A",
+                    MemberId = accountId
+                });
+            }
+            catch (Exception e)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
         private Task<bool> CheckBankAccountExisted(string bank, string accountName, string accountNumber)
         {
             Expression<Func<BankAccount, bool>> predicate = account =>
