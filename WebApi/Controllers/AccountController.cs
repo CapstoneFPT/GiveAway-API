@@ -246,7 +246,8 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> CreateBankAccount([FromRoute] Guid accountId,
         [FromBody] CreateBankAccountRequest request)
     {
-        DotNext.Result<CreateBankAccountResponse,ErrorCode> result = await _accountService.CreateBankAccount(accountId, request);
+        DotNext.Result<CreateBankAccountResponse, ErrorCode> result =
+            await _accountService.CreateBankAccount(accountId, request);
 
         if (!result.IsSuccessful)
         {
@@ -259,21 +260,23 @@ public class AccountController : ControllerBase
                     new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
                         ErrorCode.NetworkError)),
                 _ => StatusCode(500,
-                    new ErrorResponse("Error saving bank account", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                    new ErrorResponse("Error saving bank account", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError,
                         ErrorCode.UnknownError))
             };
         }
-        
+
         return Ok(result.Value);
     }
-    
+
     [HttpPut("{accountId}/bankaccounts/{bankAccountId}")]
     [ProducesResponseType<UpdateBankAccountResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> UpdateBankAccount([FromRoute] Guid accountId, [FromRoute] Guid bankAccountId,
         [FromBody] UpdateBankAccountRequest request)
     {
-        DotNext.Result<UpdateBankAccountResponse,ErrorCode> result = await _accountService.UpdateBankAccount(accountId, bankAccountId, request);
+        DotNext.Result<UpdateBankAccountResponse, ErrorCode> result =
+            await _accountService.UpdateBankAccount(accountId, bankAccountId, request);
 
         if (!result.IsSuccessful)
         {
@@ -286,11 +289,47 @@ public class AccountController : ControllerBase
                     new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
                         ErrorCode.NetworkError)),
                 _ => StatusCode(500,
-                    new ErrorResponse("Error saving bank account", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                    new ErrorResponse("Error saving bank account", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError,
                         ErrorCode.UnknownError))
             };
         }
-        
+
+        return Ok(result.Value);
+    }
+
+    [HttpDelete("{accountId}/bankaccounts/{bankAccountId}")]
+    [ProducesResponseType<DeleteBankAccountResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> DeleteBankAccount([FromRoute] Guid accountId, [FromRoute] Guid bankAccountId)
+    {
+        DotNext.Result<DeleteBankAccountResponse, ErrorCode> result =
+            await _accountService.DeleteBankAccount(accountId, bankAccountId);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                ErrorCode.NotFound => NotFound(new ErrorResponse("Bank account not found", ErrorType.ApiError,
+                    HttpStatusCode.NotFound, ErrorCode.NotFound)),
+                ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized", ErrorType.ApiError,
+                    HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
+                ErrorCode.NoBankAccountLeft => BadRequest(new ErrorResponse(
+                    "You can't delete the only bank account left", ErrorType.ApiError, HttpStatusCode.BadRequest,
+                    ErrorCode.NoBankAccountLeft)),
+                ErrorCode.ServerError => StatusCode(500,
+                    new ErrorResponse("Error deleting bank account", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                ErrorCode.NetworkError => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.NetworkError)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Error deleting bank account", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError,
+                        ErrorCode.UnknownError))
+            };
+        }
+
         return Ok(result.Value);
     }
 

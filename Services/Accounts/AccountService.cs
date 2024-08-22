@@ -480,6 +480,61 @@ namespace Services.Accounts
             }
         }
 
+        public async Task<Result<DeleteBankAccountResponse, ErrorCode>> DeleteBankAccount(Guid accountId,
+            Guid bankAccountId)
+        {
+            var existedBankAccount = await _bankAccountRepository
+                .GetQueryable()
+                .FirstOrDefaultAsync(x => x.BankAccountId == bankAccountId);
+
+            if (existedBankAccount == null)
+            {
+                return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            if (existedBankAccount.MemberId != accountId)
+            {
+                return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
+            }
+            
+            try
+            {
+                if (existedBankAccount.IsDefault)
+                {
+                    var prevBankAccount = await _bankAccountRepository
+                        .GetQueryable()
+                        .Where(x=>
+                           x.CreatedDate < existedBankAccount.CreatedDate)
+                        .OrderByDescending(x=>x.CreatedDate)
+                        .FirstOrDefaultAsync();
+                    if (prevBankAccount != null)
+                    {
+                        prevBankAccount.IsDefault = true;
+                        await _bankAccountRepository.UpdateBankAccount(prevBankAccount);
+                    }
+                    else
+                    {
+                        return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.NoBankAccountLeft);
+                    }
+                }
+                
+                await _bankAccountRepository.DeleteBankAccount(existedBankAccount);
+                return new Result<DeleteBankAccountResponse, ErrorCode>(new DeleteBankAccountResponse
+                {
+                    BankAccountId = existedBankAccount.BankAccountId,
+                    BankName = existedBankAccount.Bank ?? "N/A",
+                    BankAccountName = existedBankAccount.BankAccountName ?? "N/A",
+                    BankAccountNumber = existedBankAccount.BankAccountNumber ?? "N/A",
+                    IsDefault = existedBankAccount.IsDefault,
+                    MemberId = accountId
+                });
+            }
+            catch (Exception e)
+            {
+                return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
         private Task<bool> CheckBankAccountExisted(string bank, string accountName, string accountNumber)
         {
             Expression<Func<BankAccount, bool>> predicate = account =>

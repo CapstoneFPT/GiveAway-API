@@ -40,7 +40,8 @@ public enum ErrorCode
     InvalidInput,
     NotFound,
     UnsupportedShipping,
-    DuplicateBankAccount
+    DuplicateBankAccount,
+    NoBankAccountLeft
 }
 
 public enum ErrorType

@@ -38,6 +38,12 @@ public class BankAccountRepository : IBankAccountRepository
         _context.BankAccounts.UpdateRange(otherBankAccounts);
         return _context.SaveChangesAsync();
     }
+
+    public Task DeleteBankAccount(BankAccount existedBankAccount)
+    {
+        _context.BankAccounts.Remove(existedBankAccount);
+        return _context.SaveChangesAsync();
+    }
 }
 
 public interface IBankAccountRepository
@@ -46,4 +52,5 @@ public interface IBankAccountRepository
     Task<BankAccount> CreateBankAccount(BankAccount bankAccount);
     Task<BankAccount> UpdateBankAccount(BankAccount existedBankAccount);
     Task UpdateRange(List<BankAccount> otherBankAccounts);
+    Task DeleteBankAccount(BankAccount existedBankAccount);
 }
