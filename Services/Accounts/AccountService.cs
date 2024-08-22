@@ -38,13 +38,14 @@ namespace Services.Accounts
         private readonly IMapper _mapper;
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
-            IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository)
+            IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository, IBankAccountRepository bankAccountRepository)
         {
             _account = repository;
             _mapper = mapper;
             _inquiryRepository = inquiryRepository;
             _withdrawRepository = withdrawRepository;
             _transactionRepository = transactionRepository;
+            _bankAccountRepository = bankAccountRepository;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> BanAccountById(Guid id)
@@ -359,7 +360,8 @@ namespace Services.Accounts
                 {
                     BankAccountId = bankAccount.BankAccountId,
                     BankAccountName = bankAccount.BankAccountName ?? "N/A",
-                    BankAccountNumber = bankAccount.BankAccountNumber ?? "N/A", BankName = bankAccount.Bank ?? "N/A",
+                    BankAccountNumber = bankAccount.BankAccountNumber ?? "N/A",
+                    BankName = bankAccount.Bank ?? "N/A",
                     IsDefault = bankAccount.IsDefault
                 };
 
