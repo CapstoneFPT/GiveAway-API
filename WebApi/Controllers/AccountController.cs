@@ -285,6 +285,14 @@ public class AccountController : ControllerBase
                 ErrorCode.ServerError => StatusCode(500,
                     new ErrorResponse("Error saving bank account", ErrorType.ApiError,
                         HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                ErrorCode.NoBankAccountLeft => BadRequest(new ErrorResponse(
+                    "There must be at least 1 default bank account", ErrorType.AccountError, HttpStatusCode.BadRequest,
+                    ErrorCode.NoBankAccountLeft)),
+                ErrorCode.DuplicateBankAccount => BadRequest(new ErrorResponse(
+                    "The bank accounts must be unique", ErrorType.AccountError, HttpStatusCode.BadRequest,
+                    ErrorCode.DuplicateBankAccount)),
+                ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized", ErrorType.AccountError,
+                    HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
                 ErrorCode.NetworkError => StatusCode(500,
                     new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
                         ErrorCode.NetworkError)),

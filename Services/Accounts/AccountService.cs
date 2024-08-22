@@ -446,22 +446,28 @@ namespace Services.Accounts
 
             try
             {
+                var otherBankAccounts = await _bankAccountRepository
+                    .GetQueryable()
+                    .Where(x =>
+                        x.MemberId == accountId
+                        && x.BankAccountId != bankAccountId
+                        && x.IsDefault)
+                    .ToListAsync();
+
                 if (existedBankAccount.IsDefault)
                 {
-                    var otherBankAccounts = await _bankAccountRepository
-                        .GetQueryable()
-                        .Where(x =>
-                            x.MemberId == accountId
-                            && x.BankAccountId != bankAccountId
-                            && x.IsDefault)
-                        .ToListAsync();
-
                     foreach (var otherBankAccount in otherBankAccounts)
                     {
                         otherBankAccount.IsDefault = false;
                     }
 
                     await _bankAccountRepository.UpdateRange(otherBankAccounts);
+                }
+                else
+                {
+                    if (otherBankAccounts.Count == 0)
+                        return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.NoBankAccountLeft);
+                    
                 }
 
                 await _bankAccountRepository.UpdateBankAccount(existedBankAccount);
@@ -496,16 +502,16 @@ namespace Services.Accounts
             {
                 return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
             }
-            
+
             try
             {
                 if (existedBankAccount.IsDefault)
                 {
                     var prevBankAccount = await _bankAccountRepository
                         .GetQueryable()
-                        .Where(x=>
-                           x.CreatedDate < existedBankAccount.CreatedDate)
-                        .OrderByDescending(x=>x.CreatedDate)
+                        .Where(x =>
+                            x.CreatedDate < existedBankAccount.CreatedDate)
+                        .OrderByDescending(x => x.CreatedDate)
                         .FirstOrDefaultAsync();
                     if (prevBankAccount != null)
                     {
@@ -517,7 +523,7 @@ namespace Services.Accounts
                         return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.NoBankAccountLeft);
                     }
                 }
-                
+
                 await _bankAccountRepository.DeleteBankAccount(existedBankAccount);
                 return new Result<DeleteBankAccountResponse, ErrorCode>(new DeleteBankAccountResponse
                 {
