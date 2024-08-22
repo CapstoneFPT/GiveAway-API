@@ -134,9 +134,9 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.VerifyEmail(id, token);
         if (result.ResultStatus == ResultStatus.Success)
-            return Redirect($"https://giveawayproject.jettonetto.org/verify-email?verificationStatus=success");
+            return Redirect($"https://giveawayproject.jettonetto.org/verify-email?verificationstatus=success");
 
-        return Redirect($"https://giveawayproject.jettonetto.org/verify-email?verificationStatus=failed");
+        return Redirect($"https://giveawayproject.jettonetto.org/verify-email?verificationstatus=failed");
     }
 
     [HttpGet("resend-verify-email")]
