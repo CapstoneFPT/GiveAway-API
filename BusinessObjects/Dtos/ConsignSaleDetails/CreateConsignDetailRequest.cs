@@ -13,5 +13,5 @@ public class CreateConsignDetailRequest
     public string Color { get; set; }
     public string Brand { get; set; }
     public SizeType Size { get; set; }
-    public List<FashionItemImage> Images { get; set; } = [];
+    public List<string> ImageUrls { get; set; } = [];
 }

@@ -25,7 +25,7 @@ namespace Repositories.ConsignSales
         public ConsignSaleRepository(IMapper mapper, GiveAwayDbContext dbContext)
         {
             _mapper = mapper;
-            _giveAwayDbContext = dbContext; 
+            _giveAwayDbContext = dbContext;
         }
 
         public async Task<ConsignSaleResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
@@ -67,7 +67,11 @@ namespace Repositories.ConsignSales
                     Size = item.Size,
                     ProductName = item.ProductName,
                     Condition = item.Condition,
-                    Images = item.Images.Select(x=> new Image()).ToList(),
+                    Images = item.ImageUrls.Select(x => new Image()
+                    {
+                        CreatedDate = DateTime.UtcNow,
+                        Url = x,
+                    }).ToList(),
                     CreatedDate = DateTime.UtcNow,
                     Note = item.Note
                 };
@@ -108,7 +112,6 @@ namespace Repositories.ConsignSales
 
             var items = await query
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
-                
                 .AsNoTracking().ToListAsync();
 
             var result = new PaginationResponse<ConsignSaleResponse>
@@ -187,7 +190,7 @@ namespace Repositories.ConsignSales
         }
 
         public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
-        {   
+        {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleDetails!)
                 .FirstOrDefaultAsync(c => c.ConsignSaleId == consignId);
@@ -210,6 +213,7 @@ namespace Repositories.ConsignSales
             {
                 throw new MissingFeatureException("You should create enough item for consign");
             }
+
             consign.Status = ConsignSaleStatus.Received;
             consign.StartDate = DateTime.UtcNow;
             consign.EndDate = DateTime.UtcNow.AddDays(1);
@@ -229,14 +233,13 @@ namespace Repositories.ConsignSales
                 member.Balance += totalprice;
                 await GenericDao<Account>.Instance.UpdateAsync(member);
             }
-            
+
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
 
             return _mapper.Map<ConsignSaleResponse>(consign);
-
         }
 
-        public async Task<ConsignSaleResponse>  CreateConsignSaleByShop(Guid shopId,
+        public async Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId,
             CreateConsignSaleByShopRequest request)
         {
             //tao moi 1 consign
@@ -362,7 +365,6 @@ namespace Repositories.ConsignSales
             var items = await query
                 /*.Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)*/
                 .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
-                
                 .AsNoTracking().ToListAsync();
 
 
@@ -398,7 +400,7 @@ namespace Repositories.ConsignSales
                 .Include(c => c.ConsignSale)
                 .Where(c => c.FashionItemId == fashionItemId)
                 .FirstOrDefaultAsync();
-            
+
             if (consignSaleDetail == null)
             {
                 return false;

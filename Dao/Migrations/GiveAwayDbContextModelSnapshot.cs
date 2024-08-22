@@ -249,7 +249,7 @@ namespace Dao.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("BankAccounts");
+                    b.ToTable("BankAccounts", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Bid", b =>
@@ -488,7 +488,7 @@ namespace Dao.Migrations
 
                     b.HasIndex("MasterItemId");
 
-                    b.ToTable("FashionItemVariations");
+                    b.ToTable("FashionItemVariations", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Feedback", b =>
@@ -598,7 +598,7 @@ namespace Dao.Migrations
 
                     b.HasIndex("VariationId");
 
-                    b.ToTable("IndividualFashionItems");
+                    b.ToTable("IndividualFashionItems", (string)null);
 
                     b.HasDiscriminator<string>("Type").HasValue("ItemBase");
 
@@ -681,7 +681,7 @@ namespace Dao.Migrations
 
                     b.HasIndex("ShopId");
 
-                    b.ToTable("MasterFashionItems");
+                    b.ToTable("MasterFashionItems", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Order", b =>
@@ -908,7 +908,7 @@ namespace Dao.Migrations
                     b.HasIndex("StaffId")
                         .IsUnique();
 
-                    b.ToTable("Shops");
+                    b.ToTable("Shops", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Transaction", b =>
@@ -1001,7 +1001,7 @@ namespace Dao.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Withdraws");
+                    b.ToTable("Withdraws", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Admin", b =>

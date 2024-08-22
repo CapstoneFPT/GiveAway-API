@@ -441,6 +441,37 @@ public class GiveAwayDbContext : DbContext
             .HasOne<IndividualFashionItem>(x=>x.IndividualFashionItem)
             .WithOne(x=>x.ConsignSaleDetail)
             .HasForeignKey<IndividualFashionItem>(x=>x.ConsignSaleDetailId);
+        
+        modelBuilder.Entity<ConsignSaleDetail>()
+            .HasMany<Image>(x=>x.Images)
+            .WithOne(x=>x.ConsignSaleDetail)
+            .HasForeignKey(x=>x.ConsignSaleDetailId);
+
+        modelBuilder.Entity<ConsignSaleDetail>()
+            .Property(x => x.Size)
+            .HasConversion(prop => prop.ToString(), s => (SizeType)Enum.Parse(typeof(SizeType), s))
+            .HasColumnType("varchar")
+            .HasMaxLength(15);
+        
+        modelBuilder.Entity<ConsignSaleDetail>()
+            .Property(x => x.ProductName)
+            .HasColumnType("varchar")
+            .HasMaxLength(60);
+
+        modelBuilder.Entity<ConsignSaleDetail>()
+            .Property(x => x.Brand)
+            .HasColumnType("varchar")
+            .HasMaxLength(30);
+
+        modelBuilder.Entity<ConsignSaleDetail>()
+            .Property(x => x.Color)
+            .HasColumnType("varchar")
+            .HasMaxLength(30);
+        
+        modelBuilder.Entity<ConsignSaleDetail>()
+            .Property(x=>x.Condition)
+            .HasColumnType("varchar")
+            .HasMaxLength(20);
             
 
         #endregion
