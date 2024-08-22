@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
@@ -18,6 +19,7 @@ using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using DotNext;
 using LinqKit;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories.BankAccounts;
 using Repositories.Inquiries;
@@ -374,6 +376,55 @@ namespace Services.Accounts
             {
                 return new Result<List<BankAccountsListResponse>, ErrorCode>(ErrorCode.ServerError);
             }
+        }
+
+        public async Task<Result<CreateBankAccountResponse, ErrorCode>> CreateBankAccount(Guid accountId,
+            CreateBankAccountRequest request)
+        {
+            if (!await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
+            {
+                return new Result<CreateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
+            }
+
+            var bankAccount = new BankAccount
+            {
+                Bank = request.BankName,
+                BankAccountName = request.BankAccountName,
+                BankAccountNumber = request.BankAccountNumber,
+                MemberId = accountId,
+                IsDefault = !await _bankAccountRepository
+                    .GetQueryable()
+                    .Where(x => x.MemberId == accountId).AnyAsync()
+            };
+
+            try
+            {
+                var result = await _bankAccountRepository.CreateBankAccount(bankAccount);
+
+                return new Result<CreateBankAccountResponse, ErrorCode>(new CreateBankAccountResponse
+                {
+                    MemberId = accountId,
+                    BankAccountId = result.BankAccountId,
+                    BankAccountName = result.BankAccountName,
+                    BankAccountNumber = result.BankAccountNumber,
+                    BankName = result.Bank,
+                });
+            }
+            catch (Exception e)
+            {
+                return new Result<CreateBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        private Task<bool> CheckBankAccountExisted(string bank, string accountName, string accountNumber)
+        {
+            Expression<Func<BankAccount, bool>> predicate = account =>
+                account.Bank == bank && account.BankAccountName == accountName &&
+                account.BankAccountNumber == accountNumber;
+
+            return _bankAccountRepository
+                .GetQueryable()
+                .AnyAsync(predicate);
         }
     }
 }

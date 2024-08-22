@@ -16,9 +16,18 @@ public class BankAccountRepository : IBankAccountRepository
     {
         return _context.BankAccounts.AsQueryable();
     }
+
+    public async Task<BankAccount> CreateBankAccount(BankAccount bankAccount)
+    {
+        _context.BankAccounts.Add(bankAccount);
+        await _context.SaveChangesAsync();
+
+        return bankAccount;
+    }
 }
 
 public interface IBankAccountRepository
 {
     public IQueryable<BankAccount> GetQueryable();
+    Task<BankAccount> CreateBankAccount(BankAccount bankAccount);
 }

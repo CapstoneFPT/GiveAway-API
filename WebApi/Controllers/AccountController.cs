@@ -105,7 +105,7 @@ public class AccountController : ControllerBase
         [FromBody] DeliveryRequest deliveryRequest)
     {
         var result = await _deliveryService.CreateDelivery(accountId, deliveryRequest);
-        
+
         if (result.ResultStatus != ResultStatus.Success)
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
 
@@ -222,7 +222,8 @@ public class AccountController : ControllerBase
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> GetBankAccounts([FromRoute] Guid accountId)
     {
-        DotNext.Result<List<BankAccountsListResponse>,ErrorCode> result = await _accountService.GetBankAccounts(accountId);
+        DotNext.Result<List<BankAccountsListResponse>, ErrorCode> result =
+            await _accountService.GetBankAccounts(accountId);
 
         if (!result.IsSuccessful)
         {
@@ -236,9 +237,37 @@ public class AccountController : ControllerBase
                         ErrorCode.UnknownError))
             };
         }
+
         return Ok(result.Value);
     }
-    
+
+    [HttpPost("{accountId}/bankaccounts")]
+    [ProducesResponseType<CreateBankAccountResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> CreateBankAccount([FromRoute] Guid accountId,
+        [FromBody] CreateBankAccountRequest request)
+    {
+        DotNext.Result<CreateBankAccountResponse,ErrorCode> result = await _accountService.CreateBankAccount(accountId, request);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                ErrorCode.ServerError => StatusCode(500,
+                    new ErrorResponse("Error saving bank account", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                ErrorCode.NetworkError => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.NetworkError)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Error saving bank account", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.UnknownError))
+            };
+        }
+        
+        return Ok(result.Value);
+    }
+
 
     [HttpGet("{accountId}/transactions")]
     [ProducesResponseType<PaginationResponse<GetTransactionsResponse>>((int)HttpStatusCode.OK)]

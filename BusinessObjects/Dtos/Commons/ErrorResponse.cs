@@ -39,7 +39,8 @@ public enum ErrorCode
     ServerError,
     InvalidInput,
     NotFound,
-    UnsupportedShipping
+    UnsupportedShipping,
+    DuplicateBankAccount
 }
 
 public enum ErrorType
