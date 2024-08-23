@@ -455,8 +455,7 @@ namespace Services.Accounts
                     .GetQueryable()
                     .Where(x =>
                         x.MemberId == accountId
-                        && x.BankAccountId != bankAccountId
-                        && x.IsDefault)
+                        && x.BankAccountId != bankAccountId)
                     .ToListAsync();
 
                 if (existedBankAccount.IsDefault)
