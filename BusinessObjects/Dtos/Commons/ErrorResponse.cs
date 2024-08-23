@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿    using System.Net;
 
 namespace BusinessObjects.Dtos.Commons;
 
@@ -38,7 +38,10 @@ public enum ErrorCode
     NetworkError,
     ServerError,
     InvalidInput,
-    NotFound
+    NotFound,
+    UnsupportedShipping,
+    DuplicateBankAccount,
+    NoBankAccountLeft
 }
 
 public enum ErrorType
@@ -54,4 +57,5 @@ public enum ErrorType
     OrderError,
     PaymentError,
     AccountError,
+    ShippingError
 }

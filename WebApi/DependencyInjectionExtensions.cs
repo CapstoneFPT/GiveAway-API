@@ -5,6 +5,7 @@ using Repositories.Accounts;
 using Repositories.AuctionDeposits;
 using Repositories.AuctionItems;
 using Repositories.Auctions;
+using Repositories.BankAccounts;
 using Repositories.Bids;
 using Repositories.Categories;
 using Repositories.ConsignedForSaleItems;
@@ -112,6 +113,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IRefundRepository, RefundRepository>();
         serviceCollection.AddScoped<IWithdrawRepository, WithdrawRepository>();
         serviceCollection.AddScoped<IConsignSaleDetailRepository, ConsignSaleDetailRepository>();
+        serviceCollection.AddScoped<IBankAccountRepository, BankAccountRepository>();
         return serviceCollection;
     }
     
@@ -138,6 +140,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<Transaction>>();
         serviceCollection.AddScoped<GenericDao<Refund>>();
         serviceCollection.AddScoped<GenericDao<Withdraw>>();
+        serviceCollection.AddScoped<GenericDao<BankAccount>>();
         serviceCollection.AddScoped<GenericDao<BusinessObjects.Entities.Member>>();
         return serviceCollection;
     }

@@ -343,6 +343,17 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
                 case HttpStatusCode.Unauthorized:
                     return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode
                         .Unauthorized);
+                case HttpStatusCode.BadRequest:
+                    var badRequestContent = await response.Content
+                        .ReadFromJsonAsync<GHNApiResponse<GHNShop>>();
+
+                    if (badRequestContent.Message.Contains("[GHN-ERR81]"))
+                    {
+                        return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode.UnsupportedShipping);
+                    }
+
+                    return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode.ExternalServiceError);
+                    
                 default:
                     _logger.LogWarning("Unexpected status code {StatusCode} from GiaoHangNhanh API",
                         response.StatusCode);

@@ -3,6 +3,7 @@ using System;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dao.Migrations
 {
     [DbContext(typeof(GiveAwayDbContext))]
-    partial class GiveAwayDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240821065111_EnforceDataTypesForConsignSaleDetail")]
+    partial class EnforceDataTypesForConsignSaleDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -234,9 +237,6 @@ namespace Dao.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("BankAccountNumber")
-                        .HasColumnType("text");
-
-                    b.Property<string>("BankLogo")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
@@ -1193,7 +1193,7 @@ namespace Dao.Migrations
 
             modelBuilder.Entity("BusinessObjects.Entities.Image", b =>
                 {
-                    b.HasOne("BusinessObjects.Entities.ConsignSaleDetail", "ConsignSaleDetail")
+                    b.HasOne("BusinessObjects.Entities.ConsignSaleDetail", null)
                         .WithMany("Images")
                         .HasForeignKey("ConsignSaleDetailId");
 
@@ -1209,8 +1209,6 @@ namespace Dao.Migrations
                         .WithMany("Images")
                         .HasForeignKey("RefundId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("ConsignSaleDetail");
 
                     b.Navigation("IndividualFashionItem");
 

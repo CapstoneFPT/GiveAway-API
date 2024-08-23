@@ -20,8 +20,10 @@ using Microsoft.Extensions.Configuration;
 using Services.Emails;
 using AutoMapper.Execution;
 using BusinessObjects.Utils;
+using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories.Refunds;
 using Services.GiaoHangNhanh;
 
@@ -42,13 +44,14 @@ public class OrderService : IOrderService
     private readonly IEmailService _emailService;
     private readonly IRefundRepository _refundRepository;
     private readonly IGiaoHangNhanhService _giaoHangNhanhService;
+    private readonly ILogger<OrderService> _logger;
 
     public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
         IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository,
         IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
         IShopRepository shopRepository, ITransactionRepository transactionRepository,
         IConfiguration configuration, IEmailService emailService, IRefundRepository refundRepository,
-        IGiaoHangNhanhService giaoHangNhanhService)
+        IGiaoHangNhanhService giaoHangNhanhService, ILogger<OrderService> logger)
     {
         _orderRepository = orderRepository;
         _fashionItemRepository = fashionItemRepository;
@@ -63,12 +66,13 @@ public class OrderService : IOrderService
         _emailService = emailService;
         _refundRepository = refundRepository;
         _giaoHangNhanhService = giaoHangNhanhService;
+        _logger = logger;
     }
 
-    public async Task<Result<OrderResponse>> CreateOrder(Guid accountId,
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrder(Guid accountId,
         CartRequest cart)
     {
-        var response = new Result<OrderResponse>();
+        var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
         if (cart.PaymentMethod.Equals(PaymentMethod.Cash))
         {
             throw new WrongPaymentMethodException("Not allow to pay with cash");
@@ -111,7 +115,8 @@ public class OrderService : IOrderService
         return response;
     }
 
-    public async Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderFromBid(
+        CreateOrderFromBidRequest orderRequest)
     {
         var toBeAdded = new Order()
         {
@@ -137,7 +142,7 @@ public class OrderService : IOrderService
             await _orderDetailRepository.CreateOrderDetail(orderDetails);
 
         orderResult.OrderDetails = new List<OrderDetail>() { orderDetailResult };
-        return new Result<OrderResponse>()
+        return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
         {
             Data = _mapper.Map<Order, OrderResponse>(orderResult),
             ResultStatus = ResultStatus.Success
@@ -223,7 +228,8 @@ public class OrderService : IOrderService
     }
 
 
-    public async Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreatePointPackageOrder(
+        PointPackageOrder order)
     {
         var orderResult = await _orderRepository.CreateOrder(new Order()
         {
@@ -242,7 +248,7 @@ public class OrderService : IOrderService
             PointPackageId = order.PointPackageId,
         });
 
-        return new Result<OrderResponse>()
+        return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
         {
             Data = new OrderResponse()
             {
@@ -278,7 +284,8 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateOrder(order);
     }
 
-    public async Task<Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(Guid accountId,
+    public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(
+        Guid accountId,
         OrderRequest request)
     {
         // var response = new Result<PaginationResponse<OrderResponse>>();
@@ -362,7 +369,7 @@ public class OrderService : IOrderService
             await _orderRepository.GetOrdersProjection<OrderListResponse>(request.PageNumber,
                 request.PageSize, predicate, selector);
 
-        return new Result<PaginationResponse<OrderListResponse>>()
+        return new BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>()
         {
             Data = new PaginationResponse<OrderListResponse>()
             {
@@ -376,9 +383,9 @@ public class OrderService : IOrderService
         };
     }
 
-    public async Task<Result<string>> CancelOrder(Guid orderId)
+    public async Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrder(Guid orderId)
     {
-        var response = new Result<string>();
+        var response = new BusinessObjects.Dtos.Commons.Result<string>();
         var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
         if (order == null)
         {
@@ -421,9 +428,9 @@ public class OrderService : IOrderService
         return response;
     }
 
-    public async Task<Result<string>> CancelOrderByAdmin(Guid orderId)
+    public async Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrderByAdmin(Guid orderId)
     {
-        var response = new Result<string>();
+        var response = new BusinessObjects.Dtos.Commons.Result<string>();
         var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
         if (order == null)
         {
@@ -473,7 +480,8 @@ public class OrderService : IOrderService
     }
 
 
-    public async Task<Result<PaginationResponse<OrderListResponse>>> GetOrders(OrderRequest orderRequest)
+    public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>> GetOrders(
+        OrderRequest orderRequest)
     {
         Expression<Func<Order, bool>> predicate = order => true;
         Expression<Func<Order, OrderListResponse>> selector = order => new OrderListResponse()
@@ -542,7 +550,7 @@ public class OrderService : IOrderService
             await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
                 orderRequest.PageSize, predicate, selector);
 
-        return new Result<PaginationResponse<OrderListResponse>>()
+        return new BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>()
         {
             Data = new PaginationResponse<OrderListResponse>()
             {
@@ -557,9 +565,9 @@ public class OrderService : IOrderService
     }
 
 
-    public async Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId)
     {
-        var response = new Result<OrderResponse>();
+        var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
         var order = await _orderRepository.GetOrderById(orderId);
         if (order == null || order.Status != OrderStatus.OnDelivery)
         {
@@ -583,9 +591,10 @@ public class OrderService : IOrderService
         return response;
     }
 
-    public async Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderByShop(Guid shopId,
+        CreateOrderRequest orderRequest)
     {
-        var response = new Result<OrderResponse>();
+        var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
         if (orderRequest.ItemIds.Count == 0)
         {
             response.Messages = ["You have no item for order"];
@@ -727,7 +736,8 @@ public class OrderService : IOrderService
         await _accountRepository.UpdateAccount(account);
     }
 
-    public async Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId, Guid orderdetailId)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderId,
+        Guid orderdetailId)
     {
         var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
         if (order == null)
@@ -759,7 +769,7 @@ public class OrderService : IOrderService
 
         await _orderRepository.UpdateOrder(order);
         await _emailService.SendEmailOrder(order);
-        var response = new Result<OrderResponse>();
+        var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
         response.ResultStatus = ResultStatus.Success;
         response.Messages = new[] { "Confirm order successfully. Order has to be ready for customer " };
         response.Data = _mapper.Map<OrderResponse>(order);
@@ -771,13 +781,22 @@ public class OrderService : IOrderService
     {
         var shippingFee = 0m;
         var shopLocation = new HashSet<ShippingLocation>();
-        var shops = _fashionItemRepository.GetIndividualQueryable()
+        var shops = await _fashionItemRepository.GetIndividualQueryable()
             .Include(x => x.Variation)
             .ThenInclude(x => x.MasterItem)
             .ThenInclude(x => x.Shop)
             .Where(x => itemIds.Contains(x.ItemId))
-            .Select(x => new Shop())
-            .ToHashSet();
+            .Select(x => new
+            {
+                ShopId = x.Variation.MasterItem.ShopId,
+                Address = x.Variation.MasterItem.Shop.Address,
+                GhnDistrictId = x.Variation.MasterItem.Shop.GhnDistrictId,
+                GhnWardCode = x.Variation.MasterItem.Shop.GhnWardCode,
+                ShopCode = x.Variation.MasterItem.Shop.ShopCode
+            })
+            .ToListAsync();
+
+        _logger.LogInformation("There is {ShopCount} shops", shops.Count);
 
         foreach (var shop in shops)
         {
@@ -788,18 +807,20 @@ public class OrderService : IOrderService
                     ToDistrictId = destinationDistrictId
                 });
 
-            if (ghnShippingResult.IsSuccessful)
+            if (!ghnShippingResult.IsSuccessful)
             {
-                shippingFee += ghnShippingResult.Value.Data.ServiceFee;
-                shopLocation.Add(
-                    new ShippingLocation()
-                    {
-                        Address = shop.Address,
-                        DistrictId = shop.GhnDistrictId.Value,
-                        WardCode = int.Parse(shop.GhnWardCode)
-                    }
-                );
+                return new Result<ShippingFeeResult, ErrorCode>(ghnShippingResult.Error);
             }
+
+            shippingFee += ghnShippingResult.Value.Data.ServiceFee;
+            shopLocation.Add(
+                new ShippingLocation()
+                {
+                    Address = shop.Address,
+                    DistrictId = shop.GhnDistrictId.Value,
+                    WardCode = int.Parse(shop.GhnWardCode)
+                }
+            );
         }
 
         return new DotNext.Result<ShippingFeeResult, ErrorCode>(new ShippingFeeResult

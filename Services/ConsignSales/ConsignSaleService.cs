@@ -131,17 +131,7 @@ namespace Services.ConsignSales
                 response.ResultStatus = ResultStatus.Error;
                 return response;
             }
-
-            //check list consign status pending co' dat gioi han. = 5 chua
-            // var listconsignpending = await _consignSaleRepository.GetAllConsignPendingByAccountId(accountId);
-            // if (listconsignpending.Count >= 5)
-            // {
-            //     response.Messages = ["You have reached the consignment limit"];
-            //     response.ResultStatus = ResultStatus.Error;
-            //     return response;
-            // }
-
-            //tao moi' 1 consign form
+         
             var consign = await _consignSaleRepository.CreateConsignSale(accountId, request);
             if (consign == null)
             {

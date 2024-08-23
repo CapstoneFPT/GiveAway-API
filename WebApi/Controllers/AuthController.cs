@@ -38,7 +38,7 @@ public class AuthController : ControllerBase
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
         }
-        
+
         return Ok(result);
     }
 
@@ -80,12 +80,12 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<Result<string>>> ForgotPassword([FromQuery] ForgetPasswordRequest request)
     {
         var user = await _authService.CheckPassword(request.Email, request.Password);
-        
-        if(user.ResultStatus != ResultStatus.Success)
+
+        if (user.ResultStatus != ResultStatus.Success)
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, user);
         }
-        
+
         return Ok(user);
     }
 
@@ -93,25 +93,25 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<Result<AccountResponse>>> ResetPassword(string confirmtoken)
     {
         var result = await _authService.ChangeToNewPassword(confirmtoken);
-        
-        if(result.ResultStatus != ResultStatus.Success)
+
+        if (result.ResultStatus != ResultStatus.Success)
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
         }
-        
+
         return Ok(result);
     }
 
     [HttpPost("register")]
     public async Task<ActionResult<Result<AccountResponse>>> Register(RegisterRequest registerRequest)
     {
-        var result =  await _authService.Register(registerRequest);
-        
-        if(result.ResultStatus != ResultStatus.Success)
+        var result = await _authService.Register(registerRequest);
+
+        if (result.ResultStatus != ResultStatus.Success)
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
         }
-        
+
         return result;
     }
 
@@ -120,12 +120,12 @@ public class AuthController : ControllerBase
         [FromBody] CreateStaffAccountRequest registerRequest)
     {
         var result = await _authService.CreateStaffAccount(registerRequest);
-        
-        if(result.ResultStatus != ResultStatus.Success)
+
+        if (result.ResultStatus != ResultStatus.Success)
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
         }
-        
+
         return result;
     }
 
@@ -134,22 +134,21 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.VerifyEmail(id, token);
         if (result.ResultStatus == ResultStatus.Success)
-            return Redirect("https://giveawayproject.jettonetto.org/");
+            return Redirect($"https://giveawayproject.jettonetto.org/verify-email?verificationstatus=success");
 
-        //Todo: Do something when validation failed
-        return Redirect("http://localhost:3000/");
+        return Redirect($"https://giveawayproject.jettonetto.org/verify-email?verificationstatus=failed");
     }
 
     [HttpGet("resend-verify-email")]
     public async Task<ActionResult<Result<string>>> ResendVerifyEmail(string email)
     {
         var result = await _authService.ResendVerifyEmail(email);
-        
-        if(result.ResultStatus != ResultStatus.Success)
+
+        if (result.ResultStatus != ResultStatus.Success)
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
         }
-        
+
         return Ok(result);
     }
 
@@ -158,12 +157,12 @@ public class AuthController : ControllerBase
         [FromBody] ChangePasswordRequest request)
     {
         var result = await _authService.CheckPasswordToChange(accountId, request);
-        
-        if(result.ResultStatus != ResultStatus.Success)
+
+        if (result.ResultStatus != ResultStatus.Success)
         {
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
         }
-        
+
         return Ok(result);
     }
 }

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
@@ -16,8 +17,11 @@ using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using DotNext;
 using LinqKit;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Repositories.BankAccounts;
 using Repositories.Inquiries;
 using Repositories.Transactions;
 using Repositories.Withdraws;
@@ -30,22 +34,24 @@ namespace Services.Accounts
         private readonly IInquiryRepository _inquiryRepository;
         private readonly IWithdrawRepository _withdrawRepository;
         private readonly ITransactionRepository _transactionRepository;
+        private readonly IBankAccountRepository _bankAccountRepository;
         private readonly IMapper _mapper;
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
-            IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository)
+            IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository, IBankAccountRepository bankAccountRepository)
         {
             _account = repository;
             _mapper = mapper;
             _inquiryRepository = inquiryRepository;
             _withdrawRepository = withdrawRepository;
             _transactionRepository = transactionRepository;
+            _bankAccountRepository = bankAccountRepository;
         }
 
-        public async Task<Result<AccountResponse>> BanAccountById(Guid id)
+        public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> BanAccountById(Guid id)
         {
             var user = await _account.GetAccountById(id);
-            var response = new Result<AccountResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<AccountResponse>();
             if (user == null)
             {
                 response.Messages = ["User does not existed"];
@@ -72,9 +78,9 @@ namespace Services.Accounts
             }
         }
 
-        public async Task<Result<AccountResponse>> GetAccountById(Guid id)
+        public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> GetAccountById(Guid id)
         {
-            var response = new Result<AccountResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<AccountResponse>();
             var user = await _account.GetAccountById(id);
             if (user == null)
             {
@@ -97,9 +103,10 @@ namespace Services.Accounts
             return _mapper.Map<List<AccountResponse>>(list);
         }
 
-        public async Task<Result<AccountResponse>> UpdateAccount(Guid id, UpdateAccountRequest request)
+        public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> UpdateAccount(Guid id,
+            UpdateAccountRequest request)
         {
-            var response = new Result<AccountResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<AccountResponse>();
             var user = await _account.GetAccountById(id);
             if (user == null)
             {
@@ -191,7 +198,6 @@ namespace Services.Accounts
         {
             var inquiry = new Inquiry()
             {
-                
                 Message = request.Message,
                 MemberId = accountId,
                 Status = InquiryStatus.Processing,
@@ -204,7 +210,7 @@ namespace Services.Accounts
             {
                 InquiryId = result.InquiryId,
                 MemberId = result.MemberId,
-                
+
                 Fullname = account.Fullname,
                 Email = account.Email,
                 Phone = account.Phone,
@@ -249,7 +255,7 @@ namespace Services.Accounts
 
             account.Balance -= request.Amount;
             await _account.UpdateAccount(account);
-            
+
             var transaction = new Transaction
             {
                 Amount = result.Amount,
@@ -297,9 +303,10 @@ namespace Services.Accounts
                 };
 
             (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await
-                _transactionRepository.GetTransactionsProjection<GetTransactionsResponse>(request.Page, request.PageSize,
+                _transactionRepository.GetTransactionsProjection<GetTransactionsResponse>(request.Page,
+                    request.PageSize,
                     predicate, orderBy, selector);
- 
+
             return new PaginationResponse<GetTransactionsResponse>()
             {
                 Items = data.Items,
@@ -343,6 +350,260 @@ namespace Services.Accounts
                 PageNumber = data.Page,
                 TotalCount = data.TotalCount
             };
+        }
+
+        public async Task<Result<List<BankAccountsListResponse>, ErrorCode>> GetBankAccounts(Guid accountId)
+        {
+            Expression<Func<BankAccount, bool>> predicate = bankAccount => bankAccount.MemberId == accountId;
+            Expression<Func<BankAccount, BankAccountsListResponse>> selector = bankAccount =>
+                new BankAccountsListResponse()
+                {
+                    BankAccountId = bankAccount.BankAccountId,
+                    BankAccountName = bankAccount.BankAccountName ?? "N/A",
+                    BankAccountNumber = bankAccount.BankAccountNumber ?? "N/A",
+                    BankName = bankAccount.Bank ?? "N/A",
+                    BankLogo = bankAccount.BankLogo ?? "N/A",
+                    IsDefault = bankAccount.IsDefault
+                };
+
+            try
+            {
+                var result = await _bankAccountRepository.GetQueryable()
+                    .Where(predicate)
+                    .Select(selector)
+                    .ToListAsync();
+
+                return new Result<List<BankAccountsListResponse>, ErrorCode>(result);
+            }
+            catch (Exception e)
+            {
+                return new Result<List<BankAccountsListResponse>, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        public async Task<Result<CreateBankAccountResponse, ErrorCode>> CreateBankAccount(Guid accountId,
+            CreateBankAccountRequest request)
+        {
+            if (!await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
+            {
+                return new Result<CreateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
+            }
+
+            var bankAccount = new BankAccount
+            {
+                Bank = request.BankName,
+                BankAccountName = request.BankAccountName,
+                BankAccountNumber = request.BankAccountNumber,
+                BankLogo = request.BankLogo,
+                MemberId = accountId,
+                IsDefault = !await _bankAccountRepository
+                    .GetQueryable()
+                    .Where(x => x.MemberId == accountId).AnyAsync()
+            };
+
+            try
+            {
+                var result = await _bankAccountRepository.CreateBankAccount(bankAccount);
+
+                return new Result<CreateBankAccountResponse, ErrorCode>(new CreateBankAccountResponse
+                {
+                    MemberId = accountId,
+                    BankAccountId = result.BankAccountId,
+                    BankAccountName = result.BankAccountName,
+                    BankAccountNumber = result.BankAccountNumber,
+                    BankName = result.Bank,
+                });
+            }
+            catch (Exception e)
+            {
+                return new Result<CreateBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        public async Task<Result<UpdateBankAccountResponse, ErrorCode>> UpdateBankAccount(Guid accountId,
+            Guid bankAccountId, UpdateBankAccountRequest request)
+        {
+            var existedBankAccount = await _bankAccountRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.BankAccountId == bankAccountId);
+
+            if (existedBankAccount == null)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            if (existedBankAccount.MemberId != accountId)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
+            }
+
+            if (request is { BankName: not null, BankAccountName: not null, BankAccountNumber: not null } &&
+                await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
+            }
+
+            existedBankAccount.Bank = request.BankName ?? existedBankAccount.Bank;
+            existedBankAccount.BankAccountName = request.BankAccountName ?? existedBankAccount.BankAccountName;
+            existedBankAccount.BankAccountNumber = request.BankAccountNumber ?? existedBankAccount.BankAccountNumber;
+            existedBankAccount.BankLogo = request.BankLogo ?? existedBankAccount.BankLogo;
+            existedBankAccount.IsDefault = request.IsDefault ?? existedBankAccount.IsDefault;
+
+
+            try
+            {
+                var otherBankAccounts = await _bankAccountRepository
+                    .GetQueryable()
+                    .Where(x =>
+                        x.MemberId == accountId
+                        && x.BankAccountId != bankAccountId
+                        && x.IsDefault)
+                    .ToListAsync();
+
+                if (existedBankAccount.IsDefault)
+                {
+                    foreach (var otherBankAccount in otherBankAccounts)
+                    {
+                        otherBankAccount.IsDefault = false;
+                    }
+
+                    await _bankAccountRepository.UpdateRange(otherBankAccounts);
+                }
+                else
+                {
+                    if (otherBankAccounts.Count == 0)
+                        return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.NoBankAccountLeft);
+                }
+
+                await _bankAccountRepository.UpdateBankAccount(existedBankAccount);
+                return new Result<UpdateBankAccountResponse, ErrorCode>(new UpdateBankAccountResponse
+                {
+                    BankAccountId = existedBankAccount.BankAccountId,
+                    BankName = existedBankAccount.Bank ?? "N/A",
+                    BankAccountName = existedBankAccount.BankAccountName ?? "N/A",
+                    BankAccountNumber = existedBankAccount.BankAccountNumber ?? "N/A",
+                    MemberId = accountId
+                });
+            }
+            catch (Exception e)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        public async Task<Result<DeleteBankAccountResponse, ErrorCode>> DeleteBankAccount(Guid accountId,
+            Guid bankAccountId)
+        {
+            var existedBankAccount = await _bankAccountRepository
+                .GetQueryable()
+                .FirstOrDefaultAsync(x => x.BankAccountId == bankAccountId);
+
+            if (existedBankAccount == null)
+            {
+                return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            if (existedBankAccount.MemberId != accountId)
+            {
+                return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
+            }
+
+            try
+            {
+                if (existedBankAccount.IsDefault)
+                {
+                    var prevBankAccount = await _bankAccountRepository
+                        .GetQueryable()
+                        .Where(x =>
+                            x.CreatedDate < existedBankAccount.CreatedDate)
+                        .OrderByDescending(x => x.CreatedDate)
+                        .FirstOrDefaultAsync();
+                    if (prevBankAccount != null)
+                    {
+                        prevBankAccount.IsDefault = true;
+                        await _bankAccountRepository.UpdateBankAccount(prevBankAccount);
+                    }
+                    else
+                    {
+                        return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.NoBankAccountLeft);
+                    }
+                }
+
+                await _bankAccountRepository.DeleteBankAccount(existedBankAccount);
+                return new Result<DeleteBankAccountResponse, ErrorCode>(new DeleteBankAccountResponse
+                {
+                    BankAccountId = existedBankAccount.BankAccountId,
+                    BankName = existedBankAccount.Bank ?? "N/A",
+                    BankAccountName = existedBankAccount.BankAccountName ?? "N/A",
+                    BankAccountNumber = existedBankAccount.BankAccountNumber ?? "N/A",
+                    IsDefault = existedBankAccount.IsDefault,
+                    MemberId = accountId
+                });
+            }
+            catch (Exception e)
+            {
+                return new Result<DeleteBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        public async Task<Result<UpdateBankAccountResponse, ErrorCode>> SetDefaultBankAccount(Guid accountId,
+            Guid bankAccountId)
+        {
+            var existedBankAccount = await _bankAccountRepository
+                .GetQueryable()
+                .FirstOrDefaultAsync(x => x.BankAccountId == bankAccountId);
+
+            if (existedBankAccount == null)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            if (existedBankAccount.MemberId != accountId)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
+            }
+
+            try
+            {
+                var otherBankAccounts = await _bankAccountRepository
+                    .GetQueryable()
+                    .Where(x =>
+                        x.BankAccountId != bankAccountId
+                        && x.IsDefault)
+                    .ToListAsync();
+
+                foreach (var otherBankAccount in otherBankAccounts)
+                {
+                    otherBankAccount.IsDefault = false;
+                }
+
+                await _bankAccountRepository.UpdateRange(otherBankAccounts);
+                existedBankAccount.IsDefault = true;
+                await _bankAccountRepository.UpdateBankAccount(existedBankAccount);
+                return new Result<UpdateBankAccountResponse, ErrorCode>(new UpdateBankAccountResponse
+                {
+                    BankAccountId = existedBankAccount.BankAccountId,
+                    BankName = existedBankAccount.Bank ?? "N/A",
+                    BankAccountName = existedBankAccount.BankAccountName ?? "N/A",
+                    BankAccountNumber = existedBankAccount.BankAccountNumber ?? "N/A",
+                    IsDefault = existedBankAccount.IsDefault,
+                    MemberId = accountId
+                });
+            }
+            catch (Exception e)
+            {
+                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        private Task<bool> CheckBankAccountExisted(string bank, string accountName, string accountNumber)
+        {
+            Expression<Func<BankAccount, bool>> predicate = account =>
+                account.Bank == bank && account.BankAccountName == accountName &&
+                account.BankAccountNumber == accountNumber;
+
+            return _bankAccountRepository
+                .GetQueryable()
+                .AnyAsync(predicate);
         }
     }
 }
