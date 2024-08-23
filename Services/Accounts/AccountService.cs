@@ -384,10 +384,10 @@ namespace Services.Accounts
         public async Task<Result<CreateBankAccountResponse, ErrorCode>> CreateBankAccount(Guid accountId,
             CreateBankAccountRequest request)
         {
-            if (await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
-            {
-                return new Result<CreateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
-            }
+            // if (await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
+            // {
+            //     return new Result<CreateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
+            // }
 
             var bankAccount = new BankAccount
             {
@@ -436,11 +436,11 @@ namespace Services.Accounts
                 return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
             }
 
-            if (request is { BankName: not null, BankAccountName: not null, BankAccountNumber: not null } &&
-                await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
-            {
-                return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
-            }
+            // if (request is { BankName: not null, BankAccountName: not null, BankAccountNumber: not null } &&
+            //     await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
+            // {
+            //     return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
+            // }
 
             existedBankAccount.Bank = request.BankName ?? existedBankAccount.Bank;
             existedBankAccount.BankAccountName = request.BankAccountName ?? existedBankAccount.BankAccountName;
