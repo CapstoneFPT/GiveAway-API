@@ -399,6 +399,7 @@ namespace Services.Accounts
                 IsDefault = !await _bankAccountRepository
                     .GetQueryable()
                     .Where(x => x.MemberId == accountId).AnyAsync()
+                ,CreatedDate = DateTime.UtcNow
             };
 
             try
@@ -513,7 +514,7 @@ namespace Services.Accounts
                     var prevBankAccount = await _bankAccountRepository
                         .GetQueryable()
                         .Where(x =>
-                            x.CreatedDate < existedBankAccount.CreatedDate)
+                            x.CreatedDate < existedBankAccount.CreatedDate && x.MemberId == accountId)
                         .OrderByDescending(x => x.CreatedDate)
                         .FirstOrDefaultAsync();
                     if (prevBankAccount != null)
