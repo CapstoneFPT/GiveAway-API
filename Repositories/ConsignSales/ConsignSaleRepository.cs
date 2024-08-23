@@ -195,22 +195,24 @@ namespace Repositories.ConsignSales
 
             var listItemInConsign = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                 .Where(c => consignSaleDetailIds.Contains(c.ConsignSaleDetailId!.Value)).ToListAsync();
-            /*foreach (var detail in consign.ConsignSaleDetails)
-            {
-                var individualItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                    .Where(c => c.)
-            }*/
+            
             if (listItemInConsign.Count < consign.ConsignSaleDetails.Count)
             {
                 throw new MissingFeatureException("You should create enough item for consign");
             }
+            foreach (var individualItem in listItemInConsign)
+            {
+                individualItem.Status = FashionItemStatus.Unavailable;
+            }
+
+            await GenericDao<IndividualFashionItem>.Instance.UpdateRange(listItemInConsign);
             consign.Status = ConsignSaleStatus.Received;
             consign.StartDate = DateTime.UtcNow;
             consign.EndDate = DateTime.UtcNow.AddDays(1);
 
-            decimal totalprice = 0;
-            consign.TotalPrice = totalprice;
-            if (consign.Type.Equals(ConsignSaleType.ForSale))
+            // decimal totalprice = 0;
+            consign.TotalPrice = consign.ConsignSaleDetails.Sum(c => c.ConfirmedPrice!.Value);
+            /*if (consign.Type.Equals(ConsignSaleType.ForSale))
             {
                 var shop = await _giveAwayDbContext.Shops.AsQueryable()
                     .Where(c => c.ShopId == consign.ShopId)
@@ -222,7 +224,7 @@ namespace Repositories.ConsignSales
                     .FirstOrDefaultAsync();
                 member.Balance += totalprice;
                 await GenericDao<Account>.Instance.UpdateAsync(member);
-            }
+            }*/
             
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
 

@@ -519,11 +519,12 @@ namespace Services.FashionItems
                     Note = individual.Note,
                     VariationId = variationId,
                     CreatedDate = DateTime.UtcNow,
-                    Status = FashionItemStatus.Unavailable,
+                    // Status = FashionItemStatus.Unavailable,
                     Type = FashionItemType.ItemBase,
                     SellingPrice = individual.SellingPrice,
                     ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemCode),
                 };
+                dataIndividual.Status = masterItem.IsConsignment == false ? FashionItemStatus.Unavailable : FashionItemStatus.PendingForConsignSale;
                 dataIndividual = await _fashionitemRepository.AddInvidualFashionItem(dataIndividual);
 
                 var individualItemImages = new List<Image>();
