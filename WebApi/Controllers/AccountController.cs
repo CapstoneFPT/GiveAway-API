@@ -254,6 +254,7 @@ public class AccountController : ControllerBase
         {
             return result.Error switch
             {
+                ErrorCode.DuplicateBankAccount => Conflict(new ErrorResponse("Bank account already exists", ErrorType.AccountError,HttpStatusCode.Conflict, ErrorCode.DuplicateBankAccount)),
                 ErrorCode.ServerError => StatusCode(500,
                     new ErrorResponse("Error saving bank account", ErrorType.ApiError,
                         HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
@@ -289,8 +290,8 @@ public class AccountController : ControllerBase
                 ErrorCode.NoBankAccountLeft => BadRequest(new ErrorResponse(
                     "There must be at least 1 default bank account", ErrorType.AccountError, HttpStatusCode.BadRequest,
                     ErrorCode.NoBankAccountLeft)),
-                ErrorCode.DuplicateBankAccount => BadRequest(new ErrorResponse(
-                    "The bank accounts must be unique", ErrorType.AccountError, HttpStatusCode.BadRequest,
+                ErrorCode.DuplicateBankAccount => Conflict(new ErrorResponse(
+                    "The bank accounts must be unique", ErrorType.AccountError, HttpStatusCode.Conflict,
                     ErrorCode.DuplicateBankAccount)),
                 ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized", ErrorType.AccountError,
                     HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),

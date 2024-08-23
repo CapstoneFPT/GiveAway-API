@@ -384,7 +384,7 @@ namespace Services.Accounts
         public async Task<Result<CreateBankAccountResponse, ErrorCode>> CreateBankAccount(Guid accountId,
             CreateBankAccountRequest request)
         {
-            if (!await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
+            if (await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
             {
                 return new Result<CreateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
             }
