@@ -5,6 +5,7 @@ public class BankAccount
     public Guid BankAccountId { get; set; }
 
     public string? Bank { get; set; }
+    public string? BankLogo {get;set;}
     public string? BankAccountNumber { get; set; }
     public string? BankAccountName { get; set; }
     public bool IsDefault { get; set; }

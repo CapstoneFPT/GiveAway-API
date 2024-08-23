@@ -6,5 +6,6 @@ public class BankAccountsListResponse
     public string BankName { get; set; }
     public string BankAccountNumber { get; set; }
     public string BankAccountName { get; set; }
+    public string BankLogo { get; set; }
     public bool IsDefault { get; set; }
 }

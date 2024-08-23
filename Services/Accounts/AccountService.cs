@@ -362,6 +362,7 @@ namespace Services.Accounts
                     BankAccountName = bankAccount.BankAccountName ?? "N/A",
                     BankAccountNumber = bankAccount.BankAccountNumber ?? "N/A",
                     BankName = bankAccount.Bank ?? "N/A",
+                    BankLogo = bankAccount.BankLogo ?? "N/A",
                     IsDefault = bankAccount.IsDefault
                 };
 
@@ -393,6 +394,7 @@ namespace Services.Accounts
                 Bank = request.BankName,
                 BankAccountName = request.BankAccountName,
                 BankAccountNumber = request.BankAccountNumber,
+                BankLogo = request.BankLogo,
                 MemberId = accountId,
                 IsDefault = !await _bankAccountRepository
                     .GetQueryable()
@@ -443,6 +445,7 @@ namespace Services.Accounts
             existedBankAccount.Bank = request.BankName ?? existedBankAccount.Bank;
             existedBankAccount.BankAccountName = request.BankAccountName ?? existedBankAccount.BankAccountName;
             existedBankAccount.BankAccountNumber = request.BankAccountNumber ?? existedBankAccount.BankAccountNumber;
+            existedBankAccount.BankLogo = request.BankLogo ?? existedBankAccount.BankLogo;
             existedBankAccount.IsDefault = request.IsDefault ?? existedBankAccount.IsDefault;
 
 
