@@ -76,10 +76,10 @@ namespace Repositories
                 .ForMember(a => a.Consginer, opt => opt.MapFrom(a => a.ConsignorName))
                 .ForMember(a => a.ConsignSaleDetails, opt => opt.MapFrom(a => a.ConsignSaleDetails))
                 .ReverseMap();
-            CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse>()
-                /*.ForMember(dest => dest.FashionItem, opt => opt.MapFrom(src => src.FashionItem))*/
-                .ForMember(dest => dest.ConsignSaleCode, opt => opt.MapFrom(src => src.ConsignSale.ConsignSaleCode))
-                .ReverseMap();
+            // CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse>()
+            //     /*.ForMember(dest => dest.FashionItem, opt => opt.MapFrom(src => src.FashionItem))*/
+            //     .ForMember(dest => dest.ConsignSaleCode, opt => opt.MapFrom(src => src.ConsignSale.ConsignSaleCode))
+            //     .ReverseMap();
             CreateMap<Shop, ShopDetailResponse>() .ReverseMap();
             CreateMap<Refund, RefundResponse>()
                 .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.Select(c => c.Url)))

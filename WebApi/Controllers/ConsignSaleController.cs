@@ -116,14 +116,28 @@ namespace WebApi.Controllers
                 : Ok(result);
         }
         [HttpGet("{consignsaleId}/consignsaledetails")]
-        public async Task<ActionResult<Result<List<ConsignSaleDetailResponse>>>> GetConsignSaleDetailsByConsignSaleId(
+        [ProducesResponseType<List<ConsignSaleDetailResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetConsignSaleDetailsByConsignSaleId(
             [FromRoute] Guid consignsaleId)
         {
-            var result = await _consignsaleService.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
+            var result = await _consignsaleService.GetConsignSaleDetails(consignsaleId);
 
-            return result.ResultStatus != ResultStatus.Success
-                ? StatusCode((int)HttpStatusCode.InternalServerError, result)
-                : Ok(result);
+            if (!result.IsSuccessful)
+
+            {
+                return result.Error switch
+                {
+                    ErrorCode.ServerError => StatusCode(500,
+                        new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.UnknownError))
+                };
+            }
+
+            return Ok(result.Value);
         }
     }
 
