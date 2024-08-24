@@ -11,6 +11,7 @@ using DotNext;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Quartz;
 using Repositories.Accounts;
@@ -35,11 +36,12 @@ namespace Services.ConsignSales
         private readonly ISchedulerFactory _schedulerFactory;
         private readonly IFashionItemRepository _fashionItemRepository;
         private readonly IImageRepository _imageRepository;
+        private readonly ILogger<ConsignSaleService> _logger;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
             IConsignSaleDetailRepository consignSaleDetailRepository
             , IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
-            ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository, IImageRepository imageRepository)
+            ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository, IImageRepository imageRepository, ILogger<ConsignSaleService> logger)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
@@ -50,6 +52,7 @@ namespace Services.ConsignSales
             _schedulerFactory = schedulerFactory;
             _fashionItemRepository = fashionItemRepository;
             _imageRepository = imageRepository;
+            _logger = logger;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
@@ -266,6 +269,7 @@ namespace Services.ConsignSales
             }
             catch (Exception e)
             {
+                _logger.LogError(e, "Get consign sale details error");
                 return new Result<List<ConsignSaleDetailResponse>, ErrorCode>(ErrorCode.ServerError);
             }
         } 
