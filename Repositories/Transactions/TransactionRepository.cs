@@ -45,7 +45,7 @@ namespace Repositories.Transactions
 
             if (predicate != null)
             {
-                query = query.OrderByDescending(orderBy).Where(predicate);
+                query = query.Where(predicate);
             }
 
             var total = await query.CountAsync();
@@ -61,11 +61,11 @@ namespace Repositories.Transactions
             List<T> result;
             if (selector != null)
             {
-                result = await query.Select(selector).ToListAsync();
+                result = await query.OrderByDescending(orderBy).Select(selector).ToListAsync();
             }
             else
             {
-                result = await query.Cast<T>().ToListAsync();
+                result = await query.OrderByDescending(orderBy).Cast<T>().ToListAsync();
             }
             
             return (result, page, pageSize, total);

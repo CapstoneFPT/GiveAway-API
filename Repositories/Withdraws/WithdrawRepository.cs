@@ -34,7 +34,7 @@ public class WithdrawRepository : IWithdrawRepository
 
     public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetWithdraws<T>(int? requestPage,
         int? requestPageSize, Expression<Func<Withdraw, bool>> predicate, Expression<Func<Withdraw, T>> selector,
-        bool isTracking)
+        bool isTracking, Expression<Func<Withdraw, DateTime>> orderBy)
     {
         var query = _giveAwayDbContext.Withdraws.AsQueryable();
 
@@ -62,11 +62,11 @@ public class WithdrawRepository : IWithdrawRepository
         
         if (selector != null)
         {
-            result = await query.Select(selector).ToListAsync();
+            result = await query.OrderByDescending(orderBy).Select(selector).ToListAsync();
         }
         else
         {
-            result = await query.Cast<T>().ToListAsync();
+            result = await query.OrderByDescending(orderBy).Cast<T>().ToListAsync();
         }
 
         return (result, page, pageSize, total);

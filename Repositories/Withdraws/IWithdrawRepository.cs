@@ -10,5 +10,5 @@ public interface IWithdrawRepository
     Task UpdateWithdraw(Withdraw withdraw);
     Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetWithdraws<T>(int? requestPage,
         int? requestPageSize, Expression<Func<Withdraw, bool>> predicate, Expression<Func<Withdraw, T>> selector,
-        bool isTracking);
+        bool isTracking, Expression<Func<Withdraw, DateTime>> orderBy);
 }
