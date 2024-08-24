@@ -38,7 +38,8 @@ namespace Services.Accounts
         private readonly IMapper _mapper;
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
-            IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository, IBankAccountRepository bankAccountRepository)
+            IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository,
+            IBankAccountRepository bankAccountRepository)
         {
             _account = repository;
             _mapper = mapper;
@@ -339,9 +340,11 @@ namespace Services.Accounts
                 CreatedDate = withdraw.CreatedDate
             };
 
+            Expression<Func<Withdraw, DateTime>> orderBy = withdraw => withdraw.CreatedDate;
+
             (List<GetWithdrawsResponse> Items, int Page, int PageSize, int TotalCount) data = await
                 _withdrawRepository.GetWithdraws(request.Page, request.PageSize,
-                    predicate, selector, isTracking: false);
+                    predicate, selector, isTracking: false, orderBy: orderBy);
 
             return new PaginationResponse<GetWithdrawsResponse>()
             {
@@ -398,8 +401,8 @@ namespace Services.Accounts
                 MemberId = accountId,
                 IsDefault = !await _bankAccountRepository
                     .GetQueryable()
-                    .Where(x => x.MemberId == accountId).AnyAsync()
-                ,CreatedDate = DateTime.UtcNow
+                    .Where(x => x.MemberId == accountId).AnyAsync(),
+                CreatedDate = DateTime.UtcNow
             };
 
             try
