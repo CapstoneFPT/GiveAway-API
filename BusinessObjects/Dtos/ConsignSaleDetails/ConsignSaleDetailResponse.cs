@@ -20,6 +20,7 @@ namespace BusinessObjects.Dtos.ConsignSaleDetails
         public string Brand { get; set; }
         public string Color { get; set; }
         public SizeType Size { get; set; }
+        public GenderType Gender { get; set; }
         public string Condition { get; set; }
         public DateTime CreatedDate { get; set; }
         

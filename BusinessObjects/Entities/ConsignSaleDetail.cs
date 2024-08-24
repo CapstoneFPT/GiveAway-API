@@ -18,6 +18,7 @@ public class ConsignSaleDetail
     public string Color { get; set; }
     public SizeType Size { get; set; }
     public string Condition { get; set; }
+    public GenderType Gender { get; set; }
     
     public DateTime CreatedDate { get; set; }
     public IndividualFashionItem IndividualFashionItem { get; set; }

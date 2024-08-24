@@ -247,6 +247,7 @@ namespace Services.ConsignSales
                     Condition = detail.Condition,
                     Brand = detail.Brand,
                     Color = detail.Color,
+                    Gender = detail.Gender,
                     Size = detail.Size,
                     Images = detail.Images.Select(x => x.Url ?? string.Empty).ToList(),
                     ConfirmedPrice = detail.ConfirmedPrice,
