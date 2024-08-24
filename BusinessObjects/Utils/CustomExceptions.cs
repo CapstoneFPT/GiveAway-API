@@ -91,3 +91,5 @@ public class AddressNotFoundException : Exception{}
 public class OrderDetailNotFoundException : Exception{}
 public class MissingFeatureException(string message) : Exception(message){}
 public class OverStockException(string message) : Exception(message){}
+public class MasterItemNotAvailableException(string message): Exception(message){}
+public class ItemVariationNotAvailableException(string message): Exception(message){}

@@ -18,7 +18,13 @@ namespace Services.ConsignSales
         Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(ConsignSaleRequestForShop request);
         
         Task<Result<List<ConsignSaleDetailResponse>>> GetConsignSaleDetailsByConsignSaleId(Guid consignsaleId);
-        Task<Result<MasterItemResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignSaleDetailid, CreateMasterItemForConsignRequest detailRequest);
+        Task<Result<MasterItemResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignsaleId, CreateMasterItemForConsignRequest detailRequest);
+
+        Task<Result<ItemVariationListResponse>> CreateVariationFromConsignSaleDetail(Guid masteritemId,
+            CreateItemVariationRequestForConsign request);
+
+        Task<Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleDetail(Guid consignsaledetailId,
+            Guid variationId, CreateIndividualItemRequestForConsign request);
         Task UpdateConsignPrice(Guid orderId);
     }
 }

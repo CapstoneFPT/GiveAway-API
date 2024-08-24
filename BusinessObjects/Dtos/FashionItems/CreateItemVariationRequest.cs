@@ -19,3 +19,17 @@ public class CreateIndividualItemRequest
     public decimal SellingPrice { get; set; }
     public string[] Images { get; set; }
 }
+
+public class CreateItemVariationRequestForConsign
+{
+    public string Condition { get; set; }
+    public decimal Price { get; set; }
+    public string Color { get; set; }
+    public SizeType Size { get; set; }
+}
+
+public class CreateIndividualItemRequestForConsign
+{
+    public string Note { get; set; }
+    public string[] Images { get; set; }
+}
