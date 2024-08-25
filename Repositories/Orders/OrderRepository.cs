@@ -46,10 +46,11 @@ namespace Repositories.Orders
             CartRequest cart)
         {
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                .Include(c => c.Variation)
-                .ThenInclude(c => c.MasterItem)
-                .Where(c => cart.ItemIds.Contains(c.ItemId)).ToListAsync();
-            /*var shopIds = listItem.Select(c => c.Variation.MasterItem.ShopId).Distinct().ToList();*/
+                .Include(individualFashionItem => individualFashionItem.Variation)
+                .ThenInclude(itemVariation => itemVariation.MasterItem)
+                .Where(individualFashionItem => 
+                    cart.CartItems.Select(ci => ci.ItemId).Contains(individualFashionItem.ItemId))
+                .ToListAsync();
             var memberAccount = await GenericDao<Account>.Instance.GetQueryable()
                 .FirstOrDefaultAsync(c => c.AccountId == accountId);
 
@@ -86,14 +87,11 @@ namespace Repositories.Orders
 
             foreach (var individualItem in listItem)
             {
-                /*var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                    .Include(c => c.Variation)
-                    .ThenInclude(x => x.MasterItem)
-                    .FirstOrDefaultAsync(c => c.ItemId == individualId);*/
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = order.OrderId;
                 orderDetail.UnitPrice = individualItem.SellingPrice!.Value;
                 orderDetail.CreatedDate = DateTime.UtcNow;
+                orderDetail.Quantity = 1;
                 orderDetail.IndividualFashionItemId = individualItem.ItemId;
 
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
@@ -472,15 +470,11 @@ namespace Repositories.Orders
 
             foreach (var item in listItem)
             {
-                /*var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                    .Include(c => c.Shop)
-                    .FirstOrDefaultAsync(c => c.ItemId == id);*/
-
                 OrderDetail orderDetail = new OrderDetail();
                 orderDetail.OrderId = order.OrderId;
                 orderDetail.UnitPrice = item.SellingPrice!.Value;
                 orderDetail.CreatedDate = DateTime.UtcNow;
-
+                orderDetail.Quantity = 1;
                 orderDetail.IndividualFashionItemId = item.ItemId;
 
                 await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
@@ -496,10 +490,6 @@ namespace Repositories.Orders
 
                 listOrderDetailResponse.Add(orderDetailResponse);
             }
-
-            /*orderresult.TotalPrice = totalPrice;
-            var orderresultUpdate = await GenericDao<Order>.Instance.UpdateAsync(orderresult);*/
-
 
             var orderResponse = new OrderResponse()
             {

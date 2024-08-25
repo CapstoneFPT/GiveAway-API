@@ -78,14 +78,14 @@ public class OrderService : IOrderService
             throw new WrongPaymentMethodException("Not allow to pay with cash");
         }
 
-        if (cart.ItemIds.Count == 0)
+        if (cart.CartItems.Count == 0)
         {
             response.Messages = ["You have no item for order"];
             response.ResultStatus = ResultStatus.Error;
             return response;
         }
 
-        var checkItemAvailable = await _orderRepository.IsOrderAvailable(cart.ItemIds);
+        var checkItemAvailable = await _orderRepository.IsOrderAvailable(cart.CartItems.Select(ci => ci.ItemId as Guid?).ToList());
         if (checkItemAvailable.Count > 0)
         {
             var orderResponse = new OrderResponse();
@@ -97,7 +97,7 @@ public class OrderService : IOrderService
             return response;
         }
 
-        var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.ItemIds, accountId);
+        var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.CartItems.Select(ci => ci.ItemId as Guid?).ToList(), accountId);
         if (checkOrderExisted.Count > 0)
         {
             var listItemExisted = checkOrderExisted.Select(x => x.IndividualFashionItemId).ToList();
