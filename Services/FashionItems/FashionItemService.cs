@@ -259,7 +259,8 @@ namespace Services.FashionItems
             }
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> GetFashionItemById(Guid id)
+        public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> GetFashionItemById(Guid id,
+            Guid? memberId)
         {
             var response = new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>();
             var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == id);
@@ -270,7 +271,30 @@ namespace Services.FashionItems
                 return response;
             }
 
-            response.Data = _mapper.Map<FashionItemDetailResponse>(item);
+            var result = new FashionItemDetailResponse()
+            {
+                ItemId = item.ItemId,
+                Brand = item.Variation?.MasterItem.Brand,
+                Color = item.Variation?.Color ?? "N/A",
+                Condition = item.Variation?.Condition ?? "N/A",
+                Description = item.Variation?.MasterItem.Description ?? "N/A",
+                Gender = item.Variation!.MasterItem.Gender,
+                Name = item.Variation.MasterItem.Name,
+                Size = item.Variation.Size,
+                SellingPrice = item.SellingPrice ?? 0,
+                Status = item.Status,
+                Images = item.Images.Select(x => x.Url).ToList(),
+                Note = item.Note,
+                Type = item.Type,
+                ShopAddress = item.Variation!.MasterItem.Shop.Address,
+                CategoryName = item.Variation!.MasterItem.Category.Name,
+                IsConsignment = item.Variation!.MasterItem.IsConsignment,
+                ItemCode = item.ItemCode,
+                IsOrderedYet = memberId != null &&
+                               _fashionitemRepository.CheckItemIsInOrder(item.ItemId, memberId.Value)
+            };
+
+            response.Data = result;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Successfully"];
             return response;

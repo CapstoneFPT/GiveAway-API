@@ -117,9 +117,9 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{itemId}")]
-        public async Task<ActionResult<Result<FashionItemDetailResponse>>> GetFashionItemById([FromRoute] Guid itemId)
+        public async Task<ActionResult<Result<FashionItemDetailResponse>>> GetFashionItemById([FromRoute] Guid itemId, [FromQuery] Guid? memberId)
         {
-            var result = await _fashionItemService.GetFashionItemById(itemId);
+            var result = await _fashionItemService.GetFashionItemById(itemId,memberId);
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
