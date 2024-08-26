@@ -11,6 +11,7 @@ public class OrderDetailsResponse
     public DateTime? RefundExpirationDate { get; set; }
     public string? ItemName { get; set; }
     public FashionItemType? ItemType { get; set; }
+    public string? ItemCode { get; set; }
     public string? ItemNote { get; set; }
     public string? Condition { get; set; }
     public string? CategoryName { get; set; }
