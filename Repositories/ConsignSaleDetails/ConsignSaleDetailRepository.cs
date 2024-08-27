@@ -31,6 +31,11 @@ public class ConsignSaleDetailRepository : IConsignSaleDetailRepository
         return lstconsignSaleDetail;
     }
 
+    public IQueryable<ConsignSaleDetail> GetQueryable()
+    {
+       return GenericDao<ConsignSaleDetail>.Instance.GetQueryable(); 
+    }
+
     public async Task<ConsignSaleDetail?> GetSingleConsignSaleDetail(Expression<Func<ConsignSaleDetail, bool>> predicate)
     {
         var result = await GenericDao<ConsignSaleDetail>.Instance

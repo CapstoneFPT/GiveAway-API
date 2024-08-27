@@ -443,13 +443,19 @@ public class GiveAwayDbContext : DbContext
             .HasForeignKey<IndividualFashionItem>(x=>x.ConsignSaleDetailId);
         
         modelBuilder.Entity<ConsignSaleDetail>()
-            .HasMany<Image>(x=>x.Images)
+            .HasMany(x=>x.Images)
             .WithOne(x=>x.ConsignSaleDetail)
             .HasForeignKey(x=>x.ConsignSaleDetailId);
 
         modelBuilder.Entity<ConsignSaleDetail>()
             .Property(x => x.Size)
             .HasConversion(prop => prop.ToString(), s => (SizeType)Enum.Parse(typeof(SizeType), s))
+            .HasColumnType("varchar")
+            .HasMaxLength(15);
+        
+        modelBuilder.Entity<ConsignSaleDetail>()
+            .Property(x=>x.Gender)
+            .HasConversion(prop => prop.ToString(), s => (GenderType)Enum.Parse(typeof(GenderType), s))
             .HasColumnType("varchar")
             .HasMaxLength(15);
         

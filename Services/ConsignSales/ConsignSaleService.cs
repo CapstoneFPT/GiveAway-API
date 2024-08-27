@@ -7,8 +7,11 @@ using BusinessObjects.Dtos.Email;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using DotNext;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Quartz;
 using Repositories.Accounts;
@@ -33,11 +36,12 @@ namespace Services.ConsignSales
         private readonly ISchedulerFactory _schedulerFactory;
         private readonly IFashionItemRepository _fashionItemRepository;
         private readonly IImageRepository _imageRepository;
+        private readonly ILogger<ConsignSaleService> _logger;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
             IConsignSaleDetailRepository consignSaleDetailRepository
             , IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
-            ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository, IImageRepository imageRepository)
+            ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository, IImageRepository imageRepository, ILogger<ConsignSaleService> logger)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
@@ -48,12 +52,13 @@ namespace Services.ConsignSales
             _schedulerFactory = schedulerFactory;
             _fashionItemRepository = fashionItemRepository;
             _imageRepository = imageRepository;
+            _logger = logger;
         }
 
-        public async Task<Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
             ApproveConsignSaleRequest request)
         {
-            var response = new Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
             var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
             if (consign == null)
             {
@@ -78,9 +83,9 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId)
         {
-            var response = new Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
             var consign = await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleId == consignId);
             if (consign == null)
             {
@@ -119,10 +124,10 @@ namespace Services.ConsignSales
             await schedule.ScheduleJob(endJob, endTrigger);
         }
 
-        public async Task<Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId,
             CreateConsignSaleRequest request)
         {
-            var response = new Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
             //check account co' active hay ko
             var account = await _accountRepository.GetAccountById(accountId);
             if (account == null || account.Status.Equals(AccountStatus.Inactive) ||
@@ -147,10 +152,10 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId,
             CreateConsignSaleByShopRequest request)
         {
-            var response = new Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
             var isMemberExisted = await _accountRepository.FindUserByPhone(request.Phone);
             if (isMemberExisted != null)
             {
@@ -180,10 +185,10 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSales(Guid accountId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSales(Guid accountId,
             ConsignSaleRequest request)
         {
-            var response = new Result<PaginationResponse<ConsignSaleResponse>>();
+            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleResponse>>();
             var listConsign = await _consignSaleRepository.GetAllConsignSale(accountId, request);
             if (listConsign == null)
             {
@@ -198,10 +203,10 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(
+        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(
             ConsignSaleRequestForShop request)
         {
-            var response = new Result<PaginationResponse<ConsignSaleResponse>>();
+            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleResponse>>();
             var listConsign = await _consignSaleRepository.GetAllConsignSaleByShopId(request);
             if (listConsign.TotalCount == 0)
             {
@@ -216,9 +221,9 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ConsignSaleResponse>> GetConsignSaleById(Guid consignId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> GetConsignSaleById(Guid consignId)
         {
-            var response = new Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
             var Consign = await _consignSaleRepository.GetConsignSaleById(consignId);
             if (Consign == null)
             {
@@ -233,23 +238,46 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<List<ConsignSaleDetailResponse>>> GetConsignSaleDetailsByConsignSaleId(
-            Guid consignsaleId)
+        public async Task<DotNext.Result<List<ConsignSaleDetailResponse>, ErrorCode>> GetConsignSaleDetails(Guid consignSaleId)
         {
-            var result = await _consignSaleDetailRepository.GetConsignSaleDetailsByConsignSaleId(consignsaleId);
-            var response = new Result<List<ConsignSaleDetailResponse>>()
-            {
-                Data = result,
-                Messages = new[] { "There are " + result.Count + " items in this consign" },
-                ResultStatus = ResultStatus.Success,
-            };
-            return response;
-        }
+            Expression<Func<ConsignSaleDetail, bool>> predicate = detail => detail.ConsignSaleId == consignSaleId;
+            Expression<Func<ConsignSaleDetail, ConsignSaleDetailResponse>> selector = detail =>
+                new ConsignSaleDetailResponse
+                {
+                    ConsignSaleDetailId = detail.ConsignSaleDetailId,
+                    ConsignSaleId = detail.ConsignSaleId,
+                    ProductName = detail.ProductName,
+                    Condition = detail.Condition,
+                    Brand = detail.Brand,
+                    Color = detail.Color,
+                    Gender = detail.Gender,
+                    Size = detail.Size,
+                    Images = detail.Images.Select(x => x.Url ?? string.Empty).ToList(),
+                    ConfirmedPrice = detail.ConfirmedPrice,
+                    Note = detail.Note,
+                    DealPrice = detail.DealPrice
+                };
 
-        public async Task<Result<MasterItemResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignsaleId,
+            try
+            {
+                var result = await _consignSaleDetailRepository.GetQueryable()
+                    .Where(predicate)
+                    .Select(selector)
+                    .ToListAsync();
+
+                return new DotNext.Result<List<ConsignSaleDetailResponse>, ErrorCode>(result);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Get consign sale details error");
+                return new Result<List<ConsignSaleDetailResponse>, ErrorCode>(ErrorCode.ServerError);
+            }
+        } 
+
+        public async Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignsaleId,
             CreateMasterItemForConsignRequest detailRequest)
         {
-            var response = new Result<MasterItemResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<MasterItemResponse>();
             var consignSale =
                 await _consignSaleRepository.GetSingleConsignSale(c =>
                     c.ConsignSaleId == consignsaleId);
@@ -296,7 +324,7 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<Result<ItemVariationListResponse>> CreateVariationFromConsignSaleDetail(Guid masteritemId, CreateItemVariationRequestForConsign request)
+        public async Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleDetail(Guid masteritemId, CreateItemVariationRequestForConsign request)
         {
             Expression<Func<MasterFashionItem, bool>> predicate = masterItem => masterItem.MasterItemId == masteritemId;
             var masterItem = await _fashionItemRepository.GetSingleMasterItem(predicate);
@@ -317,7 +345,7 @@ namespace Services.ConsignSales
                 StockCount = 0
             };
             await _fashionItemRepository.AddSingleFashionItemVariation(itemVariation);
-            return new Result<ItemVariationListResponse>()
+            return new BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>()
             {
                 Data = new ItemVariationListResponse()
                 {
@@ -335,7 +363,7 @@ namespace Services.ConsignSales
             };
         }
 
-        public async Task<Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleDetail(Guid consignsaledetailId, Guid variationId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleDetail(Guid consignsaledetailId, Guid variationId,
             CreateIndividualItemRequestForConsign request)
         {
             Expression<Func<ConsignSaleDetail, bool>> predicate = consignsaledetail =>
@@ -401,7 +429,7 @@ namespace Services.ConsignSales
                 await _imageRepository.AddImage(image);
                 individualItem.Images.Add(image);
             }
-            return new Result<FashionItemDetailResponse>()
+            return new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>()
             {
                 Data = new FashionItemDetailResponse()
                 {

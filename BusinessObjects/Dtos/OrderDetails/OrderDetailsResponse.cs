@@ -7,9 +7,11 @@ public class OrderDetailsResponse
     public string OrderCode { get; set; }
     public Guid OrderDetailId { get; set; }
     public decimal UnitPrice { get; set; }
+    public int Quantity { get; set; }
     public DateTime? RefundExpirationDate { get; set; }
     public string? ItemName { get; set; }
     public FashionItemType? ItemType { get; set; }
+    public string? ItemCode { get; set; }
     public string? ItemNote { get; set; }
     public string? Condition { get; set; }
     public string? CategoryName { get; set; }

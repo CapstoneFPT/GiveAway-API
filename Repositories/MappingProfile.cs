@@ -76,10 +76,10 @@ namespace Repositories
                 .ForMember(a => a.Consginer, opt => opt.MapFrom(a => a.ConsignorName))
                 .ForMember(a => a.ConsignSaleDetails, opt => opt.MapFrom(a => a.ConsignSaleDetails))
                 .ReverseMap();
-            CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse>()
-                /*.ForMember(dest => dest.FashionItem, opt => opt.MapFrom(src => src.FashionItem))*/
-                .ForMember(dest => dest.ConsignSaleCode, opt => opt.MapFrom(src => src.ConsignSale.ConsignSaleCode))
-                .ReverseMap();
+            // CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse>()
+            //     /*.ForMember(dest => dest.FashionItem, opt => opt.MapFrom(src => src.FashionItem))*/
+            //     .ForMember(dest => dest.ConsignSaleCode, opt => opt.MapFrom(src => src.ConsignSale.ConsignSaleCode))
+            //     .ReverseMap();
             CreateMap<Shop, ShopDetailResponse>() .ReverseMap();
             CreateMap<Refund, RefundResponse>()
                 .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.Select(c => c.Url)))
@@ -109,6 +109,9 @@ namespace Repositories
                 .ForMember(dest => dest.ShopAddress, opt => opt.MapFrom(src => src.IndividualFashionItem.Variation!.MasterItem.Shop.Address))
                 .ForMember(dest => dest.ShopId, opt => opt.MapFrom(src => src.IndividualFashionItem.Variation!.MasterItem.ShopId))
                 .ForMember(dest => dest.OrderCode, opt => opt.MapFrom(src => src.Order.OrderCode))
+                .ForMember(dest => dest.Quantity , opt => opt.MapFrom(src => src.Quantity))
+                .ForMember(dest => dest.UnitPrice , opt => opt.MapFrom(src => src.UnitPrice))
+                .ForMember(dest => dest.ItemCode, opt => opt.MapFrom(src => src.IndividualFashionItem.ItemCode))
                 .ReverseMap();
             CreateMap<Transaction, GetTransactionsResponse>()
                 /*.ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))*/

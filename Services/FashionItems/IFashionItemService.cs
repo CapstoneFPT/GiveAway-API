@@ -9,7 +9,7 @@ namespace Services.FashionItems
     public interface IFashionItemService
     {
         Task<PaginationResponse<FashionItemList>> GetAllFashionItemPagination(FashionItemListRequest request);
-        Task<Result<FashionItemDetailResponse>> GetFashionItemById(Guid id);
+        Task<Result<FashionItemDetailResponse>> GetFashionItemById(Guid id, Guid? memberId);
         Task<Result<FashionItemDetailResponse>> AddFashionItem(Guid shopId, FashionItemDetailRequest request);
         Task<Result<FashionItemDetailResponse>> UpdateFashionItem(Guid itemId, UpdateFashionItemRequest request);
         Task<Result<PaginationResponse<FashionItemDetailResponse>>> GetItemByCategoryHierarchy(Guid categoryId, AuctionFashionItemRequest request);

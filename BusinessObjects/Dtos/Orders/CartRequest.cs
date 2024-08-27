@@ -21,6 +21,12 @@ namespace BusinessObjects.Dtos.Orders
         [Phone]
         public string? Phone { get; set; }
 
-        public List<Guid?> ItemIds { get; set; } = [];
+        public List<CartItem> CartItems { get; set; } = [];
+    }
+
+    public class CartItem
+    {
+        public Guid ItemId { get; set; }
+        public int Quantity { get; set; } = 1;
     }
 }

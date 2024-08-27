@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Dtos.ConsignSaleDetails
 {
@@ -12,10 +13,18 @@ namespace BusinessObjects.Dtos.ConsignSaleDetails
     {
         public Guid ConsignSaleDetailId { get; set; }
         public Guid ConsignSaleId { get; set; }
-        public string ConsignSaleCode { get; set; }
         public decimal DealPrice { get; set; }
-        public decimal ConfirmedPrice { get; set; }
-        public FashionItemDetailResponse FashionItem { get; set; }
+        public string Note { get; set; }
+        public decimal? ConfirmedPrice { get; set; }
+        public string ProductName { get; set; }
+        public string Brand { get; set; }
+        public string Color { get; set; }
+        public SizeType Size { get; set; }
+        public GenderType Gender { get; set; }
+        public string Condition { get; set; }
+        public DateTime CreatedDate { get; set; }
+        
+        public List<string> Images { get; set; } = [];
     }
 
     public class ConsignSaleDetailResponse2
@@ -23,7 +32,7 @@ namespace BusinessObjects.Dtos.ConsignSaleDetails
         public Guid ConsignSaleDetailId { get; set; }
         public Guid ConsignSaleId { get; set; }
         public decimal DealPrice { get; set; }
-        public decimal ConfirmedPrice { get; set;} 
+        public decimal ConfirmedPrice { get; set; }
         public string Note { get; set; }
     }
 }
