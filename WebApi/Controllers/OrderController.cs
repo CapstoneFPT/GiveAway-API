@@ -232,13 +232,13 @@ namespace WebApi.Controllers
                 { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
         }
 
-        [HttpPut("{orderId}/orderdetails/{orderdetailId}/confirm-pending-order")]
+        [HttpPut("orderdetails/{orderdetailId}/confirm-pending-order")]
         [ProducesResponseType<Result<OrderResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> ConfirmPendingOrderDetailByShop([FromRoute] Guid orderId,
-            [FromRoute] Guid orderdetailId)
+        public async Task<IActionResult> ConfirmPendingOrderDetailByShop(
+            [FromRoute] Guid orderdetailId, FashionItemStatus itemStatus)
         {
-            var result = await _orderService.ConfirmPendingOrder(orderId, orderdetailId);
+            var result = await _orderService.ConfirmPendingOrder(orderdetailId, itemStatus);
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             return Ok(result);

@@ -26,8 +26,8 @@ public class ConsignEndingJob : IJob
 
         var consignToEnd = await dbContext.ConsignSales
             .Include(c => c.Member)
-            .Include(c => c.ConsignSaleDetails)/*
-            .ThenInclude(c => c.FashionItem)*/
+            .Include(c => c.ConsignSaleDetails)
+            .ThenInclude(c => c.IndividualFashionItem)
             .FirstOrDefaultAsync(c => c.ConsignSaleId == consignId);
         if (consignToEnd == null)
         {
@@ -44,14 +44,14 @@ public class ConsignEndingJob : IJob
         try
         {
             consignToEnd.Status = ConsignSaleStatus.Completed;
-            /*foreach (var detail in consignToEnd.ConsignSaleDetails)
+            foreach (var detail in consignToEnd.ConsignSaleDetails)
             {
-                if (!detail.FashionItem.Status.Equals(FashionItemStatus.Sold) &&
-                    !detail.FashionItem.Status.Equals(FashionItemStatus.Refundable))
+                if (!detail.IndividualFashionItem.Status.Equals(FashionItemStatus.Sold) &&
+                    !detail.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable))
                 {
-                    detail.FashionItem.Status = FashionItemStatus.UnSold;
+                    detail.IndividualFashionItem.Status = FashionItemStatus.UnSold;
                 }
-            }*/
+            }
 
             consignToEnd.Member.Balance += consignToEnd.ConsignorReceivedAmount;
             dbContext.ConsignSales.Update(consignToEnd);

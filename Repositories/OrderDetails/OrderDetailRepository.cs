@@ -77,18 +77,13 @@ namespace Repositories.OrderDetails
         }
 
 
-        public async Task<OrderDetailResponse<IndividualFashionItem>> GetOrderDetailById(Guid id)
+        public async Task<OrderDetail> GetOrderDetailById(Guid id)
         {
             var query = await GenericDao<OrderDetail>.Instance.GetQueryable()
+                .Include(c => c.IndividualFashionItem)
+                .Include(c => c.Order)
                 .Where(c => c.OrderDetailId == id)
-                .Select(x => new OrderDetailResponse<IndividualFashionItem>
-                {
-                    OrderDetailId = id,
-                    FashionItemDetail = x.IndividualFashionItem,
-                    OrderId = x.OrderId,
-                    UnitPrice = x.UnitPrice,
-                    RefundExpirationDate = x.RefundExpirationDate,
-                }).FirstOrDefaultAsync();
+                .FirstOrDefaultAsync();
             return query;
         }
 

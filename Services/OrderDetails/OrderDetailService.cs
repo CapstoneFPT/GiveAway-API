@@ -34,15 +34,22 @@ namespace Services.OrderDetails
         public async Task<Result<OrderDetailResponse<IndividualFashionItem>>> GetOrderDetailById(Guid orderId)
         {
             var response = new Result<OrderDetailResponse<IndividualFashionItem>>();
-            var listOrder = await _orderDetailRepository.GetOrderDetailById(orderId);
-            if (listOrder is null)
+            var orderDetail = await _orderDetailRepository.GetOrderDetailById(orderId);
+            if (orderDetail is null)
             {
                 response.Messages = ["Can not found the order detail"];
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
 
-            response.Data = listOrder;
+            response.Data = new OrderDetailResponse<IndividualFashionItem>()
+            {
+                OrderDetailId = orderDetail.OrderDetailId,
+                OrderId = orderDetail.OrderId,
+                UnitPrice = orderDetail.UnitPrice,
+                RefundExpirationDate = orderDetail.RefundExpirationDate,
+                FashionItemDetail = orderDetail.IndividualFashionItem
+            };
             response.Messages = ["Successfully"];
             response.ResultStatus = ResultStatus.Success;
             return response;

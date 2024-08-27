@@ -34,7 +34,7 @@ namespace Services.Orders
         Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId, PayOrderWithCashRequest request);
         
         Task UpdateAdminBalance(Order order);
-        Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderId ,Guid orderdetailId);
+        Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId, FashionItemStatus itemStatus);
 
         Task<DotNext.Result<ShippingFeeResult, ErrorCode>> CalculateShippingFee(List<Guid> itemIds,
             int destinationDistrictId);

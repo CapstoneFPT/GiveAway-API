@@ -24,7 +24,10 @@ using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Quartz;
 using Repositories.Refunds;
+using Services.ConsignSales;
+using Services.FashionItems;
 using Services.GiaoHangNhanh;
 
 namespace Services.Orders;
@@ -45,13 +48,13 @@ public class OrderService : IOrderService
     private readonly IRefundRepository _refundRepository;
     private readonly IGiaoHangNhanhService _giaoHangNhanhService;
     private readonly ILogger<OrderService> _logger;
-
+    private readonly ISchedulerFactory _schedulerFactory;
     public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
         IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository,
         IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
         IShopRepository shopRepository, ITransactionRepository transactionRepository,
         IConfiguration configuration, IEmailService emailService, IRefundRepository refundRepository,
-        IGiaoHangNhanhService giaoHangNhanhService, ILogger<OrderService> logger)
+        IGiaoHangNhanhService giaoHangNhanhService, ILogger<OrderService> logger, ISchedulerFactory schedulerFactory)
     {
         _orderRepository = orderRepository;
         _fashionItemRepository = fashionItemRepository;
@@ -67,6 +70,7 @@ public class OrderService : IOrderService
         _refundRepository = refundRepository;
         _giaoHangNhanhService = giaoHangNhanhService;
         _logger = logger;
+        _schedulerFactory = schedulerFactory;
     }
 
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrder(Guid accountId,
@@ -727,10 +731,9 @@ public class OrderService : IOrderService
         await _accountRepository.UpdateAccount(account);
     }
 
-    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderId,
-        Guid orderdetailId)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId, FashionItemStatus itemStatus)
     {
-        var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
+        var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Any(c => c.OrderDetailId == orderdetailId));
         if (order == null)
         {
             throw new OrderNotFoundException();
@@ -740,8 +743,14 @@ public class OrderService : IOrderService
         {
             throw new StatusNotAvailableException();
         }
+        if(!itemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.Equals(FashionItemStatus.Unavailable))
+        {
+            throw new StatusNotAvailableException();
+        }
 
-        var orderDetail = order.OrderDetails.Where(c => c.OrderDetailId == orderdetailId).FirstOrDefault();
+        var orderDetail = order.OrderDetails.FirstOrDefault(c => c.OrderDetailId == orderdetailId);
+        
+        
         if (orderDetail == null)
         {
             throw new OrderDetailNotFoundException();
@@ -752,21 +761,60 @@ public class OrderService : IOrderService
             throw new StatusNotAvailableException();
         }
 
-        orderDetail.IndividualFashionItem.Status = FashionItemStatus.OnDelivery;
+        orderDetail.IndividualFashionItem.Status = itemStatus;
+        if (order.OrderDetails.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
+        {
+            foreach (var detail in order.OrderDetails)
+            {
+                detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
+                await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId);
+                // gui mail thong bao 
+            }
+            order.Status = OrderStatus.Cancelled;
+        }
         if (order.OrderDetails.All(c => c.IndividualFashionItem!.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
+            await _emailService.SendEmailOrder(order);
         }
 
         await _orderRepository.UpdateOrder(order);
-        await _emailService.SendEmailOrder(order);
+        
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
         response.ResultStatus = ResultStatus.Success;
-        response.Messages = new[] { "Confirm order successfully. Order has to be ready for customer " };
+        switch (order.Status)
+        {
+            case OrderStatus.OnDelivery:
+                response.Messages = new[] { "Confirm all items successfully. Order has to be ready for customer." };
+                break;
+            case OrderStatus.Cancelled:
+                response.Messages = new[] { "Order is cancelled." };
+                break;
+            case OrderStatus.Pending:
+                response.Messages = new[] { "Confirm item successfully" };
+                break;
+        }
+        
         response.Data = _mapper.Map<OrderResponse>(order);
         return response;
     }
-
+    private async Task ScheduleReservedItemEnding(Guid itemId)
+    {
+        var schedule = await _schedulerFactory.GetScheduler();
+        var jobDataMap = new JobDataMap()
+        {
+            { "ItemId", itemId }
+        };
+        var endJob = JobBuilder.Create<FashionItemReservedEndingJob>()
+            .WithIdentity($"EndReservedItem_{itemId}")
+            .SetJobData(jobDataMap)
+            .Build();
+        var endTrigger = TriggerBuilder.Create()
+            .WithIdentity($"EndReservedItemTrigger_{itemId}")
+            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(5)))
+            .Build();
+        await schedule.ScheduleJob(endJob, endTrigger);
+    }
     public async Task<DotNext.Result<ShippingFeeResult, ErrorCode>> CalculateShippingFee(List<Guid> itemIds,
         int destinationDistrictId)
     {
