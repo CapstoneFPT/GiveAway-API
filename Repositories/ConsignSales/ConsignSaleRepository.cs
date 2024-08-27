@@ -385,6 +385,7 @@ namespace Repositories.ConsignSales
             var result = await GenericDao<ConsignSale>.Instance
                 .GetQueryable()
                 .Include(cons => cons.ConsignSaleDetails)
+                .ThenInclude(c => c.IndividualFashionItem)
                 .Include(c => c.Shop)
                 .SingleOrDefaultAsync(predicate);
             return result;

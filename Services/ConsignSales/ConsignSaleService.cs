@@ -273,15 +273,7 @@ namespace Services.ConsignSales
 
             await _fashionItemRepository.AddSingleMasterFashionItem(masterItem);
 
-            /*if (consignSaleDetail.IndividualFashionItem is IndividualAuctionFashionItem auctionFashionItem)
-            {
-               auctionFashionItem.InitialPrice = detailRequest.SellingPrice;
-               auctionFashionItem.Status = FashionItemStatus.PendingAuction;
-            }
-            else
-            {
-                consignSaleDetail.FashionItem.SellingPrice = request.SellingPrice;
-            }*/
+            
             var listImage = new List<Image>();
             foreach (var image in detailRequest.Images)
             {
