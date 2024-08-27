@@ -266,7 +266,7 @@ public class OrderService : IOrderService
                     }
                 },
                 CreatedDate = orderResult.CreatedDate,
-                PaymentDate = orderResult.PaymentDate,
+                // PaymentDate = orderResult.PaymentDate,
             },
             ResultStatus = ResultStatus.Success
         };
@@ -288,19 +288,7 @@ public class OrderService : IOrderService
         Guid accountId,
         OrderRequest request)
     {
-        // var response = new Result<PaginationResponse<OrderResponse>>();
-        // var listOrder = await _orderRepository.GetOrdersByAccountId(accountId, request);
-        // if (listOrder.TotalCount == 0)
-        // {
-        //     response.Messages = ["You don't have any order"];
-        //     response.ResultStatus = ResultStatus.Success;
-        //     return response;
-        // }
-        //
-        // response.Data = listOrder;
-        // response.Messages = ["There are " + listOrder.TotalCount + " in total"];
-        // response.ResultStatus = ResultStatus.Success;
-        // return response;
+        
 
         Expression<Func<Order, bool>> predicate = order => order.MemberId == accountId;
         Expression<Func<Order, OrderListResponse>> selector = order => new OrderListResponse()
@@ -310,7 +298,7 @@ public class OrderService : IOrderService
             TotalPrice = order.TotalPrice,
             Status = order.Status,
             CreatedDate = order.CreatedDate,
-            PaymentDate = order.PaymentDate,
+            // PaymentDate = order.PaymentDate,
             MemberId = order.MemberId,
             CompletedDate = order.CompletedDate,
             ContactNumber = order.Phone,
@@ -321,7 +309,9 @@ public class OrderService : IOrderService
             CustomerName = order.Member.Fullname,
             Email = order.Email,
             Quantity = order.OrderDetails.Count,
-            AuctionTitle = order.Bid.Auction.Title
+            AuctionTitle = order.Bid.Auction.Title,
+            ShippingFee = order.ShippingFee,
+            Discount = order.Discount
         };
 
         if (request.Status != null)
@@ -336,8 +326,8 @@ public class OrderService : IOrderService
 
         if (request.ShopId.HasValue)
         {
-            // predicate = predicate.And(order =>
-            //     order.OrderDetails.Any(c => c.IndividualFashionItem.ShopId == request.ShopId.Value));
+            predicate = predicate.And(order =>
+                order.OrderDetails.Any(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId.Value));
         }
 
         if (request.PaymentMethod != null)
@@ -491,7 +481,7 @@ public class OrderService : IOrderService
             TotalPrice = order.TotalPrice,
             Status = order.Status,
             CreatedDate = order.CreatedDate,
-            PaymentDate = order.PaymentDate,
+            // PaymentDate = order.PaymentDate,
             MemberId = order.MemberId,
             CompletedDate = order.CompletedDate,
             ContactNumber = order.Phone,
@@ -565,7 +555,7 @@ public class OrderService : IOrderService
     }
 
 
-    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId)
     {
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
         var order = await _orderRepository.GetOrderById(orderId);
@@ -574,7 +564,7 @@ public class OrderService : IOrderService
             throw new OrderNotFoundException();
         }
 
-        var orderResponse = await _orderRepository.ConfirmOrderDelivered(orderId);
+        var orderResponse = await _orderRepository.ConfirmOrderDelivered(shopId , orderId);
         response.Data = orderResponse;
         if (orderResponse.Status.Equals(OrderStatus.Completed))
         {
@@ -641,7 +631,7 @@ public class OrderService : IOrderService
     {
         var order = await _orderRepository.GetOrderById(orderId);
 
-        if (order!.PaymentDate != null)
+        if (order!.OrderDetails.All(c => c.PaymentDate != null))
         {
             throw new InvalidOperationException("Order Already Paid");
         }
@@ -657,7 +647,7 @@ public class OrderService : IOrderService
         }
 
         order.Status = OrderStatus.Completed;
-        order.PaymentDate = DateTime.UtcNow;
+        // order.PaymentDate = DateTime.UtcNow;
         order.CompletedDate = DateTime.UtcNow;
         await _orderRepository.UpdateOrder(order);
 
@@ -675,7 +665,8 @@ public class OrderService : IOrderService
             OrderDetailId = x.OrderDetailId,
             ItemName = x.IndividualFashionItem.Variation.MasterItem.Name,
             UnitPrice = x.UnitPrice,
-            RefundExpirationDate = x.RefundExpirationDate
+            RefundExpirationDate = x.RefundExpirationDate,
+            PaymentDate = x.PaymentDate
         };
         (List<OrderDetailsResponse> Items, int Page, int PageSize, int TotalCount) orderDetailsResponse =
             await _orderDetailRepository.GetOrderDetailsPaginate<OrderDetailsResponse>(predicate: predicate,
@@ -710,7 +701,7 @@ public class OrderService : IOrderService
                 CreatedDate = order.CreatedDate,
                 Address = order.Address,
                 TotalPrice = order.TotalPrice,
-                PaymentDate = order.PaymentDate,
+                // PaymentDate = order.PaymentDate,
                 CompletedDate = order.CompletedDate,
                 ContactNumber = order.Phone,
                 RecipientName = order.RecipientName,

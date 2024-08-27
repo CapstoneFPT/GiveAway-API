@@ -25,4 +25,5 @@ public class OrderDetailsResponse
     public Guid? ShopId { get; set; }
     public Guid? PointPackageId { get; set; }
     public DateTime CreatedDate { get; set; }
+    public DateTime? PaymentDate { get; set; }
 }

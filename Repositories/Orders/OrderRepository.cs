@@ -67,6 +67,8 @@ namespace Repositories.Orders
             order.PurchaseType = PurchaseType.Online;
             order.RecipientName = cart.RecipientName;
             order.AddressType = cart.AddressType;
+            order.ShippingFee = cart.ShippingFee;
+            order.Discount = cart.Discount;
             order.Phone = cart.Phone;
             order.Email = memberAccount.Email;
             if (cart.PaymentMethod.Equals(PaymentMethod.COD))
@@ -79,7 +81,7 @@ namespace Repositories.Orders
             }
 
             order.CreatedDate = DateTime.UtcNow;
-            order.TotalPrice = listItem.Sum(c => c.SellingPrice!.Value);
+            order.TotalPrice = listItem.Sum(c => c.SellingPrice!.Value) + cart.ShippingFee - cart.Discount;
             order.OrderCode = GenerateUniqueString();
 
             var result = await GenericDao<Order>.Instance.AddAsync(order);
@@ -106,7 +108,10 @@ namespace Repositories.Orders
                     OrderDetailId = orderDetail.OrderDetailId,
                     ItemName = individualItem.Variation!.MasterItem.Name,
                     UnitPrice = orderDetail.UnitPrice,
-                    CreatedDate = orderDetail.CreatedDate
+                    CreatedDate = orderDetail.CreatedDate,
+                    OrderCode = order.OrderCode,
+                    ItemCode = individualItem.ItemCode,
+                    Quantity = orderDetail.Quantity,
                 };
                 /*totalPrice += orderDetail.UnitPrice;*/
 
@@ -133,6 +138,8 @@ namespace Repositories.Orders
                 ContactNumber = result.Phone,
                 CustomerName = memberAccount.Fullname,
                 Email = result.Email,
+                ShippingFee = result.ShippingFee,
+                Discount = result.Discount,
                 Status = result.Status,
                 OrderDetailItems = listOrderDetailResponse,
             };
@@ -188,7 +195,7 @@ namespace Repositories.Orders
                     CreatedDate = x.CreatedDate,
                     OrderCode = x.OrderCode,
                     PaymentMethod = x.PaymentMethod,
-                    PaymentDate = x.PaymentDate,
+                    // PaymentDate = x.PaymentDate,
                     MemberId = x.MemberId,
                     CompletedDate = x.CompletedDate,
                     CustomerName = x.Member.Fullname,
@@ -350,7 +357,7 @@ namespace Repositories.Orders
                     Address = order.Address,
                     ContactNumber = order.Phone,
                     CreatedDate = order.CreatedDate,
-                    PaymentDate = order.PaymentDate,
+                    // PaymentDate = order.PaymentDate,
                     PaymentMethod = order.PaymentMethod,
                     PurchaseType = order.PurchaseType,
                     Email = order.Email,
@@ -393,19 +400,22 @@ namespace Repositories.Orders
             return result;
         }
 
-        public async Task<OrderResponse> ConfirmOrderDelivered(Guid orderId)
+        public async Task<OrderResponse> ConfirmOrderDelivered(Guid shopId ,Guid orderId)
         {
-            var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable().Include(c => c.IndividualFashionItem)
-                .Where(c => c.OrderId == orderId)
+            var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable()
+                .Include(c => c.IndividualFashionItem)
+                .ThenInclude(c => c.Variation).ThenInclude(c => c.MasterItem)
+                .Where(c => c.OrderId == orderId && c.IndividualFashionItem.Variation!.MasterItem.ShopId == shopId)
                 .AsNoTracking().ToListAsync();
 
             foreach (var orderDetail in listorderdetail)
             {
                 var fashionItem = orderDetail.IndividualFashionItem;
-                if (fashionItem != null && fashionItem.Status.Equals(FashionItemStatus.OnDelivery))
+                if (fashionItem is { Status: FashionItemStatus.OnDelivery })
                 {
                     fashionItem.Status = FashionItemStatus.Refundable;
                     orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
+                    orderDetail.PaymentDate = DateTime.UtcNow;
                 }
                 else
                 {
@@ -415,11 +425,23 @@ namespace Repositories.Orders
 
             await GenericDao<OrderDetail>.Instance.UpdateRange(listorderdetail);
             var order = await GenericDao<Order>.Instance.GetQueryable().Where(c => c.OrderId == orderId)
+                .Include(c => c.OrderDetails)
+                .ThenInclude(c => c.IndividualFashionItem)
                 .FirstOrDefaultAsync();
-            order.Status = OrderStatus.Completed;
-            order.CompletedDate = DateTime.UtcNow;
-            order.PaymentDate = DateTime.UtcNow;
-            await GenericDao<Order>.Instance.UpdateAsync(order);
+            if (order != null)
+            {
+                if (order.OrderDetails.All(c => c.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable)))
+                {
+                    order.Status = OrderStatus.Completed;
+                    order.CompletedDate = DateTime.UtcNow;
+                }
+                
+                await GenericDao<Order>.Instance.UpdateAsync(order);
+            }
+            else
+            {
+                throw new OrderNotFoundException();
+            }
             var orderResponse = await GenericDao<Order>.Instance.GetQueryable().Include(c => c.OrderDetails)
                 .Where(c => c.OrderId == orderId)
                 .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider)

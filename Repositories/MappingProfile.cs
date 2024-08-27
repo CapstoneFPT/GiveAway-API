@@ -48,7 +48,7 @@ namespace Repositories
                 .ForMember(a => a.Email, opt => opt.MapFrom(a => a.Email))
                 .ForMember(a => a.RecipientName, opt => opt.MapFrom(a => a.RecipientName))
                 .ForMember(a => a.PaymentMethod, opt => opt.MapFrom(a => a.PaymentMethod))
-                .ForMember(a => a.PaymentDate, opt => opt.MapFrom(a => a.PaymentDate))
+                
                 .ForMember(a => a.CompletedDate, opt => opt.MapFrom(a => a.CompletedDate))
                 .ForMember(a => a.PurchaseType, opt => opt.MapFrom(a => a.PurchaseType))
                 .ForMember(a => a.OrderCode, opt => opt.MapFrom(a => a.OrderCode))

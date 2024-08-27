@@ -27,6 +27,8 @@ namespace BusinessObjects.Dtos.Orders
         public string? ContactNumber { get; set; }
         public string? Address { get; set; }
         public string? Email { get; set; }
+        public decimal ShippingFee { get; set; } = 0;
+        public decimal Discount { get; set; } = 0;
         public PurchaseType PurchaseType { get; set; }
         public OrderStatus Status { get; set; }
         public List<ShopOrderResponse>? ShopOrderResponses { get; set; }
@@ -52,6 +54,8 @@ namespace BusinessObjects.Dtos.Orders
         public string? ContactNumber { get; set; }
         public string? Address { get; set; }
         public string? Email { get; set; }
+        public decimal ShippingFee { get; set; } = 0;
+        public decimal Discount { get; set; } = 0;
         public PurchaseType PurchaseType { get; set; }
         public OrderStatus Status { get; set; }
         public string AuctionTitle { get; set; }

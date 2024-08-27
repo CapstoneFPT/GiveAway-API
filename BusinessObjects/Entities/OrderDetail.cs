@@ -19,5 +19,6 @@ public class OrderDetail
     public Guid? PointPackageId { get; set; }
     public Feedback? Feedback { get; set; }
     public DateTime CreatedDate { get; set; }
+    public DateTime? PaymentDate { get; set; }
     
 }

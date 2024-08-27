@@ -19,7 +19,7 @@ namespace Services.Orders
         Task<Result<string>> CancelOrder(Guid orderId);
         Task<Result<string>> CancelOrderByAdmin(Guid orderId);
         Task<Result<PaginationResponse<OrderListResponse>>> GetOrders(OrderRequest orderRequest);
-        Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid orderId);
+        Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId);
         Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
         Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderById(Guid orderId);

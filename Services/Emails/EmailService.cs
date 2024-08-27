@@ -104,7 +104,7 @@ namespace Services.Emails
             template = template.Replace($"[Order Code]", order.OrderCode);
             template = template.Replace($"[Quantity]", order.OrderDetails.Count().ToString());
             template = template.Replace($"[Payment Method]", order.PaymentMethod.ToString());
-            template = template.Replace($"[Payment Date]", order.PaymentDate.GetValueOrDefault().ToString("G"));
+            // template = template.Replace($"[Payment Date]", order.PaymentDate.GetValueOrDefault().ToString("G"));
             template = template.Replace($"[Total Price]", order.TotalPrice.ToString("N0"));
             template = template.Replace($"[Recipient Name]", order.RecipientName);
             template = template.Replace($"[Phone Number]", order.Phone);

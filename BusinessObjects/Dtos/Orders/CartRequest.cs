@@ -20,13 +20,14 @@ namespace BusinessObjects.Dtos.Orders
         public string RecipientName { get; set; }
         [Phone]
         public string? Phone { get; set; }
-
+        public decimal ShippingFee { get; set; }
+        public decimal Discount { get; set; }
         public List<CartItem> CartItems { get; set; } = [];
     }
 
     public class CartItem
     {
         public Guid ItemId { get; set; }
-        public int Quantity { get; set; } = 1;
+        // public int Quantity { get; set; } = 1;
     }
 }

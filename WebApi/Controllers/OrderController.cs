@@ -88,17 +88,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{OrderId}/confirm-deliveried")]
-        public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrderDelivered(
-            [FromRoute] Guid OrderId)
-        {
-            var result = await _orderService.ConfirmOrderDeliveried(OrderId);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-            return Ok(result);
-        }
+        
 
         [HttpPost("{orderId}/pay/vnpay")]
         public async Task<ActionResult<VnPayPurchaseResponse>> PurchaseOrder([FromRoute] Guid orderId,
@@ -172,7 +162,10 @@ namespace WebApi.Controllers
                     if (transaction.ResultStatus == ResultStatus.Success)
                     {
                         order.Status = OrderStatus.Pending;
-                        order.PaymentDate = DateTime.UtcNow;
+                        foreach (var orderDetail in order.OrderDetails)
+                        {
+                            orderDetail.PaymentDate = DateTime.UtcNow;
+                        }
 
                         await _orderService.UpdateOrder(order);
                         await _orderService.UpdateFashionItemStatus(order.OrderId);
@@ -221,7 +214,10 @@ namespace WebApi.Controllers
                 throw new NotAuthorizedToPayOrderException();
             }
 
-            order.PaymentDate = DateTime.UtcNow;
+            foreach (var orderDetail in order.OrderDetails)
+            {
+                orderDetail.PaymentDate = DateTime.UtcNow;
+            }
             order.Status = OrderStatus.Pending;
             order.Member.Balance -= order.TotalPrice;
 
@@ -237,10 +233,14 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{orderId}/orderdetails/{orderdetailId}/confirm-pending-order")]
-        public async Task<ActionResult<Result<OrderResponse>>> ConfirmPendingOrderDetailByShop([FromRoute] Guid orderId,
+        [ProducesResponseType<Result<OrderResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> ConfirmPendingOrderDetailByShop([FromRoute] Guid orderId,
             [FromRoute] Guid orderdetailId)
         {
             var result = await _orderService.ConfirmPendingOrder(orderId, orderdetailId);
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
             return Ok(result);
         }
 

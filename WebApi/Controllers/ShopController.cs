@@ -101,7 +101,17 @@ namespace WebApi.Controllers
             PayOrderWithCashResponse result = await _orderService.PayWithCash(shopId, orderId, request);
             return Ok(result);
         }
+        [HttpPut("{shopId}/orders/{OrderId}/confirm-deliveried")]
+        public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrderDelivered(
+           [FromRoute] Guid shopId ,[FromRoute] Guid OrderId)
+        {
+            var result = await _orderService.ConfirmOrderDeliveried(shopId ,OrderId);
 
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
+        }
 
         [HttpPost("{shopId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,

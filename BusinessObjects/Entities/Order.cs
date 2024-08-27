@@ -10,7 +10,7 @@ public class Order
     public string OrderCode { get; set; }
     public DateTime CreatedDate { get; set; }
     public PaymentMethod PaymentMethod { get; set; }
-    public DateTime? PaymentDate { get; set; }
+    
     public DateTime? CompletedDate { get; set; }
     public Account? Member { get; set; }
     public Guid? MemberId { get; set; }
@@ -27,6 +27,8 @@ public class Order
     public string? Email { get; set; }
     public int? GhnProvinceId { get; set; }
     public AddressType? AddressType { get; set; }
+    public decimal ShippingFee { get; set; } = 0;
+    public decimal Discount { get; set; } = 0;
 
     public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();
 }

@@ -353,7 +353,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().HasIndex(x => x.OrderCode).IsUnique();
         modelBuilder.Entity<Order>().Property(e => e.CreatedDate).HasColumnType("timestamptz").ValueGeneratedOnAdd();
         modelBuilder.Entity<Order>().Property(e => e.PaymentMethod).HasColumnType("varchar").HasMaxLength(20);
-        modelBuilder.Entity<Order>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
+        
         modelBuilder.Entity<Order>()
             .HasMany(x => x.OrderDetails)
             .WithOne(x => x.Order)
@@ -386,7 +386,7 @@ public class GiveAwayDbContext : DbContext
         #region OrderDetail
 
         modelBuilder.Entity<OrderDetail>().ToTable("OrderDetail").HasKey(e => e.OrderDetailId);
-
+        modelBuilder.Entity<OrderDetail>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
         modelBuilder.Entity<OrderDetail>()
             .HasOne<Refund>(x => x.Refund)
             .WithOne(x => x.OrderDetail)
