@@ -21,7 +21,7 @@ namespace Repositories.Orders
         Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId);
         Task<PaginationResponse<OrderResponse>> GetOrders(OrderRequest orderRequest);
         Task<Order?> GetSingleOrder(Expression<Func<Order,bool>> predicate);
-        Task<OrderResponse> ConfirmOrderDelivered(Guid shopId,Guid orderId);
+        /*Task<Order> ConfirmOrderDelivered(Guid shopId,Guid orderId);*/
         Task<List<Order?>> GetOrders(Expression<Func<Order?, bool>> predicate);
         Task BulkUpdate(List<Order?> ordersToUpdate);
         Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest);

@@ -19,7 +19,7 @@ public class FashionItemReservedEndingJob : IJob
     {
         await using var scope = _serviceProvider.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
-        var individualItemId = context.JobDetail.JobDataMap.GetGuid("ItemId");
+        var individualItemId = context.JobDetail.JobDataMap.GetGuid("ReservedItemId");
 
         var reservedItemToEnd =
             await dbContext.IndividualFashionItems.FirstOrDefaultAsync(c => c.ItemId == individualItemId);

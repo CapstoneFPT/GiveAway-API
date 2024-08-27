@@ -48,12 +48,13 @@ namespace Repositories
                 .ForMember(a => a.Email, opt => opt.MapFrom(a => a.Email))
                 .ForMember(a => a.RecipientName, opt => opt.MapFrom(a => a.RecipientName))
                 .ForMember(a => a.PaymentMethod, opt => opt.MapFrom(a => a.PaymentMethod))
-                
+
                 .ForMember(a => a.CompletedDate, opt => opt.MapFrom(a => a.CompletedDate))
                 .ForMember(a => a.PurchaseType, opt => opt.MapFrom(a => a.PurchaseType))
                 .ForMember(a => a.OrderCode, opt => opt.MapFrom(a => a.OrderCode))
                 .ForMember(a => a.Status, opt => opt.MapFrom(a => a.Status))
-                .ForMember(a => a.TotalPrice, opt => opt.MapFrom(a => a.TotalPrice));
+                .ForMember(a => a.TotalPrice, opt => opt.MapFrom(a => a.TotalPrice))
+                .ReverseMap();
             CreateMap<IndividualFashionItem, FashionItemDetailResponse>()
                 .ForPath(a => a.ShopId, opt => opt.MapFrom(a => a.Variation!.MasterItem.ShopId))
                 .ForPath(a => a.ItemId, opt => opt.MapFrom(a => a.ItemId))

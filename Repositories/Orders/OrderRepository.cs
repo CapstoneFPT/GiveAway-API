@@ -159,6 +159,8 @@ namespace Repositories.Orders
                 .Include(c => c.Member)
                 .Include(order => order.OrderDetails)
                 .ThenInclude(orderDetail => orderDetail.IndividualFashionItem)
+                .ThenInclude(c => c.Variation)
+                .ThenInclude(c => c.MasterItem)
                 .SingleOrDefaultAsync(predicate);
             return result;
         }
@@ -400,14 +402,17 @@ namespace Repositories.Orders
             return result;
         }
 
-        public async Task<OrderResponse> ConfirmOrderDelivered(Guid shopId ,Guid orderId)
+        /*public async Task<Order> ConfirmOrderDelivered(Guid shopId ,Guid orderId)
         {
             var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable()
-                .Include(c => c.IndividualFashionItem)
-                .ThenInclude(c => c.Variation).ThenInclude(c => c.MasterItem)
+                /*.Include(c => c.IndividualFashionItem)
+                .ThenInclude(c => c.Variation).ThenInclude(c => c.MasterItem)#1#
                 .Where(c => c.OrderId == orderId && c.IndividualFashionItem.Variation!.MasterItem.ShopId == shopId)
                 .AsNoTracking().ToListAsync();
-
+            var order = await GenericDao<Order>.Instance.GetQueryable().Where(c => c.OrderId == orderId)
+                .Include(c => c.OrderDetails)
+                .ThenInclude(c => c.IndividualFashionItem)
+                .FirstOrDefaultAsync();
             foreach (var orderDetail in listorderdetail)
             {
                 var fashionItem = orderDetail.IndividualFashionItem;
@@ -422,13 +427,10 @@ namespace Repositories.Orders
                     throw new FashionItemNotFoundException();
                 }
             }
-
+        
             await GenericDao<OrderDetail>.Instance.UpdateRange(listorderdetail);
-            var order = await GenericDao<Order>.Instance.GetQueryable().Where(c => c.OrderId == orderId)
-                .Include(c => c.OrderDetails)
-                .ThenInclude(c => c.IndividualFashionItem)
-                .FirstOrDefaultAsync();
-            if (order != null)
+            
+            if (order != null && order.Status != OrderStatus.OnDelivery)
             {
                 if (order.OrderDetails.All(c => c.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable)))
                 {
@@ -442,12 +444,9 @@ namespace Repositories.Orders
             {
                 throw new OrderNotFoundException();
             }
-            var orderResponse = await GenericDao<Order>.Instance.GetQueryable().Include(c => c.OrderDetails)
-                .Where(c => c.OrderId == orderId)
-                .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync();
-            return orderResponse;
-        }
+            
+            return order;
+        }*/
 
         public async Task<List<Order>> GetOrders(Expression<Func<Order, bool>> predicate)
         {

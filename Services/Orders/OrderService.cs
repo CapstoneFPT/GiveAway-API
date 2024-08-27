@@ -562,15 +562,36 @@ public class OrderService : IOrderService
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId)
     {
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
-        var order = await _orderRepository.GetOrderById(orderId);
-        if (order == null || order.Status != OrderStatus.OnDelivery)
-        {
-            throw new OrderNotFoundException();
-        }
 
-        var orderResponse = await _orderRepository.ConfirmOrderDelivered(shopId , orderId);
-        response.Data = orderResponse;
-        if (orderResponse.Status.Equals(OrderStatus.Completed))
+        var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
+        var orderDetailFromShop = order!.OrderDetails
+            .Where(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == shopId).ToList();
+        foreach (var orderDetail in orderDetailFromShop)
+        {
+            var fashionItem = orderDetail.IndividualFashionItem;
+            if (fashionItem is { Status: FashionItemStatus.OnDelivery })
+            {
+                fashionItem.Status = FashionItemStatus.Refundable;
+                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
+                if (order.PaymentMethod.Equals(PaymentMethod.COD))
+                    orderDetail.PaymentDate = DateTime.UtcNow;
+                await ScheduleRefundableItemEnding(fashionItem.ItemId, orderDetail.RefundExpirationDate.Value);
+            }
+            else
+            {
+                throw new FashionItemNotFoundException();
+            }
+        }
+        
+        if (order.OrderDetails.All(c => c.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable)))
+        {
+            order.Status = OrderStatus.Completed;
+            order.CompletedDate = DateTime.UtcNow;
+        }
+        await _orderRepository.UpdateOrder(order);    
+        
+        response.Data = _mapper.Map<OrderResponse>(order);
+        if (order.Status.Equals(OrderStatus.Completed))
         {
             response.Messages =
                 ["This order of your shop is finally delivered! The order status has changed to completed"];
@@ -584,7 +605,23 @@ public class OrderService : IOrderService
         response.ResultStatus = ResultStatus.Success;
         return response;
     }
-
+    private async Task ScheduleRefundableItemEnding(Guid itemId, DateTime expiredTime)
+    {
+        var schedule = await _schedulerFactory.GetScheduler();
+        var jobDataMap = new JobDataMap()
+        {
+            { "RefundItemId", itemId }
+        };
+        var endJob = JobBuilder.Create<FashionItemRefundEndingJob>()
+            .WithIdentity($"EndRefundableItem_{itemId}")
+            .SetJobData(jobDataMap)
+            .Build();
+        var endTrigger = TriggerBuilder.Create()
+            .WithIdentity($"EndRefundableItemTrigger_{itemId}")
+            .StartAt(new DateTimeOffset(expiredTime))
+            .Build();
+        await schedule.ScheduleJob(endJob, endTrigger);
+    }
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderByShop(Guid shopId,
         CreateOrderRequest orderRequest)
     {
@@ -667,7 +704,7 @@ public class OrderService : IOrderService
         Expression<Func<OrderDetail, OrderDetailsResponse>> selector = x => new OrderDetailsResponse()
         {
             OrderDetailId = x.OrderDetailId,
-            ItemName = x.IndividualFashionItem.Variation.MasterItem.Name,
+            ItemName = x.IndividualFashionItem.Variation!.MasterItem.Name,
             UnitPrice = x.UnitPrice,
             RefundExpirationDate = x.RefundExpirationDate,
             PaymentDate = x.PaymentDate
@@ -778,6 +815,24 @@ public class OrderService : IOrderService
             await _emailService.SendEmailOrder(order);
         }
 
+        if (order.Status.Equals(OrderStatus.Cancelled) && !order.PaymentMethod.Equals(PaymentMethod.COD))
+        {
+            order.Member.Balance += order.TotalPrice;
+            var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
+            if (admin == null)
+                throw new AccountNotFoundException();
+            admin.Balance -= order.TotalPrice;
+            await _accountRepository.UpdateAccount(admin);
+            var transaction = new Transaction()
+            {
+                OrderId = order.OrderId,
+                MemberId = order.MemberId,
+                Amount = order.TotalPrice,
+                CreatedDate = DateTime.UtcNow,
+                Type = TransactionType.Refund
+            };
+            await _transactionRepository.CreateTransaction(transaction);
+        }
         await _orderRepository.UpdateOrder(order);
         
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
@@ -803,7 +858,7 @@ public class OrderService : IOrderService
         var schedule = await _schedulerFactory.GetScheduler();
         var jobDataMap = new JobDataMap()
         {
-            { "ItemId", itemId }
+            { "ReservedItemId", itemId }
         };
         var endJob = JobBuilder.Create<FashionItemReservedEndingJob>()
             .WithIdentity($"EndReservedItem_{itemId}")
