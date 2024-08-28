@@ -12,6 +12,7 @@ using Services.Emails;
 using BusinessObjects.Dtos.Account.Response;
 using Microsoft.AspNetCore.Identity;
 using BusinessObjects.Dtos.Account.Request;
+using DotNext;
 using Microsoft.AspNetCore.Cors;
 
 namespace WebApi.Controllers;
@@ -28,7 +29,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<Result<LoginResponse>>> Login(
+    public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<LoginResponse>>> Login(
         [FromBody] LoginRequest loginRequest
     )
     {
@@ -77,7 +78,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("forgot-password")]
-    public async Task<ActionResult<Result<string>>> ForgotPassword([FromQuery] ForgetPasswordRequest request)
+    public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<string>>> ForgotPassword([FromQuery] ForgetPasswordRequest request)
     {
         var user = await _authService.CheckPassword(request.Email, request.Password);
 
@@ -90,7 +91,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPut("reset-password")]
-    public async Task<ActionResult<Result<AccountResponse>>> ResetPassword(string confirmtoken)
+    public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<AccountResponse>>> ResetPassword(string confirmtoken)
     {
         var result = await _authService.ChangeToNewPassword(confirmtoken);
 
@@ -103,7 +104,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<Result<AccountResponse>>> Register(RegisterRequest registerRequest)
+    public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<AccountResponse>>> Register(RegisterRequest registerRequest)
     {
         var result = await _authService.Register(registerRequest);
 
@@ -116,7 +117,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("create-staff-account")]
-    public async Task<ActionResult<Result<AccountResponse>>> CreateStaffAccount(
+    public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<AccountResponse>>> CreateStaffAccount(
         [FromBody] CreateStaffAccountRequest registerRequest)
     {
         var result = await _authService.CreateStaffAccount(registerRequest);
@@ -140,7 +141,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("resend-verify-email")]
-    public async Task<ActionResult<Result<string>>> ResendVerifyEmail(string email)
+    public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<string>>> ResendVerifyEmail(string email)
     {
         var result = await _authService.ResendVerifyEmail(email);
 
@@ -153,7 +154,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPut("{accountId}/change-password")]
-    public async Task<ActionResult<Result<AccountResponse>>> ChangePassword([FromRoute] Guid accountId,
+    public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<AccountResponse>>> ChangePassword([FromRoute] Guid accountId,
         [FromBody] ChangePasswordRequest request)
     {
         var result = await _authService.CheckPasswordToChange(accountId, request);

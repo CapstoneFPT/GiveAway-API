@@ -42,7 +42,7 @@ namespace Repositories.ConsignSales
                 Address = request.Address,
                 Type = request.Type,
                 CreatedDate = DateTime.UtcNow,
-                ConsignDuration = 60,
+                
                 ShopId = request.ShopId,
                 MemberId = accountId,
                 Status = ConsignSaleStatus.Pending,
@@ -162,13 +162,7 @@ namespace Repositories.ConsignSales
             if (status.Equals(ConsignSaleStatus.Rejected))
             {
                 consign.Status = ConsignSaleStatus.Rejected;
-                foreach (var consigndetail in consign.ConsignSaleDetails)
-                {
-                    // var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                    //     .FirstOrDefaultAsync(c => c.ItemId == consigndetail.FashionItemId);
-                    // item.Status = FashionItemStatus.Rejected;
-                    // await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
-                }
+                
             }
             else
             {
@@ -250,7 +244,7 @@ namespace Repositories.ConsignSales
             {
                 Type = request.Type,
                 CreatedDate = DateTime.UtcNow,
-                ConsignDuration = 60,
+                
                 ShopId = shopId,
                 Status = ConsignSaleStatus.Received,
                 ConsignSaleMethod = ConsignSaleMethod.Offline,

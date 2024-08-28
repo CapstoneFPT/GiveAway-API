@@ -19,10 +19,10 @@ namespace BusinessObjects.Dtos.FashionItems
         public string Description { get; set; }
         public string Condition { get; set; }
         public FashionItemStatus Status { get; set; }
-        public string ShopAddress { get; set; }
+        public string? ShopAddress { get; set; }
         public Guid ShopId { get; set; }
         public Guid CategoryId { get; set; }
-        public string CategoryName { get; set; }
+        public string? CategoryName { get; set; }
         public SizeType Size { get; set; }
         public string Color { get; set; }
         public string? Brand { get; set; }

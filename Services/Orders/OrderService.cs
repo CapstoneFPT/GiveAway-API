@@ -572,7 +572,7 @@ public class OrderService : IOrderService
             if (fashionItem is { Status: FashionItemStatus.OnDelivery })
             {
                 fashionItem.Status = FashionItemStatus.Refundable;
-                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
+                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(2);
                 if (order.PaymentMethod.Equals(PaymentMethod.COD))
                     orderDetail.PaymentDate = DateTime.UtcNow;
                 await ScheduleRefundableItemEnding(fashionItem.ItemId, orderDetail.RefundExpirationDate.Value);

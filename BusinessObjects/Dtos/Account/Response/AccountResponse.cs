@@ -17,5 +17,6 @@ namespace BusinessObjects.Dtos.Account.Response
         public Roles Role { get; set; }
         public decimal Balance { get; set; }
         public AccountStatus Status { get; set; }
+        public Guid? ShopId { get; set; }
     }
 }

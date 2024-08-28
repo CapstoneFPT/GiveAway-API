@@ -10,7 +10,7 @@ public class ConsignSale
     public ConsignSaleType Type { get; set; }
     public string ConsignSaleCode { get; set; }
     public DateTime CreatedDate { get; set; }
-    public int? ConsignDuration { get; set; }
+
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public Shop Shop { get; set; }

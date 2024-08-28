@@ -31,5 +31,6 @@ public class CreateItemVariationRequestForConsign
 public class CreateIndividualItemRequestForConsign
 {
     public string Note { get; set; }
+    public decimal ConfirmPrice { get; set; }
     public string[] Images { get; set; }
 }

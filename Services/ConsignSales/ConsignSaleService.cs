@@ -374,6 +374,8 @@ namespace Services.ConsignSales
                 throw new ConsignSaleDetailsNotFoundException();
             }
 
+            consignSaleDetail.ConfirmedPrice = request.ConfirmPrice;
+            await _consignSaleDetailRepository.UpdateConsignSaleDetail(consignSaleDetail);
             Expression<Func<FashionItemVariation, bool>> predicateVariation =
                 itemvariation => itemvariation.VariationId == variationId;
             var itemVariation = await _fashionItemRepository.GetSingleFashionItemVariation(predicateVariation!);
@@ -382,6 +384,8 @@ namespace Services.ConsignSales
                 throw new ItemVariationNotAvailableException("Variation is not found");
             }
 
+            itemVariation.StockCount += 1;
+            await _fashionItemRepository.UpdateFashionItemVariation(itemVariation);
             var individualItem = new IndividualFashionItem()
             {
                 Note = request.Note,
@@ -424,7 +428,8 @@ namespace Services.ConsignSales
                 {
                     Url = imageRequest,
                     CreatedDate = DateTime.UtcNow,
-                    IndividualFashionItemId = individualItem.ItemId
+                    IndividualFashionItemId = individualItem.ItemId,
+                    ConsignSaleDetailId = consignsaledetailId
                 };
                 await _imageRepository.AddImage(image);
                 individualItem.Images.Add(image);
@@ -446,12 +451,13 @@ namespace Services.ConsignSales
                     Note = individualItem.Note,
                     Status = individualItem.Status,
                     Images = individualItem.Images.Select(c => c.Url).ToList(),
-                    ItemId = individualItem.ItemId,
+                    ItemId = individualItem.ItemId, 
                     CategoryId = itemVariation.MasterItem.CategoryId,
-                    CategoryName = itemVariation.MasterItem.Category.Name,
+                    // CategoryName = itemVariation.MasterItem.Category.Name,
                     SellingPrice = individualItem.SellingPrice ?? 0,
                     ShopId = itemVariation.MasterItem.ShopId,
-                    ShopAddress = itemVariation.MasterItem.Shop.Address
+                    // ShopAddress = itemVariation.MasterItem.Shop.Address,
+                    // IsOrderedYet = false,
                 },
                 Messages = new []{"Create individual item successfully"},
                 ResultStatus = ResultStatus.Success

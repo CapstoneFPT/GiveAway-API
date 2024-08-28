@@ -9,6 +9,7 @@ using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
@@ -28,15 +29,17 @@ public class AccountController : ControllerBase
     private readonly IDeliveryService _deliveryService;
     private readonly IOrderDetailService _orderDetailService;
     private readonly IOrderService _orderService;
-
+    private readonly IHttpContextAccessor _contextAccessor;
     public AccountController(IAccountService accountService, IDeliveryService deliveryService,
-        IOrderService orderService, IConsignSaleService consignSaleService, IOrderDetailService orderDetailService)
+        IOrderService orderService, IConsignSaleService consignSaleService, IOrderDetailService orderDetailService,
+        IHttpContextAccessor contextAccessor)
     {
         _accountService = accountService;
         _deliveryService = deliveryService;
         _orderService = orderService;
         _consignSaleService = consignSaleService;
         _orderDetailService = orderDetailService;
+        _contextAccessor = contextAccessor;
     }
 
     [HttpGet]
@@ -59,7 +62,28 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
+    [Authorize]
+    [HttpPost("get-current-account")]
+    [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
+    public async Task<IActionResult> GetAccountByToken()
+    {
+        var user = _contextAccessor.HttpContext!.User?.Claims?.FirstOrDefault(c => c.Type.Contains("AccountId"))?.Value;
+        if (user is null)
+        {
+            return StatusCode((int)HttpStatusCode.NotFound);
+        }
+        var shop = _contextAccessor.HttpContext!.User?.Claims?.FirstOrDefault(c => c.Type.Contains("ShopId"))?.Value;
+        var result = await _accountService.GetAccountById(Guid.Parse(user!));
+        if (shop != null)
+        {
+            result.Data.ShopId = Guid.Parse(shop);
+        }
+        if (result.ResultStatus != ResultStatus.Success)
+            return StatusCode((int)HttpStatusCode.InternalServerError, result);
 
+        return Ok(result);
+    }
     [HttpPut("{id}/ban")]
     [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> BanAccount([FromRoute] Guid id)

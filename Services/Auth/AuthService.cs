@@ -233,23 +233,14 @@ public class AuthService : IAuthService
 
             var claims = new List<Claim>()
             {
-                new(ClaimTypes.NameIdentifier, account.AccountId.ToString()),
+                new Claim("AccountId", account.AccountId.ToString()),
                 new(ClaimTypes.Name, account.Email),
                 new(ClaimTypes.Role, account.Role.ToString())
             };
-
-            var accessToken = _tokenService.GenerateAccessToken(claims);
-
-            var data = new LoginResponse()
-            {
-                AccessToken = accessToken,
-                Email = account.Email,
-                Role = account.Role,
-                Id = account.AccountId
-            };
+            var shop = await _shopRepository.GetSingleShop(c => c.StaffId == account.AccountId);
             if (account.Role.Equals(Roles.Staff))
             {
-                var shop = await _shopRepository.GetSingleShop(c => c.StaffId == account.AccountId);
+                
                 if (shop == null)
                 {
                     return new Result<LoginResponse>()
@@ -258,8 +249,25 @@ public class AuthService : IAuthService
                         ResultStatus = ResultStatus.Error
                     };
                 }
-                data.ShopId = shop.ShopId;
+                claims = new List<Claim>()
+                {
+                    new Claim("AccountId", account.AccountId.ToString()),
+                    new(ClaimTypes.Name, account.Email),
+                    new(ClaimTypes.Role, account.Role.ToString()),
+                    new Claim("ShopId", shop.ShopId.ToString())
+                };
             }
+            var accessToken = _tokenService.GenerateAccessToken(claims);
+
+            var data = new LoginResponse()
+            {
+                AccessToken = accessToken,
+                Email = account.Email,
+                Role = account.Role,
+                Id = account.AccountId,
+            };
+            if (account.Role.Equals(Roles.Staff))
+                data.ShopId = shop?.ShopId;
 
             return new Result<LoginResponse>()
             {
