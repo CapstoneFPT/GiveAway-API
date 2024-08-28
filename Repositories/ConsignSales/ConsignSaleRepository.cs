@@ -364,7 +364,7 @@ namespace Repositories.ConsignSales
 
             var result = new PaginationResponse<ConsignSaleResponse>
             {
-                Items = items,
+                Items = items ?? [],
                 PageSize = request.PageSize,
                 TotalCount = count,
                 Filters = new[] { request.Status.ToString() },
@@ -388,6 +388,44 @@ namespace Repositories.ConsignSales
         public async Task UpdateConsignSale(ConsignSale consignSale)
         {
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consignSale);
+        }
+
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetConsignSalesProjections<T>(Expression<Func<ConsignSale, bool>>? predicate, Expression<Func<ConsignSale, T>>? selector, int? requestPage, int? requestPageSize)
+        {
+            var query = _giveAwayDbContext.ConsignSales.AsQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+            
+            var count = await query.CountAsync();
+
+            var page = requestPage ?? -1;
+            var pageSize = requestPageSize ?? -1;
+
+            if (page > 0 && pageSize > 0)
+            {
+                query = query
+                    .OrderByDescending(c => c.CreatedDate)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize);
+            }
+
+            query = query.OrderByDescending(c => c.CreatedDate);
+
+            List<T> items;
+
+            if (selector != null)
+            {
+                items = await query.Select(selector).ToListAsync();
+            }
+            else
+            {
+                items = await query.Cast<T>().ToListAsync();
+            }
+
+            return (items, page, pageSize, count);
         }
 
         /*public async Task<bool> UpdateConsignSaleToOnSale(Guid fashionItemId)

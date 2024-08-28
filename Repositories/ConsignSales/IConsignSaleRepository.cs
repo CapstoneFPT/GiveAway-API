@@ -23,5 +23,6 @@ namespace Repositories.ConsignSales
         Task<ConsignSale?> GetSingleConsignSale(Expression<Func<ConsignSale, bool>> predicate);
         Task UpdateConsignSale(ConsignSale consignSale);
         /*Task UpdateConsignSaleToOnSale(Guid fashionItemId);*/
+        Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetConsignSalesProjections<T>(Expression<Func<ConsignSale,bool>>? predicate, Expression<Func<ConsignSale,T>>? selector, int? requestPage, int? requestPageSize);
     }
 }
