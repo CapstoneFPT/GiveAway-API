@@ -16,7 +16,6 @@ namespace Services.ConsignSales
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId, ApproveConsignSaleRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
-        Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleResponse>>> GetAllConsignSalesByShopId(ConsignSaleRequestForShop request);
         
         Task<Result<List<ConsignSaleDetailResponse>, ErrorCode>> GetConsignSaleDetails(Guid consignsaleId);
         Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignsaleId, CreateMasterItemForConsignRequest detailRequest);
@@ -27,5 +26,8 @@ namespace Services.ConsignSales
         Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleDetail(Guid consignsaledetailId,
             Guid variationId, CreateIndividualItemRequestForConsign request);
         Task UpdateConsignPrice(Guid orderId);
+
+        Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(
+            ConsignSaleListRequest request);
     }
 }

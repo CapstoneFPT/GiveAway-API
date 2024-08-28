@@ -21,16 +21,25 @@ namespace WebApi.Controllers
             _consignsaleService = consignsaleService;
         }
         [HttpGet]
-        public async Task<ActionResult<Result<PaginationResponse<ConsignSaleResponse>>>> GetAllConsignSaleByShopId(
-            [FromQuery] ConsignSaleRequestForShop request)
+        [ProducesResponseType<PaginationResponse<ConsignSaleListResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetConsignSales(
+            [FromQuery] ConsignSaleListRequest request)
         {
-            var result = await _consignsaleService.GetAllConsignSalesByShopId(request);
+            var result = await _consignsaleService.GetConsignSales(request);
 
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    _ => StatusCode(500, new ErrorResponse("Error fetching consign sales", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, ErrorCode.UnknownError))
+                };
+            }
 
-            return Ok(result);
+            return Ok(result.Value);
         }
+        
         [HttpGet("{consignsaleId}")]
         public async Task<ActionResult<Result<ConsignSaleResponse>>> GetConsignSaleById([FromRoute] Guid consignsaleId)
         {
@@ -140,5 +149,4 @@ namespace WebApi.Controllers
             return Ok(result.Value);
         }
     }
-
 }
