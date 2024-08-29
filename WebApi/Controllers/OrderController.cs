@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
@@ -70,6 +71,27 @@ namespace WebApi.Controllers
             return await _orderLineItemService.GetOrderLineItemsByOrderId(orderId, request);
         }
 
+        [HttpGet("{orderId}")]
+        [ProducesResponseType<OrderDetailedResponse>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
+        public async Task<IActionResult> GetOrderById([FromRoute] Guid orderId)
+        {
+            var result = await _orderService.GetDetailedOrder(orderId);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => NotFound(new ErrorResponse("Order not found", ErrorType.ApiError, HttpStatusCode.NotFound, result.Error)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error fetching order", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
+
+            return Ok(result.Value);
+        }
 
         
 

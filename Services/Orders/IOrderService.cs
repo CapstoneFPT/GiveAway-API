@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Entities;
 using DotNext;
@@ -39,5 +40,7 @@ namespace Services.Orders
 
         Task<DotNext.Result<ShippingFeeResult, ErrorCode>> CalculateShippingFee(List<Guid> itemIds,
             int destinationDistrictId);
+
+        Task<Result<OrderDetailedResponse,ErrorCode>> GetDetailedOrder(Guid orderId);
     }
 }

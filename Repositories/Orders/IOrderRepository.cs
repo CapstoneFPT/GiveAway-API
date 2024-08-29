@@ -27,5 +27,6 @@ namespace Repositories.Orders
         Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest);
         string GenerateUniqueString();
         Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetOrdersProjection<T>(int? orderRequestPageNumber, int? orderRequestPageSize, Expression<Func<Order,bool>> predicate, Expression<Func<Order,T>> selector);
+        IQueryable<Order> GetQueryable();
     }
 }

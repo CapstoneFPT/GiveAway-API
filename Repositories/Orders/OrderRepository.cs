@@ -276,6 +276,13 @@ namespace Repositories.Orders
             return (items, pageNumber, pageSize, count);
         }
 
+        public IQueryable<Order> GetQueryable()
+        {
+            return GenericDao<Order>.Instance.GetQueryable();
+        }
+    
+    
+
         private static string GenerateRandomString()
         {
             int number = random.Next(100000, 1000000);

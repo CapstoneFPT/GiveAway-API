@@ -49,6 +49,7 @@ public class OrderService : IOrderService
     private readonly IGiaoHangNhanhService _giaoHangNhanhService;
     private readonly ILogger<OrderService> _logger;
     private readonly ISchedulerFactory _schedulerFactory;
+
     public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
         IMapper mapper, IOrderLineItemRepository orderLineItemRepository, IAuctionItemRepository auctionItemRepository,
         IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
@@ -89,7 +90,8 @@ public class OrderService : IOrderService
             return response;
         }
 
-        var checkItemAvailable = await _orderRepository.IsOrderAvailable(cart.CartItems.Select(ci => ci.ItemId).ToList());
+        var checkItemAvailable =
+            await _orderRepository.IsOrderAvailable(cart.CartItems.Select(ci => ci.ItemId).ToList());
         if (checkItemAvailable.Count > 0)
         {
             var orderResponse = new OrderResponse();
@@ -101,7 +103,8 @@ public class OrderService : IOrderService
             return response;
         }
 
-        var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.CartItems.Select(ci => ci.ItemId).ToList(), accountId) ?? [];
+        var checkOrderExisted =
+            await _orderRepository.IsOrderExisted(cart.CartItems.Select(ci => ci.ItemId).ToList(), accountId) ?? [];
         if (checkOrderExisted.Count > 0)
         {
             var listItemExisted = checkOrderExisted.Select(x => x.IndividualFashionItemId.Value).ToList() ?? [];
@@ -292,8 +295,6 @@ public class OrderService : IOrderService
         Guid accountId,
         OrderRequest request)
     {
-        
-
         Expression<Func<Order, bool>> predicate = order => order.MemberId == accountId;
         Expression<Func<Order, OrderListResponse>> selector = order => new OrderListResponse()
         {
@@ -331,7 +332,8 @@ public class OrderService : IOrderService
         if (request.ShopId.HasValue)
         {
             predicate = predicate.And(order =>
-                order.OrderLineItems.Any(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId.Value));
+                order.OrderLineItems.Any(c =>
+                    c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId.Value));
         }
 
         if (request.PaymentMethod != null)
@@ -474,7 +476,7 @@ public class OrderService : IOrderService
     }
 
 
-    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>,ErrorCode>> GetOrders(
+    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrders(
         OrderRequest orderRequest)
     {
         Expression<Func<Order, bool>> predicate = order => true;
@@ -485,7 +487,7 @@ public class OrderService : IOrderService
             TotalPrice = order.TotalPrice,
             Status = order.Status,
             CreatedDate = order.CreatedDate,
-            PaymentDate = order.OrderLineItems.Select(x=>x.PaymentDate).Max(),
+            PaymentDate = order.OrderLineItems.Select(x => x.PaymentDate).Max(),
             MemberId = order.MemberId,
             CompletedDate = order.CompletedDate,
             ContactNumber = order.Phone,
@@ -556,7 +558,8 @@ public class OrderService : IOrderService
     }
 
 
-    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId,
+        Guid orderId)
     {
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
 
@@ -579,14 +582,15 @@ public class OrderService : IOrderService
                 throw new FashionItemNotFoundException();
             }
         }
-        
+
         if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable)))
         {
             order.Status = OrderStatus.Completed;
             order.CompletedDate = DateTime.UtcNow;
         }
-        await _orderRepository.UpdateOrder(order);    
-        
+
+        await _orderRepository.UpdateOrder(order);
+
         response.Data = _mapper.Map<OrderResponse>(order);
         if (order.Status.Equals(OrderStatus.Completed))
         {
@@ -602,6 +606,7 @@ public class OrderService : IOrderService
         response.ResultStatus = ResultStatus.Success;
         return response;
     }
+
     private async Task ScheduleRefundableItemEnding(Guid itemId, DateTime expiredTime)
     {
         var schedule = await _schedulerFactory.GetScheduler();
@@ -619,6 +624,7 @@ public class OrderService : IOrderService
             .Build();
         await schedule.ScheduleJob(endJob, endTrigger);
     }
+
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderByShop(Guid shopId,
         CreateOrderRequest request)
     {
@@ -698,16 +704,18 @@ public class OrderService : IOrderService
 
         await _orderLineItemRepository.UpdateRange(listorderDetail);
         Expression<Func<OrderLineItem, bool>> predicate = x => x.OrderId == orderId;
-        Expression<Func<OrderLineItem, OrderLineItemDetailedResponse>> selector = x => new OrderLineItemDetailedResponse()
-        {
-            OrderLineItemId = x.OrderLineItemId,
-            ItemName = x.IndividualFashionItem.Variation!.MasterItem.Name,
-            UnitPrice = x.UnitPrice,
-            RefundExpirationDate = x.RefundExpirationDate,
-            PaymentDate = x.PaymentDate
-        };
+        Expression<Func<OrderLineItem, OrderLineItemDetailedResponse>> selector = x =>
+            new OrderLineItemDetailedResponse()
+            {
+                OrderLineItemId = x.OrderLineItemId,
+                ItemName = x.IndividualFashionItem.Variation!.MasterItem.Name,
+                UnitPrice = x.UnitPrice,
+                RefundExpirationDate = x.RefundExpirationDate,
+                PaymentDate = x.PaymentDate
+            };
         (List<OrderLineItemDetailedResponse> Items, int Page, int PageSize, int TotalCount) orderDetailsResponse =
-            await _orderLineItemRepository.GetOrderLineItemsPaginate<OrderLineItemDetailedResponse>(predicate: predicate,
+            await _orderLineItemRepository.GetOrderLineItemsPaginate<OrderLineItemDetailedResponse>(
+                predicate: predicate,
                 selector: selector, isTracking: false);
         var orderDetails = orderDetailsResponse.Items;
 
@@ -765,9 +773,11 @@ public class OrderService : IOrderService
         await _accountRepository.UpdateAccount(account);
     }
 
-    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId, FashionItemStatus itemStatus)
+    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId,
+        FashionItemStatus itemStatus)
     {
-        var order = await _orderRepository.GetSingleOrder(c => c.OrderLineItems.Any(c => c.OrderLineItemId == orderdetailId));
+        var order = await _orderRepository.GetSingleOrder(c =>
+            c.OrderLineItems.Any(c => c.OrderLineItemId == orderdetailId));
         if (order == null)
         {
             throw new OrderNotFoundException();
@@ -777,14 +787,15 @@ public class OrderService : IOrderService
         {
             throw new StatusNotAvailableException();
         }
-        if(!itemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.Equals(FashionItemStatus.Unavailable))
+
+        if (!itemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.Equals(FashionItemStatus.Unavailable))
         {
             throw new StatusNotAvailableException();
         }
 
         var orderDetail = order.OrderLineItems.FirstOrDefault(c => c.OrderLineItemId == orderdetailId);
-        
-        
+
+
         if (orderDetail == null)
         {
             throw new OrderDetailNotFoundException();
@@ -804,8 +815,10 @@ public class OrderService : IOrderService
                 await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId);
                 // gui mail thong bao 
             }
+
             order.Status = OrderStatus.Cancelled;
         }
+
         if (order.OrderLineItems.All(c => c.IndividualFashionItem!.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
@@ -830,8 +843,9 @@ public class OrderService : IOrderService
             };
             await _transactionRepository.CreateTransaction(transaction);
         }
+
         await _orderRepository.UpdateOrder(order);
-        
+
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
         response.ResultStatus = ResultStatus.Success;
         switch (order.Status)
@@ -846,10 +860,11 @@ public class OrderService : IOrderService
                 response.Messages = new[] { "Confirm item successfully" };
                 break;
         }
-        
+
         response.Data = _mapper.Map<OrderResponse>(order);
         return response;
     }
+
     private async Task ScheduleReservedItemEnding(Guid itemId)
     {
         var schedule = await _schedulerFactory.GetScheduler();
@@ -867,6 +882,7 @@ public class OrderService : IOrderService
             .Build();
         await schedule.ScheduleJob(endJob, endTrigger);
     }
+
     public async Task<DotNext.Result<ShippingFeeResult, ErrorCode>> CalculateShippingFee(List<Guid> itemIds,
         int destinationDistrictId)
     {
@@ -922,5 +938,58 @@ public class OrderService : IOrderService
             },
             ShippingFee = shippingFee,
         });
+    }
+
+    public async Task<Result<OrderDetailedResponse, ErrorCode>> GetDetailedOrder(Guid orderId)
+    {
+        var query = _orderRepository.GetQueryable();
+
+        Expression<Func<Order, bool>> predicate = order => order.OrderId == orderId;
+        Expression<Func<Order, OrderDetailedResponse>> selector = order => new OrderDetailedResponse()
+        {
+            OrderId = order.OrderId,
+            OrderCode = order.OrderCode,
+            PaymentMethod = order.PaymentMethod,
+            PurchaseType = order.PurchaseType,
+            Address = order.Address ?? "N/A",
+            CompletedDate = order.CompletedDate ?? DateTime.MinValue,
+            Discount = order.Discount,
+            Status = order.Status,
+            Email = order.Email ?? "N/A",
+            CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
+            ShippingFee = order.ShippingFee,
+            PaymentDate = order.OrderLineItems.Select(x => x.PaymentDate).Max() ?? DateTime.MinValue,
+            TotalPrice = order.TotalPrice,
+            MemberId = order.MemberId ?? Guid.Empty,
+            Phone = order.Phone ?? "N/A",
+            BidId = order.BidId ?? Guid.Empty,
+            AddressType = order.AddressType != null ? order.AddressType.Value : default,
+            Subtotal = order.OrderLineItems.Sum(x => x.UnitPrice * x.Quantity),
+            BidAmount = order.Bid != null ? order.Bid.Amount : 0m,
+            ReciepientName = order.RecipientName ?? "N/A",
+            BidCreatedDate = order.Bid != null ? order.Bid.CreatedDate : DateTime.MinValue
+        };
+        try
+        {
+
+            var result = await query.Include(x => x.OrderLineItems)
+                .Include(x => x.Member)
+                .Include(x => x.Bid)
+                .Where(predicate)
+                .Select(selector)
+                .FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new Result<OrderDetailedResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            return new Result<OrderDetailedResponse, ErrorCode>(result);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "GetDetailedOrder error");
+            return new Result<OrderDetailedResponse, ErrorCode>(ErrorCode.ServerError);
+        }
     }
 }
