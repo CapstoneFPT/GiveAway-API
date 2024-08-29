@@ -19,7 +19,7 @@ public class OrderLineItemDetailedResponse
     public SizeType? ItemSize { get; set; }
     public string? ItemBrand { get; set; }
     public GenderType? ItemGender { get; set; }
-    public List<string>? ItemImage { get; set; }
+    public List<string> ItemImage { get; set; } = [];
     public FashionItemStatus? ItemStatus { get; set; }
     public string? ShopAddress { get; set; }
     public Guid? ShopId { get; set; }

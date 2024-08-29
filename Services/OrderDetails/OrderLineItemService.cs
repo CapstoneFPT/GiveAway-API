@@ -9,9 +9,13 @@ using Repositories.OrderLineItems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Utils;
+using DotNext;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories.FashionItems;
 using Repositories.Orders;
 
@@ -21,42 +25,96 @@ namespace Services.OrderLineItems
     {
         private readonly IOrderLineItemRepository _orderLineItemRepository;
         private readonly IFashionItemRepository _fashionItemRepository;
+        private readonly ILogger<OrderLineItemService> _logger;
 
         public OrderLineItemService(IOrderLineItemRepository orderLineItemRepository,
-             IFashionItemRepository fashionItemRepository)
+            IFashionItemRepository fashionItemRepository, ILogger<OrderLineItemService> logger)
         {
             _orderLineItemRepository = orderLineItemRepository;
             _fashionItemRepository = fashionItemRepository;
+            _logger = logger;
         }
 
-        public async Task<Result<OrderLineItemResponse<IndividualFashionItem>>> GetOrderLineItemById(Guid orderId)
+        public async Task<DotNext.Result<OrderLineItemDetailedResponse, ErrorCode>> GetOrderLineItemById(Guid orderId)
         {
-            var response = new Result<OrderLineItemResponse<IndividualFashionItem>>();
-            var orderDetail = await _orderLineItemRepository.GetOrderLineItemById(orderId);
-            if (orderDetail is null)
+            var query = _orderLineItemRepository.GetQueryable();
+
+            Expression<Func<OrderLineItem, bool>> predicate = item => item.OrderId == orderId;
+            Expression<Func<OrderLineItem, OrderLineItemDetailedResponse>> selector = item =>
+                new OrderLineItemDetailedResponse()
+                {
+                    OrderLineItemId = item.OrderLineItemId,
+                    CreatedDate = item.CreatedDate,
+                    RefundExpirationDate = item.RefundExpirationDate,
+                    Condition = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.Condition
+                        : "N/A",
+                    Quantity = item.Quantity,
+                    CategoryName = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.MasterItem.Category.Name
+                        : "N/A",
+                    ItemBrand = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.MasterItem.Brand
+                        : "N/A",
+                    ItemCode = item.IndividualFashionItem.ItemCode,
+                    ItemColor = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.Color
+                        : "N/A",
+                    UnitPrice = item.UnitPrice,
+                    ItemGender = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.MasterItem.Gender
+                        : null,
+                    ItemImage = item.IndividualFashionItem.Images.Select(x => x.Url).ToList(),
+                    ItemName = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.MasterItem.Name
+                        : "N/A",
+                    ItemNote = item.IndividualFashionItem.Note,
+                    ItemSize = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.Size
+                        : null,
+                    ItemStatus = item.IndividualFashionItem.Status,
+                    ItemType = item.IndividualFashionItem.Type,
+                    OrderCode = item.Order.OrderCode,
+                    PaymentDate = item.PaymentDate,
+                    ShopAddress = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.MasterItem.Shop.Address
+                        : "N/A",
+                    ShopId = item.IndividualFashionItem.Variation != null
+                        ? item.IndividualFashionItem.Variation.MasterItem.ShopId
+                        : null,
+                    PointPackageId = item.PointPackage != null ? item.PointPackage.PointPackageId : null
+                };
+            try
             {
-                response.Messages = ["Can not found the order detail"];
-                response.ResultStatus = ResultStatus.NotFound;
-                return response;
+                var result = await query
+                    .Include(x => x.IndividualFashionItem)
+                    .ThenInclude(x => x.Images)
+                    .Include(x => x.IndividualFashionItem)
+                    .ThenInclude(x => x.Variation)
+                    .ThenInclude(x => x.MasterItem)
+                    .ThenInclude(x => x.Shop)
+                    .Include(x => x.Order)
+                    .Where(predicate)
+                    .Select(selector)
+                    .FirstOrDefaultAsync();
+
+
+                if (result == null) return new Result<OrderLineItemDetailedResponse, ErrorCode>(ErrorCode.NotFound);
+
+                return new Result<OrderLineItemDetailedResponse, ErrorCode>(result);
             }
-
-            response.Data = new OrderLineItemResponse<IndividualFashionItem>()
+            catch (Exception e)
             {
-                OrderLineItemId = orderDetail.OrderLineItemId,
-                OrderId = orderDetail.OrderId,
-                UnitPrice = orderDetail.UnitPrice,
-                RefundExpirationDate = orderDetail.RefundExpirationDate,
-                FashionItemDetail = orderDetail.IndividualFashionItem
-            };
-            response.Messages = ["Successfully"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+                _logger.LogError(e,"GetOrderLineItemById error");
+                return new Result<OrderLineItemDetailedResponse, ErrorCode>(ErrorCode.ServerError);
+            }
         }
 
-        public async Task<Result<PaginationResponse<OrderLineItemDetailedResponse>>> GetOrderLineItemsByOrderId(
-            Guid orderId, OrderLineItemRequest request)
+        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderLineItemDetailedResponse>>>
+            GetOrderLineItemsByOrderId(
+                Guid orderId, OrderLineItemRequest request)
         {
-            var response = new Result<PaginationResponse<OrderLineItemDetailedResponse>>();
+            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderLineItemDetailedResponse>>();
             var listOrder = await _orderLineItemRepository.GetAllOrderLineItemsByOrderId(orderId, request);
             if (listOrder.TotalCount == 0)
             {
@@ -71,19 +129,20 @@ namespace Services.OrderLineItems
             return response;
         }
 
-        public async Task<Result<RefundResponse>> RequestRefundToShop(
+        public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> RequestRefundToShop(
             CreateRefundRequest refundRequest)
         {
-            var response = new Result<RefundResponse>();
-            
-            var orderDetail = await _orderLineItemRepository.GetOrderLineItems(c => c.OrderLineItemId == refundRequest.OrderLineItemId);
+            var response = new BusinessObjects.Dtos.Commons.Result<RefundResponse>();
+
+            var orderDetail =
+                await _orderLineItemRepository.GetOrderLineItems(
+                    c => c.OrderLineItemId == refundRequest.OrderLineItemId);
             if (orderDetail is null)
             {
                 throw new OrderNotFoundException();
             }
 
-            
-        
+
             if (orderDetail.Any(c => c.RefundExpirationDate < DateTime.UtcNow))
             {
                 throw new RefundExpiredException("There are items that ran out refund expiration");
@@ -104,13 +163,16 @@ namespace Services.OrderLineItems
             return response;
         }
 
-        public async Task ChangeFashionItemsStatus(List<OrderLineItem> orderDetails, FashionItemStatus fashionItemStatus)
+        public async Task ChangeFashionItemsStatus(List<OrderLineItem> orderDetails,
+            FashionItemStatus fashionItemStatus)
         {
             List<IndividualFashionItem> fashionItems = [];
 
             foreach (var orderDetail in orderDetails)
             {
-                var fashionItem = await _fashionItemRepository.GetFashionItemById(c => c.ItemId == orderDetail.IndividualFashionItemId!.Value);
+                var fashionItem =
+                    await _fashionItemRepository.GetFashionItemById(c =>
+                        c.ItemId == orderDetail.IndividualFashionItemId!.Value);
                 fashionItems.Add(fashionItem);
             }
 

@@ -35,15 +35,23 @@ public class OrderLineItemController : ControllerBase
     }
 
     [HttpGet("{orderLineItemId}")]
-    public async Task<ActionResult<Result<OrderLineItemResponse<IndividualFashionItem>>>> GetOrderLineItemById(
+    [ProducesResponseType<OrderLineItemDetailedResponse>((int) HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetOrderLineItemById(
         [FromRoute] Guid orderLineItemId)
     {
         var result = await _orderLineItemService.GetOrderLineItemById(orderLineItemId);
 
-        if (result.ResultStatus != ResultStatus.Success)
-            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500, new ErrorResponse("Error fetching order line item", ErrorType.ApiError,
+                    HttpStatusCode.InternalServerError
+                    , result.Error))
+            };
+        }
 
-
-        return Ok(result);
+        return Ok(result.Value);
     }
 }

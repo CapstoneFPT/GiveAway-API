@@ -168,5 +168,10 @@ namespace Repositories.OrderLineItems
         {
             await GenericDao<OrderLineItem>.Instance.UpdateRange(orderLineItems);
         }
+
+        public IQueryable<OrderLineItem> GetQueryable()
+        {
+            return GenericDao<OrderLineItem>.Instance.GetQueryable();
+        }
     }
 }

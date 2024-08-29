@@ -19,5 +19,7 @@ namespace Repositories.OrderLineItems
             GetOrderLineItemsPaginate<T>(Expression<Func<OrderLineItem, bool>>? predicate,
                 Expression<Func<OrderLineItem, T>>? selector, bool isTracking, int page = -1, int pageSize = -1);
         Task UpdateRange(List<OrderLineItem> orderLineItems);
+        Task<OrderLineItemDetailedResponse?> GetOrderLineItemDetail(Guid orderId);
+         IQueryable<OrderLineItem> GetQueryable();
     }
 }
