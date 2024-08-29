@@ -62,18 +62,7 @@ namespace WebApi.Controllers
         }
 
 
-        [HttpGet("orderlineitems/{orderLineItemId}")]
-        public async Task<ActionResult<Result<OrderLineItemResponse<IndividualFashionItem>>>> GetOrderLineItemById(
-            [FromRoute] Guid orderLineItemId)
-        {
-            var result = await _orderLineItemService.GetOrderLineItemById(orderLineItemId);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-
-            return Ok(result);
-        }
+        
 
         [HttpPut("{OrderId}/cancel")]
         public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid OrderId)
@@ -230,17 +219,7 @@ namespace WebApi.Controllers
                 { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
         }
 
-        [HttpPut("orderdetails/{orderdetailId}/confirm-pending-order")]
-        [ProducesResponseType<Result<OrderResponse>>((int)HttpStatusCode.OK)]
-        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> ConfirmPendingOrderLineItemByShop(
-            [FromRoute] Guid orderdetailId, FashionItemStatus itemStatus)
-        {
-            var result = await _orderService.ConfirmPendingOrder(orderdetailId, itemStatus);
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            return Ok(result);
-        }
+      
 
         [HttpPut("{orderId}/cancelbyadmin")]
         public async Task<ActionResult<Result<string>>> CancelOrderByAdmin([FromRoute] Guid orderId)
