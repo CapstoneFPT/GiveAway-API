@@ -157,7 +157,7 @@ namespace Repositories.Orders
             var result = await GenericDao<Order>.Instance
                 .GetQueryable()
                 .Include(c => c.Member)
-                .Include(order => order.OrderDetails)
+                .Include(order => order.OrderLineItems)
                 .ThenInclude(orderDetail => orderDetail.IndividualFashionItem)
                 .ThenInclude(c => c.Variation)
                 .ThenInclude(c => c.MasterItem)
@@ -169,7 +169,7 @@ namespace Repositories.Orders
         {
             var query = _giveAwayDbContext.Orders.AsQueryable();
             query = query.Include(c => c.Member)
-                .Where(c => c.MemberId == accountId && c.OrderDetails.Any(c => c.PointPackageId == null))
+                .Where(c => c.MemberId == accountId && c.OrderLineItems.Any(c => c.PointPackageId == null))
                 .OrderByDescending(c => c.CreatedDate);
 
             if (request.Status != null)
@@ -192,7 +192,7 @@ namespace Repositories.Orders
                 .Select(x => new OrderResponse
                 {
                     OrderId = x.OrderId,
-                    Quantity = x.OrderDetails.Count,
+                    Quantity = x.OrderLineItems.Count,
                     TotalPrice = x.TotalPrice,
                     CreatedDate = x.CreatedDate,
                     OrderCode = x.OrderCode,
@@ -348,11 +348,11 @@ namespace Repositories.Orders
             foreach (var orderId in listOrderdetail.Select(c => c.OrderId).Distinct())
             {
                 var order = await GenericDao<Order>.Instance.GetQueryable().Include(c => c.Member)
-                    .Include(c => c.OrderDetails).FirstOrDefaultAsync(c => c.OrderId == orderId);
+                    .Include(c => c.OrderLineItems).FirstOrDefaultAsync(c => c.OrderId == orderId);
                 var orderResponse = new OrderResponse()
                 {
                     OrderId = order.OrderId,
-                    Quantity = order.OrderDetails.Count,
+                    Quantity = order.OrderLineItems.Count,
                     TotalPrice = order.TotalPrice,
                     RecipientName = order.RecipientName,
                     OrderCode = order.OrderCode,

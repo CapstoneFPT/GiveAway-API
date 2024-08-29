@@ -121,7 +121,7 @@ public class PointPackageController : ControllerBase
 
                 order.Member.Balance += pointPackage!.Points;
                 order.Status = OrderStatus.Completed;
-                foreach (var orderDetail in order.OrderDetails)
+                foreach (var orderDetail in order.OrderLineItems)
                 {
                     orderDetail.PaymentDate = DateTime.UtcNow;
                 }

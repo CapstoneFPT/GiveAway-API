@@ -554,7 +554,7 @@ namespace Services.ConsignSales
         public async Task UpdateConsignPrice(Guid orderId)
         {
             var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
-            foreach (var detail in order.OrderDetails)
+            foreach (var detail in order.OrderLineItems)
             {
                 // var consign =
                 //     await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(detail.IndividualFashionItemId)));

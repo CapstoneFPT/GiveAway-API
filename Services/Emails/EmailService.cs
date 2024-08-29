@@ -102,7 +102,7 @@ namespace Services.Emails
 
             var template = GetEmailTemplate("OrderMail");
             template = template.Replace($"[Order Code]", order.OrderCode);
-            template = template.Replace($"[Quantity]", order.OrderDetails.Count().ToString());
+            template = template.Replace($"[Quantity]", order.OrderLineItems.Count().ToString());
             template = template.Replace($"[Payment Method]", order.PaymentMethod.ToString());
             // template = template.Replace($"[Payment Date]", order.PaymentDate.GetValueOrDefault().ToString("G"));
             template = template.Replace($"[Total Price]", order.TotalPrice.ToString("N0"));
@@ -121,7 +121,7 @@ namespace Services.Emails
         public async Task<bool> SendEmailRefund(RefundResponse request)
         {
             SendEmailRequest content = new SendEmailRequest();
-            var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Select(c => c.OrderLineItemId).Contains(request.OrderLineItemId));
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderLineItems.Select(c => c.OrderLineItemId).Contains(request.OrderLineItemId));
             var template = GetEmailTemplate("RefundMail");
             template = template.Replace("[Order Code]", order.OrderCode);   
             template = template.Replace("[Status]", request.RefundStatus.ToString());   

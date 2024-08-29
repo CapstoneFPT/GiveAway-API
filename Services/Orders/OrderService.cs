@@ -145,7 +145,7 @@ public class OrderService : IOrderService
         var orderDetailResult =
             await _orderLineItemRepository.CreateOrderLineItem(orderDetails);
 
-        orderResult.OrderDetails = new List<OrderLineItem>() { orderDetailResult };
+        orderResult.OrderLineItems = new List<OrderLineItem>() { orderDetailResult };
         return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
         {
             Data = _mapper.Map<Order, OrderResponse>(orderResult),
@@ -310,10 +310,10 @@ public class OrderService : IOrderService
             PurchaseType = order.PurchaseType,
             Address = order.Address,
             PaymentMethod = order.PaymentMethod,
-            CustomerName = order.Member.Fullname,
+            CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
             Email = order.Email,
-            Quantity = order.OrderDetails.Count,
-            AuctionTitle = order.Bid.Auction.Title,
+            Quantity = order.OrderLineItems.Count,
+            AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
             ShippingFee = order.ShippingFee,
             Discount = order.Discount
         };
@@ -331,7 +331,7 @@ public class OrderService : IOrderService
         if (request.ShopId.HasValue)
         {
             predicate = predicate.And(order =>
-                order.OrderDetails.Any(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId.Value));
+                order.OrderLineItems.Any(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId.Value));
         }
 
         if (request.PaymentMethod != null)
@@ -411,7 +411,7 @@ public class OrderService : IOrderService
         }
 
         order.Status = OrderStatus.Cancelled;
-        foreach (var item in order.OrderDetails.Select(c => c.IndividualFashionItem))
+        foreach (var item in order.OrderLineItems.Select(c => c.IndividualFashionItem))
         {
             item.Status = FashionItemStatus.Available;
         }
@@ -461,7 +461,7 @@ public class OrderService : IOrderService
         }
 
         order.Status = OrderStatus.Cancelled;
-        foreach (var item in order.OrderDetails.Select(c => c.IndividualFashionItem))
+        foreach (var item in order.OrderLineItems.Select(c => c.IndividualFashionItem))
         {
             item.Status = FashionItemStatus.Unavailable;
         }
@@ -474,7 +474,7 @@ public class OrderService : IOrderService
     }
 
 
-    public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>> GetOrders(
+    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>,ErrorCode>> GetOrders(
         OrderRequest orderRequest)
     {
         Expression<Func<Order, bool>> predicate = order => true;
@@ -485,7 +485,7 @@ public class OrderService : IOrderService
             TotalPrice = order.TotalPrice,
             Status = order.Status,
             CreatedDate = order.CreatedDate,
-            // PaymentDate = order.PaymentDate,
+            PaymentDate = order.OrderLineItems.Select(x=>x.PaymentDate).Max(),
             MemberId = order.MemberId,
             CompletedDate = order.CompletedDate,
             ContactNumber = order.Phone,
@@ -493,10 +493,10 @@ public class OrderService : IOrderService
             PurchaseType = order.PurchaseType,
             Address = order.Address,
             PaymentMethod = order.PaymentMethod,
-            CustomerName = order.Member.Fullname,
+            CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
             Email = order.Email,
-            Quantity = order.OrderDetails.Count,
-            AuctionTitle = order.Bid.Auction.Title
+            Quantity = order.OrderLineItems.Count,
+            AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
         };
 
         if (orderRequest.Status != null)
@@ -532,30 +532,27 @@ public class OrderService : IOrderService
 
         if (orderRequest.IsPointPackage == true)
         {
-            predicate = predicate.And(or => or.OrderDetails.All(c => c.PointPackageId != null));
+            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId != null));
         }
 
         if (orderRequest.IsPointPackage == false)
         {
-            predicate = predicate.And(or => or.OrderDetails.All(c => c.PointPackageId == null));
+            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId == null));
         }
 
         (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
             await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
                 orderRequest.PageSize, predicate, selector);
 
-        return new BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>()
+        var response = new PaginationResponse<OrderListResponse>()
         {
-            Data = new PaginationResponse<OrderListResponse>()
-            {
-                Items = Items,
-                PageNumber = Page,
-                PageSize = PageSize,
-                TotalCount = TotalCount,
-                SearchTerm = orderRequest.OrderCode
-            },
-            ResultStatus = ResultStatus.Success
+            Items = Items,
+            PageNumber = Page,
+            PageSize = PageSize,
+            TotalCount = TotalCount, SearchTerm = orderRequest.OrderCode,
         };
+
+        return new Result<PaginationResponse<OrderListResponse>, ErrorCode>(response);
     }
 
 
@@ -564,7 +561,7 @@ public class OrderService : IOrderService
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
 
         var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
-        var orderDetailFromShop = order!.OrderDetails
+        var orderDetailFromShop = order!.OrderLineItems
             .Where(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == shopId).ToList();
         foreach (var orderDetail in orderDetailFromShop)
         {
@@ -583,7 +580,7 @@ public class OrderService : IOrderService
             }
         }
         
-        if (order.OrderDetails.All(c => c.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable)))
+        if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable)))
         {
             order.Status = OrderStatus.Completed;
             order.CompletedDate = DateTime.UtcNow;
@@ -672,7 +669,7 @@ public class OrderService : IOrderService
     {
         var order = await _orderRepository.GetOrderById(orderId);
 
-        if (order!.OrderDetails.All(c => c.PaymentDate != null))
+        if (order!.OrderLineItems.All(c => c.PaymentDate != null))
         {
             throw new InvalidOperationException("Order Already Paid");
         }
@@ -770,7 +767,7 @@ public class OrderService : IOrderService
 
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId, FashionItemStatus itemStatus)
     {
-        var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Any(c => c.OrderLineItemId == orderdetailId));
+        var order = await _orderRepository.GetSingleOrder(c => c.OrderLineItems.Any(c => c.OrderLineItemId == orderdetailId));
         if (order == null)
         {
             throw new OrderNotFoundException();
@@ -785,7 +782,7 @@ public class OrderService : IOrderService
             throw new StatusNotAvailableException();
         }
 
-        var orderDetail = order.OrderDetails.FirstOrDefault(c => c.OrderLineItemId == orderdetailId);
+        var orderDetail = order.OrderLineItems.FirstOrDefault(c => c.OrderLineItemId == orderdetailId);
         
         
         if (orderDetail == null)
@@ -799,9 +796,9 @@ public class OrderService : IOrderService
         }
 
         orderDetail.IndividualFashionItem.Status = itemStatus;
-        if (order.OrderDetails.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
+        if (order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
-            foreach (var detail in order.OrderDetails)
+            foreach (var detail in order.OrderLineItems)
             {
                 detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
                 await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId);
@@ -809,7 +806,7 @@ public class OrderService : IOrderService
             }
             order.Status = OrderStatus.Cancelled;
         }
-        if (order.OrderDetails.All(c => c.IndividualFashionItem!.Status == FashionItemStatus.OnDelivery))
+        if (order.OrderLineItems.All(c => c.IndividualFashionItem!.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
             await _emailService.SendEmailOrder(order);

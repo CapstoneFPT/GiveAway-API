@@ -43,15 +43,24 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Result<PaginationResponse<OrderResponse>>>> GetOrders(
+        [ProducesResponseType<PaginationResponse<OrderListResponse>>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetOrders(
             [FromQuery] OrderRequest orderRequest)
         {
             var result = await _orderService.GetOrders(orderRequest);
 
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error fetching orders", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
 
-            return Ok(result);
+            return Ok(result.Value);
         }
 
         [HttpGet("{orderId}/orderlineitems")]
@@ -149,7 +158,7 @@ namespace WebApi.Controllers
                     if (transaction.ResultStatus == ResultStatus.Success)
                     {
                         order.Status = OrderStatus.Pending;
-                        foreach (var orderDetail in order.OrderDetails)
+                        foreach (var orderDetail in order.OrderLineItems)
                         {
                             orderDetail.PaymentDate = DateTime.UtcNow;
                         }
@@ -201,7 +210,7 @@ namespace WebApi.Controllers
                 throw new NotAuthorizedToPayOrderException();
             }
 
-            foreach (var orderDetail in order.OrderDetails)
+            foreach (var orderDetail in order.OrderLineItems)
             {
                 orderDetail.PaymentDate = DateTime.UtcNow;
             }

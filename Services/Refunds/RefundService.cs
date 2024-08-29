@@ -100,7 +100,7 @@ namespace Services.Refunds
             {
                 throw new RefundNoFoundException();
             }
-            var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Select(c => c.OrderLineItemId).Contains(refund.OrderLineItemId));
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderLineItems.Select(c => c.OrderLineItemId).Contains(refund.OrderLineItemId));
             if (order == null)
             {
                 throw new OrderNotFoundException();

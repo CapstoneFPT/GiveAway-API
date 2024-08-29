@@ -355,7 +355,7 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(e => e.PaymentMethod).HasColumnType("varchar").HasMaxLength(20);
         
         modelBuilder.Entity<Order>()
-            .HasMany(x => x.OrderDetails)
+            .HasMany(x => x.OrderLineItems)
             .WithOne(x => x.Order)
             .HasForeignKey(x => x.OrderId);
 

@@ -8,20 +8,21 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Entities;
+using DotNext;
 using Services.GiaoHangNhanh;
 
 namespace Services.Orders
 {
     public interface IOrderService
     {
-        Task<Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(Guid accountId, OrderRequest request);
-        Task<Result<OrderResponse>> CreateOrder(Guid accountId, CartRequest cart);
-        Task<Result<string>> CancelOrder(Guid orderId);
-        Task<Result<string>> CancelOrderByAdmin(Guid orderId);
-        Task<Result<PaginationResponse<OrderListResponse>>> GetOrders(OrderRequest orderRequest);
-        Task<Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId);
-        Task<Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
-        Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
+        Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(Guid accountId, OrderRequest request);
+        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrder(Guid accountId, CartRequest cart);
+        Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrder(Guid orderId);
+        Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrderByAdmin(Guid orderId);
+        Task<Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrders(OrderRequest orderRequest);
+        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId);
+        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
+        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderById(Guid orderId);
         Task UpdateOrder(Order? order);
         Task<List<OrderLineItem>> GetOrderLineItemByOrderId(Guid orderId);
@@ -30,11 +31,11 @@ namespace Services.Orders
         Task UpdateShopBalance(Order order);
         Task UpdateFashionItemStatus(Guid orderOrderId);
         Task PayWithPoints(Guid orderId, Guid requestMemberId);
-        Task<Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest request);
+        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest request);
         Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId, PayOrderWithCashRequest request);
         
         Task UpdateAdminBalance(Order order);
-        Task<Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId, FashionItemStatus itemStatus);
+        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId, FashionItemStatus itemStatus);
 
         Task<DotNext.Result<ShippingFeeResult, ErrorCode>> CalculateShippingFee(List<Guid> itemIds,
             int destinationDistrictId);
