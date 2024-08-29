@@ -385,7 +385,7 @@ public class GiveAwayDbContext : DbContext
 
         #region OrderDetail
 
-        modelBuilder.Entity<OrderLineItem>().ToTable("OrderDetail").HasKey(e => e.OrderLineItemId);
+        modelBuilder.Entity<OrderLineItem>().ToTable("OrderLineItem").HasKey(e => e.OrderLineItemId);
         modelBuilder.Entity<OrderLineItem>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
         modelBuilder.Entity<OrderLineItem>()
             .HasOne<Refund>(x => x.Refund)
@@ -435,7 +435,7 @@ public class GiveAwayDbContext : DbContext
 
         #region ConsignedSaleDetail
 
-        modelBuilder.Entity<ConsignSaleLineItem>().ToTable("ConsignSaleDetail").HasKey(x => x.ConsignSaleLineItemId);
+        modelBuilder.Entity<ConsignSaleLineItem>().ToTable("ConsignSaleLineItem").HasKey(x => x.ConsignSaleLineItemId);
         
         modelBuilder.Entity<ConsignSaleLineItem>()
             .HasOne<IndividualFashionItem>(x=>x.IndividualFashionItem)
