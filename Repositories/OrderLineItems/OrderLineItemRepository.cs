@@ -1,20 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.OrderLineItems;
-using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using Dao;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace Repositories.OrderLineItems
 {
@@ -168,6 +160,8 @@ namespace Repositories.OrderLineItems
         {
             await GenericDao<OrderLineItem>.Instance.UpdateRange(orderLineItems);
         }
+
+        
 
         public IQueryable<OrderLineItem> GetQueryable()
         {
