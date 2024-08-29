@@ -1,6 +1,6 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using System;
@@ -31,11 +31,10 @@ namespace BusinessObjects.Dtos.Orders
         public decimal Discount { get; set; } = 0;
         public PurchaseType PurchaseType { get; set; }
         public OrderStatus Status { get; set; }
-        public List<ShopOrderResponse>? ShopOrderResponses { get; set; }
-        public List<Guid?>? ListItemNotAvailable { get; set; }
-        /*public List<OrderDetailResponse<FashionItem>>? OrderDetails { get; set;}*/
+        public List<ShopOrderResponse> ShopOrderResponses { get; set; } = [];
+        public List<Guid> ListItemNotAvailable { get; set; } = [];
 
-        public List<OrderDetailsResponse>? OrderDetailItems { get; set; }
+        public List<OrderLineItemDetailedResponse> OrderLineItems { get; set; } = [];
     }
 
     public class OrderListResponse

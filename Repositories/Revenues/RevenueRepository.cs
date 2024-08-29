@@ -21,7 +21,7 @@ public class RevenueRepository : IRevenueRepository
 
     private async Task<decimal> GetOrderRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
     {
-        var query = GenericDao<OrderDetail>.Instance.GetQueryable()
+        var query = GenericDao<OrderLineItem>.Instance.GetQueryable()
             .Where(od => od.Order.CreatedDate >= startDate &&
                          od.Order.CreatedDate <= endDate &&
                          od.Order.Status == OrderStatus.Completed);
@@ -37,7 +37,7 @@ public class RevenueRepository : IRevenueRepository
 
     public async Task<decimal?> GetConsignSaleRevenue(Guid? shopId, DateTime startDate, DateTime endDate)
     {
-        var query = GenericDao<ConsignSaleDetail>.Instance
+        var query = GenericDao<ConsignSaleLineItem>.Instance
                 .GetQueryable()
                 .Where(detail =>
                     detail.ConsignSale.CreatedDate >= startDate &&
@@ -57,7 +57,7 @@ public class RevenueRepository : IRevenueRepository
 
     public Task<decimal> GetTotalPayout(Guid? shopId, DateTime startDate, DateTime endDate)
     {
-        var query = GenericDao<OrderDetail>.Instance.GetQueryable()
+        var query = GenericDao<OrderLineItem>.Instance.GetQueryable()
             .Where(od => od.Order.CreatedDate >= startDate &&
                          od.Order.CreatedDate <= endDate &&
                          od.Order.Status == OrderStatus.Completed &&

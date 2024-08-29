@@ -26,7 +26,7 @@ public class ConsignEndingJob : IJob
 
         var consignToEnd = await dbContext.ConsignSales
             .Include(c => c.Member)
-            .Include(c => c.ConsignSaleDetails)
+            .Include(c => c.ConsignSaleLineItems)
             .ThenInclude(c => c.IndividualFashionItem)
             .FirstOrDefaultAsync(c => c.ConsignSaleId == consignId);
         if (consignToEnd == null)
@@ -35,7 +35,7 @@ public class ConsignEndingJob : IJob
             return;
         }
 
-        if (consignToEnd.ConsignSaleDetails.Count == 0)
+        if (consignToEnd.ConsignSaleLineItems.Count == 0)
         {
             Console.WriteLine("No details valid");
             return;
@@ -44,7 +44,7 @@ public class ConsignEndingJob : IJob
         try
         {
             consignToEnd.Status = ConsignSaleStatus.Completed;
-            foreach (var detail in consignToEnd.ConsignSaleDetails)
+            foreach (var detail in consignToEnd.ConsignSaleLineItems)
             {
                 if (!detail.IndividualFashionItem.Status.Equals(FashionItemStatus.Sold) &&
                     !detail.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable))

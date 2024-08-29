@@ -3,10 +3,10 @@ using Org.BouncyCastle.Bcpg;
 
 namespace BusinessObjects.Entities;
 
-public class OrderDetail
+public class OrderLineItem
 {
     [Key]
-    public Guid OrderDetailId { get; set; }
+    public Guid OrderLineItemId { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public Order Order { get; set; }

@@ -10,6 +10,6 @@ public class PointPackage
     public PointPackageStatus Status { get; set; }
     public DateTime CreatedDate { get; set; }
 
-    public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+    public ICollection<OrderLineItem> OrderLineItems { get; set; } = new List<OrderLineItem>();
 }
 

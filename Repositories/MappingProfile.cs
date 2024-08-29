@@ -2,11 +2,11 @@
 using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
 using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.ConsignSaleDetails;
+using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Dtos.Shops;
@@ -44,7 +44,7 @@ namespace Repositories
                 .ForMember(a => a.ContactNumber, opt => opt.MapFrom(a => a.Phone))
                 .ForMember(a => a.Address, opt => opt.MapFrom(a => a.Address))
                 .ForMember(a => a.Quantity, opt => opt.MapFrom(a => a.OrderDetails.Count))
-                .ForMember(a => a.OrderDetailItems, opt => opt.MapFrom(a => a.OrderDetails))
+                .ForMember(a => a.OrderLineItems, opt => opt.MapFrom(a => a.OrderDetails))
                 .ForMember(a => a.Email, opt => opt.MapFrom(a => a.Email))
                 .ForMember(a => a.RecipientName, opt => opt.MapFrom(a => a.RecipientName))
                 .ForMember(a => a.PaymentMethod, opt => opt.MapFrom(a => a.PaymentMethod))
@@ -75,7 +75,6 @@ namespace Repositories
                 .ReverseMap();
             CreateMap<ConsignSale, ConsignSaleResponse>()
                 .ForMember(a => a.Consginer, opt => opt.MapFrom(a => a.ConsignorName))
-                .ForMember(a => a.ConsignSaleDetails, opt => opt.MapFrom(a => a.ConsignSaleDetails))
                 .ReverseMap();
             // CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse>()
             //     /*.ForMember(dest => dest.FashionItem, opt => opt.MapFrom(src => src.FashionItem))*/
@@ -84,17 +83,17 @@ namespace Repositories
             CreateMap<Shop, ShopDetailResponse>() .ReverseMap();
             CreateMap<Refund, RefundResponse>()
                 .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.Select(c => c.Url)))
-                .ForMember(dest => dest.OrderDetailsResponse, opt => opt.MapFrom(src => src.OrderDetail))
-                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.OrderDetail.Order.Member.Fullname))
-                .ForMember(dest => dest.CustomerEmail, opt => opt.MapFrom(src => src.OrderDetail.Order.Member.Email))
-                .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.OrderDetail.Order.Member.Phone))
+                .ForMember(dest => dest.OrderLineItemDetailedResponse, opt => opt.MapFrom(src => src.OrderLineItem))
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member.Fullname))
+                .ForMember(dest => dest.CustomerEmail, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member.Email))
+                .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member.Phone))
                 .ForMember(dest => dest.RefundPercentage, opt => opt.MapFrom(src => src.RefundPercentage))
-                .ForMember(dest => dest.RefundAmount, opt => opt.MapFrom(src => src.RefundPercentage / 100 * src.OrderDetail.UnitPrice ))
+                .ForMember(dest => dest.RefundAmount, opt => opt.MapFrom(src => src.RefundPercentage / 100 * src.OrderLineItem.UnitPrice ))
                 .ReverseMap();
-            CreateMap<ConsignSaleDetail, ConsignSaleDetailResponse2>()
+            CreateMap<ConsignSaleLineItem, ConsignSaleDetailResponse2>()
                 /*.ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.FashionItem.Name))*/
                 .ReverseMap();
-            CreateMap<OrderDetail, OrderDetailsResponse>()
+            CreateMap<OrderLineItem, OrderLineItemDetailedResponse>()
                 .ForMember(dest => dest.ItemName, opt => opt.MapFrom(src => src.IndividualFashionItem.Variation.MasterItem.Name))
                 .ForMember(dest => dest.ItemStatus, opt => opt.MapFrom(src => src.IndividualFashionItem.Status))
                 .ForMember(dest => dest.ItemBrand, opt => opt.MapFrom(src => !string.IsNullOrEmpty(src.IndividualFashionItem.Variation.MasterItem.Brand) ? src.IndividualFashionItem.Variation.MasterItem.Brand : "No Brand"))

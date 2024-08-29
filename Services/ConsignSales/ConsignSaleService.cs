@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using AutoMapper;
 using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.ConsignSaleDetails;
+using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Dtos.FashionItems;
@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Quartz;
 using Repositories.Accounts;
-using Repositories.ConsignSaleDetails;
+using Repositories.ConsignSaleLineItems;
 using Repositories.ConsignSales;
 using Repositories.FashionItems;
 using Repositories.Images;
@@ -30,7 +30,7 @@ namespace Services.ConsignSales
     {
         private readonly IConsignSaleRepository _consignSaleRepository;
         private readonly IAccountRepository _accountRepository;
-        private readonly IConsignSaleDetailRepository _consignSaleDetailRepository;
+        private readonly IConsignSaleLineItemRepository _consignSaleLineItemRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
@@ -40,14 +40,14 @@ namespace Services.ConsignSales
         private readonly ILogger<ConsignSaleService> _logger;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
-            IConsignSaleDetailRepository consignSaleDetailRepository
+            IConsignSaleLineItemRepository consignSaleLineItemRepository
             , IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
             ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository,
             IImageRepository imageRepository, ILogger<ConsignSaleService> logger)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
-            _consignSaleDetailRepository = consignSaleDetailRepository;
+            _consignSaleLineItemRepository = consignSaleLineItemRepository;
             _orderRepository = orderRepository;
             _emailService = emailService;
             _mapper = mapper;
@@ -316,45 +316,45 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<DotNext.Result<List<ConsignSaleDetailResponse>, ErrorCode>> GetConsignSaleDetails(
+        public async Task<DotNext.Result<List<ConsignSaleLineItemsListResponse>, ErrorCode>> GetConsignSaleLineItems(
             Guid consignSaleId)
         {
-            Expression<Func<ConsignSaleDetail, bool>> predicate = detail => detail.ConsignSaleId == consignSaleId;
-            Expression<Func<ConsignSaleDetail, ConsignSaleDetailResponse>> selector = detail =>
-                new ConsignSaleDetailResponse
+            Expression<Func<ConsignSaleLineItem, bool>> predicate = lineItem => lineItem.ConsignSaleId == consignSaleId;
+            Expression<Func<ConsignSaleLineItem, ConsignSaleLineItemsListResponse>> selector = lineItem =>
+                new ConsignSaleLineItemsListResponse
                 {
-                    ConsignSaleDetailId = detail.ConsignSaleDetailId,
-                    ConsignSaleId = detail.ConsignSaleId,
-                    ProductName = detail.ProductName,
-                    Condition = detail.Condition,
-                    Brand = detail.Brand,
-                    Color = detail.Color,
-                    Gender = detail.Gender,
-                    Size = detail.Size,
-                    Images = detail.Images.Select(x => x.Url ?? string.Empty).ToList(),
-                    ConfirmedPrice = detail.ConfirmedPrice,
-                    Note = detail.Note,
-                    DealPrice = detail.DealPrice
+                    ConsignSaleLineItemId = lineItem.ConsignSaleLineItemId,
+                    ConsignSaleId = lineItem.ConsignSaleId,
+                    ProductName = lineItem.ProductName,
+                    Condition = lineItem.Condition,
+                    Brand = lineItem.Brand,
+                    Color = lineItem.Color,
+                    Gender = lineItem.Gender,
+                    Size = lineItem.Size,
+                    Images = lineItem.Images.Select(x => x.Url ?? string.Empty).ToList(),
+                    ConfirmedPrice = lineItem.ConfirmedPrice,
+                    Note = lineItem.Note,
+                    DealPrice = lineItem.DealPrice
                 };
 
             try
             {
-                var result = await _consignSaleDetailRepository.GetQueryable()
+                var result = await _consignSaleLineItemRepository.GetQueryable()
                     .Where(predicate)
                     .Select(selector)
                     .ToListAsync();
 
-                return new DotNext.Result<List<ConsignSaleDetailResponse>, ErrorCode>(result);
+                return new DotNext.Result<List<ConsignSaleLineItemsListResponse>, ErrorCode>(result);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Get consign sale details error");
-                return new Result<List<ConsignSaleDetailResponse>, ErrorCode>(ErrorCode.ServerError);
+                return new Result<List<ConsignSaleLineItemsListResponse>, ErrorCode>(ErrorCode.ServerError);
             }
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>>
-            CreateMasterItemFromConsignSaleDetail(Guid consignsaleId,
+            CreateMasterItemFromConsignSaleLineItem(Guid consignsaleId,
                 CreateMasterItemForConsignRequest detailRequest)
         {
             var response = new BusinessObjects.Dtos.Commons.Result<MasterItemResponse>();
@@ -407,7 +407,7 @@ namespace Services.ConsignSales
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>>
-            CreateVariationFromConsignSaleDetail(Guid masteritemId, CreateItemVariationRequestForConsign request)
+            CreateVariationFromConsignSaleLineItem(Guid masteritemId, CreateItemVariationRequestForConsign request)
         {
             Expression<Func<MasterFashionItem, bool>> predicate = masterItem => masterItem.MasterItemId == masteritemId;
             var masterItem = await _fashionItemRepository.GetSingleMasterItem(predicate);
@@ -447,19 +447,19 @@ namespace Services.ConsignSales
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>>
-            CreateIndividualItemFromConsignSaleDetail(Guid consignsaledetailId, Guid variationId,
+            CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId, Guid variationId,
                 CreateIndividualItemRequestForConsign request)
         {
-            Expression<Func<ConsignSaleDetail, bool>> predicate = consignsaledetail =>
-                consignsaledetail.ConsignSaleDetailId == consignsaledetailId;
-            var consignSaleDetail = await _consignSaleDetailRepository.GetSingleConsignSaleDetail(predicate);
+            Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
+                consignsaledetail.ConsignSaleLineItemId == consignsaledetailId;
+            var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
             if (consignSaleDetail == null)
             {
                 throw new ConsignSaleDetailsNotFoundException();
             }
 
             consignSaleDetail.ConfirmedPrice = request.ConfirmPrice;
-            await _consignSaleDetailRepository.UpdateConsignSaleDetail(consignSaleDetail);
+            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
             Expression<Func<FashionItemVariation, bool>> predicateVariation =
                 itemvariation => itemvariation.VariationId == variationId;
             var itemVariation = await _fashionItemRepository.GetSingleFashionItemVariation(predicateVariation!);
@@ -478,7 +478,7 @@ namespace Services.ConsignSales
                 ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemVariation.MasterItem
                     .MasterItemCode),
                 Status = FashionItemStatus.PendingForConsignSale,
-                ConsignSaleDetailId = consignsaledetailId
+                ConsignSaleLineItemId = consignsaledetailId
             };
             switch (consignSaleDetail.ConsignSale.Type)
             {
@@ -495,7 +495,7 @@ namespace Services.ConsignSales
                         ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemVariation.MasterItem
                             .MasterItemCode),
                         Status = FashionItemStatus.PendingForConsignSale,
-                        ConsignSaleDetailId = consignsaledetailId,
+                        ConsignSaleLineItemId = consignsaledetailId,
                         Type = FashionItemType.ConsignedForAuction,
                         InitialPrice = consignSaleDetail.ConfirmedPrice,
                         SellingPrice = 0,
@@ -515,7 +515,7 @@ namespace Services.ConsignSales
                     Url = imageRequest,
                     CreatedDate = DateTime.UtcNow,
                     IndividualFashionItemId = individualItem.ItemId,
-                    ConsignSaleDetailId = consignsaledetailId
+                    ConsignLineItemId = consignsaledetailId
                 };
                 await _imageRepository.AddImage(image);
                 individualItem.Images.Add(image);

@@ -4,10 +4,10 @@ using BusinessObjects.Dtos.Commons;
 
 namespace BusinessObjects.Entities;
 
-public class ConsignSaleDetail
+public class ConsignSaleLineItem
 {
     [Key]
-    public Guid ConsignSaleDetailId { get; set; }
+    public Guid ConsignSaleLineItemId { get; set; }
     public Guid ConsignSaleId { get; set; }
     public decimal DealPrice { get; set; }
     public string Note { get; set; }

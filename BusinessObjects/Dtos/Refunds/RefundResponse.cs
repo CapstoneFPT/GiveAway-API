@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Transactions;
 
 namespace BusinessObjects.Dtos.Refunds
@@ -19,7 +19,7 @@ namespace BusinessObjects.Dtos.Refunds
 
         public DateTime CreatedDate { get; set; }
 
-        public Guid OrderDetailId { get; set; }
+        public Guid OrderLineItemId { get; set; }
         public string CustomerName { get; set; }
         public string CustomerPhone { get; set; }
         public string CustomerEmail { get; set; }
@@ -29,7 +29,7 @@ namespace BusinessObjects.Dtos.Refunds
 
         public string[] Images { get; set; }
         public RefundStatus RefundStatus { get; set; }
-        public OrderDetailsResponse OrderDetailsResponse { get; set; }
+        public OrderLineItemDetailedResponse OrderLineItemDetailedResponse { get; set; }
         public GetTransactionsResponse? TransactionsResponse { get; set; }
     }
 }

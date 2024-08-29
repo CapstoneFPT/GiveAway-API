@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Protocol;
-using Services.OrderDetails;
+using Services.OrderLineItems;
 using Services.Refunds;
 
 namespace WebApi.Controllers
@@ -15,12 +15,12 @@ namespace WebApi.Controllers
     public class RefundController : ControllerBase
     {
         private readonly IRefundService _refundService;
-        private readonly IOrderDetailService _orderDetailService;
+        private readonly IOrderLineItemService _orderLineItemService;
 
-        public RefundController(IRefundService refundService, IOrderDetailService orderDetailService)
+        public RefundController(IRefundService refundService, IOrderLineItemService orderLineItemService)
         {
             _refundService = refundService;
-            _orderDetailService = orderDetailService;
+            _orderLineItemService = orderLineItemService;
         }
 
         [HttpGet("{refundId}")]
@@ -59,7 +59,7 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<RefundResponse>>> RequestRefundItemToShop(
             [FromBody] CreateRefundRequest refundRequest)
         {
-            var result = await _orderDetailService.RequestRefundToShop(refundRequest);
+            var result = await _orderLineItemService.RequestRefundToShop(refundRequest);
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);

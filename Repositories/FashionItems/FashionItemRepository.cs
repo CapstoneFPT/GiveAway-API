@@ -116,7 +116,7 @@ namespace Repositories.FashionItems
         public bool CheckItemIsInOrder(Guid itemId, Guid? memberId)
         {
             var result =
-                    _giveAwayDbContext.OrderDetails
+                    _giveAwayDbContext.OrderLineItems
                         .Any(orderDetail =>
                             orderDetail.IndividualFashionItemId == itemId && orderDetail.Order.MemberId == memberId &&
                             orderDetail.Order.Status == OrderStatus.AwaitingPayment)
@@ -126,7 +126,7 @@ namespace Repositories.FashionItems
 
         public async Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId)
         {
-            return await _giveAwayDbContext.OrderDetails
+            return await _giveAwayDbContext.OrderLineItems
                 .Where(orderDetail =>
                     itemIds.Contains(orderDetail.IndividualFashionItemId.Value) &&
                     orderDetail.Order.MemberId == memberId &&
@@ -378,9 +378,9 @@ namespace Repositories.FashionItems
             }
         }
 
-        public async Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> listItemId)
+        public async Task<List<Guid>> IsItemBelongShop(Guid shopId, List<Guid> listItemId)
         {
-            var listItemNotbelongshop = new List<Guid?>();
+            var listItemNotbelongshop = new List<Guid>();
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                 .Include(c => c.Variation)
                 .ThenInclude(C => C.MasterItem)

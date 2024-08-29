@@ -3,7 +3,7 @@ using AutoMapper.Execution;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
@@ -85,33 +85,33 @@ namespace Repositories.Orders
             order.OrderCode = GenerateUniqueString();
 
             var result = await GenericDao<Order>.Instance.AddAsync(order);
-            var listOrderDetailResponse = new List<OrderDetailsResponse>();
+            var listOrderDetailResponse = new List<OrderLineItemDetailedResponse>();
 
             foreach (var individualItem in listItem)
             {
-                OrderDetail orderDetail = new OrderDetail();
-                orderDetail.OrderId = order.OrderId;
-                orderDetail.UnitPrice = individualItem.SellingPrice!.Value;
-                orderDetail.CreatedDate = DateTime.UtcNow;
-                orderDetail.Quantity = 1;
-                orderDetail.IndividualFashionItemId = individualItem.ItemId;
+                OrderLineItem orderLineItem = new OrderLineItem();
+                orderLineItem.OrderId = order.OrderId;
+                orderLineItem.UnitPrice = individualItem.SellingPrice!.Value;
+                orderLineItem.CreatedDate = DateTime.UtcNow;
+                orderLineItem.Quantity = 1;
+                orderLineItem.IndividualFashionItemId = individualItem.ItemId;
 
-                await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
+                await GenericDao<OrderLineItem>.Instance.AddAsync(orderLineItem);
                 if (cart.PaymentMethod.Equals(PaymentMethod.COD))
                 {
                     individualItem.Status = FashionItemStatus.PendingForOrder;
                     await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(individualItem);
                 }
 
-                var orderDetailResponse = new OrderDetailsResponse()
+                var orderDetailResponse = new OrderLineItemDetailedResponse()
                 {
-                    OrderDetailId = orderDetail.OrderDetailId,
+                    OrderLineItemId = orderLineItem.OrderLineItemId,
                     ItemName = individualItem.Variation!.MasterItem.Name,
-                    UnitPrice = orderDetail.UnitPrice,
-                    CreatedDate = orderDetail.CreatedDate,
+                    UnitPrice = orderLineItem.UnitPrice,
+                    CreatedDate = orderLineItem.CreatedDate,
                     OrderCode = order.OrderCode,
                     ItemCode = individualItem.ItemCode,
-                    Quantity = orderDetail.Quantity,
+                    Quantity = orderLineItem.Quantity,
                 };
                 /*totalPrice += orderDetail.UnitPrice;*/
 
@@ -141,7 +141,7 @@ namespace Repositories.Orders
                 ShippingFee = result.ShippingFee,
                 Discount = result.Discount,
                 Status = result.Status,
-                OrderDetailItems = listOrderDetailResponse,
+                OrderLineItems = listOrderDetailResponse,
             };
             return orderResponse;
         }
@@ -186,7 +186,7 @@ namespace Repositories.Orders
             query = query.Skip((request.PageNumber.Value - 1) * request.PageSize.Value)
                 .Take(request.PageSize.Value);
 
-            var list = await _giveAwayDbContext.OrderDetails.CountAsync();
+            var list = await _giveAwayDbContext.OrderLineItems.CountAsync();
 
             var items = await query
                 .Select(x => new OrderResponse
@@ -287,17 +287,17 @@ namespace Repositories.Orders
             return await GenericDao<Order>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.OrderCode.Equals(code));
         }
 
-        public async Task<List<OrderDetail>> IsOrderExisted(List<Guid?> listItemId, Guid memberId)
+        public async Task<List<OrderLineItem>> IsOrderExisted(List<Guid> listItemId, Guid memberId)
         {
-            var listorderdetail = await GenericDao<OrderDetail>.Instance.GetQueryable()
+            var listorderdetail = await GenericDao<OrderLineItem>.Instance.GetQueryable()
                 .Where(c => c.Order.MemberId == memberId && c.Order.Status.Equals(OrderStatus.AwaitingPayment))
-                .Where(c => listItemId.Contains(c.IndividualFashionItemId)).ToListAsync();
+                .Where(c => listItemId.Contains(c.IndividualFashionItemId.Value)).ToListAsync();
             return listorderdetail;
         }
 
-        public async Task<List<Guid?>> IsOrderAvailable(List<Guid?> listItemId)
+        public async Task<List<Guid>> IsOrderAvailable(List<Guid> listItemId)
         {
-            var listItemNotAvailable = new List<Guid?>();
+            var listItemNotAvailable = new List<Guid>();
             foreach (var itemId in listItemId)
             {
                 var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
@@ -326,14 +326,14 @@ namespace Repositories.Orders
                     .Select(c => c.ItemId).ToListAsync();
             }
 
-            var listOrderdetail = new List<OrderDetailResponse<IndividualFashionItem>>();
+            var listOrderdetail = new List<OrderLineItemResponse<IndividualFashionItem>>();
             foreach (var itemId in listItemId)
             {
-                var orderDetail = await GenericDao<OrderDetail>.Instance.GetQueryable()
+                var orderDetail = await GenericDao<OrderLineItem>.Instance.GetQueryable()
                     .FirstOrDefaultAsync(c => c.IndividualFashionItemId.Equals(itemId));
                 if (orderDetail != null)
                 {
-                    var newOrderDetail = new OrderDetailResponse<IndividualFashionItem>();
+                    var newOrderDetail = new OrderLineItemResponse<IndividualFashionItem>();
                     newOrderDetail.OrderId = orderDetail.OrderId;
                     newOrderDetail.UnitPrice = orderDetail.UnitPrice;
                     newOrderDetail.FashionItemDetail = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
@@ -487,27 +487,27 @@ namespace Repositories.Orders
 
             await CreateOrder(order);
 
-            var listOrderDetailResponse = new List<OrderDetailsResponse>();
+            var listOrderDetailResponse = new List<OrderLineItemDetailedResponse>();
 
             foreach (var item in listItem)
             {
-                OrderDetail orderDetail = new OrderDetail();
-                orderDetail.OrderId = order.OrderId;
-                orderDetail.UnitPrice = item.SellingPrice!.Value;
-                orderDetail.CreatedDate = DateTime.UtcNow;
-                orderDetail.Quantity = 1;
-                orderDetail.IndividualFashionItemId = item.ItemId;
+                OrderLineItem orderLineItem = new OrderLineItem();
+                orderLineItem.OrderId = order.OrderId;
+                orderLineItem.UnitPrice = item.SellingPrice!.Value;
+                orderLineItem.CreatedDate = DateTime.UtcNow;
+                orderLineItem.Quantity = 1;
+                orderLineItem.IndividualFashionItemId = item.ItemId;
 
-                await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
+                await GenericDao<OrderLineItem>.Instance.AddAsync(orderLineItem);
                 item.Status = FashionItemStatus.OnDelivery;
                 await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
 
-                var orderDetailResponse = await _giveAwayDbContext.OrderDetails.AsQueryable()
+                var orderDetailResponse = await _giveAwayDbContext.OrderLineItems.AsQueryable()
                     .Where(c => c.IndividualFashionItemId == item.ItemId)
-                    .ProjectTo<OrderDetailsResponse>(_mapper.ConfigurationProvider)
+                    .ProjectTo<OrderLineItemDetailedResponse>(_mapper.ConfigurationProvider)
                     .AsNoTracking()
                     .FirstOrDefaultAsync();
-                totalPrice += orderDetail.UnitPrice;
+                totalPrice += orderLineItem.UnitPrice;
 
                 listOrderDetailResponse.Add(orderDetailResponse);
             }
@@ -526,7 +526,7 @@ namespace Repositories.Orders
                 PurchaseType = order.PurchaseType,
                 OrderCode = order.OrderCode,
                 Status = order.Status,
-                OrderDetailItems = listOrderDetailResponse
+                OrderLineItems = listOrderDetailResponse
             };
             return orderResponse;
         }

@@ -7,7 +7,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
@@ -30,7 +30,7 @@ namespace Repositories.Refunds
 
         public async Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, ApprovalRefundRequest request)
         {
-            var refund = await GenericDao<Refund>.Instance.GetQueryable().Include(c => c.OrderDetail)
+            var refund = await GenericDao<Refund>.Instance.GetQueryable().Include(c => c.OrderLineItem)
                 .ThenInclude(c => c.IndividualFashionItem)
                 .FirstOrDefaultAsync(c => c.RefundId == refundId);
             if (refund == null)
@@ -42,14 +42,14 @@ namespace Repositories.Refunds
                 refund.RefundStatus = RefundStatus.Approved;
                 refund.RefundPercentage = request.RefundPercentage;
                 refund.ResponseFromShop = request.Description;
-                refund.OrderDetail.IndividualFashionItem.Status = FashionItemStatus.Returned;
+                refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
             }
             else if (request.Status.Equals(RefundStatus.Rejected))
             {
                 refund.RefundStatus = RefundStatus.Rejected;
                 refund.RefundPercentage = 0;
                 refund.ResponseFromShop = request.Description;
-                refund.OrderDetail.IndividualFashionItem.Status = FashionItemStatus.Sold;
+                refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Sold;
             }
             else
             {
@@ -65,7 +65,7 @@ namespace Repositories.Refunds
         public async Task<RefundResponse> GetRefundById(Guid refundId)
         {
             var refund = await GenericDao<Refund>.Instance.GetQueryable()
-                .Include(c => c.OrderDetail).ThenInclude(c => c.Order)
+                .Include(c => c.OrderLineItem).ThenInclude(c => c.Order)
                 .Where(c => c.RefundId == refundId)
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();
@@ -114,10 +114,10 @@ namespace Repositories.Refunds
 
         public async Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId)
         {
-            var refund = await _giveAwayDbContext.Refunds.AsQueryable().Include(c => c.OrderDetail)
+            var refund = await _giveAwayDbContext.Refunds.AsQueryable().Include(c => c.OrderLineItem)
                 .ThenInclude(c => c.IndividualFashionItem).Where(c => c.RefundId == refundId).FirstOrDefaultAsync();
             refund.RefundStatus = RefundStatus.Completed;
-            refund.OrderDetail.IndividualFashionItem.Status = FashionItemStatus.Unavailable;
+            refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Unavailable;
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
             return await GetRefundById(refundId);
         }

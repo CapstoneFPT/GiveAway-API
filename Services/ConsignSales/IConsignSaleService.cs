@@ -1,5 +1,5 @@
 ﻿using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.ConsignSaleDetails;
+using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
@@ -17,13 +17,13 @@ namespace Services.ConsignSales
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> ConfirmReceivedFromShop(Guid consignId);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
         
-        Task<Result<List<ConsignSaleDetailResponse>, ErrorCode>> GetConsignSaleDetails(Guid consignsaleId);
-        Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> CreateMasterItemFromConsignSaleDetail(Guid consignsaleId, CreateMasterItemForConsignRequest detailRequest);
+        Task<Result<List<ConsignSaleLineItemsListResponse>, ErrorCode>> GetConsignSaleLineItems(Guid consignsaleId);
+        Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> CreateMasterItemFromConsignSaleLineItem(Guid consignsaleId, CreateMasterItemForConsignRequest detailRequest);
 
-        Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleDetail(Guid masteritemId,
+        Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleLineItem(Guid masteritemId,
             CreateItemVariationRequestForConsign request);
 
-        Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleDetail(Guid consignsaledetailId,
+        Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId,
             Guid variationId, CreateIndividualItemRequestForConsign request);
         Task UpdateConsignPrice(Guid orderId);
 

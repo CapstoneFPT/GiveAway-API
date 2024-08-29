@@ -30,7 +30,7 @@ public class FashionItemRefundEndingJob : IJob
         var individualItemId = context.JobDetail.JobDataMap.GetGuid("RefundItemId");
         var refundItemToEnd =
             await dbContext.IndividualFashionItems
-                .Include(c => c.ConsignSaleDetail)
+                .Include(c => c.ConsignSaleLineItem)
                 .ThenInclude(c => c!.ConsignSale)
                 .ThenInclude(c => c.Member)
                 .FirstOrDefaultAsync(c => c.ItemId == individualItemId);
@@ -43,27 +43,27 @@ public class FashionItemRefundEndingJob : IJob
         try
         {
             refundItemToEnd.Status = FashionItemStatus.Sold;
-            if (refundItemToEnd.ConsignSaleDetail != null)
+            if (refundItemToEnd.ConsignSaleLineItem != null)
             {
                 var amountConsignorReceive = refundItemToEnd.SellingPrice!.Value * 80 / 100;
                 
-                refundItemToEnd.ConsignSaleDetail.ConsignSale.Member!.Balance += amountConsignorReceive;
+                refundItemToEnd.ConsignSaleLineItem.ConsignSale.Member!.Balance += amountConsignorReceive;
                 var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
                 if (admin == null)
                     throw new AccountNotFoundException();
                 admin.Balance -= amountConsignorReceive;
                 await _accountRepository.UpdateAccount(admin);
 
-                refundItemToEnd.ConsignSaleDetail.ConsignSale.SoldPrice += refundItemToEnd.SellingPrice!.Value;
-                refundItemToEnd.ConsignSaleDetail.ConsignSale.ConsignorReceivedAmount += amountConsignorReceive;
+                refundItemToEnd.ConsignSaleLineItem.ConsignSale.SoldPrice += refundItemToEnd.SellingPrice!.Value;
+                refundItemToEnd.ConsignSaleLineItem.ConsignSale.ConsignorReceivedAmount += amountConsignorReceive;
                 
                 var transaction = new Transaction() 
                 {
-                    MemberId = refundItemToEnd.ConsignSaleDetail.ConsignSale.MemberId,
+                    MemberId = refundItemToEnd.ConsignSaleLineItem.ConsignSale.MemberId,
                     Amount = refundItemToEnd.SellingPrice!.Value,
                     CreatedDate = DateTime.UtcNow,
                     Type = TransactionType.Payout,
-                    ConsignSaleId = refundItemToEnd.ConsignSaleDetail.ConsignSaleId
+                    ConsignSaleId = refundItemToEnd.ConsignSaleLineItem.ConsignSaleId
                 };
                 await _transactionRepository.CreateTransaction(transaction);
             }

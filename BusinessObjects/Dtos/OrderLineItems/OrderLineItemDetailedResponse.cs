@@ -1,11 +1,11 @@
 ﻿using BusinessObjects.Dtos.Commons;
 
-namespace BusinessObjects.Dtos.OrderDetails;
+namespace BusinessObjects.Dtos.OrderLineItems;
 
-public class OrderDetailsResponse
+public class OrderLineItemDetailedResponse
 {
     public string OrderCode { get; set; }
-    public Guid OrderDetailId { get; set; }
+    public Guid OrderLineItemId { get; set; }
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; }
     public DateTime? RefundExpirationDate { get; set; }

@@ -30,5 +30,5 @@ public class Order
     public decimal ShippingFee { get; set; } = 0;
     public decimal Discount { get; set; } = 0;
 
-    public ICollection<OrderDetail> OrderDetails = new List<OrderDetail>();
+    public ICollection<OrderLineItem> OrderDetails = new List<OrderLineItem>();
 }

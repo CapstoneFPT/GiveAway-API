@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessObjects.Dtos.OrderDetails
+namespace BusinessObjects.Dtos.OrderLineItems
 {
-    public class OrderDetailRequest
+    public class OrderLineItemRequest
     {
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;

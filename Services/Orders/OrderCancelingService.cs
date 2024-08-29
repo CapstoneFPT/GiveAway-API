@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Services.OrderDetails;
+using Services.OrderLineItems;
 
 namespace Services.Orders;
 
@@ -56,7 +56,7 @@ public class OrderCancelingService : BackgroundService
                 order.Status = OrderStatus.Cancelled;
                 dbContext.Orders.Update(order);
 
-                var orderDetails = await dbContext.OrderDetails.Include(x => x.IndividualFashionItem)
+                var orderDetails = await dbContext.OrderLineItems.Include(x => x.IndividualFashionItem)
                     .Where(x => x.OrderId == order.OrderId).ToListAsync();
 
                 foreach (var orderDetail in orderDetails)
@@ -66,7 +66,7 @@ public class OrderCancelingService : BackgroundService
                         throw new FashionItemNotFoundException();
                     }
                     orderDetail.IndividualFashionItem.Status = FashionItemStatus.Available;
-                    dbContext.OrderDetails.Update(orderDetail);
+                    dbContext.OrderLineItems.Update(orderDetail);
                 }
             }
 

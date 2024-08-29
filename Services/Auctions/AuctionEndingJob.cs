@@ -95,7 +95,7 @@ public class AuctionEndingJob : IJob
             dbContext.Orders.Add(newOrder);
 
 
-            var orderDetail = new OrderDetail()
+            var orderDetail = new OrderLineItem()
             {
                 OrderId = newOrder.OrderId,
                 IndividualFashionItemId = orderRequest.AuctionFashionItemId,
@@ -103,7 +103,7 @@ public class AuctionEndingJob : IJob
                 CreatedDate = DateTime.UtcNow,
             };
 
-            dbContext.OrderDetails.Add(orderDetail);
+            dbContext.OrderLineItems.Add(orderDetail);
         }
         catch (Exception e)
         {

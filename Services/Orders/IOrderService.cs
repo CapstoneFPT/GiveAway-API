@@ -24,7 +24,7 @@ namespace Services.Orders
         Task<Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderById(Guid orderId);
         Task UpdateOrder(Order? order);
-        Task<List<OrderDetail>> GetOrderDetailByOrderId(Guid orderId);
+        Task<List<OrderLineItem>> GetOrderLineItemByOrderId(Guid orderId);
         Task<List<Order?>> GetOrdersToCancel();
         Task CancelOrders(List<Order?> ordersToCancel);
         Task UpdateShopBalance(Order order);

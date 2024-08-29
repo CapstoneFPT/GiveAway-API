@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
 using Services.ConsignSales;
 using Services.Deliveries;
-using Services.OrderDetails;
+using Services.OrderLineItems;
 using Services.Orders;
 
 namespace WebApi.Controllers;
@@ -27,18 +27,18 @@ public class AccountController : ControllerBase
     private readonly IAccountService _accountService;
     private readonly IConsignSaleService _consignSaleService;
     private readonly IDeliveryService _deliveryService;
-    private readonly IOrderDetailService _orderDetailService;
+    private readonly IOrderLineItemService _orderLineItemService;
     private readonly IOrderService _orderService;
     private readonly IHttpContextAccessor _contextAccessor;
     public AccountController(IAccountService accountService, IDeliveryService deliveryService,
-        IOrderService orderService, IConsignSaleService consignSaleService, IOrderDetailService orderDetailService,
+        IOrderService orderService, IConsignSaleService consignSaleService, IOrderLineItemService orderLineItemService,
         IHttpContextAccessor contextAccessor)
     {
         _accountService = accountService;
         _deliveryService = deliveryService;
         _orderService = orderService;
         _consignSaleService = consignSaleService;
-        _orderDetailService = orderDetailService;
+        _orderLineItemService = orderLineItemService;
         _contextAccessor = contextAccessor;
     }
 

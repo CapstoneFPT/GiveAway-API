@@ -1,5 +1,5 @@
 ﻿using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +12,6 @@ namespace BusinessObjects.Dtos.Shops
     {
         public Guid ShopId { get; set; }
         public string? ShopAddress { get; set; }
-        public List<OrderDetailResponse<FashionItemDetailResponse>>? Items { get; set; } 
+        public List<OrderLineItemResponse<FashionItemDetailResponse>>? Items { get; set; } 
     }
 }

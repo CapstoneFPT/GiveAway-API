@@ -28,6 +28,6 @@ public class ConsignSale
     public string? Address { get; set; }
     [EmailAddress] public string? Email { get; set; }
     public ConsignSaleMethod ConsignSaleMethod { get; set; }
-    public ICollection<ConsignSaleDetail> ConsignSaleDetails { get; set; } = new List<ConsignSaleDetail>();
+    public ICollection<ConsignSaleLineItem> ConsignSaleLineItems { get; set; } = new List<ConsignSaleLineItem>();
 }
 

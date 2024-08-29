@@ -5,10 +5,10 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Repositories.FashionItems;
-using Repositories.OrderDetails;
+using Repositories.OrderLineItems;
 using Repositories.Orders;
 using BusinessObjects.Dtos.Auctions;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Repositories.Accounts;
 using Repositories.AuctionItems;
@@ -36,7 +36,7 @@ public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IFashionItemRepository _fashionItemRepository;
-    private readonly IOrderDetailRepository _orderDetailRepository;
+    private readonly IOrderLineItemRepository _orderLineItemRepository;
     private readonly IAuctionItemRepository _auctionItemRepository;
     private readonly IMapper _mapper;
     private readonly IAccountRepository _accountRepository;
@@ -50,7 +50,7 @@ public class OrderService : IOrderService
     private readonly ILogger<OrderService> _logger;
     private readonly ISchedulerFactory _schedulerFactory;
     public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
-        IMapper mapper, IOrderDetailRepository orderDetailRepository, IAuctionItemRepository auctionItemRepository,
+        IMapper mapper, IOrderLineItemRepository orderLineItemRepository, IAuctionItemRepository auctionItemRepository,
         IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
         IShopRepository shopRepository, ITransactionRepository transactionRepository,
         IConfiguration configuration, IEmailService emailService, IRefundRepository refundRepository,
@@ -59,7 +59,7 @@ public class OrderService : IOrderService
         _orderRepository = orderRepository;
         _fashionItemRepository = fashionItemRepository;
         _mapper = mapper;
-        _orderDetailRepository = orderDetailRepository;
+        _orderLineItemRepository = orderLineItemRepository;
         _auctionItemRepository = auctionItemRepository;
         _pointPackageRepository = pointPackageRepository;
         _accountRepository = accountRepository;
@@ -89,7 +89,7 @@ public class OrderService : IOrderService
             return response;
         }
 
-        var checkItemAvailable = await _orderRepository.IsOrderAvailable(cart.CartItems.Select(ci => ci.ItemId as Guid?).ToList());
+        var checkItemAvailable = await _orderRepository.IsOrderAvailable(cart.CartItems.Select(ci => ci.ItemId).ToList());
         if (checkItemAvailable.Count > 0)
         {
             var orderResponse = new OrderResponse();
@@ -101,10 +101,10 @@ public class OrderService : IOrderService
             return response;
         }
 
-        var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.CartItems.Select(ci => ci.ItemId as Guid?).ToList(), accountId);
+        var checkOrderExisted = await _orderRepository.IsOrderExisted(cart.CartItems.Select(ci => ci.ItemId).ToList(), accountId) ?? [];
         if (checkOrderExisted.Count > 0)
         {
-            var listItemExisted = checkOrderExisted.Select(x => x.IndividualFashionItemId).ToList();
+            var listItemExisted = checkOrderExisted.Select(x => x.IndividualFashionItemId.Value).ToList() ?? [];
             var orderResponse = new OrderResponse();
             orderResponse.ListItemNotAvailable = listItemExisted;
             response.Data = orderResponse;
@@ -134,7 +134,7 @@ public class OrderService : IOrderService
         var orderResult = await _orderRepository.CreateOrder(toBeAdded);
 
         var orderDetails =
-                new OrderDetail()
+                new OrderLineItem()
                 {
                     OrderId = orderResult.OrderId,
                     IndividualFashionItemId = orderRequest.AuctionFashionItemId,
@@ -143,9 +143,9 @@ public class OrderService : IOrderService
                 }
             ;
         var orderDetailResult =
-            await _orderDetailRepository.CreateOrderDetail(orderDetails);
+            await _orderLineItemRepository.CreateOrderLineItem(orderDetails);
 
-        orderResult.OrderDetails = new List<OrderDetail>() { orderDetailResult };
+        orderResult.OrderDetails = new List<OrderLineItem>() { orderDetailResult };
         return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
         {
             Data = _mapper.Map<Order, OrderResponse>(orderResult),
@@ -153,9 +153,9 @@ public class OrderService : IOrderService
         };
     }
 
-    public async Task<List<OrderDetail>> GetOrderDetailByOrderId(Guid orderId)
+    public async Task<List<OrderLineItem>> GetOrderLineItemByOrderId(Guid orderId)
     {
-        return await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderId);
+        return await _orderLineItemRepository.GetOrderLineItems(x => x.OrderId == orderId);
     }
 
     public async Task<List<Order>> GetOrdersToCancel()
@@ -207,7 +207,7 @@ public class OrderService : IOrderService
 
     public async Task UpdateFashionItemStatus(Guid orderOrderId)
     {
-        var orderDetails = await _orderDetailRepository.GetOrderDetails(x => x.OrderId == orderOrderId);
+        var orderDetails = await _orderLineItemRepository.GetOrderLineItems(x => x.OrderId == orderOrderId);
         orderDetails.ForEach(x => x.IndividualFashionItem.Status = FashionItemStatus.PendingForOrder);
         var fashionItems = orderDetails.Select(x => x.IndividualFashionItem).ToList();
         await _fashionItemRepository.BulkUpdate(fashionItems!);
@@ -245,7 +245,7 @@ public class OrderService : IOrderService
             Status = OrderStatus.AwaitingPayment,
         });
 
-        var orderDetailResult = await _orderDetailRepository.CreateOrderDetail(new OrderDetail()
+        var orderDetailResult = await _orderLineItemRepository.CreateOrderLineItem(new OrderLineItem()
         {
             OrderId = orderResult.OrderId,
             UnitPrice = order.TotalPrice,
@@ -259,11 +259,11 @@ public class OrderService : IOrderService
                 OrderId = orderResult.OrderId,
                 OrderCode = orderResult.OrderCode,
                 TotalPrice = orderResult.TotalPrice,
-                OrderDetailItems = new List<OrderDetailsResponse>()
+                OrderLineItems = new List<OrderLineItemDetailedResponse>()
                 {
-                    new OrderDetailsResponse()
+                    new OrderLineItemDetailedResponse()
                     {
-                        OrderDetailId = orderDetailResult.OrderDetailId,
+                        OrderLineItemId = orderDetailResult.OrderLineItemId,
                         UnitPrice = orderDetailResult.UnitPrice,
                         RefundExpirationDate = null,
                         PointPackageId = orderDetailResult.PointPackageId
@@ -623,10 +623,10 @@ public class OrderService : IOrderService
         await schedule.ScheduleJob(endJob, endTrigger);
     }
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderByShop(Guid shopId,
-        CreateOrderRequest orderRequest)
+        CreateOrderRequest request)
     {
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
-        if (orderRequest.ItemIds.Count == 0)
+        if (request.ItemIds.Count == 0)
         {
             response.Messages = ["You have no item for order"];
             response.ResultStatus = ResultStatus.Error;
@@ -634,7 +634,7 @@ public class OrderService : IOrderService
         }
 
 
-        var checkItemAvailable = await _orderRepository.IsOrderAvailable(orderRequest.ItemIds);
+        var checkItemAvailable = await _orderRepository.IsOrderAvailable(request.ItemIds);
         if (checkItemAvailable.Count > 0)
         {
             var orderResponse = new OrderResponse();
@@ -646,7 +646,7 @@ public class OrderService : IOrderService
             return response;
         }
 
-        var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, orderRequest.ItemIds);
+        var isitembelongshop = await _fashionItemRepository.IsItemBelongShop(shopId, request.ItemIds);
         if (isitembelongshop.Count > 0)
         {
             var orderResponse = new OrderResponse();
@@ -661,7 +661,7 @@ public class OrderService : IOrderService
             return response;
         }
 
-        response.Data = await _orderRepository.CreateOrderByShop(shopId, orderRequest);
+        response.Data = await _orderRepository.CreateOrderByShop(shopId, request);
         response.Messages = ["Create Successfully"];
         response.ResultStatus = ResultStatus.Success;
         return response;
@@ -692,25 +692,25 @@ public class OrderService : IOrderService
         order.CompletedDate = DateTime.UtcNow;
         await _orderRepository.UpdateOrder(order);
 
-        var listorderDetail = await _orderDetailRepository.GetOrderDetails(c => c.OrderId == orderId);
+        var listorderDetail = await _orderLineItemRepository.GetOrderLineItems(c => c.OrderId == orderId);
         foreach (var itemOrderDetail in listorderDetail)
         {
             itemOrderDetail.RefundExpirationDate = DateTime.UtcNow;
             itemOrderDetail.IndividualFashionItem.Status = FashionItemStatus.Refundable;
         }
 
-        await _orderDetailRepository.UpdateRange(listorderDetail);
-        Expression<Func<OrderDetail, bool>> predicate = x => x.OrderId == orderId;
-        Expression<Func<OrderDetail, OrderDetailsResponse>> selector = x => new OrderDetailsResponse()
+        await _orderLineItemRepository.UpdateRange(listorderDetail);
+        Expression<Func<OrderLineItem, bool>> predicate = x => x.OrderId == orderId;
+        Expression<Func<OrderLineItem, OrderLineItemDetailedResponse>> selector = x => new OrderLineItemDetailedResponse()
         {
-            OrderDetailId = x.OrderDetailId,
+            OrderLineItemId = x.OrderLineItemId,
             ItemName = x.IndividualFashionItem.Variation!.MasterItem.Name,
             UnitPrice = x.UnitPrice,
             RefundExpirationDate = x.RefundExpirationDate,
             PaymentDate = x.PaymentDate
         };
-        (List<OrderDetailsResponse> Items, int Page, int PageSize, int TotalCount) orderDetailsResponse =
-            await _orderDetailRepository.GetOrderDetailsPaginate<OrderDetailsResponse>(predicate: predicate,
+        (List<OrderLineItemDetailedResponse> Items, int Page, int PageSize, int TotalCount) orderDetailsResponse =
+            await _orderLineItemRepository.GetOrderLineItemsPaginate<OrderLineItemDetailedResponse>(predicate: predicate,
                 selector: selector, isTracking: false);
         var orderDetails = orderDetailsResponse.Items;
 
@@ -747,7 +747,7 @@ public class OrderService : IOrderService
                 ContactNumber = order.Phone,
                 RecipientName = order.RecipientName,
                 PurchaseType = order.PurchaseType,
-                OrderDetailItems = orderDetails
+                OrderLineItems = orderDetails
             }
         };
         return response;
@@ -770,7 +770,7 @@ public class OrderService : IOrderService
 
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId, FashionItemStatus itemStatus)
     {
-        var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Any(c => c.OrderDetailId == orderdetailId));
+        var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Any(c => c.OrderLineItemId == orderdetailId));
         if (order == null)
         {
             throw new OrderNotFoundException();
@@ -785,7 +785,7 @@ public class OrderService : IOrderService
             throw new StatusNotAvailableException();
         }
 
-        var orderDetail = order.OrderDetails.FirstOrDefault(c => c.OrderDetailId == orderdetailId);
+        var orderDetail = order.OrderDetails.FirstOrDefault(c => c.OrderLineItemId == orderdetailId);
         
         
         if (orderDetail == null)

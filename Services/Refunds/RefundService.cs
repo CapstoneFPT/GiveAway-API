@@ -11,7 +11,7 @@ using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
-using Repositories.OrderDetails;
+using Repositories.OrderLineItems;
 using Repositories.Orders;
 using Repositories.Refunds;
 using Repositories.Transactions;
@@ -100,7 +100,7 @@ namespace Services.Refunds
             {
                 throw new RefundNoFoundException();
             }
-            var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Select(c => c.OrderDetailId).Contains(refund.OrderDetailId));
+            var order = await _orderRepository.GetSingleOrder(c => c.OrderDetails.Select(c => c.OrderLineItemId).Contains(refund.OrderLineItemId));
             if (order == null)
             {
                 throw new OrderNotFoundException();
@@ -152,7 +152,7 @@ namespace Services.Refunds
             {
                 Description = request.Description,
                 CreatedDate = DateTime.UtcNow,
-                OrderDetailId = request.OrderDetailIds,
+                OrderLineItemId = request.OrderLineItemId,
                 RefundStatus = RefundStatus.Approved,
                 RefundPercentage = request.RefundPercentage,
                 ResponseFromShop = "We accepted refund request at shop"

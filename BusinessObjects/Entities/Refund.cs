@@ -13,8 +13,8 @@ public class Refund
     public int? RefundPercentage { get; set; }
     public string? ResponseFromShop { get; set; }
     public DateTime CreatedDate { get; set; } 
-    public Guid OrderDetailId { get; set; }
-    public OrderDetail OrderDetail { get; set; }
+    public Guid OrderLineItemId { get; set; }
+    public OrderLineItem OrderLineItem { get; set; }
     
     public RefundStatus RefundStatus { get; set; }
     public Transaction Transaction { get; set; }

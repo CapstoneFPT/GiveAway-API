@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BusinessObjects.Dtos.OrderDetails
+namespace BusinessObjects.Dtos.OrderLineItems
 {
-    public class OrderDetailResponse<T>
+    public class OrderLineItemResponse<T>
     {
-        public Guid OrderDetailId { get; set; }
+        public Guid OrderLineItemId { get; set; }
         public decimal UnitPrice { get; set; }
         public Guid OrderId { get; set; }
         public DateTime? RefundExpirationDate { get; set; }

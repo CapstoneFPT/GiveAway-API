@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.ConsignSaleDetails;
+using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using Microsoft.AspNetCore.Cors;
@@ -14,11 +14,11 @@ namespace WebApi.Controllers
     [ApiController]
     public class ConsignSaleController : ControllerBase
     {
-        private readonly IConsignSaleService _consignsaleService;
+        private readonly IConsignSaleService _consignSaleService;
 
-        public ConsignSaleController(IConsignSaleService consignsaleService)
+        public ConsignSaleController(IConsignSaleService consignSaleService)
         {
-            _consignsaleService = consignsaleService;
+            _consignSaleService = consignSaleService;
         }
         [HttpGet]
         [ProducesResponseType<PaginationResponse<ConsignSaleListResponse>>((int)HttpStatusCode.OK)]
@@ -26,7 +26,7 @@ namespace WebApi.Controllers
         public async Task<IActionResult> GetConsignSales(
             [FromQuery] ConsignSaleListRequest request)
         {
-            var result = await _consignsaleService.GetConsignSales(request);
+            var result = await _consignSaleService.GetConsignSales(request);
 
             if (!result.IsSuccessful)
             {
@@ -40,10 +40,12 @@ namespace WebApi.Controllers
             return Ok(result.Value);
         }
         
-        [HttpGet("{consignsaleId}")]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> GetConsignSaleById([FromRoute] Guid consignsaleId)
+        [HttpGet("{consignSaleId}")]
+        [ProducesResponseType<ConsignSaleResponse>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetConsignSaleById([FromRoute] Guid consignSaleId)
         {
-            var result = await _consignsaleService.GetConsignSaleById(consignsaleId);
+            var result = await _consignSaleService.GetConsignSaleById(consignSaleId);
 
             if (result.ResultStatus != ResultStatus.Success)
             {
@@ -53,11 +55,11 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{consignsaleId}/approval")]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> ApprovalConsignSale([FromRoute] Guid consignsaleId,
+        [HttpPut("{consignSaleId}/approval")]
+        public async Task<ActionResult<Result<ConsignSaleResponse>>> ApprovalConsignSale([FromRoute] Guid consignSaleId,
             ApproveConsignSaleRequest request)
         {
-            var result = await _consignsaleService.ApprovalConsignSale(consignsaleId, request);
+            var result = await _consignSaleService.ApprovalConsignSale(consignSaleId, request);
 
             if (result.ResultStatus != ResultStatus.Success)
             {
@@ -75,7 +77,7 @@ namespace WebApi.Controllers
         public async Task<ActionResult<Result<ConsignSaleResponse>>> ConfirmReceivedConsignFromShop(
             [FromRoute] Guid consignSaleId)
         {
-            var result = await _consignsaleService.ConfirmReceivedFromShop(consignSaleId);
+            var result = await _consignSaleService.ConfirmReceivedFromShop(consignSaleId);
 
             if (result.ResultStatus != ResultStatus.Success)
             {
@@ -88,10 +90,10 @@ namespace WebApi.Controllers
         [HttpPost("{consignsaleId}/create-masteritem")]
         [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> CreateMasterItemFromConsignSaleDetail([FromRoute] Guid consignsaleId,
+        public async Task<IActionResult> CreateMasterItemFromConsignSaleLineItem([FromRoute] Guid consignsaleId,
             [FromBody] CreateMasterItemForConsignRequest detailRequest)
         {
-            var result = await _consignsaleService.CreateMasterItemFromConsignSaleDetail(consignsaleId, detailRequest);
+            var result = await _consignSaleService.CreateMasterItemFromConsignSaleLineItem(consignsaleId, detailRequest);
             if (result.ResultStatus != ResultStatus.Success)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
@@ -103,10 +105,10 @@ namespace WebApi.Controllers
         [HttpPost("fashionitems/{masteritemId}/create-variation")]
         [ProducesResponseType<Result<ItemVariationListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> CreateVariationFromConsignSaleDetail([FromRoute] Guid masteritemId,
+        public async Task<IActionResult> CreateVariationFromConsignSaleLineItem([FromRoute] Guid masteritemId,
             [FromBody] CreateItemVariationRequestForConsign request)
         {
-            var result = await _consignsaleService.CreateVariationFromConsignSaleDetail(masteritemId, request);
+            var result = await _consignSaleService.CreateVariationFromConsignSaleLineItem(masteritemId, request);
             return result.ResultStatus != ResultStatus.Success
                 ? StatusCode((int)HttpStatusCode.InternalServerError, result)
                 : Ok(result);
@@ -115,22 +117,22 @@ namespace WebApi.Controllers
         [HttpPost("consignsaledetails/{consignsaledetailId}/fashionitems/{variationId}/create-individual")]
         [ProducesResponseType<Result<FashionItemDetailResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> CreateIndividualItemFromConsignSaleDetail([FromRoute] Guid consignsaledetailId,
+        public async Task<IActionResult> CreateIndividualItemFromConsignSaleListItem([FromRoute] Guid consignsaledetailId,
             [FromRoute] Guid variationId, [FromBody] CreateIndividualItemRequestForConsign request)
         {
-            var result = await _consignsaleService.CreateIndividualItemFromConsignSaleDetail(consignsaledetailId,variationId,request);
+            var result = await _consignSaleService.CreateIndividualItemFromConsignSaleLineItem(consignsaledetailId,variationId,request);
 
             return result.ResultStatus != ResultStatus.Success
                 ? StatusCode((int)HttpStatusCode.InternalServerError, result)
                 : Ok(result);
         }
         [HttpGet("{consignsaleId}/consignsaledetails")]
-        [ProducesResponseType<List<ConsignSaleDetailResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<List<ConsignSaleLineItemsListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> GetConsignSaleDetailsByConsignSaleId(
+        public async Task<IActionResult> GetConsignSaleLineItemsByConsignSaleId(
             [FromRoute] Guid consignsaleId)
         {
-            var result = await _consignsaleService.GetConsignSaleDetails(consignsaleId);
+            var result = await _consignSaleService.GetConsignSaleLineItems(consignsaleId);
 
             if (!result.IsSuccessful)
 

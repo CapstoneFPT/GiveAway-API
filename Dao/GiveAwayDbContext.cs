@@ -16,14 +16,14 @@ public class GiveAwayDbContext : DbContext
     public DbSet<IndividualConsignedForSaleFashionItem> IndividualConsignedForSaleFashionItems { get; set; }
     public DbSet<IndividualAuctionFashionItem> IndividualAuctionFashionItems { get; set; }
     public DbSet<ConsignSale> ConsignSales { get; set; }
-    public DbSet<ConsignSaleDetail> ConsignSaleDetails { get; set; }
+    public DbSet<ConsignSaleLineItem> ConsignSaleLineItems { get; set; }
     public DbSet<Shop> Shops { get; set; }
     public DbSet<Withdraw> Withdraws { get; set; }
     public DbSet<BankAccount> BankAccounts { get; set; }
     public DbSet<Image> Images { get; set; }
     public DbSet<Auction> Auctions { get; set; }
     public DbSet<Address> Addresses { get; set; }
-    public DbSet<OrderDetail> OrderDetails { get; set; }
+    public DbSet<OrderLineItem> OrderLineItems { get; set; }
     public DbSet<Member> Members { get; set; }
     public DbSet<Staff> Staffs { get; set; }
     public DbSet<Admin> Admins { get; set; }
@@ -385,16 +385,16 @@ public class GiveAwayDbContext : DbContext
 
         #region OrderDetail
 
-        modelBuilder.Entity<OrderDetail>().ToTable("OrderDetail").HasKey(e => e.OrderDetailId);
-        modelBuilder.Entity<OrderDetail>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
-        modelBuilder.Entity<OrderDetail>()
+        modelBuilder.Entity<OrderLineItem>().ToTable("OrderDetail").HasKey(e => e.OrderLineItemId);
+        modelBuilder.Entity<OrderLineItem>().Property(e => e.PaymentDate).HasColumnType("timestamptz");
+        modelBuilder.Entity<OrderLineItem>()
             .HasOne<Refund>(x => x.Refund)
-            .WithOne(x => x.OrderDetail)
-            .HasForeignKey<Refund>(x => x.OrderDetailId);
-        modelBuilder.Entity<OrderDetail>()
+            .WithOne(x => x.OrderLineItem)
+            .HasForeignKey<Refund>(x => x.OrderLineItemId);
+        modelBuilder.Entity<OrderLineItem>()
             .HasOne<Feedback>(x => x.Feedback)
-            .WithOne(x => x.OrderDetail)
-            .HasForeignKey<Feedback>(x => x.OrderDetailId);
+            .WithOne(x => x.OrderLineItem)
+            .HasForeignKey<Feedback>(x => x.OrderLineItemId);
 
         #endregion
 
@@ -421,7 +421,7 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<ConsignSale>().Property(e => e.EndDate).HasColumnType("timestamptz").IsRequired(false);
 
-        modelBuilder.Entity<ConsignSale>().HasMany(x => x.ConsignSaleDetails).WithOne(x => x.ConsignSale)
+        modelBuilder.Entity<ConsignSale>().HasMany(x => x.ConsignSaleLineItems).WithOne(x => x.ConsignSale)
             .HasForeignKey(x => x.ConsignSaleId);
         modelBuilder.Entity<ConsignSale>().Property(x => x.Address).HasColumnType("varchar").HasMaxLength(255);
         modelBuilder.Entity<ConsignSale>().Property(x => x.ConsignorName).HasColumnType("varchar").HasMaxLength(100);
@@ -435,46 +435,46 @@ public class GiveAwayDbContext : DbContext
 
         #region ConsignedSaleDetail
 
-        modelBuilder.Entity<ConsignSaleDetail>().ToTable("ConsignSaleDetail").HasKey(x => x.ConsignSaleDetailId);
+        modelBuilder.Entity<ConsignSaleLineItem>().ToTable("ConsignSaleDetail").HasKey(x => x.ConsignSaleLineItemId);
         
-        modelBuilder.Entity<ConsignSaleDetail>()
+        modelBuilder.Entity<ConsignSaleLineItem>()
             .HasOne<IndividualFashionItem>(x=>x.IndividualFashionItem)
-            .WithOne(x=>x.ConsignSaleDetail)
-            .HasForeignKey<IndividualFashionItem>(x=>x.ConsignSaleDetailId);
+            .WithOne(x=>x.ConsignSaleLineItem)
+            .HasForeignKey<IndividualFashionItem>(x=>x.ConsignSaleLineItemId);
         
-        modelBuilder.Entity<ConsignSaleDetail>()
+        modelBuilder.Entity<ConsignSaleLineItem>()
             .HasMany(x=>x.Images)
-            .WithOne(x=>x.ConsignSaleDetail)
-            .HasForeignKey(x=>x.ConsignSaleDetailId);
+            .WithOne(x=>x.ConsignSaleLineItem)
+            .HasForeignKey(x=>x.ConsignLineItemId);
 
-        modelBuilder.Entity<ConsignSaleDetail>()
+        modelBuilder.Entity<ConsignSaleLineItem>()
             .Property(x => x.Size)
             .HasConversion(prop => prop.ToString(), s => (SizeType)Enum.Parse(typeof(SizeType), s))
             .HasColumnType("varchar")
             .HasMaxLength(15);
         
-        modelBuilder.Entity<ConsignSaleDetail>()
+        modelBuilder.Entity<ConsignSaleLineItem>()
             .Property(x=>x.Gender)
             .HasConversion(prop => prop.ToString(), s => (GenderType)Enum.Parse(typeof(GenderType), s))
             .HasColumnType("varchar")
             .HasMaxLength(15);
         
-        modelBuilder.Entity<ConsignSaleDetail>()
+        modelBuilder.Entity<ConsignSaleLineItem>()
             .Property(x => x.ProductName)
             .HasColumnType("varchar")
             .HasMaxLength(60);
 
-        modelBuilder.Entity<ConsignSaleDetail>()
+        modelBuilder.Entity<ConsignSaleLineItem>()
             .Property(x => x.Brand)
             .HasColumnType("varchar")
             .HasMaxLength(30);
 
-        modelBuilder.Entity<ConsignSaleDetail>()
+        modelBuilder.Entity<ConsignSaleLineItem>()
             .Property(x => x.Color)
             .HasColumnType("varchar")
             .HasMaxLength(30);
         
-        modelBuilder.Entity<ConsignSaleDetail>()
+        modelBuilder.Entity<ConsignSaleLineItem>()
             .Property(x=>x.Condition)
             .HasColumnType("varchar")
             .HasMaxLength(20);

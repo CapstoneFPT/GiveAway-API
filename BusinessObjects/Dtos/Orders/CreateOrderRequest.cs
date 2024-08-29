@@ -19,6 +19,6 @@ namespace BusinessObjects.Dtos.Orders
         [Phone]
         public string? Phone {  get; set; }
         [EmailAddress] public string? Email { get; set; }
-        public List<Guid?> ItemIds { get; set; } = [];
+        public List<Guid> ItemIds { get; set; } = [];
     }
 }

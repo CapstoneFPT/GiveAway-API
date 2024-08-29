@@ -8,7 +8,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
@@ -16,27 +16,27 @@ using Dao;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1.Ocsp;
 
-namespace Repositories.OrderDetails
+namespace Repositories.OrderLineItems
 {
-    public class OrderDetailRepository : IOrderDetailRepository
+    public class OrderLineItemRepository : IOrderLineItemRepository
     {
       
         private readonly IMapper _mapper;
 
-        public OrderDetailRepository(IMapper mapper)
+        public OrderLineItemRepository(IMapper mapper)
         {
             _mapper = mapper;
         }
 
-        public async Task<OrderDetail> CreateOrderDetail(OrderDetail orderDetail)
+        public async Task<OrderLineItem> CreateOrderLineItem(OrderLineItem orderLineItem)
         {
-            return await GenericDao<OrderDetail>.Instance.AddAsync(orderDetail);
+            return await GenericDao<OrderLineItem>.Instance.AddAsync(orderLineItem);
         }
 
-        public async Task<PaginationResponse<OrderDetailsResponse>> GetAllOrderDetailByOrderId(Guid orderId,
-            OrderDetailRequest request)
+        public async Task<PaginationResponse<OrderLineItemDetailedResponse>> GetAllOrderLineItemsByOrderId(Guid orderId,
+            OrderLineItemRequest request)
         {
-            var query = GenericDao<OrderDetail>.Instance.GetQueryable();
+            var query = GenericDao<OrderLineItem>.Instance.GetQueryable();
             query = query.Include(c => c.PointPackage)
                 .Include(c => c.IndividualFashionItem)
                 .ThenInclude(c => c.Variation)
@@ -54,10 +54,10 @@ namespace Repositories.OrderDetails
 
             
             var items = await query
-                .ProjectTo<OrderDetailsResponse>(_mapper.ConfigurationProvider)
+                .ProjectTo<OrderLineItemDetailedResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().ToListAsync();
 
-            var result = new PaginationResponse<OrderDetailsResponse>
+            var result = new PaginationResponse<OrderLineItemDetailedResponse>
             {
                 Items = items,
                 PageSize = request.PageSize,
@@ -67,9 +67,9 @@ namespace Repositories.OrderDetails
             return result;
         }
 
-        public async Task<List<OrderDetail>> GetOrderDetails(Expression<Func<OrderDetail, bool>> predicate)
+        public async Task<List<OrderLineItem>> GetOrderLineItems(Expression<Func<OrderLineItem, bool>> predicate)
         {
-            var result = await GenericDao<OrderDetail>.Instance.GetQueryable()
+            var result = await GenericDao<OrderLineItem>.Instance.GetQueryable()
                 .Include(x => x.IndividualFashionItem)
                 .Where(predicate)
                 .ToListAsync();
@@ -77,12 +77,12 @@ namespace Repositories.OrderDetails
         }
 
 
-        public async Task<OrderDetail> GetOrderDetailById(Guid id)
+        public async Task<OrderLineItem> GetOrderLineItemById(Guid id)
         {
-            var query = await GenericDao<OrderDetail>.Instance.GetQueryable()
+            var query = await GenericDao<OrderLineItem>.Instance.GetQueryable()
                 .Include(c => c.IndividualFashionItem)
                 .Include(c => c.Order)
-                .Where(c => c.OrderDetailId == id)
+                .Where(c => c.OrderLineItemId == id)
                 .FirstOrDefaultAsync();
             return query;
         }
@@ -92,16 +92,16 @@ namespace Repositories.OrderDetails
         {
             
 
-            var fashionItem = await GenericDao<OrderDetail>.Instance.GetQueryable()
+            var fashionItem = await GenericDao<OrderLineItem>.Instance.GetQueryable()
                 .Include(c => c.IndividualFashionItem)
-                .Where(c => c.OrderDetailId == refundRequest.OrderDetailIds)
+                .Where(c => c.OrderLineItemId == refundRequest.OrderLineItemId)
                 .Select(c => c.IndividualFashionItem)
                 .FirstOrDefaultAsync();
             fashionItem.Status = FashionItemStatus.PendingForRefund;
             await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(fashionItem);
             var refund = new Refund()
             {
-                OrderDetailId = refundRequest.OrderDetailIds,
+                OrderLineItemId = refundRequest.OrderLineItemId,
                 Description = refundRequest.Description,
                 CreatedDate = DateTime.UtcNow,
                 RefundStatus = RefundStatus.Pending
@@ -124,17 +124,17 @@ namespace Repositories.OrderDetails
             await GenericDao<Image>.Instance.AddRange(listImage);
             var refundResponse = await GenericDao<Refund>.Instance.GetQueryable()
                 
-                .Where(c => c.OrderDetailId == refundRequest.OrderDetailIds)
+                .Where(c => c.OrderLineItemId == refundRequest.OrderLineItemId)
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();
             return refundResponse;
         }
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)>
-            GetOrderDetailsPaginate<T>(Expression<Func<OrderDetail, bool>>? predicate,
-                Expression<Func<OrderDetail, T>>? selector, bool isTracking, int page = -1, int pageSize = -1)
+            GetOrderLineItemsPaginate<T>(Expression<Func<OrderLineItem, bool>>? predicate,
+                Expression<Func<OrderLineItem, T>>? selector, bool isTracking, int page = -1, int pageSize = -1)
         {
-            var query = GenericDao<OrderDetail>.Instance.GetQueryable();
+            var query = GenericDao<OrderLineItem>.Instance.GetQueryable();
 
             if (predicate != null)
             {
@@ -164,9 +164,9 @@ namespace Repositories.OrderDetails
             return (items, page, pageSize, count);
         }
 
-        public async Task UpdateRange(List<OrderDetail> orderDetails)
+        public async Task UpdateRange(List<OrderLineItem> orderLineItems)
         {
-            await GenericDao<OrderDetail>.Instance.UpdateRange(orderDetails);
+            await GenericDao<OrderLineItem>.Instance.UpdateRange(orderLineItems);
         }
     }
 }

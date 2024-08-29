@@ -29,7 +29,7 @@ namespace Repositories.FashionItems
         Task BulkUpdate(List<IndividualFashionItem> fashionItems);
         Task<List<IndividualFashionItem>> GetFashionItems(Expression<Func<IndividualFashionItem, bool>> predicate);
         Task UpdateFashionItems(List<IndividualFashionItem> fashionItems);
-        Task<List<Guid?>?> IsItemBelongShop(Guid shopId, List<Guid?> itemId);
+        Task<List<Guid>> IsItemBelongShop(Guid shopId, List<Guid> itemId);
 
         Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetIndividualItemProjections<T>(
             int? page,

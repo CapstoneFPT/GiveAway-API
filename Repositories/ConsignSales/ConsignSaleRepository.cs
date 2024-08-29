@@ -2,7 +2,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.ConsignSaleDetails;
+using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
@@ -57,7 +57,7 @@ namespace Repositories.ConsignSales
             foreach (var item in request.ConsignDetailRequests)
             {
                 //tao moi consigndetail tuong ung voi mon do
-                ConsignSaleDetail consignDetail = new ConsignSaleDetail()
+                ConsignSaleLineItem consignLineItem = new ConsignSaleLineItem()
                 {
                     ConfirmedPrice = 0,
                     DealPrice = item.DealPrice,
@@ -75,7 +75,7 @@ namespace Repositories.ConsignSales
                     CreatedDate = DateTime.UtcNow,
                     Note = item.Note
                 };
-                await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);
+                await GenericDao<ConsignSaleLineItem>.Instance.AddAsync(consignLineItem);
             }
 
             var consignResponse = await GenericDao<ConsignSale>.Instance.GetQueryable()
@@ -156,7 +156,7 @@ namespace Repositories.ConsignSales
         public async Task<ConsignSaleResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                .Include(c => c.ConsignSaleDetails)
+                .Include(c => c.ConsignSaleLineItems)
                 .Where(c => c.ConsignSaleId == consignId)
                 .FirstOrDefaultAsync();
             if (status.Equals(ConsignSaleStatus.Rejected))
@@ -186,7 +186,7 @@ namespace Repositories.ConsignSales
         public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                .Include(c => c.ConsignSaleDetails!)
+                .Include(c => c.ConsignSaleLineItems!)
                 .FirstOrDefaultAsync(c => c.ConsignSaleId == consignId);
 
             if (consign == null)
@@ -194,16 +194,16 @@ namespace Repositories.ConsignSales
                 throw new ConsignSaleNotFoundException();
             }
 
-            var consignSaleDetailIds = consign.ConsignSaleDetails.Select(d => d.ConsignSaleDetailId).ToList();
+            var consignSaleDetailIds = consign.ConsignSaleLineItems.Select(d => d.ConsignSaleLineItemId).ToList();
 
             var listItemInConsign = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                .Where(c => consignSaleDetailIds.Contains(c.ConsignSaleDetailId!.Value)).ToListAsync();
+                .Where(c => consignSaleDetailIds.Contains(c.ConsignSaleLineItemId!.Value)).ToListAsync();
             /*foreach (var detail in consign.ConsignSaleDetails)
             {
                 var individualItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                     .Where(c => c.)
             }*/
-            if (listItemInConsign.Count < consign.ConsignSaleDetails.Count)
+            if (listItemInConsign.Count < consign.ConsignSaleLineItems.Count)
             {
                 throw new MissingFeatureException("You should create enough item for consign");
             }
@@ -306,13 +306,13 @@ namespace Repositories.ConsignSales
 
 
                 //tao moi consigndetail tuong ung voi mon do
-                ConsignSaleDetail consignDetail = new ConsignSaleDetail()
+                ConsignSaleLineItem consignLineItem = new ConsignSaleLineItem()
                 {
                     ConfirmedPrice = item.ConfirmedPrice,
                     DealPrice = 0,
                     ConsignSaleId = newConsign.ConsignSaleId
                 };
-                await GenericDao<ConsignSaleDetail>.Instance.AddAsync(consignDetail);
+                await GenericDao<ConsignSaleLineItem>.Instance.AddAsync(consignLineItem);
             }
 
 
@@ -378,7 +378,7 @@ namespace Repositories.ConsignSales
         {
             var result = await GenericDao<ConsignSale>.Instance
                 .GetQueryable()
-                .Include(cons => cons.ConsignSaleDetails)
+                .Include(cons => cons.ConsignSaleLineItems)
                 .ThenInclude(c => c.IndividualFashionItem)
                 .Include(c => c.Shop)
                 .SingleOrDefaultAsync(predicate);

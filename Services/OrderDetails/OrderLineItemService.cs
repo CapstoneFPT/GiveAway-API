@@ -1,11 +1,11 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using Org.BouncyCastle.Asn1.Ocsp;
-using Repositories.OrderDetails;
+using Repositories.OrderLineItems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,26 +15,24 @@ using BusinessObjects.Utils;
 using Repositories.FashionItems;
 using Repositories.Orders;
 
-namespace Services.OrderDetails
+namespace Services.OrderLineItems
 {
-    public class OrderDetailService : IOrderDetailService
+    public class OrderLineItemService : IOrderLineItemService
     {
-        private readonly IOrderDetailRepository _orderDetailRepository;
-        private readonly IOrderRepository _orderRepository;
+        private readonly IOrderLineItemRepository _orderLineItemRepository;
         private readonly IFashionItemRepository _fashionItemRepository;
 
-        public OrderDetailService(IOrderDetailRepository orderDetailRepository,
-            IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository)
+        public OrderLineItemService(IOrderLineItemRepository orderLineItemRepository,
+             IFashionItemRepository fashionItemRepository)
         {
-            _orderDetailRepository = orderDetailRepository;
-            _orderRepository = orderRepository;
+            _orderLineItemRepository = orderLineItemRepository;
             _fashionItemRepository = fashionItemRepository;
         }
 
-        public async Task<Result<OrderDetailResponse<IndividualFashionItem>>> GetOrderDetailById(Guid orderId)
+        public async Task<Result<OrderLineItemResponse<IndividualFashionItem>>> GetOrderLineItemById(Guid orderId)
         {
-            var response = new Result<OrderDetailResponse<IndividualFashionItem>>();
-            var orderDetail = await _orderDetailRepository.GetOrderDetailById(orderId);
+            var response = new Result<OrderLineItemResponse<IndividualFashionItem>>();
+            var orderDetail = await _orderLineItemRepository.GetOrderLineItemById(orderId);
             if (orderDetail is null)
             {
                 response.Messages = ["Can not found the order detail"];
@@ -42,9 +40,9 @@ namespace Services.OrderDetails
                 return response;
             }
 
-            response.Data = new OrderDetailResponse<IndividualFashionItem>()
+            response.Data = new OrderLineItemResponse<IndividualFashionItem>()
             {
-                OrderDetailId = orderDetail.OrderDetailId,
+                OrderLineItemId = orderDetail.OrderLineItemId,
                 OrderId = orderDetail.OrderId,
                 UnitPrice = orderDetail.UnitPrice,
                 RefundExpirationDate = orderDetail.RefundExpirationDate,
@@ -55,11 +53,11 @@ namespace Services.OrderDetails
             return response;
         }
 
-        public async Task<Result<PaginationResponse<OrderDetailsResponse>>> GetOrderDetailsByOrderId(
-            Guid orderId, OrderDetailRequest request)
+        public async Task<Result<PaginationResponse<OrderLineItemDetailedResponse>>> GetOrderLineItemsByOrderId(
+            Guid orderId, OrderLineItemRequest request)
         {
-            var response = new Result<PaginationResponse<OrderDetailsResponse>>();
-            var listOrder = await _orderDetailRepository.GetAllOrderDetailByOrderId(orderId, request);
+            var response = new Result<PaginationResponse<OrderLineItemDetailedResponse>>();
+            var listOrder = await _orderLineItemRepository.GetAllOrderLineItemsByOrderId(orderId, request);
             if (listOrder.TotalCount == 0)
             {
                 response.Messages = ["You don't have any order"];
@@ -78,7 +76,7 @@ namespace Services.OrderDetails
         {
             var response = new Result<RefundResponse>();
             
-            var orderDetail = await _orderDetailRepository.GetOrderDetails(c => c.OrderDetailId == refundRequest.OrderDetailIds);
+            var orderDetail = await _orderLineItemRepository.GetOrderLineItems(c => c.OrderLineItemId == refundRequest.OrderLineItemId);
             if (orderDetail is null)
             {
                 throw new OrderNotFoundException();
@@ -100,13 +98,13 @@ namespace Services.OrderDetails
                 return response;
             }
 
-            response.Data = await _orderDetailRepository.CreateRefundToShop(refundRequest);
+            response.Data = await _orderLineItemRepository.CreateRefundToShop(refundRequest);
             response.Messages = new[] { "Send refund request successfully" };
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
 
-        public async Task ChangeFashionItemsStatus(List<OrderDetail> orderDetails, FashionItemStatus fashionItemStatus)
+        public async Task ChangeFashionItemsStatus(List<OrderLineItem> orderDetails, FashionItemStatus fashionItemStatus)
         {
             List<IndividualFashionItem> fashionItems = [];
 

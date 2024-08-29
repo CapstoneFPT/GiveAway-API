@@ -48,7 +48,7 @@ public class CompleteRefundableItemsService : BackgroundService
             var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
 
 
-            var refundableItems = await dbContext.OrderDetails.Include(x => x.IndividualFashionItem).Where(x =>
+            var refundableItems = await dbContext.OrderLineItems.Include(x => x.IndividualFashionItem).Where(x =>
                     x.IndividualFashionItem != null && x.IndividualFashionItem.Status == FashionItemStatus.Refundable &&
                     x.RefundExpirationDate < DateTime.UtcNow)
                 .Select(x => x.IndividualFashionItem)

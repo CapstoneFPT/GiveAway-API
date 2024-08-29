@@ -33,8 +33,8 @@ public class IndividualFashionItem
 
     public FashionItemType Type { get; set; }
     public FashionItemVariation? Variation { get; set; }
-    public ConsignSaleDetail? ConsignSaleDetail { get; set; }
-    public Guid? ConsignSaleDetailId { get; set; }
+    public ConsignSaleLineItem? ConsignSaleLineItem { get; set; }
+    public Guid? ConsignSaleLineItemId { get; set; }
     public DateTime CreatedDate { get; set; }
     public ICollection<Image> Images { get; set; } = [];
 }

@@ -1,7 +1,7 @@
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 
-namespace BusinessObjects.Dtos.ConsignSaleDetails;
+namespace BusinessObjects.Dtos.ConsignSaleLineItems;
 
 public class CreateConsignDetailRequest
 {

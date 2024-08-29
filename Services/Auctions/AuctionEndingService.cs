@@ -82,14 +82,14 @@ public class AuctionEndingService : BackgroundService
                 dbContext.Orders.Add(newOrder);
 
 
-                var orderDetail = new OrderDetail()
+                var orderDetail = new OrderLineItem()
                 {
                     OrderId = newOrder.OrderId,
                     IndividualFashionItemId = orderRequest.AuctionFashionItemId,
                     UnitPrice = orderRequest.TotalPrice,
                 };
 
-                dbContext.OrderDetails.Add(orderDetail);
+                dbContext.OrderLineItems.Add(orderDetail);
             }
             catch (Exception e)
             {

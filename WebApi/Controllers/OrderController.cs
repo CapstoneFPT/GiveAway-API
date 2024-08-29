@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using BusinessObjects.Dtos.Commons;
-using BusinessObjects.Dtos.OrderDetails;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
@@ -10,7 +10,7 @@ using Services.Accounts;
 using Services.ConsignSales;
 using Services.Emails;
 using Services.GiaoHangNhanh;
-using Services.OrderDetails;
+using Services.OrderLineItems;
 using Services.Orders;
 using Services.Transactions;
 using Services.VnPayService;
@@ -22,23 +22,21 @@ namespace WebApi.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
-        private readonly IOrderDetailService _orderDetailService;
+        private readonly IOrderLineItemService _orderLineItemService;
         private readonly IVnPayService _vnPayService;
         private readonly ITransactionService _transactionService;
         private readonly ILogger<OrderController> _logger;
-        private readonly IAccountService _accountService;
         private readonly IEmailService _emailService;
         private readonly IConsignSaleService _consignSaleService;
 
-        public OrderController(IOrderService orderService, IOrderDetailService orderDetailService, IVnPayService
+        public OrderController(IOrderService orderService, IOrderLineItemService orderLineItemService, IVnPayService
                 vnPayService, ITransactionService transactionService, ILogger<OrderController> logger,
-            IAccountService accountService, IEmailService emailService, IConsignSaleService consignSaleService)
+            IEmailService emailService, IConsignSaleService consignSaleService)
         {
             _orderService = orderService;
-            _orderDetailService = orderDetailService;
+            _orderLineItemService = orderLineItemService;
             _vnPayService = vnPayService;
             _transactionService = transactionService;
-            _accountService = accountService;
             _emailService = emailService;
             _logger = logger;
             _consignSaleService = consignSaleService;
@@ -56,19 +54,19 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{OrderId}/orderdetails")]
-        public async Task<ActionResult<Result<PaginationResponse<OrderDetailsResponse>>>>
-            GetOrderDetailsByOrderId([FromRoute] Guid OrderId, [FromQuery] OrderDetailRequest request)
+        [HttpGet("{orderId}/orderlineitems")]
+        public async Task<ActionResult<Result<PaginationResponse<OrderLineItemDetailedResponse>>>>
+            GetOrderLineItemByOrderId([FromRoute] Guid orderId, [FromQuery] OrderLineItemRequest request)
         {
-            return await _orderDetailService.GetOrderDetailsByOrderId(OrderId, request);
+            return await _orderLineItemService.GetOrderLineItemsByOrderId(orderId, request);
         }
 
 
-        [HttpGet("orderdetails/{OrderdetailId}")]
-        public async Task<ActionResult<Result<OrderDetailResponse<IndividualFashionItem>>>> GetOrderDetailById(
-            [FromRoute] Guid OrderdetailId)
+        [HttpGet("orderlineitems/{orderLineItemId}")]
+        public async Task<ActionResult<Result<OrderLineItemResponse<IndividualFashionItem>>>> GetOrderLineItemById(
+            [FromRoute] Guid orderLineItemId)
         {
-            var result = await _orderDetailService.GetOrderDetailById(OrderdetailId);
+            var result = await _orderLineItemService.GetOrderLineItemById(orderLineItemId);
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
@@ -235,7 +233,7 @@ namespace WebApi.Controllers
         [HttpPut("orderdetails/{orderdetailId}/confirm-pending-order")]
         [ProducesResponseType<Result<OrderResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> ConfirmPendingOrderDetailByShop(
+        public async Task<IActionResult> ConfirmPendingOrderLineItemByShop(
             [FromRoute] Guid orderdetailId, FashionItemStatus itemStatus)
         {
             var result = await _orderService.ConfirmPendingOrder(orderdetailId, itemStatus);
