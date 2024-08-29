@@ -3,12 +3,14 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
+using DotNext;
 
 namespace Repositories.OrderLineItems
 {
     public interface IOrderLineItemRepository
     {
-        Task<PaginationResponse<OrderLineItemDetailedResponse>> GetAllOrderLineItemsByOrderId(Guid id, OrderLineItemRequest request);
+        Task<Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>> GetAllOrderLineItemsByOrderId(Guid id,
+            OrderLineItemRequest request);
         Task<List<OrderLineItem>> GetOrderLineItems(Expression<Func<OrderLineItem, bool>> predicate);
         Task<OrderLineItem> GetOrderLineItemById(Guid id);
         Task<OrderLineItem> CreateOrderLineItem(OrderLineItem orderLineItem);

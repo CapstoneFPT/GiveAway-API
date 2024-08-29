@@ -65,10 +65,23 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{orderId}/orderlineitems")]
-        public async Task<ActionResult<Result<PaginationResponse<OrderLineItemDetailedResponse>>>>
+        [ProducesResponseType<PaginationResponse<OrderLineItemListResponse>>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult>
             GetOrderLineItemByOrderId([FromRoute] Guid orderId, [FromQuery] OrderLineItemRequest request)
         {
-            return await _orderLineItemService.GetOrderLineItemsByOrderId(orderId, request);
+            var result = await _orderService.GetOrderLineItemByOrderId(orderId,request);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    _ => StatusCode(500, new ErrorResponse("Error fetching order line items", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
+
+            return Ok(result.Value);
         }
 
         [HttpGet("{orderId}")]

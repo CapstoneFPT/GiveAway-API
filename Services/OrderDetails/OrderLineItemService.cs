@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Utils;
 using DotNext;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories.FashionItems;
@@ -105,28 +106,108 @@ namespace Services.OrderLineItems
             }
             catch (Exception e)
             {
-                _logger.LogError(e,"GetOrderLineItemById error");
+                _logger.LogError(e, "GetOrderLineItemById error");
                 return new Result<OrderLineItemDetailedResponse, ErrorCode>(ErrorCode.ServerError);
             }
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderLineItemDetailedResponse>>>
+        public async Task<DotNext.Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>>
             GetOrderLineItemsByOrderId(
                 Guid orderId, OrderLineItemRequest request)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderLineItemDetailedResponse>>();
-            var listOrder = await _orderLineItemRepository.GetAllOrderLineItemsByOrderId(orderId, request);
-            if (listOrder.TotalCount == 0)
-            {
-                response.Messages = ["You don't have any order"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
-            }
+            var query = _orderLineItemRepository.GetQueryable();
 
-            response.Data = listOrder;
-            response.Messages = ["There are " + listOrder.TotalCount + " in total"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+            Expression<Func<OrderLineItem, bool>> predicate = orderLineItem => orderLineItem.OrderId == orderId;
+            Expression<Func<OrderLineItem, OrderLineItemListResponse>> selector = orderLineItem =>
+                new OrderLineItemListResponse()
+                {
+                    OrderLineItemId = orderLineItem.OrderLineItemId,
+                    CreatedDate = orderLineItem.CreatedDate,
+                    RefundExpirationDate = orderLineItem.RefundExpirationDate,
+                    Condition = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.Condition
+                        : "N/A",
+                    ItemBrand = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Brand
+                        : "N/A",
+                    ItemCode = orderLineItem.IndividualFashionItem.ItemCode,
+                    ItemColor = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.Color
+                        : "N/A",
+                    Quantity = orderLineItem.Quantity,
+                    CategoryName = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Category.Name
+                        : "N/A",
+                    ItemNote = orderLineItem.IndividualFashionItem.Note,
+                    ItemSize = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.Size
+                        : null,
+                    ItemImage = orderLineItem.IndividualFashionItem.Images.Select(x => x.Url).ToList(),
+                    ItemName = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Name
+                        : "N/A",
+                    UnitPrice = orderLineItem.UnitPrice,
+                    ItemGender = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Gender
+                        : null,
+                    ItemStatus = orderLineItem.IndividualFashionItem.Status,
+                    ItemType = orderLineItem.IndividualFashionItem.Type,
+                    OrderCode = orderLineItem.Order.OrderCode,
+                    PaymentDate = orderLineItem.PaymentDate,
+                    ShopAddress = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Shop.Address
+                        : "N/A",
+                    ShopId = orderLineItem.IndividualFashionItem.Variation != null
+                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.ShopId
+                        : null,
+                    PointPackageId = orderLineItem.PointPackage != null
+                        ? orderLineItem.PointPackage.PointPackageId
+                        : null
+                };
+
+            try
+            {
+                query = query
+                    .Include(x => x.IndividualFashionItem)
+                    .ThenInclude(x => x.Images)
+                    .Include(x => x.IndividualFashionItem)
+                    .ThenInclude(x => x.Variation)
+                    .ThenInclude(x => x.MasterItem)
+                    .ThenInclude(x => x.Shop)
+                    .Include(x => x.Order);
+
+                if (request.ShopId.HasValue)
+                    predicate = predicate.And(x =>
+                        x.IndividualFashionItem.Variation.MasterItem.ShopId == request.ShopId.Value);
+
+                query = query.Where(predicate);
+                var page = request.PageNumber ?? -1;
+                var pageSize = request.PageSize ?? -1;
+
+                if (page > 0 && pageSize > 0)
+                {
+                    query = query.Skip((page - 1) * pageSize).Take(pageSize);
+                }
+
+
+                var totalCount = await query.CountAsync();
+
+                var items = await query.Select(selector).ToListAsync();
+
+                var response = new PaginationResponse<OrderLineItemListResponse>()
+                {
+                    Items = items,
+                    PageNumber = request.PageNumber ?? -1,
+                    PageSize = request.PageSize ?? -1,
+                    TotalCount = totalCount
+                };
+
+                return new Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>(response);
+            }
+            catch (Exception e)
+            {
+                return new Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>(ErrorCode.ServerError);
+            }
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> RequestRefundToShop(

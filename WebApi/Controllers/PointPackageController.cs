@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.PointPackages;
 using BusinessObjects.Entities;
@@ -100,8 +101,9 @@ public class PointPackageController : ControllerBase
             {
                 await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Recharge);
                 var order = await _orderService.GetOrderById(new Guid(response.OrderId));
-                var orderDetails = await _orderService.GetOrderLineItemByOrderId(new Guid(response.OrderId));
-                var pointPackageId = orderDetails[0].PointPackageId!.Value;
+                var orderLineItems = await _orderService.GetOrderLineItemByOrderId(new Guid(response.OrderId),
+                    new OrderLineItemRequest());
+                var pointPackageId = orderLineItems.Value.Items[0].PointPackageId!.Value;
                 var pointPackage = await _pointPackageService.GetPointPackageDetail(pointPackageId);
 
                 if (order == null)

@@ -156,9 +156,17 @@ public class OrderService : IOrderService
         };
     }
 
-    public async Task<List<OrderLineItem>> GetOrderLineItemByOrderId(Guid orderId)
+    public async Task<DotNext.Result<PaginationResponse<OrderLineItemListResponse>,ErrorCode>> GetOrderLineItemByOrderId(Guid orderId,OrderLineItemRequest request)
     {
-        return await _orderLineItemRepository.GetOrderLineItems(x => x.OrderId == orderId);
+        try
+        {
+            return await _orderLineItemRepository.GetAllOrderLineItemsByOrderId(orderId, request);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error when get order line item by order id");
+            return new Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>(ErrorCode.ServerError);
+        }
     }
 
     public async Task<List<Order>> GetOrdersToCancel()

@@ -8,7 +8,8 @@ namespace Services.OrderLineItems
 {
     public interface IOrderLineItemService
     {
-        Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderLineItemDetailedResponse>>> GetOrderLineItemsByOrderId(Guid orderId, OrderLineItemRequest request);
+        Task<Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>> GetOrderLineItemsByOrderId(Guid orderId,
+            OrderLineItemRequest request);
         Task<Result<OrderLineItemDetailedResponse, ErrorCode>> GetOrderLineItemById(Guid orderId);
 
         Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> RequestRefundToShop(CreateRefundRequest refundRequest);

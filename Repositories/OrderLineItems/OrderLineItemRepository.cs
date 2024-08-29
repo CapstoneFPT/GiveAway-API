@@ -6,13 +6,13 @@ using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using Dao;
+using DotNext;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repositories.OrderLineItems
 {
     public class OrderLineItemRepository : IOrderLineItemRepository
     {
-      
         private readonly IMapper _mapper;
 
         public OrderLineItemRepository(IMapper mapper)
@@ -25,38 +25,82 @@ namespace Repositories.OrderLineItems
             return await GenericDao<OrderLineItem>.Instance.AddAsync(orderLineItem);
         }
 
-        public async Task<PaginationResponse<OrderLineItemDetailedResponse>> GetAllOrderLineItemsByOrderId(Guid orderId,
+        public async Task<Result<PaginationResponse<OrderLineItemListResponse>,ErrorCode>> GetAllOrderLineItemsByOrderId(Guid orderId,
             OrderLineItemRequest request)
         {
-            var query = GenericDao<OrderLineItem>.Instance.GetQueryable();
-            query = query.Include(c => c.PointPackage)
-                .Include(c => c.IndividualFashionItem)
-                .ThenInclude(c => c.Variation)
-                .ThenInclude(c => c.MasterItem)
-                .ThenInclude(c => c.Shop)
-                .Where(c => c.OrderId == orderId);
-            
-            if (request.ShopId != null)
+            try
             {
-                query = query.Where(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId);
+                var query = GenericDao<OrderLineItem>.Instance.GetQueryable();
+                Expression<Func<OrderLineItem, OrderLineItemListResponse>> selector = order =>
+                    new ()
+                    {
+                        OrderLineItemId = order.OrderLineItemId,
+                        CreatedDate = order.CreatedDate,
+                        OrderCode = order.Order.OrderCode,
+                        ItemCode = order.IndividualFashionItem.ItemCode,
+                        ItemColor = order.IndividualFashionItem.Variation!.Color,
+                        Condition = order.IndividualFashionItem.Variation.Condition,
+                        CategoryName = order.IndividualFashionItem.Variation.MasterItem.Category.Name,
+                        UnitPrice = order.UnitPrice,
+                        ItemGender = order.IndividualFashionItem.Variation.MasterItem.Gender,
+                        ItemBrand = order.IndividualFashionItem.Variation.MasterItem.Brand,
+                        ItemImage = order.IndividualFashionItem.Images.Select(x => x.Url).ToList(),
+                        ItemName = order.IndividualFashionItem.Variation.MasterItem.Name,
+                        Quantity = order.Quantity,
+                        ShopId = order.IndividualFashionItem.Variation.MasterItem.ShopId,
+                        ItemStatus = order.IndividualFashionItem.Status,
+                        ItemType = order.IndividualFashionItem.Type,
+                        ItemNote = order.IndividualFashionItem.Note,
+                        ItemSize = order.IndividualFashionItem.Variation.Size,
+                        PaymentDate = order.PaymentDate,
+                        ShopAddress = order.IndividualFashionItem.Variation.MasterItem.Shop.Address,
+                        PointPackageId = order.PointPackageId,
+                        RefundExpirationDate = order.RefundExpirationDate
+                    };
+
+                query = query.Include(c => c.PointPackage)
+                    .Include(c => c.IndividualFashionItem)
+                    .ThenInclude(c => c.Variation)
+                    .ThenInclude(c => c.MasterItem)
+                    .ThenInclude(c => c.Shop)
+                    .Where(c => c.OrderId == orderId);
+
+                if (request.ShopId != null)
+                {
+                    query = query.Where(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId);
+                }
+
+                var count = await query.CountAsync();
+
+
+                var page = request.PageSize ?? -1;
+                var pageSize = request.PageSize ?? -1;
+
+                if (page > 0 && pageSize > 0)
+                {
+                    query = query
+                        .Skip((page - 1) * pageSize)
+                        .Take(pageSize);
+                }
+
+
+                var items = await query
+                    .Select(selector)
+                    .AsNoTracking().ToListAsync();
+
+                var result = new PaginationResponse<OrderLineItemListResponse>
+                {
+                    Items = items,
+                    PageSize = request.PageSize ?? -1,
+                    TotalCount = count,
+                    PageNumber = request.PageNumber ?? -1,
+                };
+                return new Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>(result);
             }
-            var count = await query.CountAsync();
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
-
-            
-            var items = await query
-                .ProjectTo<OrderLineItemDetailedResponse>(_mapper.ConfigurationProvider)
-                .AsNoTracking().ToListAsync();
-
-            var result = new PaginationResponse<OrderLineItemDetailedResponse>
+            catch (Exception e)
             {
-                Items = items,
-                PageSize = request.PageSize,
-                TotalCount = count,
-                PageNumber = request.PageNumber,
-            };
-            return result;
+                return new Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>(ErrorCode.ServerError);
+            }
         }
 
         public async Task<List<OrderLineItem>> GetOrderLineItems(Expression<Func<OrderLineItem, bool>> predicate)
@@ -82,8 +126,6 @@ namespace Repositories.OrderLineItems
         public async Task<RefundResponse> CreateRefundToShop(
             CreateRefundRequest refundRequest)
         {
-            
-
             var fashionItem = await GenericDao<OrderLineItem>.Instance.GetQueryable()
                 .Include(c => c.IndividualFashionItem)
                 .Where(c => c.OrderLineItemId == refundRequest.OrderLineItemId)
@@ -109,13 +151,12 @@ namespace Repositories.OrderLineItems
                     RefundId = refund.RefundId,
                     CreatedDate = DateTime.UtcNow,
                     Url = img,
-                }; 
+                };
                 listImage.Add(newImg);
             }
 
             await GenericDao<Image>.Instance.AddRange(listImage);
             var refundResponse = await GenericDao<Refund>.Instance.GetQueryable()
-                
                 .Where(c => c.OrderLineItemId == refundRequest.OrderLineItemId)
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync();
@@ -161,7 +202,6 @@ namespace Repositories.OrderLineItems
             await GenericDao<OrderLineItem>.Instance.UpdateRange(orderLineItems);
         }
 
-        
 
         public IQueryable<OrderLineItem> GetQueryable()
         {

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
+using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Entities;
 using DotNext;
 using Services.GiaoHangNhanh;
@@ -26,7 +27,6 @@ namespace Services.Orders
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderById(Guid orderId);
         Task UpdateOrder(Order? order);
-        Task<List<OrderLineItem>> GetOrderLineItemByOrderId(Guid orderId);
         Task<List<Order?>> GetOrdersToCancel();
         Task CancelOrders(List<Order?> ordersToCancel);
         Task UpdateShopBalance(Order order);
@@ -42,5 +42,6 @@ namespace Services.Orders
             int destinationDistrictId);
 
         Task<Result<OrderDetailedResponse,ErrorCode>> GetDetailedOrder(Guid orderId);
+        Task<DotNext.Result<PaginationResponse<OrderLineItemListResponse>,ErrorCode>> GetOrderLineItemByOrderId(Guid orderId,OrderLineItemRequest request);
     }
 }
