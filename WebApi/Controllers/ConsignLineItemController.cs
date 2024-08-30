@@ -1,7 +1,9 @@
 ﻿using System.Net;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.FashionItems;
 using Microsoft.AspNetCore.Mvc;
+using Services.ConsignLineItems;
 using Services.ConsignSales;
 
 namespace WebApi.Controllers;
@@ -11,10 +13,12 @@ namespace WebApi.Controllers;
 public class ConsignLineItemController : ControllerBase
 {
     private readonly IConsignSaleService _consignSaleService;
+    private readonly IConsignLineItemService _consignLineItemService;
 
-    public ConsignLineItemController(IConsignSaleService consignSaleService)
+    public ConsignLineItemController(IConsignSaleService consignSaleService, IConsignLineItemService consignLineItemService)
     {
         _consignSaleService = consignSaleService;
+        _consignLineItemService = consignLineItemService;
     }
 
     [HttpPost("{consignLineItemId}/fashionitems/{variationId}/create-individual")]
@@ -30,5 +34,13 @@ public class ConsignLineItemController : ControllerBase
         return result.ResultStatus != ResultStatus.Success
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
+    }
+
+    [HttpGet("{consignLineItemId}")]
+    [ProducesResponseType<ConsignSaleLineItemDetailedResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetDetailedConsignLineItem([FromRoute] Guid consignLineItemId)
+    {
+        return Ok();
     }
 }

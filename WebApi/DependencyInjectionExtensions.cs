@@ -34,6 +34,7 @@ using Services.Auth;
 using Services.Bids;
 using Services.Categories;
 using Services.ConsignedForSaleItems;
+using Services.ConsignLineItems;
 using Services.ConsignSales;
 using Services.Deliveries;
 using Services.Emails;
@@ -85,6 +86,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IRefundService, RefundService>();
         serviceCollection.AddScoped<IWithdrawService, WithdrawService>();
         serviceCollection.AddScoped<IGiaoHangNhanhService, GiaoHangNhanhService>();
+        serviceCollection.AddScoped<IConsignLineItemService, ConsignLineItemService>();
         serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }
