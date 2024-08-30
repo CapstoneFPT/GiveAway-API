@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.FashionItems;
+using DotNext;
 using Microsoft.AspNetCore.Mvc;
 using Services.ConsignLineItems;
 using Services.ConsignSales;
@@ -22,7 +23,7 @@ public class ConsignLineItemController : ControllerBase
     }
 
     [HttpPost("{consignLineItemId}/fashionitems/{masterItemId}/create-individual")]
-    [ProducesResponseType<Result<FashionItemDetailResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> CreateIndividualItemFromConsignSaleListItem([FromRoute] Guid consignLineItemId,
         [FromRoute] Guid masterItemId, [FromBody] CreateIndividualItemRequestForConsign request)
@@ -41,6 +42,20 @@ public class ConsignLineItemController : ControllerBase
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> GetDetailedConsignLineItem([FromRoute] Guid consignLineItemId)
     {
-        return Ok();
+        var result = await _consignLineItemService.GetConsignLineItemById(consignLineItemId);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                ErrorCode.NotFound => NotFound(new ErrorResponse("Consign line item not found", ErrorType.ApiError,
+                    HttpStatusCode.NotFound, result.Error)),
+                _ => StatusCode((int)HttpStatusCode.InternalServerError,
+                    new ErrorResponse("Error fetching consign line item details", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, result.Error))
+            };
+        }
+
+        return Ok(result.Value);
     }
 }
