@@ -57,10 +57,11 @@ namespace Services.ConsignSales
             _logger = logger;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> ApprovalConsignSale(Guid consignId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ApprovalConsignSale(
+            Guid consignId,
             ApproveConsignSaleRequest request)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>();
             var consign = await _consignSaleRepository.GetConsignSaleById(consignId);
             if (consign == null)
             {
@@ -85,10 +86,10 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> ConfirmReceivedFromShop(
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ConfirmReceivedFromShop(
             Guid consignId)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>();
             var consign = await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleId == consignId);
             if (consign == null)
             {
@@ -109,7 +110,7 @@ namespace Services.ConsignSales
             return response;
         }
 
-        private async Task ScheduleConsignEnding(ConsignSaleResponse consign)
+        private async Task ScheduleConsignEnding(ConsignSaleDetailedResponse consign)
         {
             var schedule = await _schedulerFactory.GetScheduler();
             var jobDataMap = new JobDataMap()
@@ -127,10 +128,11 @@ namespace Services.ConsignSales
             await schedule.ScheduleJob(endJob, endTrigger);
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> CreateConsignSale(Guid accountId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> CreateConsignSale(
+            Guid accountId,
             CreateConsignSaleRequest request)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>();
             //check account co' active hay ko
             var account = await _accountRepository.GetAccountById(accountId);
             if (account == null || account.Status.Equals(AccountStatus.Inactive) ||
@@ -155,10 +157,11 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> CreateConsignSaleByShop(Guid shopId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> CreateConsignSaleByShop(
+            Guid shopId,
             CreateConsignSaleByShopRequest request)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>();
             var isMemberExisted = await _accountRepository.FindUserByPhone(request.Phone);
             if (isMemberExisted != null)
             {
@@ -188,11 +191,11 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleResponse>>>
+        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleDetailedResponse>>>
             GetAllConsignSales(Guid accountId,
                 ConsignSaleRequest request)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleResponse>>();
+            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleDetailedResponse>>();
             var listConsign = await _consignSaleRepository.GetAllConsignSale(accountId, request);
             if (listConsign == null)
             {
@@ -235,7 +238,7 @@ namespace Services.ConsignSales
 
             if (!string.IsNullOrEmpty(request.ConsignSaleCode))
             {
-                predicate = predicate.And(x=> EF.Functions.ILike(x.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
+                predicate = predicate.And(x => EF.Functions.ILike(x.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
             }
 
             if (request.StartDate != null && request.EndDate != null)
@@ -250,27 +253,28 @@ namespace Services.ConsignSales
 
             if (request.ShopId.HasValue)
             {
-               predicate = predicate.And(x => x.ShopId == request.ShopId); 
+                predicate = predicate.And(x => x.ShopId == request.ShopId);
             }
 
-            if (request.Email !=null)
+            if (request.Email != null)
             {
-               predicate = predicate.And(x => x.Email != null && EF.Functions.ILike(x.Email , $"%{request.Email}%")); 
+                predicate = predicate.And(x => x.Email != null && EF.Functions.ILike(x.Email, $"%{request.Email}%"));
             }
 
             if (request.ConsignType != null)
             {
-               predicate = predicate.And(x => x.Type == request.ConsignType); 
+                predicate = predicate.And(x => x.Type == request.ConsignType);
             }
 
             if (request.ConsignorName != null)
             {
-                predicate = predicate.And(x=>x.ConsignorName != null && EF.Functions.ILike(x.ConsignorName , $"%{request.ConsignorName}%"));
+                predicate = predicate.And(x =>
+                    x.ConsignorName != null && EF.Functions.ILike(x.ConsignorName, $"%{request.ConsignorName}%"));
             }
 
             if (request.ConsignorPhone != null)
             {
-                predicate = predicate.And(x=>EF.Functions.Like(x.Phone , $"%{request.ConsignorPhone}%"));
+                predicate = predicate.And(x => EF.Functions.Like(x.Phone, $"%{request.ConsignorPhone}%"));
             }
 
             try
@@ -293,27 +297,27 @@ namespace Services.ConsignSales
             }
             catch (Exception e)
             {
-                return new Result<PaginationResponse<ConsignSaleListResponse>,ErrorCode>(ErrorCode.ServerError);
+                return new Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>(ErrorCode.ServerError);
             }
         }
 
-      
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>> GetConsignSaleById(Guid consignId)
+        public async Task<DotNext.Result<ConsignSaleDetailedResponse, ErrorCode>> GetConsignSaleById(Guid consignId)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleResponse>();
-            var Consign = await _consignSaleRepository.GetConsignSaleById(consignId);
-            if (Consign == null)
+            try
             {
-                response.Messages = ["Consignment is not found"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
-            }
+                var consignSale = await _consignSaleRepository.GetConsignSaleById(consignId);
+                if (consignSale is null)
+                {
+                    return new DotNext.Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.NotFound);
+                }
 
-            response.Data = Consign;
-            response.Messages = ["Successfully"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+                return new DotNext.Result<ConsignSaleDetailedResponse, ErrorCode>(consignSale);
+            }
+            catch (Exception e)
+            {
+                return new Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.ServerError);
+            }
         }
 
         public async Task<DotNext.Result<List<ConsignSaleLineItemsListResponse>, ErrorCode>> GetConsignSaleLineItems(

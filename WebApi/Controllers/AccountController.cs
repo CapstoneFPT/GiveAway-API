@@ -188,7 +188,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/consignsales")]
-    [ProducesResponseType<Result<PaginationResponse<ConsignSaleResponse>>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<Result<PaginationResponse<ConsignSaleDetailedResponse>>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAllConsignSale(
         [FromRoute] Guid accountId, [FromQuery] ConsignSaleRequest request)
     {
@@ -201,7 +201,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("{accountId}/consignsales")]
-    [ProducesResponseType<Result<ConsignSaleResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateConsignSale([FromRoute] Guid accountId,
         [FromBody] CreateConsignSaleRequest request)
     {
