@@ -123,7 +123,7 @@ public static class DependencyInjectionExtensions
     {
         serviceCollection.AddScoped<GenericDao<Account>>();
         serviceCollection.AddScoped<GenericDao<MasterFashionItem>>();
-        serviceCollection.AddScoped<GenericDao<FashionItemVariation>>();
+        // serviceCollection.AddScoped<GenericDao<FashionItemVariation>>();
         serviceCollection.AddScoped<GenericDao<IndividualFashionItem>>();
         serviceCollection.AddScoped<GenericDao<IndividualAuctionFashionItem>>();
         serviceCollection.AddScoped<GenericDao<Auction>>();

@@ -6,7 +6,7 @@ public class IndividualItemListResponse
 {
     public Guid ItemId { get; set; }
     public string ItemCode { get; set; }
-    public Guid VariationId { get; set; }
+    public Guid MasterItemId { get; set; }
     public decimal SellingPrice { get; set; }
     public FashionItemStatus Status { get; set; }
     public FashionItemType Type { get; set; }

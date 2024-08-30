@@ -21,14 +21,14 @@ public class ConsignLineItemController : ControllerBase
         _consignLineItemService = consignLineItemService;
     }
 
-    [HttpPost("{consignLineItemId}/fashionitems/{variationId}/create-individual")]
+    [HttpPost("{consignLineItemId}/fashionitems/{masterItemId}/create-individual")]
     [ProducesResponseType<Result<FashionItemDetailResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> CreateIndividualItemFromConsignSaleListItem([FromRoute] Guid consignLineItemId,
-        [FromRoute] Guid variationId, [FromBody] CreateIndividualItemRequestForConsign request)
+        [FromRoute] Guid masterItemId, [FromBody] CreateIndividualItemRequestForConsign request)
     {
         var result =
-            await _consignSaleService.CreateIndividualItemFromConsignSaleLineItem(consignLineItemId, variationId,
+            await _consignSaleService.CreateIndividualItemFromConsignSaleLineItem(consignLineItemId, masterItemId,
                 request);
 
         return result.ResultStatus != ResultStatus.Success

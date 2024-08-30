@@ -87,7 +87,7 @@ namespace Repositories.Categories
             {
                 relevantCategoryIds = fashionItemDao
                     // .Where(fi => fi.ShopId == shopId.Value)
-                    .Select(fi => fi.Variation.MasterItem.CategoryId)
+                    .Select(fi => fi.MasterItem.CategoryId)
                     .Distinct();
             }
             else
@@ -200,7 +200,7 @@ namespace Repositories.Categories
             {
                 relevantCategories = GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                     // .Where(x => x.ShopId == shopId.Value)
-                    .Select(x => x.Variation.MasterItem.Category).Where(x => x.Level == 4 && x.Status.Equals(CategoryStatus.Available))
+                    .Select(x => x.MasterItem.Category).Where(x => x.Level == 4 && x.Status.Equals(CategoryStatus.Available))
                     .Distinct();
             }
             else

@@ -79,36 +79,36 @@ namespace Services.FashionItems
                 FashionItemList()
                 {
                     ItemId = item.ItemId,
-                    Name = item.Variation != null ? item.Variation.MasterItem.Name : string.Empty,
+                    Name = item.MasterItem.Name,
                     Note = item.Note ?? string.Empty,
-                    CategoryId = item.Variation != null ? item.Variation.MasterItem.CategoryId : Guid.Empty,
-                    Condition = item.Variation != null ? item.Variation.Condition : string.Empty,
-                    Brand = item.Variation != null ? item.Variation.MasterItem.Brand : string.Empty,
-                    Gender = item.Variation != null ? item.Variation.MasterItem.Gender : 0,
-                    Size = item.Variation != null ? item.Variation.Size : 0,
+                    CategoryId = item.MasterItem.CategoryId,
+                    Condition = item.Condition,
+                    Brand = item.MasterItem.Brand,
+                    Gender = item.MasterItem.Gender,
+                    Size = item.Size,
                     Type = item.Type,
                     Status = item.Status,
-                    Color = item.Variation != null ? item.Variation.Color : string.Empty,
+                    Color = item.Color,
                     SellingPrice = item.SellingPrice ?? 0,
                     Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
-                    MasterItemId = item.Variation != null ? item.Variation.MasterItemId : Guid.Empty,
-                    ShopId = item.Variation != null ? item.Variation.MasterItem.ShopId : Guid.Empty,
+                    MasterItemId = item.MasterItemId,
+                    ShopId = item.MasterItem.ShopId,
                     ItemCode = item.ItemCode,
-                    VariationId = item.VariationId
+                    
                 };
 
             if (!string.IsNullOrEmpty(request.Name))
             {
                 predicate = predicate.And(item =>
-                    item.Variation != null && EF.Functions.ILike(item.Variation.MasterItem.Name, $"%{request.Name}%"));
+                    item != null && EF.Functions.ILike(item.MasterItem.Name, $"%{request.Name}%"));
             }
 
             if (!string.IsNullOrEmpty(request.MasterItemCode))
             {
                 predicate = predicate
                     .And(item =>
-                        item.Variation != null &&
-                        EF.Functions.ILike(item.Variation.MasterItem.MasterItemCode, $"%{request.MasterItemCode}%"));
+                        item != null &&
+                        EF.Functions.ILike(item.MasterItem.MasterItemCode, $"%{request.MasterItemCode}%"));
             }
 
             if (!string.IsNullOrEmpty(request.ItemCode))
@@ -131,19 +131,19 @@ namespace Services.FashionItems
             {
                 var categoryIds = await _categoryRepository.GetAllChildrenCategoryIds(request.CategoryId.Value);
                 predicate = predicate.And(item =>
-                    item.Variation != null && categoryIds.Contains(item.Variation.MasterItem.CategoryId));
+                    item != null && categoryIds.Contains(item.MasterItem.CategoryId));
             }
 
             if (request.ShopId.HasValue)
             {
                 predicate = predicate.And(item =>
-                    item.Variation != null && item.Variation.MasterItem.ShopId == request.ShopId);
+                    item != null && item.MasterItem.ShopId == request.ShopId);
             }
 
             if (request.Gender.HasValue)
             {
                 predicate = predicate.And(item =>
-                    item.Variation != null && item.Variation.MasterItem.Gender == request.Gender);
+                    item != null && item.MasterItem.Gender == request.Gender);
             }
 
             if (request.MinPrice.HasValue)
@@ -158,23 +158,23 @@ namespace Services.FashionItems
 
             if (request.Color != null)
             {
-                predicate = predicate.And(item => item.Variation != null && item.Variation.Color == request.Color);
+                predicate = predicate.And(item => item != null && item.Color == request.Color);
             }
 
             if (request.Size != null)
             {
-                predicate = predicate.And(item => item.Variation != null && item.Variation.Size == request.Size);
+                predicate = predicate.And(item => item != null && item.Size == request.Size);
             }
 
             if (request.MasterItemId != null)
             {
                 predicate = predicate.And(item =>
-                    item.Variation != null && item.Variation.MasterItemId == request.MasterItemId);
+                    item != null && item.MasterItemId == request.MasterItemId);
             }
 
             if (!string.IsNullOrEmpty(request.Condition))
             {
-                predicate = predicate.And(item => item.Variation != null && item.Variation.Condition == request.Condition);
+                predicate = predicate.And(item => item != null && item.Condition == request.Condition);
             }
 
             (List<FashionItemList> Items, int Page, int PageSize, int TotalCount) result =
@@ -274,21 +274,21 @@ namespace Services.FashionItems
             var result = new FashionItemDetailResponse()
             {
                 ItemId = item.ItemId,
-                Brand = item.Variation?.MasterItem.Brand,
-                Color = item.Variation?.Color ?? "N/A",
-                Condition = item.Variation?.Condition ?? "N/A",
-                Description = item.Variation?.MasterItem.Description ?? "N/A",
-                Gender = item.Variation!.MasterItem.Gender,
-                Name = item.Variation.MasterItem.Name,
-                Size = item.Variation.Size,
+                Brand = item.MasterItem.Brand,
+                Color = item.Color ?? "N/A",
+                Condition = item.Condition ?? "N/A",
+                Description = item.MasterItem.Description ?? "N/A",
+                Gender = item.MasterItem.Gender,
+                Name = item.MasterItem.Name,
+                Size = item.Size,
                 SellingPrice = item.SellingPrice ?? 0,
                 Status = item.Status,
                 Images = item.Images.Select(x => x.Url).ToList(),
                 Note = item.Note,
                 Type = item.Type,
-                ShopAddress = item.Variation!.MasterItem.Shop.Address,
-                CategoryName = item.Variation!.MasterItem.Category.Name,
-                IsConsignment = item.Variation!.MasterItem.IsConsignment,
+                ShopAddress = item.MasterItem.Shop.Address,
+                CategoryName = item.MasterItem.Category.Name,
+                IsConsignment = item.MasterItem.IsConsignment,
                 ItemCode = item.ItemCode,
                 IsOrderedYet = memberId != null &&
                                _fashionitemRepository.CheckItemIsInOrder(item.ItemId, memberId.Value)
@@ -433,10 +433,12 @@ namespace Services.FashionItems
                     MasterItemCode =
                         await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
                     CategoryId = masterItemRequest.CategoryId,
+                    StockCount = masterItemRequest.StockCount,
                     IsConsignment = false,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow,
+                    ShopId = shopId
                 };
-                masterItem.ShopId = shopId;
+                
                 masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
 
                 var imgForMaster = masterItemRequest.Images.Select(
@@ -458,7 +460,7 @@ namespace Services.FashionItems
             };
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ItemVariationResponse>> CreateItemVariation(
+        /*public async Task<BusinessObjects.Dtos.Commons.Result<ItemVariationResponse>> CreateItemVariation(
             Guid masteritemId,
             CreateItemVariationRequest variationRequest)
         {
@@ -518,20 +520,21 @@ namespace Services.FashionItems
                 ResultStatus = ResultStatus.Success,
                 Messages = new[] { "Add new variation successfully" }
             };
-        }
+        }*/
 
         public async Task<BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>> CreateIndividualItems(
-            Guid variationId,
+            Guid masterItemId,
             List<CreateIndividualItemRequest> requests)
         {
             var individualItems = new List<IndividualFashionItem>();
             Expression<Func<MasterFashionItem, bool>> predicate = masterItem =>
-                masterItem.Variations.Select(c => c.VariationId).Contains(variationId);
+                masterItem.MasterItemId == masterItemId;
             var masterItem = await _fashionitemRepository.GetSingleMasterItem(predicate);
-            Expression<Func<FashionItemVariation, bool>> expression = variation =>
-                variation.VariationId == variationId;
-            var fashionItemVariation = await _fashionitemRepository.GetSingleFashionItemVariation(expression);
-            if ((fashionItemVariation.IndividualItems.Count + requests.Count) > fashionItemVariation.StockCount)
+            if (masterItem is null || masterItem.IsConsignment == true)
+            {
+                throw new MasterItemNotAvailableException("Master item is not found or unable to add items");
+            }
+            if ((masterItem!.IndividualFashionItems.Count + requests.Count) > masterItem.StockCount)
             {
                 throw new OverStockException("You have added item more than permitted quantity in stock");
             }
@@ -541,7 +544,11 @@ namespace Services.FashionItems
                 var dataIndividual = new IndividualFashionItem()
                 {
                     Note = individual.Note,
-                    VariationId = variationId,
+                    RetailPrice = individual.RetailPrice,
+                    Size = individual.Size,
+                    Color = individual.Color,
+                    Condition = individual.Condition,
+                    MasterItemId = masterItemId,
                     CreatedDate = DateTime.UtcNow,
                     Status = FashionItemStatus.Unavailable,
                     Type = FashionItemType.ItemBase,
@@ -569,8 +576,7 @@ namespace Services.FashionItems
                 individualItems.Add(dataIndividual);
             }
 
-            fashionItemVariation.StockCount += individualItems.Count;
-            await _fashionitemRepository.UpdateFashionItemVariation(fashionItemVariation);
+            
 
             return new BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>()
             {
@@ -597,10 +603,7 @@ namespace Services.FashionItems
                     CategoryId = item.CategoryId,
                     IsConsignment = item.IsConsignment,
                     ShopId = item.ShopId,
-                    StockCount = item.Variations
-                        .Sum(x => x.IndividualItems
-                            .Count(fashionItem => fashionItem
-                                .Status == FashionItemStatus.Available)),
+                    StockCount = item.StockCount,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
 
@@ -685,8 +688,7 @@ namespace Services.FashionItems
                     Gender = g.First().Gender,
                     CategoryId = g.First().CategoryId,
                     IsConsignment = g.First().IsConsignment,
-                    StockCount = g.Sum(m =>
-                        m.Variations.Sum(v => v.IndividualItems.Count(i => i.Status == FashionItemStatus.Available))),
+                    StockCount = g.First().StockCount,
                     Images = g.First().Images.Select(i => i.Url).ToList()
                 });
 
@@ -729,10 +731,7 @@ namespace Services.FashionItems
                     IsConsignment = item.IsConsignment,
                     CreatedDate = item.CreatedDate,
                     CategoryName = item.Category.Name,
-                    StockCount = item.Variations
-                        .Sum(x => x.IndividualItems
-                            .Count(fashionItem => fashionItem
-                                .Status == FashionItemStatus.Available)),
+                    StockCount = item.StockCount,
                     Images = item.Images.Select(x => new FashionItemImage()
                     {
                         ImageId = x.ImageId,
@@ -765,7 +764,7 @@ namespace Services.FashionItems
                 : new Result<MasterItemDetailResponse, ErrorCode>(result);
         }
 
-        public async Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(
+        /*public async Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(
             Guid masterItemId, ItemVariationRequest request)
         {
             Expression<Func<FashionItemVariation, bool>> predicate = x => x.MasterItemId == masterItemId;
@@ -819,26 +818,27 @@ namespace Services.FashionItems
                 PageNumber = result.Page,
                 TotalCount = result.TotalCount
             };
-        }
+        }*/
 
-        public async Task<PaginationResponse<IndividualItemListResponse>> GetIndividualItemPagination(Guid variationId,
+        public async Task<PaginationResponse<IndividualItemListResponse>> GetIndividualItemPagination(Guid masterItemId,
             IndividualItemRequest request)
         {
-            Expression<Func<IndividualFashionItem, bool>> predicate = x => x.VariationId == variationId;
+            Expression<Func<IndividualFashionItem, bool>> predicate = x => x.MasterItemId == masterItemId;
             Expression<Func<IndividualFashionItem, IndividualItemListResponse>> selector = item => new
                 IndividualItemListResponse()
                 {
-                    VariationId = item.VariationId,
+                    MasterItemId = item.MasterItemId,
                     CreatedDate = item.CreatedDate,
                     ItemId = item.ItemId,
                     Type = item.Type,
                     Status = item.Status,
                     ItemCode = item.ItemCode,
                     SellingPrice = item.SellingPrice!.Value,
-                    Color = item.Variation != null ? item.Variation.Color : string.Empty,
-                    Condition = item.Variation != null ? item.Variation.Condition : string.Empty,
+                    Color = item.Color,
+                    Condition = item.Condition,
                     Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
-                    Size = item.Variation != null ? item.Variation.Size : 0
+                    Size =item.Size,
+                    
                 };
 
             if (!string.IsNullOrEmpty(request.SearchItemCode))

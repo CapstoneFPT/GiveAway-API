@@ -213,22 +213,22 @@ namespace Services.Auctions
                 AuctionItem = new AuctionItemDetailResponse()
                 {
                     ItemId = result.IndividualAuctionFashionItemId,
-                    Name = result.IndividualAuctionFashionItem.Variation.MasterItem.Name,
+                    Name = result.IndividualAuctionFashionItem.MasterItem.Name,
                     FashionItemType = result.IndividualAuctionFashionItem.Type,
                     SellingPrice = result.IndividualAuctionFashionItem.SellingPrice ?? 0,
                     InitialPrice = result.IndividualAuctionFashionItem.InitialPrice,
-                    Size = result.IndividualAuctionFashionItem.Variation.Size,
-                    Color = result.IndividualAuctionFashionItem.Variation.Color,
-                    Gender = result.IndividualAuctionFashionItem.Variation.MasterItem.Gender,
-                    Description = result.IndividualAuctionFashionItem.Variation.MasterItem.Description,
-                    Brand = result.IndividualAuctionFashionItem.Variation.MasterItem.Brand ?? "N/A",
-                    Condition = result.IndividualAuctionFashionItem.Variation.Condition ?? "N/A",
+                    Size = result.IndividualAuctionFashionItem.Size,
+                    Color = result.IndividualAuctionFashionItem.Color,
+                    Gender = result.IndividualAuctionFashionItem.MasterItem.Gender,
+                    Description = result.IndividualAuctionFashionItem.MasterItem.Description,
+                    Brand = result.IndividualAuctionFashionItem.MasterItem.Brand ?? "N/A",
+                    Condition = result.IndividualAuctionFashionItem.Condition ?? "N/A",
                     Note = result.IndividualAuctionFashionItem.Note,
                     Category = new AuctionItemCategory()
                     {
-                        CategoryId = result.IndividualAuctionFashionItem.Variation.MasterItem.CategoryId,
-                        CategoryName = result.IndividualAuctionFashionItem.Variation.MasterItem.Category.Name,
-                        Level = result.IndividualAuctionFashionItem.Variation.MasterItem.Category.Level
+                        CategoryId = result.IndividualAuctionFashionItem.MasterItem.CategoryId,
+                        CategoryName = result.IndividualAuctionFashionItem.MasterItem.Category.Name,
+                        Level = result.IndividualAuctionFashionItem.MasterItem.Category.Level
                     },
                     Shop = new ShopAuctionDetailResponse()
                     {

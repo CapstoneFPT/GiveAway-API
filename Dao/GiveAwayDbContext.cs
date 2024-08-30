@@ -11,7 +11,7 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Account> Accounts { get; set; }
     public DbSet<Inquiry> Inquiries { get; set; }
     public DbSet<MasterFashionItem> MasterFashionItems { get; set; }
-    public DbSet<FashionItemVariation> FashionItemVariations { get; set; }
+    
     public DbSet<IndividualFashionItem> IndividualFashionItems { get; set; }
     public DbSet<IndividualConsignedForSaleFashionItem> IndividualConsignedForSaleFashionItems { get; set; }
     public DbSet<IndividualAuctionFashionItem> IndividualAuctionFashionItems { get; set; }
@@ -217,7 +217,7 @@ public class GiveAwayDbContext : DbContext
             .HasForeignKey(x => x.MasterFashionItemId);
 
         modelBuilder.Entity<MasterFashionItem>()
-            .HasMany(x => x.Variations)
+            .HasMany(x => x.IndividualFashionItems)
             .WithOne(x => x.MasterItem)
             .HasForeignKey(x => x.MasterItemId);
         
@@ -234,29 +234,26 @@ public class GiveAwayDbContext : DbContext
             .Property(x => x.Brand)
             .HasColumnType("varchar")
             .HasMaxLength(50);
-
+        
         #endregion
 
-        #region Variation
-
-        modelBuilder.Entity<FashionItemVariation>().HasKey(x => x.VariationId);
-
-        modelBuilder.Entity<FashionItemVariation>()
-            .Property(x => x.Size)
-            .HasConversion(prop => prop.ToString(), s => (SizeType)Enum.Parse(typeof(SizeType), s))
-            .HasColumnType("varchar").HasMaxLength(20);
-
-        modelBuilder.Entity<FashionItemVariation>()
-            .HasMany(x => x.IndividualItems)
-            .WithOne(x => x.Variation)
-            .HasForeignKey(x => x.VariationId);
-
-        modelBuilder.Entity<FashionItemVariation>()
-            .Property(x => x.Condition)
-            .HasColumnType("varchar")
-            .HasMaxLength(30);
-
-        #endregion
+        // #region Variation
+        //
+        // modelBuilder.Entity<FashionItemVariation>().HasKey(x => x.VariationId);
+        //
+        
+        //
+        // modelBuilder.Entity<FashionItemVariation>()
+        //     .HasMany(x => x.IndividualItems)
+        //     .WithOne(x => x.Variation)
+        //     .HasForeignKey(x => x.VariationId);
+        //
+        // modelBuilder.Entity<FashionItemVariation>()
+        //     .Property(x => x.Condition)
+        //     .HasColumnType("varchar")
+        //     .HasMaxLength(30);
+        //
+        // #endregion
 
         modelBuilder.Entity<IndividualFashionItem>().HasKey(x => x.ItemId);
 
@@ -288,7 +285,18 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.Auctions)
             .WithOne(x => x.IndividualAuctionFashionItem)
             .HasForeignKey(x => x.IndividualAuctionFashionItemId);
-
+        modelBuilder.Entity<IndividualFashionItem>()
+        .Property(x => x.Condition)
+        .HasColumnType("varchar")
+        .HasMaxLength(30);
+        modelBuilder.Entity<IndividualFashionItem>()
+            .Property(x => x.Size)
+            .HasConversion(prop => prop.ToString(), s => (SizeType)Enum.Parse(typeof(SizeType), s))
+            .HasColumnType("varchar").HasMaxLength(20);
+        modelBuilder.Entity<IndividualFashionItem>()
+            .Property(x => x.Color)
+            .HasColumnType("varchar")
+            .HasMaxLength(30);
         #endregion
 
         #region Bid
