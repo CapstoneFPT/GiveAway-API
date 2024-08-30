@@ -38,36 +38,36 @@ namespace Repositories.OrderLineItems
                         CreatedDate = order.CreatedDate,
                         OrderCode = order.Order.OrderCode,
                         ItemCode = order.IndividualFashionItem.ItemCode,
-                        ItemColor = order.IndividualFashionItem.Variation!.Color,
-                        Condition = order.IndividualFashionItem.Variation.Condition,
-                        CategoryName = order.IndividualFashionItem.Variation.MasterItem.Category.Name,
+                        ItemColor = order.IndividualFashionItem.Color,
+                        Condition = order.IndividualFashionItem.Condition,
+                        CategoryName = order.IndividualFashionItem.MasterItem.Category.Name,
                         UnitPrice = order.UnitPrice,
-                        ItemGender = order.IndividualFashionItem.Variation.MasterItem.Gender,
-                        ItemBrand = order.IndividualFashionItem.Variation.MasterItem.Brand,
+                        ItemGender = order.IndividualFashionItem.MasterItem.Gender,
+                        ItemBrand = order.IndividualFashionItem.MasterItem.Brand,
                         ItemImage = order.IndividualFashionItem.Images.Select(x => x.Url).ToList(),
-                        ItemName = order.IndividualFashionItem.Variation.MasterItem.Name,
+                        ItemName = order.IndividualFashionItem.MasterItem.Name,
                         Quantity = order.Quantity,
-                        ShopId = order.IndividualFashionItem.Variation.MasterItem.ShopId,
+                        ShopId = order.IndividualFashionItem.MasterItem.ShopId,
                         ItemStatus = order.IndividualFashionItem.Status,
                         ItemType = order.IndividualFashionItem.Type,
                         ItemNote = order.IndividualFashionItem.Note,
-                        ItemSize = order.IndividualFashionItem.Variation.Size,
+                        ItemSize = order.IndividualFashionItem.Size,
                         PaymentDate = order.PaymentDate,
-                        ShopAddress = order.IndividualFashionItem.Variation.MasterItem.Shop.Address,
+                        ShopAddress = order.IndividualFashionItem.MasterItem.Shop.Address,
                         PointPackageId = order.PointPackageId,
                         RefundExpirationDate = order.RefundExpirationDate
                     };
 
                 query = query.Include(c => c.PointPackage)
                     .Include(c => c.IndividualFashionItem)
-                    .ThenInclude(c => c.Variation)
+                    
                     .ThenInclude(c => c.MasterItem)
                     .ThenInclude(c => c.Shop)
                     .Where(c => c.OrderId == orderId);
 
                 if (request.ShopId != null)
                 {
-                    query = query.Where(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId);
+                    query = query.Where(c => c.IndividualFashionItem.MasterItem.ShopId == request.ShopId);
                 }
 
                 var count = await query.CountAsync();

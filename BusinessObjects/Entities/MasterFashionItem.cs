@@ -19,39 +19,31 @@ public class MasterFashionItem
     
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
-    public ICollection<FashionItemVariation> Variations { get; set; } = [];
+    public int StockCount { get; set; }
+    public ICollection<IndividualFashionItem> IndividualFashionItems { get; set; } = [];
 }
 
 public class IndividualFashionItem
 {
     public Guid ItemId { get; set; }
     public string ItemCode { get; set; }
-    public Guid VariationId { get; set; }
+    public Guid MasterItemId { get; set; }
     public string? Note { get; set; }
     public decimal? SellingPrice { get; set; }
     public FashionItemStatus Status { get; set; }
-
+    public decimal RetailPrice { get; set; } = 0;
+    public string Color { get; set; } = "N/A";
+    public SizeType Size { get; set; }
+    public string Condition { get; set; }
     public FashionItemType Type { get; set; }
-    public FashionItemVariation? Variation { get; set; }
+    public MasterFashionItem MasterItem { get; set; }
     public ConsignSaleLineItem? ConsignSaleLineItem { get; set; }
     public Guid? ConsignSaleLineItemId { get; set; }
     public DateTime CreatedDate { get; set; }
     public ICollection<Image> Images { get; set; } = [];
 }
 
-public class FashionItemVariation
-{
-    public Guid VariationId { get; set; }
-    public Guid MasterItemId { get; set; }
-    public string Condition { get; set; }
-    public decimal Price { get; set; }
-    public string Color { get; set; }
-    public SizeType Size { get; set; }
-    public int StockCount { get; set; }
-    public DateTime CreatedDate { get; set; }
-    public MasterFashionItem MasterItem { get; set; }
-    public ICollection<IndividualFashionItem> IndividualItems { get; set; } = [];
-}
+
 
 public class IndividualConsignedForSaleFashionItem : IndividualFashionItem
 {

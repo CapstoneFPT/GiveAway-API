@@ -46,8 +46,7 @@ namespace Repositories.Orders
             CartRequest cart)
         {
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                .Include(individualFashionItem => individualFashionItem.Variation)
-                .ThenInclude(itemVariation => itemVariation.MasterItem)
+                .Include(itemVariation => itemVariation.MasterItem)
                 .Where(individualFashionItem => 
                     cart.CartItems.Select(ci => ci.ItemId).Contains(individualFashionItem.ItemId))
                 .ToListAsync();
@@ -106,7 +105,7 @@ namespace Repositories.Orders
                 var orderDetailResponse = new OrderLineItemDetailedResponse()
                 {
                     OrderLineItemId = orderLineItem.OrderLineItemId,
-                    ItemName = individualItem.Variation!.MasterItem.Name,
+                    ItemName = individualItem.MasterItem.Name,
                     UnitPrice = orderLineItem.UnitPrice,
                     CreatedDate = orderLineItem.CreatedDate,
                     OrderCode = order.OrderCode,
@@ -159,7 +158,7 @@ namespace Repositories.Orders
                 .Include(c => c.Member)
                 .Include(order => order.OrderLineItems)
                 .ThenInclude(orderDetail => orderDetail.IndividualFashionItem)
-                .ThenInclude(c => c.Variation)
+                
                 .ThenInclude(c => c.MasterItem)
                 .SingleOrDefaultAsync(predicate);
             return result;

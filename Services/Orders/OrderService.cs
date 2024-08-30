@@ -341,7 +341,7 @@ public class OrderService : IOrderService
         {
             predicate = predicate.And(order =>
                 order.OrderLineItems.Any(c =>
-                    c.IndividualFashionItem.Variation!.MasterItem.ShopId == request.ShopId.Value));
+                    c.IndividualFashionItem.MasterItem.ShopId == request.ShopId.Value));
         }
 
         if (request.PaymentMethod != null)
@@ -573,7 +573,7 @@ public class OrderService : IOrderService
 
         var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
         var orderDetailFromShop = order!.OrderLineItems
-            .Where(c => c.IndividualFashionItem.Variation!.MasterItem.ShopId == shopId).ToList();
+            .Where(c => c.IndividualFashionItem.MasterItem.ShopId == shopId).ToList();
         foreach (var orderDetail in orderDetailFromShop)
         {
             var fashionItem = orderDetail.IndividualFashionItem;
@@ -716,7 +716,7 @@ public class OrderService : IOrderService
             new OrderLineItemDetailedResponse()
             {
                 OrderLineItemId = x.OrderLineItemId,
-                ItemName = x.IndividualFashionItem.Variation!.MasterItem.Name,
+                ItemName = x.IndividualFashionItem.MasterItem.Name,
                 UnitPrice = x.UnitPrice,
                 RefundExpirationDate = x.RefundExpirationDate,
                 PaymentDate = x.PaymentDate
@@ -897,17 +897,16 @@ public class OrderService : IOrderService
         var shippingFee = 0m;
         var shopLocation = new HashSet<ShippingLocation>();
         var shops = await _fashionItemRepository.GetIndividualQueryable()
-            .Include(x => x.Variation)
-            .ThenInclude(x => x.MasterItem)
+            .Include(x => x.MasterItem)
             .ThenInclude(x => x.Shop)
             .Where(x => itemIds.Contains(x.ItemId))
             .Select(x => new
             {
-                ShopId = x.Variation.MasterItem.ShopId,
-                Address = x.Variation.MasterItem.Shop.Address,
-                GhnDistrictId = x.Variation.MasterItem.Shop.GhnDistrictId,
-                GhnWardCode = x.Variation.MasterItem.Shop.GhnWardCode,
-                ShopCode = x.Variation.MasterItem.Shop.ShopCode
+                ShopId = x.MasterItem.ShopId,
+                Address = x.MasterItem.Shop.Address,
+                GhnDistrictId = x.MasterItem.Shop.GhnDistrictId,
+                GhnWardCode = x.MasterItem.Shop.GhnWardCode,
+                ShopCode = x.MasterItem.Shop.ShopCode
             })
             .ToListAsync();
 

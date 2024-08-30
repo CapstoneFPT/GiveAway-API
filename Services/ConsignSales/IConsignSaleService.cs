@@ -20,11 +20,11 @@ namespace Services.ConsignSales
         Task<Result<List<ConsignSaleLineItemsListResponse>, ErrorCode>> GetConsignSaleLineItems(Guid consignsaleId);
         Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> CreateMasterItemFromConsignSaleLineItem(Guid consignsaleId, CreateMasterItemForConsignRequest detailRequest);
 
-        Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleLineItem(Guid masteritemId,
-            CreateItemVariationRequestForConsign request);
+        /*Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleLineItem(Guid masteritemId,
+            CreateItemVariationRequestForConsign request);*/
 
         Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId,
-            Guid variationId, CreateIndividualItemRequestForConsign request);
+            Guid masterItemId, CreateIndividualItemRequestForConsign request);
         Task UpdateConsignPrice(Guid orderId);
 
         Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(

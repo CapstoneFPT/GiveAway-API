@@ -6,7 +6,7 @@ public class FashionItemList
 {
     public Guid ItemId { get; set; }
     public Guid MasterItemId { get; set; }
-    public Guid VariationId { get; set; }
+    
     public Guid ShopId { get; set; }
     public string Brand { get; set; }
     public string Name { get; set; }
@@ -15,6 +15,7 @@ public class FashionItemList
     public string Color { get; set; }
     public SizeType Size { get; set; }
     public string Condition { get; set; }
+    public string RetailPrice { get; set; }
     public string Note { get; set; }
     public decimal SellingPrice { get; set; }
     public string Image { get; set; }

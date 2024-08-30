@@ -406,7 +406,7 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>>
+        /*public async Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>>
             CreateVariationFromConsignSaleLineItem(Guid masteritemId, CreateItemVariationRequestForConsign request)
         {
             Expression<Func<MasterFashionItem, bool>> predicate = masterItem => masterItem.MasterItemId == masteritemId;
@@ -444,10 +444,10 @@ namespace Services.ConsignSales
                 ResultStatus = ResultStatus.Success,
                 Messages = new[] { "Create variation successfully" }
             };
-        }
+        }*/
 
         public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>>
-            CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId, Guid variationId,
+            CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId, Guid masterItemId,
                 CreateIndividualItemRequestForConsign request)
         {
             Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
@@ -460,25 +460,28 @@ namespace Services.ConsignSales
 
             consignSaleDetail.ConfirmedPrice = request.ConfirmPrice;
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
-            Expression<Func<FashionItemVariation, bool>> predicateVariation =
-                itemvariation => itemvariation.VariationId == variationId;
-            var itemVariation = await _fashionItemRepository.GetSingleFashionItemVariation(predicateVariation!);
-            if (itemVariation is null)
+            Expression<Func<MasterFashionItem, bool>> predicateMaster =
+                masterItem => masterItem.MasterItemId == masterItemId;
+            var itemMaster = await _fashionItemRepository.GetSingleMasterItem(predicateMaster!);
+            if (itemMaster is null)
             {
-                throw new ItemVariationNotAvailableException("Variation is not found");
+                throw new MasterItemNotAvailableException("Master item is not found");
             }
 
-            itemVariation.StockCount += 1;
-            await _fashionItemRepository.UpdateFashionItemVariation(itemVariation);
+            itemMaster.StockCount += 1;
+            await _fashionItemRepository.UpdateMasterItem(itemMaster);
             var individualItem = new IndividualFashionItem()
             {
                 Note = request.Note,
                 CreatedDate = DateTime.UtcNow,
-                VariationId = variationId,
-                ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemVariation.MasterItem
-                    .MasterItemCode),
+                MasterItemId = masterItemId,
+                ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemMaster.MasterItemCode),
                 Status = FashionItemStatus.PendingForConsignSale,
-                ConsignSaleLineItemId = consignsaledetailId
+                ConsignSaleLineItemId = consignsaledetailId,
+                Condition = request.Condition,
+                RetailPrice = request.RetailPrice,
+                Color = request.Color,
+                Size = request.Size
             };
             switch (consignSaleDetail.ConsignSale.Type)
             {
@@ -491,9 +494,8 @@ namespace Services.ConsignSales
                     {
                         Note = request.Note,
                         CreatedDate = DateTime.UtcNow,
-                        VariationId = variationId,
-                        ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemVariation.MasterItem
-                            .MasterItemCode),
+                        MasterItemId = masterItemId,
+                        ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemMaster.MasterItemCode),
                         Status = FashionItemStatus.PendingForConsignSale,
                         ConsignSaleLineItemId = consignsaledetailId,
                         Type = FashionItemType.ConsignedForAuction,
@@ -526,23 +528,24 @@ namespace Services.ConsignSales
                 Data = new FashionItemDetailResponse()
                 {
                     Type = individualItem.Type,
-                    Description = itemVariation.MasterItem.Description ?? string.Empty,
-                    Brand = itemVariation.MasterItem.Brand,
-                    Gender = itemVariation.MasterItem.Gender,
-                    Name = itemVariation.MasterItem.Name,
-                    IsConsignment = itemVariation.MasterItem.IsConsignment,
-                    Color = itemVariation.Color,
-                    Size = itemVariation.Size,
-                    Condition = itemVariation.Condition,
+                    Description = itemMaster.Description ?? string.Empty,
+                    Brand = itemMaster.Brand,
+                    Gender = itemMaster.Gender,
+                    Name = itemMaster.Name,
+                    IsConsignment = itemMaster.IsConsignment,
+                    Color = individualItem.Color,
+                    Size = individualItem.Size,
+                    Condition = individualItem.Condition,
                     ItemCode = individualItem.ItemCode,
+                    RetailPrice = individualItem.RetailPrice,
                     Note = individualItem.Note,
                     Status = individualItem.Status,
                     Images = individualItem.Images.Select(c => c.Url).ToList(),
                     ItemId = individualItem.ItemId, 
-                    CategoryId = itemVariation.MasterItem.CategoryId,
+                    CategoryId = itemMaster.CategoryId,
                     // CategoryName = itemVariation.MasterItem.Category.Name,
                     SellingPrice = individualItem.SellingPrice ?? 0,
-                    ShopId = itemVariation.MasterItem.ShopId,
+                    ShopId = itemMaster.ShopId,
                     // ShopAddress = itemVariation.MasterItem.Shop.Address,
                     // IsOrderedYet = false,
                 },

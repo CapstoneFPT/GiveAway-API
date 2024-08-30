@@ -47,42 +47,25 @@ namespace Services.OrderLineItems
                     OrderLineItemId = item.OrderLineItemId,
                     CreatedDate = item.CreatedDate,
                     RefundExpirationDate = item.RefundExpirationDate,
-                    Condition = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.Condition
-                        : "N/A",
+                    Condition = item.IndividualFashionItem.Condition,
                     Quantity = item.Quantity,
-                    CategoryName = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.MasterItem.Category.Name
-                        : "N/A",
-                    ItemBrand = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.MasterItem.Brand
-                        : "N/A",
+                    CategoryName = item.IndividualFashionItem.MasterItem.Category.Name,
+                    ItemBrand =item.IndividualFashionItem.MasterItem.Brand
+                        ?? "N/A",
                     ItemCode = item.IndividualFashionItem.ItemCode,
-                    ItemColor = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.Color
-                        : "N/A",
+                    ItemColor = item.IndividualFashionItem.Color,
                     UnitPrice = item.UnitPrice,
-                    ItemGender = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.MasterItem.Gender
-                        : null,
+                    ItemGender = item.IndividualFashionItem.MasterItem.Gender,
                     ItemImage = item.IndividualFashionItem.Images.Select(x => x.Url).ToList(),
-                    ItemName = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.MasterItem.Name
-                        : "N/A",
+                    ItemName = item.IndividualFashionItem.MasterItem.Name,
                     ItemNote = item.IndividualFashionItem.Note,
-                    ItemSize = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.Size
-                        : null,
+                    ItemSize = item.IndividualFashionItem.Size,
                     ItemStatus = item.IndividualFashionItem.Status,
                     ItemType = item.IndividualFashionItem.Type,
                     OrderCode = item.Order.OrderCode,
                     PaymentDate = item.PaymentDate,
-                    ShopAddress = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.MasterItem.Shop.Address
-                        : "N/A",
-                    ShopId = item.IndividualFashionItem.Variation != null
-                        ? item.IndividualFashionItem.Variation.MasterItem.ShopId
-                        : null,
+                    ShopAddress = item.IndividualFashionItem.MasterItem.Shop.Address,
+                    ShopId = item.IndividualFashionItem.MasterItem.ShopId,
                     PointPackageId = item.PointPackage != null ? item.PointPackage.PointPackageId : null
                 };
             try
@@ -91,7 +74,7 @@ namespace Services.OrderLineItems
                     .Include(x => x.IndividualFashionItem)
                     .ThenInclude(x => x.Images)
                     .Include(x => x.IndividualFashionItem)
-                    .ThenInclude(x => x.Variation)
+                    
                     .ThenInclude(x => x.MasterItem)
                     .ThenInclude(x => x.Shop)
                     .Include(x => x.Order)
@@ -124,42 +107,24 @@ namespace Services.OrderLineItems
                     OrderLineItemId = orderLineItem.OrderLineItemId,
                     CreatedDate = orderLineItem.CreatedDate,
                     RefundExpirationDate = orderLineItem.RefundExpirationDate,
-                    Condition = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.Condition
-                        : "N/A",
-                    ItemBrand = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Brand
-                        : "N/A",
+                    Condition = orderLineItem.IndividualFashionItem.Condition,
+                    ItemBrand = orderLineItem.IndividualFashionItem.MasterItem.Brand,
                     ItemCode = orderLineItem.IndividualFashionItem.ItemCode,
-                    ItemColor = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.Color
-                        : "N/A",
+                    ItemColor = orderLineItem.IndividualFashionItem.Color,
                     Quantity = orderLineItem.Quantity,
-                    CategoryName = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Category.Name
-                        : "N/A",
+                    CategoryName = orderLineItem.IndividualFashionItem.MasterItem.Category.Name,
                     ItemNote = orderLineItem.IndividualFashionItem.Note,
-                    ItemSize = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.Size
-                        : null,
+                    ItemSize = orderLineItem.IndividualFashionItem.Size,
                     ItemImage = orderLineItem.IndividualFashionItem.Images.Select(x => x.Url).ToList(),
-                    ItemName = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Name
-                        : "N/A",
+                    ItemName = orderLineItem.IndividualFashionItem.MasterItem.Name,
                     UnitPrice = orderLineItem.UnitPrice,
-                    ItemGender = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Gender
-                        : null,
+                    ItemGender = orderLineItem.IndividualFashionItem.MasterItem.Gender,
                     ItemStatus = orderLineItem.IndividualFashionItem.Status,
                     ItemType = orderLineItem.IndividualFashionItem.Type,
                     OrderCode = orderLineItem.Order.OrderCode,
                     PaymentDate = orderLineItem.PaymentDate,
-                    ShopAddress = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.Shop.Address
-                        : "N/A",
-                    ShopId = orderLineItem.IndividualFashionItem.Variation != null
-                        ? orderLineItem.IndividualFashionItem.Variation.MasterItem.ShopId
-                        : null,
+                    ShopAddress = orderLineItem.IndividualFashionItem.MasterItem.Shop.Address,
+                    ShopId = orderLineItem.IndividualFashionItem.MasterItem.ShopId,
                     PointPackageId = orderLineItem.PointPackage != null
                         ? orderLineItem.PointPackage.PointPackageId
                         : null
@@ -171,14 +136,14 @@ namespace Services.OrderLineItems
                     .Include(x => x.IndividualFashionItem)
                     .ThenInclude(x => x.Images)
                     .Include(x => x.IndividualFashionItem)
-                    .ThenInclude(x => x.Variation)
+                    
                     .ThenInclude(x => x.MasterItem)
                     .ThenInclude(x => x.Shop)
                     .Include(x => x.Order);
 
                 if (request.ShopId.HasValue)
                     predicate = predicate.And(x =>
-                        x.IndividualFashionItem.Variation.MasterItem.ShopId == request.ShopId.Value);
+                        x.IndividualFashionItem.MasterItem.ShopId == request.ShopId.Value);
 
                 query = query.Where(predicate);
                 var page = request.PageNumber ?? -1;

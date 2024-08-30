@@ -62,7 +62,7 @@ namespace Repositories.FashionItems
             return (items, pageNum, pageSizeNum, count);
         }
 
-        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemVariationProjections<T>(int? page, int? pageSize, Expression<Func<FashionItemVariation, bool>>? predicate, Expression<Func<FashionItemVariation, T>>? selector)
+        /*public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemVariationProjections<T>(int? page, int? pageSize, Expression<Func<FashionItemVariation, bool>>? predicate, Expression<Func<FashionItemVariation, T>>? selector)
         {
             var query = _giveAwayDbContext.FashionItemVariations.AsQueryable();
 
@@ -92,7 +92,7 @@ namespace Repositories.FashionItems
             }
 
             return (items, pageNum, pageSizeNum, count);
-        }
+        }*/
 
         public async Task<MasterFashionItem?> GetSingleMasterItem(Expression<Func<MasterFashionItem, bool>> predicate)
         {
@@ -104,14 +104,14 @@ namespace Repositories.FashionItems
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<FashionItemVariation?> GetSingleFashionItemVariation(Expression<Func<FashionItemVariation?, bool>> predicate)
+        /*public async Task<FashionItemVariation?> GetSingleFashionItemVariation(Expression<Func<FashionItemVariation?, bool>> predicate)
         {
             return await GenericDao<FashionItemVariation>.Instance.GetQueryable()
                 .Include(c => c.MasterItem)
                 .Include(c => c.IndividualItems)
                 .Where(predicate)
                 .FirstOrDefaultAsync();
-        }
+        }*/
 
         public bool CheckItemIsInOrder(Guid itemId, Guid? memberId)
         {
@@ -184,10 +184,10 @@ namespace Repositories.FashionItems
         
         
 
-        public async Task<FashionItemVariation> AddSingleFashionItemVariation(FashionItemVariation request)
+        /*public async Task<FashionItemVariation> AddSingleFashionItemVariation(FashionItemVariation request)
         {
             return await GenericDao<FashionItemVariation>.Instance.AddAsync(request);
-        }
+        }*/
 
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetIndividualItemProjections<T>(
@@ -230,18 +230,18 @@ namespace Repositories.FashionItems
         public async Task<IndividualFashionItem> GetFashionItemById(Expression<Func<IndividualFashionItem, bool>> predicate)
         {
             var query = await _giveAwayDbContext.IndividualFashionItems.AsQueryable()
-                .Include(c => c.Variation!.MasterItem.Shop)
-                .Include(a => a.Variation.MasterItem.Category)
+                .Include(c => c.MasterItem.Shop)
+                .Include(a => a.MasterItem.Category)
                 .Include(b => b.Images)
                 .Where(predicate)
                 .FirstOrDefaultAsync();
             return query;
         }
 
-        public async Task<FashionItemVariation> UpdateFashionItemVariation(FashionItemVariation fashionItemVariation)
+        /*public async Task<FashionItemVariation> UpdateFashionItemVariation(FashionItemVariation fashionItemVariation)
         {
             return await GenericDao<FashionItemVariation>.Instance.UpdateAsync(fashionItemVariation);
-        }
+        }*/
 
         public async Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,
             AuctionFashionItemRequest request)
@@ -356,6 +356,11 @@ namespace Repositories.FashionItems
             await GenericDao<IndividualFashionItem>.Instance.UpdateRange(fashionItems);
         }
 
+        public async Task UpdateMasterItem(MasterFashionItem masterFashionItem)
+        {
+            await GenericDao<MasterFashionItem>.Instance.UpdateAsync(masterFashionItem);
+        }
+
         public async Task<IndividualFashionItem> UpdateFashionItem(IndividualFashionItem fashionItem)
         {
             _giveAwayDbContext.IndividualFashionItems.Update(fashionItem);
@@ -382,13 +387,12 @@ namespace Repositories.FashionItems
         {
             var listItemNotbelongshop = new List<Guid>();
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
-                .Include(c => c.Variation)
-                .ThenInclude(C => C.MasterItem)
+                .Include(C => C.MasterItem)
                 .ThenInclude(c => c.Shop)
                 .Where(c => listItemId.Contains(c.ItemId)).ToListAsync();
             foreach (IndividualFashionItem item in listItem)
             {
-                if (!item.Variation!.MasterItem.ShopId.Equals(shopId))
+                if (!item.MasterItem.ShopId.Equals(shopId))
                 {
                     listItemNotbelongshop.Add(item.ItemId);
                 }

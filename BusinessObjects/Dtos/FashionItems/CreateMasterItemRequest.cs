@@ -10,6 +10,7 @@ public class CreateMasterItemRequest
     public required string Description { get; set; }
     public required Guid CategoryId { get; set; }
     public required GenderType Gender { get; set; }
+    public required int StockCount { get; set; }
     public required string[] Images { get; set; }
     public required Guid[] ShopId { get; set; }
 }

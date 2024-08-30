@@ -18,15 +18,15 @@ namespace Services.FashionItems
         Task ChangeToSoldItems(List<IndividualFashionItem> refundableItems);
         Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId, UpdateFashionItemStatusRequest request);
         Task<Result<List<MasterItemResponse>>> CreateMasterItemByAdmin(CreateMasterItemRequest masterItemRequest);
-        Task<Result<ItemVariationResponse>> CreateItemVariation(Guid masteritemId,CreateItemVariationRequest variationRequest);
+        // Task<Result<ItemVariationResponse>> CreateItemVariation(Guid masteritemId,CreateItemVariationRequest variationRequest);
 
-        Task<Result<List<IndividualItemListResponse>>> CreateIndividualItems(Guid variationId,
+        Task<Result<List<IndividualItemListResponse>>> CreateIndividualItems(Guid masterItemId,
             List<CreateIndividualItemRequest> requests);
 
         Task<PaginationResponse<MasterItemListResponse>> GetAllMasterItemPagination(MasterItemRequest request);
-        Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(Guid masterItemId,
-            ItemVariationRequest request);
-        Task<PaginationResponse<IndividualItemListResponse>> GetIndividualItemPagination(Guid variationId,
+        /*Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(Guid masterItemId,
+            ItemVariationRequest request);*/
+        Task<PaginationResponse<IndividualItemListResponse>> GetIndividualItemPagination(Guid masterItemId,
             IndividualItemRequest request);
 
         Task<DotNext.Result<MasterItemDetailResponse, ErrorCode>> GetMasterItemById(Guid id);

@@ -15,6 +15,10 @@ public class CreateItemVariationRequest
 
 public class CreateIndividualItemRequest
 {
+    public string Condition { get; set; }
+    public decimal RetailPrice { get; set; }
+    public string Color { get; set; }
+    public SizeType Size { get; set; }
     public string Note { get; set; }
     public decimal SellingPrice { get; set; }
     public string[] Images { get; set; }
@@ -30,6 +34,10 @@ public class CreateItemVariationRequestForConsign
 
 public class CreateIndividualItemRequestForConsign
 {
+    public string Condition { get; set; }
+    public decimal RetailPrice { get; set; }
+    public string Color { get; set; }
+    public SizeType Size { get; set; }
     public string Note { get; set; }
     public decimal ConfirmPrice { get; set; }
     public string[] Images { get; set; }

@@ -102,7 +102,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("fashionitems/{masteritemId}/create-variation")]
+        /*[HttpPost("fashionitems/{masteritemId}/create-variation")]
         [ProducesResponseType<Result<ItemVariationListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> CreateVariationFromConsignSaleLineItem([FromRoute] Guid masteritemId,
@@ -112,7 +112,7 @@ namespace WebApi.Controllers
             return result.ResultStatus != ResultStatus.Success
                 ? StatusCode((int)HttpStatusCode.InternalServerError, result)
                 : Ok(result);
-        }
+        }*/
 
       
         [HttpGet("{consignsaleId}/consignlineitems")]
