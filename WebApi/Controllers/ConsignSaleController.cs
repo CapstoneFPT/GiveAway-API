@@ -41,22 +41,26 @@ namespace WebApi.Controllers
         }
         
         [HttpGet("{consignSaleId}")]
-        [ProducesResponseType<ConsignSaleResponse>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<ConsignSaleDetailedResponse>((int) HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetConsignSaleById([FromRoute] Guid consignSaleId)
         {
             var result = await _consignSaleService.GetConsignSaleById(consignSaleId);
 
-            if (result.ResultStatus != ResultStatus.Success)
+            if (!result.IsSuccessful)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-            }
+                return result.Error switch
+                {
+                    _ => StatusCode(500, new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, result.Error))
+                };
+            } 
 
-            return Ok(result);
+            return Ok(result.Value);
         }
 
         [HttpPut("{consignSaleId}/approval")]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> ApprovalConsignSale([FromRoute] Guid consignSaleId,
+        public async Task<ActionResult<Result<ConsignSaleDetailedResponse>>> ApprovalConsignSale([FromRoute] Guid consignSaleId,
             ApproveConsignSaleRequest request)
         {
             var result = await _consignSaleService.ApprovalConsignSale(consignSaleId, request);
@@ -74,7 +78,7 @@ namespace WebApi.Controllers
         [HttpPut("{consignSaleId}/confirm-received")]
         [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> ConfirmReceivedConsignFromShop(
+        public async Task<ActionResult<Result<ConsignSaleDetailedResponse>>> ConfirmReceivedConsignFromShop(
             [FromRoute] Guid consignSaleId)
         {
             var result = await _consignSaleService.ConfirmReceivedFromShop(consignSaleId);

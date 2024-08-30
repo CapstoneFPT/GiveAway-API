@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BusinessObjects.Dtos.ConsignSales
 {
-    public class ConsignSaleResponse
+    public class ConsignSaleDetailedResponse
     {
         public Guid ConsignSaleId { get; set; }
         public ConsignSaleType Type { get; set; }

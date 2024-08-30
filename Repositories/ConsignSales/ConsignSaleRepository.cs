@@ -28,7 +28,7 @@ namespace Repositories.ConsignSales
             _giveAwayDbContext = dbContext;
         }
 
-        public async Task<ConsignSaleResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
+        public async Task<ConsignSaleDetailedResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request)
         {
             var account = await _giveAwayDbContext.Members.AsQueryable()
                 .Include(c => c.Addresses)
@@ -79,13 +79,13 @@ namespace Repositories.ConsignSales
             }
 
             var consignResponse = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                .ProjectTo<ConsignSaleDetailedResponse>(_mapper.ConfigurationProvider)
                 .Where(c => c.ConsignSaleId == newConsign.ConsignSaleId)
                 .FirstOrDefaultAsync();
             return consignResponse;
         }
 
-        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSale(Guid accountId,
+        public async Task<PaginationResponse<ConsignSaleDetailedResponse>> GetAllConsignSale(Guid accountId,
             ConsignSaleRequest request)
         {
             var query = GenericDao<ConsignSale>.Instance.GetQueryable();
@@ -111,10 +111,10 @@ namespace Repositories.ConsignSales
                 .Take(request.PageSize);
 
             var items = await query
-                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                .ProjectTo<ConsignSaleDetailedResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().ToListAsync();
 
-            var result = new PaginationResponse<ConsignSaleResponse>
+            var result = new PaginationResponse<ConsignSaleDetailedResponse>
             {
                 Items = items,
                 PageSize = request.PageSize,
@@ -125,11 +125,11 @@ namespace Repositories.ConsignSales
             return result;
         }
 
-        public async Task<ConsignSaleResponse> GetConsignSaleById(Guid consignId)
+        public async Task<ConsignSaleDetailedResponse> GetConsignSaleById(Guid consignId)
         {
             var consignSale = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Where(c => c.ConsignSaleId == consignId)
-                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
+                .ProjectTo<ConsignSaleDetailedResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
             return consignSale;
         }
 
@@ -153,7 +153,7 @@ namespace Repositories.ConsignSales
             return prefix + number.ToString("D6");
         }
 
-        public async Task<ConsignSaleResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
+        public async Task<ConsignSaleDetailedResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleLineItems)
@@ -171,7 +171,7 @@ namespace Repositories.ConsignSales
             }
 
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
-            return _mapper.Map<ConsignSaleResponse>(consign);
+            return _mapper.Map<ConsignSaleDetailedResponse>(consign);
         }
 
         public async Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId, bool isTracking = false)
@@ -183,7 +183,7 @@ namespace Repositories.ConsignSales
             return await query.ToListAsync();
         }
 
-        public async Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId)
+        public async Task<ConsignSaleDetailedResponse> ConfirmReceivedFromShop(Guid consignId)
         {
             var consign = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Include(c => c.ConsignSaleLineItems!)
@@ -230,10 +230,10 @@ namespace Repositories.ConsignSales
 
             await GenericDao<ConsignSale>.Instance.UpdateAsync(consign);
 
-            return _mapper.Map<ConsignSaleResponse>(consign);
+            return _mapper.Map<ConsignSaleDetailedResponse>(consign);
         }
 
-        public async Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId,
+        public async Task<ConsignSaleDetailedResponse> CreateConsignSaleByShop(Guid shopId,
             CreateConsignSaleByShopRequest request)
         {
             //tao moi 1 consign
@@ -317,13 +317,13 @@ namespace Repositories.ConsignSales
 
 
             var consignResponse = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                .ProjectTo<ConsignSaleDetailedResponse>(_mapper.ConfigurationProvider)
                 .Where(c => c.ConsignSaleId == newConsign.ConsignSaleId)
                 .FirstOrDefaultAsync();
             return consignResponse;
         }
 
-        public async Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(
+        public async Task<PaginationResponse<ConsignSaleDetailedResponse>> GetAllConsignSaleByShopId(
             ConsignSaleRequestForShop request)
         {
             var query = GenericDao<ConsignSale>.Instance.GetQueryable();
@@ -358,11 +358,11 @@ namespace Repositories.ConsignSales
 
             var items = await query
                 /*.Include(c => c.ConsignSaleDetails).ThenInclude(c => c.FashionItem)*/
-                .ProjectTo<ConsignSaleResponse>(_mapper.ConfigurationProvider)
+                .ProjectTo<ConsignSaleDetailedResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().ToListAsync();
 
 
-            var result = new PaginationResponse<ConsignSaleResponse>
+            var result = new PaginationResponse<ConsignSaleDetailedResponse>
             {
                 Items = items ?? [],
                 PageSize = request.PageSize,

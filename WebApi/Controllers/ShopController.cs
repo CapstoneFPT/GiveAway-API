@@ -114,7 +114,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{shopId}/consignsales")]
-        public async Task<ActionResult<Result<ConsignSaleResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,
+        public async Task<ActionResult<Result<ConsignSaleDetailedResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,
             [FromBody] CreateConsignSaleByShopRequest consignRequest)
         {
             var result = await _consignSaleService.CreateConsignSaleByShop(shopId, consignRequest);

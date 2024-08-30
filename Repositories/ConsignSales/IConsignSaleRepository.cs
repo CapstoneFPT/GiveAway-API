@@ -12,14 +12,14 @@ namespace Repositories.ConsignSales
 {
     public interface IConsignSaleRepository
     {
-        Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSale(Guid accountId, ConsignSaleRequest request);
-        Task<ConsignSaleResponse> GetConsignSaleById(Guid consignId);
-        Task<ConsignSaleResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request);
-        Task<ConsignSaleResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status);
+        Task<PaginationResponse<ConsignSaleDetailedResponse>> GetAllConsignSale(Guid accountId, ConsignSaleRequest request);
+        Task<ConsignSaleDetailedResponse> GetConsignSaleById(Guid consignId);
+        Task<ConsignSaleDetailedResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request);
+        Task<ConsignSaleDetailedResponse> ApprovalConsignSale(Guid consignId, ConsignSaleStatus status);
         Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId,bool isTracking = false);
-        Task<ConsignSaleResponse> ConfirmReceivedFromShop(Guid consignId);
-        Task<ConsignSaleResponse> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
-        Task<PaginationResponse<ConsignSaleResponse>> GetAllConsignSaleByShopId(ConsignSaleRequestForShop request);
+        Task<ConsignSaleDetailedResponse> ConfirmReceivedFromShop(Guid consignId);
+        Task<ConsignSaleDetailedResponse> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
+        Task<PaginationResponse<ConsignSaleDetailedResponse>> GetAllConsignSaleByShopId(ConsignSaleRequestForShop request);
         Task<ConsignSale?> GetSingleConsignSale(Expression<Func<ConsignSale, bool>> predicate);
         Task UpdateConsignSale(ConsignSale consignSale);
         /*Task UpdateConsignSaleToOnSale(Guid fashionItemId);*/
