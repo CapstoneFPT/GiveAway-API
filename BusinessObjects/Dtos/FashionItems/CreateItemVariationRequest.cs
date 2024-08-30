@@ -34,6 +34,7 @@ public class CreateItemVariationRequestForConsign
 
 public class CreateIndividualItemRequestForConsign
 {
+    public required Guid MasterItemId { get; set; }
     public string Condition { get; set; }
     public decimal RetailPrice { get; set; }
     public string Color { get; set; }

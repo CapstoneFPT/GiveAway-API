@@ -473,7 +473,7 @@ namespace Services.ConsignSales
         }*/
 
         public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>>
-            CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId, Guid masterItemId,
+            CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId,
                 CreateIndividualItemRequestForConsign request)
         {
             Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
@@ -490,7 +490,7 @@ namespace Services.ConsignSales
             }
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
             Expression<Func<MasterFashionItem, bool>> predicateMaster =
-                masterItem => masterItem.MasterItemId == masterItemId;
+                masterItem => masterItem.MasterItemId == request.MasterItemId;
             var itemMaster = await _fashionItemRepository.GetSingleMasterItem(predicateMaster!);
             if (itemMaster is null)
             {
@@ -503,7 +503,7 @@ namespace Services.ConsignSales
             {
                 Note = request.Note,
                 CreatedDate = DateTime.UtcNow,
-                MasterItemId = masterItemId,
+                MasterItemId = request.MasterItemId,
                 ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemMaster.MasterItemCode),
                 Status = FashionItemStatus.PendingForConsignSale,
                 ConsignSaleLineItemId = consignsaledetailId,
@@ -523,7 +523,7 @@ namespace Services.ConsignSales
                     {
                         Note = request.Note,
                         CreatedDate = DateTime.UtcNow,
-                        MasterItemId = masterItemId,
+                        MasterItemId = request.MasterItemId,
                         ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemMaster.MasterItemCode),
                         Status = FashionItemStatus.PendingForConsignSale,
                         ConsignSaleLineItemId = consignsaledetailId,

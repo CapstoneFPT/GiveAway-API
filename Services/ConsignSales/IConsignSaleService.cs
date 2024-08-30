@@ -23,8 +23,7 @@ namespace Services.ConsignSales
         /*Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleLineItem(Guid masteritemId,
             CreateItemVariationRequestForConsign request);*/
 
-        Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId,
-            Guid masterItemId, CreateIndividualItemRequestForConsign request);
+        Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId, CreateIndividualItemRequestForConsign request);
         Task UpdateConsignPrice(Guid orderId);
 
         Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(
