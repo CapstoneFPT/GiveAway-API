@@ -24,6 +24,7 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
     {
         public Guid ConsignSaleLineItemId { get; set; }
         public Guid ConsignSaleId { get; set; }
+        public string ConsignSaleCode { get; set; } = "N/A";
         public decimal DealPrice { get; set; }
         public string Note { get; set; }
         public decimal? ConfirmedPrice { get; set; }
@@ -34,6 +35,7 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         public GenderType Gender { get; set; }
         public string Condition { get; set; }
         public DateTime CreatedDate { get; set; }
+        public FashionItemStatus? FashionItemStatus { get; set; }
         
         public List<string> Images { get; set; } = [];        
     }
