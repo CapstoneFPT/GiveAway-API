@@ -173,16 +173,16 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        /*[HttpPost("{masteritemId}/item-variants")]
-        [ProducesResponseType<Result<ItemVariationResponse>>((int)HttpStatusCode.OK)]
-        public async Task<IActionResult> CreateItemVariation([FromRoute] Guid masteritemId,
-            [FromBody] CreateItemVariationRequest request)
+        [HttpPut("{masteritemId}/update-masteritem")]
+        [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> UpdateMasterItem([FromRoute] Guid masteritemId,
+            [FromBody] UpdateMasterItemRequest request)
         {
-            var result = await _fashionItemService.CreateItemVariation(masteritemId, request);
+            var result = await _fashionItemService.UpdateMasterItem(masteritemId, request);
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             return Ok(result);
-        }*/
+        }
 
         [HttpPost("{masterItemId}/individual-items")]
         [ProducesResponseType<Result<List<IndividualItemListResponse>>>((int)HttpStatusCode.OK)]

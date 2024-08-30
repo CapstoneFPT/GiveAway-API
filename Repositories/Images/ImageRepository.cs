@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Repositories.Images
 {
@@ -12,7 +13,10 @@ namespace Repositories.Images
     {
         
 
-     
+        public async Task UpdateSingleImage(Image image)
+        {
+            await GenericDao<Image>.Instance.UpdateAsync(image);
+        }
 
         public async Task AddImage(Image image)
         {
@@ -23,5 +27,11 @@ namespace Repositories.Images
         {
             await GenericDao<Image>.Instance.AddRange(images);
         }
+
+        public async Task<Image?> GetImageById(Guid imageId)
+        {
+            return await GenericDao<Image>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.ImageId == imageId);
+        }
+
     }
 }

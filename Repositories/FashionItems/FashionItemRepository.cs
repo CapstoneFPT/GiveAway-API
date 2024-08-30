@@ -97,6 +97,7 @@ namespace Repositories.FashionItems
         public async Task<MasterFashionItem?> GetSingleMasterItem(Expression<Func<MasterFashionItem, bool>> predicate)
         {
             return await GenericDao<MasterFashionItem>.Instance.GetQueryable()
+                .Include(c => c.IndividualFashionItems)
                 .Include(c => c.Images)
                 .Include(c => c.Shop)
                 .Include(x=>x.Category)

@@ -301,6 +301,28 @@ namespace Services.ConsignSales
             }
         }
 
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemsListResponse>> ConfirmConsignSaleLineItemPrice(Guid consignLineItemId, decimal price)
+        {
+            Expression<Func<ConsignSaleLineItem, bool>> predicate = consignLineItem =>
+                consignLineItem.ConsignSaleLineItemId == consignLineItemId;
+            var consignSaleLine = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
+            if (consignSaleLine is null)
+                throw new ConsignSaleLineItemNotFoundException();
+            consignSaleLine.ConfirmedPrice = price;
+            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleLine);
+            return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemsListResponse>()
+            {
+                Data = new ConsignSaleLineItemsListResponse()
+                {
+                    ConsignSaleId = consignSaleLine.ConsignSaleId,
+                    ConsignSaleLineItemId = consignSaleLine.ConsignSaleLineItemId,
+                    ConfirmedPrice = consignSaleLine.ConfirmedPrice
+                },
+                ResultStatus = ResultStatus.Success,
+                Messages = new []{"Update confirm price for consign line item successfully"}
+            };
+        }
+
 
         public async Task<DotNext.Result<ConsignSaleDetailedResponse, ErrorCode>> GetConsignSaleById(Guid consignId)
         {
@@ -459,10 +481,13 @@ namespace Services.ConsignSales
             var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
             if (consignSaleDetail == null)
             {
-                throw new ConsignSaleDetailsNotFoundException();
+                throw new ConsignSaleLineItemNotFoundException();
             }
 
-            consignSaleDetail.ConfirmedPrice = request.ConfirmPrice;
+            if (consignSaleDetail.ConfirmedPrice == 0)
+            {
+                throw new ConfirmPriceIsNullException("Please confirm this item price before add to stock");
+            }
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
             Expression<Func<MasterFashionItem, bool>> predicateMaster =
                 masterItem => masterItem.MasterItemId == masterItemId;

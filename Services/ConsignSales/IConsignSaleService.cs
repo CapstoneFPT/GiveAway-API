@@ -29,5 +29,7 @@ namespace Services.ConsignSales
 
         Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(
             ConsignSaleListRequest request);
+
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemsListResponse>> ConfirmConsignSaleLineItemPrice(Guid consignLineItemId, decimal price);
     }
 }

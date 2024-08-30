@@ -460,67 +460,55 @@ namespace Services.FashionItems
             };
         }
 
-        /*public async Task<BusinessObjects.Dtos.Commons.Result<ItemVariationResponse>> CreateItemVariation(
+        public async Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> UpdateMasterItem(
             Guid masteritemId,
-            CreateItemVariationRequest variationRequest)
+            UpdateMasterItemRequest masterItemRequest)
         {
-            if (variationRequest.IndividualItems.Length > variationRequest.StockCount)
+            Expression<Func<MasterFashionItem, bool>> predicate = masterItem => masterItem.MasterItemId == masteritemId;
+            var itemMaster = await _fashionitemRepository.GetSingleMasterItem(predicate);
+            if (itemMaster is null)
+                throw new MasterItemNotAvailableException("Can not find master item");
+            if (masterItemRequest.CategoryId != null)
             {
-                throw new OverStockException("You have added item more than permitted quantity in stock");
-            }
-
-            var itemVariation = new FashionItemVariation()
-            {
-                Color = variationRequest.Color,
-                Condition = variationRequest.Condition,
-                CreatedDate = DateTime.UtcNow,
-                Size = variationRequest.Size,
-                StockCount = variationRequest.StockCount,
-                MasterItemId = masteritemId,
-                Price = variationRequest.Price
-            };
-            var itemVariationResponse = await _fashionitemRepository.AddSingleFashionItemVariation(itemVariation);
-            var individualItemsResponse = new List<IndividualFashionItem>();
-            var masterItem = await _fashionitemRepository.GetSingleMasterItem(c => c.MasterItemId == masteritemId);
-            foreach (var individualItem in variationRequest.IndividualItems)
-            {
-                var dataIndividualItem = new IndividualFashionItem()
+                var category = await _categoryRepository.GetCategoryById(masterItemRequest.CategoryId.Value);
+                if (category is null)
                 {
-                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemCode),
-                    SellingPrice = individualItem.SellingPrice,
-                    Note = individualItem.Note,
-                    VariationId = itemVariation.VariationId,
-                    Status = FashionItemStatus.Unavailable,
-                    Type = FashionItemType.ItemBase,
-                    CreatedDate = DateTime.UtcNow
-                };
-                dataIndividualItem = await _fashionitemRepository.AddInvidualFashionItem(dataIndividualItem);
-
-                var individualItemImages = new List<Image>();
-                foreach (var image in individualItem.Images)
-                {
-                    var dataImage = new Image()
-                    {
-                        Url = image,
-                        CreatedDate = DateTime.UtcNow,
-                        IndividualFashionItemId = dataIndividualItem.ItemId,
-                    };
-                    individualItemImages.Add(dataImage);
+                    throw new CategoryNotFound("Your new category is not found");
                 }
-
-                await _imageRepository.AddRangeImage(individualItemImages);
-                dataIndividualItem.Images = individualItemImages;
-                individualItemsResponse.Add(dataIndividualItem);
+                itemMaster.CategoryId = masterItemRequest.CategoryId.Value;
+                itemMaster.Category = category;
             }
 
-            itemVariationResponse.IndividualItems = individualItemsResponse;
-            return new BusinessObjects.Dtos.Commons.Result<ItemVariationResponse>()
+            if (masterItemRequest.StockCount < itemMaster.IndividualFashionItems.Count)
+                throw new StockCountUnavailableException(
+                    "Your new quantity for stock is lower items existing in stock");
+            itemMaster.Description = masterItemRequest.Description ?? itemMaster.Description;
+            itemMaster.Name = masterItemRequest.Name ?? itemMaster.Name;
+            itemMaster.Brand = masterItemRequest.Brand ?? itemMaster.Brand;
+            
+            itemMaster.Gender = masterItemRequest.Gender ?? itemMaster.Gender;
+            itemMaster.StockCount = masterItemRequest.StockCount ?? itemMaster.StockCount;
+            if (masterItemRequest.ImageRequests?.Length > 0)
             {
-                Data = _mapper.Map<ItemVariationResponse>(itemVariationResponse),
+                foreach (var imageRequest in masterItemRequest.ImageRequests)
+                {
+                    var imageToUpdate = await _imageRepository.GetImageById(imageRequest.ImageId);
+                    if (imageToUpdate != null)
+                    {
+                        imageToUpdate.Url = imageRequest.Url;
+                    }
+                }
+                
+                
+            }
+            await _fashionitemRepository.UpdateMasterItem(itemMaster);
+            return new BusinessObjects.Dtos.Commons.Result<MasterItemResponse>()
+            {
+                Data = _mapper.Map<MasterItemResponse>(itemMaster),
                 ResultStatus = ResultStatus.Success,
-                Messages = new[] { "Add new variation successfully" }
+                Messages = new[] { "Update new master item successfully" }
             };
-        }*/
+        }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>> CreateIndividualItems(
             Guid masterItemId,

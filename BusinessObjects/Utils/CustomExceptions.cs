@@ -84,7 +84,7 @@ public class StatusNotAvailableException : Exception
 }
 public class StatusNotAvailableWithMessageException(string message) : Exception(message){}
 
-public class ConsignSaleDetailsNotFoundException : Exception
+public class ConsignSaleLineItemNotFoundException : Exception
 {
 }
 public class AddressNotFoundException : Exception{}
@@ -92,4 +92,6 @@ public class OrderDetailNotFoundException : Exception{}
 public class MissingFeatureException(string message) : Exception(message){}
 public class OverStockException(string message) : Exception(message){}
 public class MasterItemNotAvailableException(string message): Exception(message){}
-public class ItemVariationNotAvailableException(string message): Exception(message){}
+public class CategoryNotFound(string message): Exception(message){}
+public class StockCountUnavailableException(string message): Exception(message){}
+public class ConfirmPriceIsNullException(string message): Exception(message){}

@@ -16,6 +16,5 @@ public class MasterItemResponse
     public bool IsConsignment { get; set; }
     public List<string> Images { get; set; } = [];
     public Guid ShopId { get; set; }
-    public ItemVariationResponse? ItemVariationResponse { get; set; }
-    public PaginationResponse<ItemVariationResponse>? ListItemVariationResponses { get; set; }
+    public int StockCount { get; set; }
 }

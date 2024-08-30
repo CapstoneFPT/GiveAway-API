@@ -18,7 +18,7 @@ namespace Services.FashionItems
         Task ChangeToSoldItems(List<IndividualFashionItem> refundableItems);
         Task<Result<FashionItemDetailResponse?>> UpdateFashionItemStatus(Guid itemId, UpdateFashionItemStatusRequest request);
         Task<Result<List<MasterItemResponse>>> CreateMasterItemByAdmin(CreateMasterItemRequest masterItemRequest);
-        // Task<Result<ItemVariationResponse>> CreateItemVariation(Guid masteritemId,CreateItemVariationRequest variationRequest);
+        Task<Result<MasterItemResponse>> UpdateMasterItem(Guid masteritemId,UpdateMasterItemRequest masterItemRequest);
 
         Task<Result<List<IndividualItemListResponse>>> CreateIndividualItems(Guid masterItemId,
             List<CreateIndividualItemRequest> requests);

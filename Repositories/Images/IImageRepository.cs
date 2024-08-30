@@ -11,5 +11,7 @@ namespace Repositories.Images
     {
         Task AddImage(Image image);
         Task AddRangeImage(List<Image> images);
+        Task<Image?> GetImageById(Guid imageId);
+        Task UpdateSingleImage(Image image);
     }
 }

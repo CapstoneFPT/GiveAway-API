@@ -39,6 +39,6 @@ public class CreateIndividualItemRequestForConsign
     public string Color { get; set; }
     public SizeType Size { get; set; }
     public string Note { get; set; }
-    public decimal ConfirmPrice { get; set; }
+    
     public string[] Images { get; set; }
 }

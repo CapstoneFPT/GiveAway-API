@@ -25,7 +25,7 @@ public class ConsignSaleLineItemRepository : IConsignSaleLineItemRepository
             .ProjectTo<ConsignSaleLineItemsListResponse>(_mapper.ConfigurationProvider).AsNoTracking().ToListAsync();
         if (lstconsignSaleDetail.Count == 0)
         {
-            throw new ConsignSaleDetailsNotFoundException();
+            throw new ConsignSaleLineItemNotFoundException();
         }
 
         return lstconsignSaleDetail;

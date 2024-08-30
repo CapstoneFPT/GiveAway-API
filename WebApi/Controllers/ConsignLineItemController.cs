@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.FashionItems;
 using Microsoft.AspNetCore.Mvc;
 using Services.ConsignSales;
@@ -26,6 +27,19 @@ public class ConsignLineItemController : ControllerBase
         var result =
             await _consignSaleService.CreateIndividualItemFromConsignSaleLineItem(consignLineItemId, masterItemId,
                 request);
+
+        return result.ResultStatus != ResultStatus.Success
+            ? StatusCode((int)HttpStatusCode.InternalServerError, result)
+            : Ok(result);
+    }
+
+    [HttpPut("{consignLineItemId}/confirm-price")]
+    [ProducesResponseType<Result<ConsignSaleLineItemsListResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> ConfirmConsignSaleLineItemPrice(Guid consignLineItemId ,decimal price)
+    {
+        var result =
+            await _consignSaleService.ConfirmConsignSaleLineItemPrice(consignLineItemId, price);
 
         return result.ResultStatus != ResultStatus.Success
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
