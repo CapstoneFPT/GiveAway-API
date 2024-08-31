@@ -47,6 +47,42 @@ public class ConsignLineItemController : ControllerBase
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
     }
+    [HttpPut("{consignLineItemId}/aprrove-negotiation")]
+    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> ApproveNegotiationForConsignSaleLineItem([FromRoute] Guid consignLineItemId)
+    {
+        var result =
+            await _consignSaleService.ApproveNegotiation(consignLineItemId);
+
+        return result.ResultStatus != ResultStatus.Success
+            ? StatusCode((int)HttpStatusCode.InternalServerError, result)
+            : Ok(result);
+    }
+    [HttpPut("{consignLineItemId}/reject-negotiation")]
+    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> RejectNegotiationForConsignSaleLineItem([FromRoute] Guid consignLineItemId)
+    {
+        var result =
+            await _consignSaleService.RejectNegotiation(consignLineItemId);
+
+        return result.ResultStatus != ResultStatus.Success
+            ? StatusCode((int)HttpStatusCode.InternalServerError, result)
+            : Ok(result);
+    }
+    [HttpPost("{consignLineItemId}/create-individual-after-negotiation")]
+    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> CreateIndividualAfterNegotiation([FromRoute] Guid consignLineItemId, [FromBody] CreateIndividualAfterNegotiationRequest request)
+    {
+        var result =
+            await _consignSaleService.CreateIndividualAfterNegotiation(consignLineItemId, request);
+
+        return result.ResultStatus != ResultStatus.Success
+            ? StatusCode((int)HttpStatusCode.InternalServerError, result)
+            : Ok(result);
+    }
     [HttpGet("{consignLineItemId}")]
     [ProducesResponseType<ConsignSaleLineItemDetailedResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
