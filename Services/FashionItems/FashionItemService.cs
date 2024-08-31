@@ -427,7 +427,7 @@ namespace Services.FashionItems
             CreateMasterItemRequest masterItemRequest)
         {
             var listMasterItemResponse = new List<MasterFashionItem>();
-            foreach (var shopId in masterItemRequest.ShopId)
+            foreach (var shop in masterItemRequest.ItemForEachShops)
             {
                 var masterItem = new MasterFashionItem()
                 {
@@ -438,10 +438,10 @@ namespace Services.FashionItems
                     MasterItemCode =
                         await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
                     CategoryId = masterItemRequest.CategoryId,
-                    StockCount = masterItemRequest.StockCount,
+                    StockCount = shop.StockCount,
                     IsConsignment = false,
                     CreatedDate = DateTime.UtcNow,
-                    ShopId = shopId
+                    ShopId = shop.ShopId
                 };
                 
                 masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
@@ -592,6 +592,7 @@ namespace Services.FashionItems
                     Gender = item.Gender,
                     CategoryId = item.CategoryId,
                     IsConsignment = item.IsConsignment,
+                    ItemInStock = item.IndividualFashionItems.Count,
                     ShopId = item.ShopId,
                     StockCount = item.StockCount,
                     Images = item.Images.Select(x => x.Url).ToList()

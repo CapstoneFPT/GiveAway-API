@@ -10,7 +10,13 @@ public class CreateMasterItemRequest
     public required string Description { get; set; }
     public required Guid CategoryId { get; set; }
     public required GenderType Gender { get; set; }
-    public required int StockCount { get; set; }
+    
     public required string[] Images { get; set; }
-    public required Guid[] ShopId { get; set; }
+    public required List<DistributeItemForEachShop> ItemForEachShops { get; set; }
+}
+
+public class DistributeItemForEachShop
+{
+    public Guid ShopId { get; set; }
+    public int StockCount { get; set; }
 }
