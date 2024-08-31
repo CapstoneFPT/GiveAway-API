@@ -34,6 +34,7 @@ public class ConsignLineItemService : IConsignLineItemService
                 {
                     ConsignSaleLineItemId = item.ConsignSaleLineItemId,
                     ConsignSaleId = item.ConsignSaleId,
+                    Status = item.Status,
                     ProductName = item.ProductName,
                     Condition = item.Condition,
                     Images = item.Images.Select(x => x.Url ?? string.Empty).ToList(),
