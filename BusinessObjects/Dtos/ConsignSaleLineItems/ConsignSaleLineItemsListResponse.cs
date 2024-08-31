@@ -28,17 +28,16 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         public string ConsignSaleCode { get; set; } = "N/A";
         public decimal DealPrice { get; set; }
         public decimal ExpectedPrice { get; set; }
-        public string Note { get; set; }
+        public string Note { get; set; } = "N/A";
         public decimal? ConfirmedPrice { get; set; }
-        public string ProductName { get; set; }
-        public string Brand { get; set; }
-        public string Color { get; set; }
+        public string ProductName { get; set; } = "N/A";
+        public string Brand { get; set; } = "N/A";
+        public string Color { get; set; } = "N/A";
         public SizeType Size { get; set; }
         public GenderType Gender { get; set; }
-        public string Condition { get; set; }
+        public string Condition { get; set; } = "N/A";
         public DateTime CreatedDate { get; set; }
         public FashionItemStatus? FashionItemStatus { get; set; }
-        
         public List<string> Images { get; set; } = [];        
     }
 

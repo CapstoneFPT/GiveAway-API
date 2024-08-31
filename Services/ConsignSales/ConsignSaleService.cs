@@ -339,6 +339,7 @@ namespace Services.ConsignSales
             }
             catch (Exception e)
             {
+                _logger.LogError(e,"Error fetching consign sale details");
                 return new Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.ServerError);
             }
         }
