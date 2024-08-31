@@ -31,5 +31,8 @@ namespace Services.ConsignSales
 
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemsListResponse>> ConfirmConsignSaleLineItemPrice(Guid consignLineItemId, decimal price);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> NegotiateConsignSaleLineItem(Guid consignLineItemId, NegotiateConsignSaleLineRequest request);
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> ApproveNegotiation(Guid consignLineItemId);
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> RejectNegotiation(Guid consignLineItemId);
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> CreateIndividualAfterNegotiation(Guid consignLineItemId, CreateIndividualAfterNegotiationRequest request);
     }
 }

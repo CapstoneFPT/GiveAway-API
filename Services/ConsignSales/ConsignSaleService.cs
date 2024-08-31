@@ -477,6 +477,151 @@ namespace Services.ConsignSales
             };
         }
 
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> ApproveNegotiation(Guid consignLineItemId)
+        {
+            Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
+                consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
+            var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
+            if (consignSaleDetail == null || !consignSaleDetail.Status.Equals(ConsignSaleLineItemStatus.Negotiating))
+            {
+                throw new ConsignSaleLineItemNotFoundException();
+            }
+
+            consignSaleDetail.IsApproved = true;
+            consignSaleDetail.Status = ConsignSaleLineItemStatus.ReadyForConsignSale;
+            consignSaleDetail.ConfirmedPrice = consignSaleDetail.DealPrice;
+            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
+            return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
+            {
+                Data = new ConsignSaleLineItemResponse()
+                {
+                    ConsignSaleLineItemId  = consignSaleDetail.ConsignSaleLineItemId,
+                    DealPrice = consignSaleDetail.DealPrice!.Value,
+                    IsApproved = consignSaleDetail.IsApproved,
+                    ResponseFromShop = consignSaleDetail.ResponseFromShop,
+                    ConsignSaleLineItemStatus = consignSaleDetail.Status,
+                },
+                Messages = new []{"You have approved deal price of this item from our shop"},
+                ResultStatus = ResultStatus.Success
+            };
+        }
+
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> RejectNegotiation(Guid consignLineItemId)
+        {
+            Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
+                consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
+            var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
+            if (consignSaleDetail == null || !consignSaleDetail.Status.Equals(ConsignSaleLineItemStatus.Negotiating))
+            {
+                throw new ConsignSaleLineItemNotFoundException();
+            }
+
+            consignSaleDetail.IsApproved = false;
+            consignSaleDetail.Status = ConsignSaleLineItemStatus.Returned;
+            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
+            return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
+            {
+                Data = new ConsignSaleLineItemResponse()
+                {
+                    ConsignSaleLineItemId  = consignSaleDetail.ConsignSaleLineItemId,
+                    DealPrice = consignSaleDetail.DealPrice!.Value,
+                    IsApproved = consignSaleDetail.IsApproved,
+                    ResponseFromShop = consignSaleDetail.ResponseFromShop,
+                    ConsignSaleLineItemStatus = consignSaleDetail.Status,
+                },
+                Messages = new []{"You have rejected deal price of this item from our shop. We will send back your item soon"},
+                ResultStatus = ResultStatus.Success
+            };
+        }
+
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> CreateIndividualAfterNegotiation(Guid consignLineItemId, CreateIndividualAfterNegotiationRequest request)
+        {
+            Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
+                consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
+            var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
+            if (consignSaleDetail == null || !consignSaleDetail.Status.Equals(ConsignSaleLineItemStatus.Negotiating))
+            {
+                throw new ConsignSaleLineItemNotFoundException();
+            }
+            Expression<Func<MasterFashionItem, bool>> predicateMaster =
+                masterItem => masterItem.MasterItemId == request.MasterItemId;
+            var itemMaster = await _fashionItemRepository.GetSingleMasterItem(predicateMaster);
+            if (itemMaster is null)
+            {
+                throw new MasterItemNotAvailableException("Master item is not found");
+            }
+
+            if (!itemMaster.Images.Select(c => c.ConsignLineItemId).Distinct().Contains(consignLineItemId))
+            {
+                throw new MasterItemNotAvailableException("This master item is not allowed to use");
+            }
+
+            itemMaster.StockCount += 1;
+            await _fashionItemRepository.UpdateMasterItem(itemMaster);
+            var individualItem = new IndividualFashionItem()
+            {
+                Note = consignSaleDetail.Note,
+                CreatedDate = DateTime.UtcNow,
+                MasterItemId = request.MasterItemId,
+                ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemMaster.MasterItemCode),
+                Status = FashionItemStatus.PendingForConsignSale,
+                ConsignSaleLineItemId = consignLineItemId,
+                Condition = consignSaleDetail.Condition,
+
+                Color = consignSaleDetail.Color,
+                Size = consignSaleDetail.Size
+            };
+            switch (consignSaleDetail.ConsignSale.Type)
+            {
+                case ConsignSaleType.ForSale:
+                    individualItem.Type = FashionItemType.ItemBase;
+                    individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
+                    break;
+                case ConsignSaleType.ConsignedForAuction:
+                    individualItem = new IndividualAuctionFashionItem()
+                    {
+                        Note = consignSaleDetail.Note,
+                        CreatedDate = DateTime.UtcNow,
+                        MasterItemId = request.MasterItemId,
+                        ItemCode =
+                            await _fashionItemRepository.GenerateIndividualItemCode(itemMaster.MasterItemCode),
+                        Status = FashionItemStatus.PendingForConsignSale,
+                        ConsignSaleLineItemId = consignLineItemId,
+                        Type = FashionItemType.ConsignedForAuction,
+                        InitialPrice = consignSaleDetail.ConfirmedPrice,
+                        SellingPrice = 0,
+                    };
+                    break;
+                case ConsignSaleType.ConsignedForSale:
+                    individualItem.Type = FashionItemType.ConsignedForSale;
+                    individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
+                    break;
+            }
+
+            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
+            await _fashionItemRepository.AddInvidualFashionItem(individualItem);
+            foreach (var imageRequest in consignSaleDetail.Images)
+            {
+                imageRequest.IndividualFashionItemId = individualItem.ItemId;
+                await _imageRepository.UpdateSingleImage(imageRequest);
+            }
+            return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
+            {
+                Data = new ConsignSaleLineItemResponse()
+                {
+                    ConsignSaleLineItemId = consignSaleDetail.ConsignSaleLineItemId,
+                    ConsignSaleLineItemStatus = consignSaleDetail.Status,
+                    DealPrice = consignSaleDetail.DealPrice!.Value,
+                    IsApproved = consignSaleDetail.IsApproved,
+                    ResponseFromShop = consignSaleDetail.ResponseFromShop,
+                    IndividualItemId = individualItem.ItemId,
+                    FashionItemStatus = individualItem.Status
+                },
+                Messages = new[] { "Create individual item successfully" },
+                ResultStatus = ResultStatus.Success
+            };
+        }
+
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
             CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId,
                 CreateIndividualItemRequestForConsign request)
@@ -506,7 +651,7 @@ namespace Services.ConsignSales
 
             Expression<Func<MasterFashionItem, bool>> predicateMaster =
                 masterItem => masterItem.MasterItemId == request.MasterItemId;
-            var itemMaster = await _fashionItemRepository.GetSingleMasterItem(predicateMaster!);
+            var itemMaster = await _fashionItemRepository.GetSingleMasterItem(predicateMaster);
             if (itemMaster is null)
             {
                 throw new MasterItemNotAvailableException("Master item is not found");
@@ -523,7 +668,7 @@ namespace Services.ConsignSales
             {
                 Note = consignSaleDetail.Note,
                 CreatedDate = DateTime.UtcNow,
-                MasterItemId = request.MasterItemId!.Value,
+                MasterItemId = request.MasterItemId,
                 ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(itemMaster.MasterItemCode),
                 Status = FashionItemStatus.PendingForConsignSale,
                 ConsignSaleLineItemId = consignsaledetailId,
@@ -543,7 +688,7 @@ namespace Services.ConsignSales
                     {
                         Note = consignSaleDetail.Note,
                         CreatedDate = DateTime.UtcNow,
-                        MasterItemId = request.MasterItemId!.Value,
+                        MasterItemId = request.MasterItemId,
                         ItemCode =
                             await _fashionItemRepository.GenerateIndividualItemCode(itemMaster.MasterItemCode),
                         Status = FashionItemStatus.PendingForConsignSale,

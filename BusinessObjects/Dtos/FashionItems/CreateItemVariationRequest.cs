@@ -32,8 +32,13 @@ public class NegotiateConsignSaleLineRequest
 
 public class CreateIndividualItemRequestForConsign
 {
-    public Guid? MasterItemId { get; set; }
+    public Guid MasterItemId { get; set; }
     public decimal DealPrice { get; set; }
     
     
+}
+
+public class CreateIndividualAfterNegotiationRequest
+{
+    public Guid MasterItemId { get; set; }
 }
