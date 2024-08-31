@@ -339,7 +339,7 @@ namespace Services.ConsignSales
             }
             catch (Exception e)
             {
-                _logger.LogError(e,"Error fetching consign sale details");
+                _logger.LogError(e, "Error fetching consign sale details");
                 return new Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.ServerError);
             }
         }
@@ -420,7 +420,7 @@ namespace Services.ConsignSales
                 {
                     Url = image,
                     CreatedDate = DateTime.UtcNow,
-                    MasterFashionItemId = masterItem.MasterItemId,
+                    // MasterFashionItemId = masterItem.MasterItemId,
                     ConsignLineItemId = consignLineItemId
                 };
                 listImage.Add(dataImage);
@@ -477,7 +477,8 @@ namespace Services.ConsignSales
             };
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> ApproveNegotiation(Guid consignLineItemId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> ApproveNegotiation(
+            Guid consignLineItemId)
         {
             Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
                 consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
@@ -495,18 +496,19 @@ namespace Services.ConsignSales
             {
                 Data = new ConsignSaleLineItemResponse()
                 {
-                    ConsignSaleLineItemId  = consignSaleDetail.ConsignSaleLineItemId,
+                    ConsignSaleLineItemId = consignSaleDetail.ConsignSaleLineItemId,
                     DealPrice = consignSaleDetail.DealPrice!.Value,
                     IsApproved = consignSaleDetail.IsApproved,
                     ResponseFromShop = consignSaleDetail.ResponseFromShop,
                     ConsignSaleLineItemStatus = consignSaleDetail.Status,
                 },
-                Messages = new []{"You have approved deal price of this item from our shop"},
+                Messages = new[] { "You have approved deal price of this item from our shop" },
                 ResultStatus = ResultStatus.Success
             };
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> RejectNegotiation(Guid consignLineItemId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> RejectNegotiation(
+            Guid consignLineItemId)
         {
             Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
                 consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
@@ -523,18 +525,20 @@ namespace Services.ConsignSales
             {
                 Data = new ConsignSaleLineItemResponse()
                 {
-                    ConsignSaleLineItemId  = consignSaleDetail.ConsignSaleLineItemId,
+                    ConsignSaleLineItemId = consignSaleDetail.ConsignSaleLineItemId,
                     DealPrice = consignSaleDetail.DealPrice!.Value,
                     IsApproved = consignSaleDetail.IsApproved,
                     ResponseFromShop = consignSaleDetail.ResponseFromShop,
                     ConsignSaleLineItemStatus = consignSaleDetail.Status,
                 },
-                Messages = new []{"You have rejected deal price of this item from our shop. We will send back your item soon"},
+                Messages = new[]
+                    { "You have rejected deal price of this item from our shop. We will send back your item soon" },
                 ResultStatus = ResultStatus.Success
             };
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> CreateIndividualAfterNegotiation(Guid consignLineItemId, CreateIndividualAfterNegotiationRequest request)
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
+            CreateIndividualAfterNegotiation(Guid consignLineItemId, CreateIndividualAfterNegotiationRequest request)
         {
             Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
                 consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
@@ -543,6 +547,7 @@ namespace Services.ConsignSales
             {
                 throw new ConsignSaleLineItemNotFoundException();
             }
+
             Expression<Func<MasterFashionItem, bool>> predicateMaster =
                 masterItem => masterItem.MasterItemId == request.MasterItemId;
             var itemMaster = await _fashionItemRepository.GetSingleMasterItem(predicateMaster);
@@ -551,10 +556,7 @@ namespace Services.ConsignSales
                 throw new MasterItemNotAvailableException("Master item is not found");
             }
 
-            if (!itemMaster.Images.Select(c => c.ConsignLineItemId).Distinct().Contains(consignLineItemId))
-            {
-                throw new MasterItemNotAvailableException("This master item is not allowed to use");
-            }
+            
 
             itemMaster.StockCount += 1;
             await _fashionItemRepository.UpdateMasterItem(itemMaster);
@@ -599,12 +601,16 @@ namespace Services.ConsignSales
             }
 
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
+            individualItem.Images = consignSaleDetail.Images
+                .Select(x => new Image()
+                {
+                    Url = x.Url,
+                    CreatedDate = DateTime.UtcNow,
+                    IndividualFashionItemId = individualItem.ItemId
+                }).ToList();
             await _fashionItemRepository.AddInvidualFashionItem(individualItem);
-            foreach (var imageRequest in consignSaleDetail.Images)
-            {
-                imageRequest.IndividualFashionItemId = individualItem.ItemId;
-                await _imageRepository.UpdateSingleImage(imageRequest);
-            }
+            
+
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
             {
                 Data = new ConsignSaleLineItemResponse()
@@ -622,7 +628,8 @@ namespace Services.ConsignSales
             };
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> PostConsignSaleForSelling(Guid consignSaleId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> PostConsignSaleForSelling(
+            Guid consignSaleId)
         {
             Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
             var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
@@ -645,9 +652,9 @@ namespace Services.ConsignSales
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>()
             {
                 Data = _mapper.Map<ConsignSaleDetailedResponse>(consignSale),
-                Messages = new []{"Post items successfully"},
+                Messages = new[] { "Post items successfully" },
                 ResultStatus = ResultStatus.Success
-            };  
+            };
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
@@ -685,10 +692,7 @@ namespace Services.ConsignSales
                 throw new MasterItemNotAvailableException("Master item is not found");
             }
 
-            if (!itemMaster.Images.Select(c => c.ConsignLineItemId).Distinct().Contains(consignsaledetailId))
-            {
-                throw new MasterItemNotAvailableException("This master item is not allowed to use");
-            }
+            
 
             itemMaster.StockCount += 1;
             await _fashionItemRepository.UpdateMasterItem(itemMaster);
@@ -733,12 +737,15 @@ namespace Services.ConsignSales
             }
 
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
+            individualItem.Images = consignSaleDetail.Images
+                .Select(x => new Image()
+                {
+                    Url = x.Url,
+                    CreatedDate = DateTime.UtcNow,
+                    IndividualFashionItemId = individualItem.ItemId
+                }).ToList();
             await _fashionItemRepository.AddInvidualFashionItem(individualItem);
-            foreach (var imageRequest in consignSaleDetail.Images)
-            {
-                imageRequest.IndividualFashionItemId = individualItem.ItemId;
-                await _imageRepository.UpdateSingleImage(imageRequest);
-            }
+
 
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
             {
