@@ -52,9 +52,9 @@ public class ConsignEndingJob : IJob
                     detail.IndividualFashionItem.Status = FashionItemStatus.UnSold;
                 }
             }
-
-            consignToEnd.Member.Balance += consignToEnd.ConsignorReceivedAmount;
-            dbContext.ConsignSales.Update(consignToEnd);
+            
+            /*consignToEnd.Member.Balance += consignToEnd.ConsignorReceivedAmount;
+            
             var transaction = new Transaction()
             {
                 ConsignSaleId = consignToEnd.ConsignSaleId,
@@ -63,7 +63,8 @@ public class ConsignEndingJob : IJob
                 Amount = consignToEnd.ConsignorReceivedAmount,
                 Type = TransactionType.Payout,
             };
-            dbContext.Transactions.Add(transaction);
+            dbContext.Transactions.Add(transaction);*/
+            dbContext.ConsignSales.Update(consignToEnd);
         }
         catch (Exception e)
         {

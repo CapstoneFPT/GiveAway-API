@@ -110,7 +110,7 @@ namespace Services.ConsignSales
             return response;
         }
 
-        private async Task ScheduleConsignEnding(ConsignSaleDetailedResponse consign)
+        private async Task ScheduleConsignEnding(ConsignSale consign)
         {
             var schedule = await _schedulerFactory.GetScheduler();
             var jobDataMap = new JobDataMap()
@@ -123,7 +123,7 @@ namespace Services.ConsignSales
                 .Build();
             var endTrigger = TriggerBuilder.Create()
                 .WithIdentity($"EndConsignTrigger_{consign.ConsignSaleId}")
-                .StartAt(new DateTimeOffset(consign.EndDate.Value))
+                .StartAt(new DateTimeOffset(consign.EndDate!.Value))
                 .Build();
             await schedule.ScheduleJob(endJob, endTrigger);
         }
@@ -184,7 +184,7 @@ namespace Services.ConsignSales
                 return response;
             }
 
-            await ScheduleConsignEnding(consign);
+            // await ScheduleConsignEnding(consign);
             response.Data = consign;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
@@ -619,6 +619,34 @@ namespace Services.ConsignSales
                 Messages = new[] { "Create individual item successfully" },
                 ResultStatus = ResultStatus.Success
             };
+        }
+
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> PostConsignSaleForSelling(Guid consignSaleId)
+        {
+            Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+            if (consignSale is null || !consignSale.Status.Equals(ConsignSaleStatus.Processing))
+            {
+                throw new ConsignSaleNotFoundException();
+            }
+
+            foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
+            {
+                consignSaleLineItem.Status = ConsignSaleLineItemStatus.OnSale;
+                consignSaleLineItem.IndividualFashionItem.Status = FashionItemStatus.Available;
+            }
+
+            consignSale.Status = ConsignSaleStatus.OnSale;
+            consignSale.StartDate = DateTime.UtcNow;
+            consignSale.EndDate = DateTime.UtcNow.AddDays(60);
+            await _consignSaleRepository.UpdateConsignSale(consignSale);
+            await ScheduleConsignEnding(consignSale);
+            return new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>()
+            {
+                Data = _mapper.Map<ConsignSaleDetailedResponse>(consignSale),
+                Messages = new []{"Post items successfully"},
+                ResultStatus = ResultStatus.Success
+            };  
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>

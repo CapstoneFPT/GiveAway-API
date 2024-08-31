@@ -60,7 +60,9 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{consignSaleId}/approval")]
-        public async Task<ActionResult<Result<ConsignSaleDetailedResponse>>> ApprovalConsignSale([FromRoute] Guid consignSaleId,
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> ApprovalConsignSale([FromRoute] Guid consignSaleId,
             ApproveConsignSaleRequest request)
         {
             var result = await _consignSaleService.ApprovalConsignSale(consignSaleId, request);
@@ -72,9 +74,20 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+        [HttpPut("{consignSaleId}/post-items-to-sell")]
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> PostConsignSaleForSelling([FromRoute] Guid consignSaleId)
+        {
+            var result = await _consignSaleService.PostConsignSaleForSelling(consignSaleId);
 
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
 
-
+            return Ok(result);
+        }
         [HttpPut("{consignSaleId}/confirm-received")]
         [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
