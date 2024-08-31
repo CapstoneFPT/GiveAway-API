@@ -353,6 +353,7 @@ namespace Services.ConsignSales
                 {
                     ConsignSaleLineItemId = lineItem.ConsignSaleLineItemId,
                     ConsignSaleId = lineItem.ConsignSaleId,
+                    Status = lineItem.Status,
                     ProductName = lineItem.ProductName,
                     Condition = lineItem.Condition,
                     Brand = lineItem.Brand,
