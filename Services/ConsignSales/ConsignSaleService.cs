@@ -556,7 +556,10 @@ namespace Services.ConsignSales
                 throw new MasterItemNotAvailableException("Master item is not found");
             }
 
-            
+            if (itemMaster.IsConsignment == false)
+            {
+                throw new MasterItemNotAvailableException("You can not choose master in stock");
+            }
 
             itemMaster.StockCount += 1;
             await _fashionItemRepository.UpdateMasterItem(itemMaster);
@@ -692,7 +695,10 @@ namespace Services.ConsignSales
                 throw new MasterItemNotAvailableException("Master item is not found");
             }
 
-            
+            if (itemMaster.IsConsignment == false)
+            {
+                throw new MasterItemNotAvailableException("You can not choose master in stock");
+            }
 
             itemMaster.StockCount += 1;
             await _fashionItemRepository.UpdateMasterItem(itemMaster);
