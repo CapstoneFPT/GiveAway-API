@@ -231,7 +231,8 @@ namespace Repositories.FashionItems
         public async Task<IndividualFashionItem> GetFashionItemById(Expression<Func<IndividualFashionItem, bool>> predicate)
         {
             var query = await _giveAwayDbContext.IndividualFashionItems.AsQueryable()
-                .Include(c => c.MasterItem.Shop)
+                .Include(c => c.MasterItem)
+                .ThenInclude(c => c.Shop)
                 .Include(a => a.MasterItem.Category)
                 .Include(b => b.Images)
                 .Where(predicate)

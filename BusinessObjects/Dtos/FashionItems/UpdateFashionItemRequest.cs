@@ -11,14 +11,13 @@ namespace BusinessObjects.Dtos.FashionItems
     public class UpdateFashionItemRequest
     {
         public decimal? SellingPrice { get; set; }
-        public string? Name { get; set; }
+
         public string? Note { get; set; }
         
-        public int? Condition { get; set; }
-        public string? Brand { get; set; }
+        public string? Condition { get; set; }
         public string? Color { get; set; }
-        public GenderType? Gender { get; set; }
+
         public SizeType? Size { get; set; }
-        public Guid? CategoryId { get; set; }
+        public string[] imageUrls { get; set; } = [];
     }
 }

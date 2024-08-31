@@ -305,17 +305,22 @@ namespace Services.FashionItems
         {
             var response = new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>();
             var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == itemId);
-            if (item is null)
+            if (item is null || item.MasterItem.IsConsignment)
             {
-                response.Messages = ["Item is not found"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new FashionItemNotFoundException();
             }
-
-            ;
-            item.SellingPrice = request.SellingPrice.HasValue ? request.SellingPrice.Value : item.SellingPrice;
+            item.Images.Clear();
+            item.Images = request.imageUrls
+                .Select(x => new Image()
+                {
+                    Url = x,
+                    CreatedDate = DateTime.UtcNow,
+                }).ToList();
+            item.SellingPrice = request.SellingPrice ?? item.SellingPrice;
             item.Note = request.Note ?? item.Note;
-            /*item.Value = request.Value.HasValue ? request.Value.Value : item.Value;*/
+            item.Color = request.Color ?? item.Color;
+            item.Condition = request.Condition ?? item.Condition;
+            item.Size = request.Size ?? item.Size;
             await _fashionitemRepository.UpdateFashionItem(item);
             response.Data =
                 _mapper.Map<FashionItemDetailResponse>(item);

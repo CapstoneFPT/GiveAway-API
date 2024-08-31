@@ -54,26 +54,27 @@ namespace Repositories.ConsignSales
 
 
             //tao nhung consign detail do trong consign moi'
-            foreach (var item in request.ConsignDetailRequests)
+            foreach (var itemRequest in request.ConsignDetailRequests)
             {
                 //tao moi consigndetail tuong ung voi mon do
                 ConsignSaleLineItem consignLineItem = new ConsignSaleLineItem()
                 {
                     ConfirmedPrice = 0,
-                    ExpectedPrice = item.ExpectedPrice,
+                    ExpectedPrice = itemRequest.ExpectedPrice,
                     ConsignSaleId = newConsign.ConsignSaleId,
-                    Brand = item.Brand,
-                    Color = item.Color,
-                    Size = item.Size,
-                    ProductName = item.ProductName,
-                    Condition = item.Condition,
-                    Images = item.ImageUrls.Select(x => new Image()
+                    Brand = itemRequest.Brand,
+                    Color = itemRequest.Color,
+                    Size = itemRequest.Size,
+                    Gender = itemRequest.Gender,
+                    ProductName = itemRequest.ProductName,
+                    Condition = itemRequest.Condition,
+                    Images = itemRequest.ImageUrls.Select(x => new Image()
                     {
                         CreatedDate = DateTime.UtcNow,
                         Url = x,
                     }).ToList(),
                     CreatedDate = DateTime.UtcNow,
-                    Note = item.Note,
+                    Note = itemRequest.Note,
                     Status = ConsignSaleLineItemStatus.Pending
                 };
                 await GenericDao<ConsignSaleLineItem>.Instance.AddAsync(consignLineItem);
