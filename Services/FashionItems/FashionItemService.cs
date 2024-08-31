@@ -488,19 +488,16 @@ namespace Services.FashionItems
             
             itemMaster.Gender = masterItemRequest.Gender ?? itemMaster.Gender;
             itemMaster.StockCount = masterItemRequest.StockCount ?? itemMaster.StockCount;
-            if (masterItemRequest.ImageRequests?.Length > 0)
-            {
-                foreach (var imageRequest in masterItemRequest.ImageRequests)
+            
+            itemMaster.Images.Clear();
+            
+            itemMaster.Images = masterItemRequest.ImageRequests
+                .Select(x => new Image()
                 {
-                    var imageToUpdate = await _imageRepository.GetImageById(imageRequest.ImageId);
-                    if (imageToUpdate != null)
-                    {
-                        imageToUpdate.Url = imageRequest.Url;
-                    }
-                }
-                
-                
-            }
+                    Url = x,
+                    CreatedDate = DateTime.UtcNow,
+                }).ToList();
+            
             await _fashionitemRepository.UpdateMasterItem(itemMaster);
             return new BusinessObjects.Dtos.Commons.Result<MasterItemResponse>()
             {

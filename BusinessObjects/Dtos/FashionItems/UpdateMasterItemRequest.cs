@@ -10,7 +10,7 @@ public class UpdateMasterItemRequest
     public Guid? CategoryId { get; set; }
     public GenderType? Gender { get; set; }
     public int? StockCount { get; set; }
-    public UpdateMasterImageRequest[]? ImageRequests { get; set; } = [];
+    public string[] ImageRequests { get; set; } = [];
 }
 
 public class UpdateMasterImageRequest
