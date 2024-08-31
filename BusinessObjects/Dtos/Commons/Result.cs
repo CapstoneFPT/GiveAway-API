@@ -74,13 +74,23 @@ public enum ConsignSaleStatus
 {
     Pending,
     AwaitDelivery,
-    Received,
+    Processing,
     OnSale,
     Completed,
     Rejected,
     Cancelled
 }
 
+public enum ConsignSaleLineItemStatus
+{
+    Pending,
+    AwaitDelivery,
+    Negotiating,
+    Received,
+    Returned,
+    ReadyForConsignSale,
+    OnSale
+}
 public enum OrderStatus
 {
     AwaitingPayment,

@@ -6,7 +6,8 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
     {
         public Guid ConsignSaleLineItemId { get; set; }
         public Guid ConsignSaleId { get; set; }
-        public decimal DealPrice { get; set; }
+        public decimal? DealPrice { get; set; }
+        public decimal ExpectedPrice { get; set; }
         public string Note { get; set; }
         public decimal? ConfirmedPrice { get; set; }
         public string ProductName { get; set; }
@@ -26,6 +27,7 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         public Guid ConsignSaleId { get; set; }
         public string ConsignSaleCode { get; set; } = "N/A";
         public decimal DealPrice { get; set; }
+        public decimal ExpectedPrice { get; set; }
         public string Note { get; set; }
         public decimal? ConfirmedPrice { get; set; }
         public string ProductName { get; set; }
@@ -44,8 +46,10 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
     {
         public Guid ConsignSaleLineItemId { get; set; }
         public Guid ConsignSaleId { get; set; }
+        public decimal ExpectedPrice { get; set; }
         public decimal DealPrice { get; set; }
         public decimal ConfirmedPrice { get; set; }
         public string Note { get; set; }
+        public ConsignSaleLineItemStatus Status { get; set; }
     }
 }

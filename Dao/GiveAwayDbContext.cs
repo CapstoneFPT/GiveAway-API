@@ -438,10 +438,12 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<ConsignSale>().Property(e => e.ConsignSaleMethod)
             .HasConversion(prop => prop.ToString(), s => (ConsignSaleMethod)Enum.Parse(typeof(ConsignSaleMethod), s))
             .HasColumnType("varchar").HasMaxLength(20);
-
+        modelBuilder.Entity<ConsignSale>()
+            .Property(x => x.ResponseFromShop)
+            .HasColumnType("text");
         #endregion
 
-        #region ConsignedSaleDetail
+        #region ConsignedSaleLineItem
 
         modelBuilder.Entity<ConsignSaleLineItem>().ToTable("ConsignSaleLineItem").HasKey(x => x.ConsignSaleLineItemId);
         
@@ -486,8 +488,16 @@ public class GiveAwayDbContext : DbContext
             .Property(x=>x.Condition)
             .HasColumnType("varchar")
             .HasMaxLength(20);
-            
+        
+        modelBuilder.Entity<ConsignSaleLineItem>()
+            .Property(x=>x.Status)
+            .HasConversion(prop => prop.ToString(), s => (ConsignSaleLineItemStatus)Enum.Parse(typeof(ConsignSaleLineItemStatus), s))
+            .HasColumnType("varchar").HasMaxLength(20);
 
+        modelBuilder.Entity<ConsignSaleLineItem>()
+            .Property(x => x.ResponseFromShop)
+            .HasColumnType("text");
+            
         #endregion
 
 

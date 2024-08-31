@@ -31,6 +31,6 @@ namespace BusinessObjects.Dtos.ConsignSales
         public string? Address { get; set; }
         [EmailAddress] public string? Email { get; set; }
         /*public ICollection<ConsignSaleDetailResponse>? ConsignSaleDetails { get; set; } = new List<ConsignSaleDetailResponse>();*/
-        // public List<ConsignSaleDetailResponse2>? ConsignSaleDetails { get; set; }
+        public List<ConsignSaleDetailResponse2>? ConsignSaleDetails { get; set; }
     }
 }

@@ -532,7 +532,7 @@ namespace Services.FashionItems
                 var dataIndividual = new IndividualFashionItem()
                 {
                     Note = individual.Note,
-                    RetailPrice = individual.RetailPrice,
+                    
                     Size = individual.Size,
                     Color = individual.Color,
                     Condition = individual.Condition,

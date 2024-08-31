@@ -18,17 +18,18 @@ namespace Services.ConsignSales
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
         
         Task<Result<List<ConsignSaleLineItemsListResponse>, ErrorCode>> GetConsignSaleLineItems(Guid consignsaleId);
-        Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> CreateMasterItemFromConsignSaleLineItem(Guid consignsaleId, CreateMasterItemForConsignRequest detailRequest);
+        Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> CreateMasterItemFromConsignSaleLineItem(Guid consignLineItemId, CreateMasterItemForConsignRequest detailRequest);
 
         /*Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleLineItem(Guid masteritemId,
             CreateItemVariationRequestForConsign request);*/
 
-        Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId, CreateIndividualItemRequestForConsign request);
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId, CreateIndividualItemRequestForConsign request);
         Task UpdateConsignPrice(Guid orderId);
 
         Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(
             ConsignSaleListRequest request);
 
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemsListResponse>> ConfirmConsignSaleLineItemPrice(Guid consignLineItemId, decimal price);
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> NegotiateConsignSaleLineItem(Guid consignLineItemId, NegotiateConsignSaleLineRequest request);
     }
 }

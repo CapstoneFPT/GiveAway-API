@@ -95,3 +95,4 @@ public class MasterItemNotAvailableException(string message): Exception(message)
 public class CategoryNotFound(string message): Exception(message){}
 public class StockCountUnavailableException(string message): Exception(message){}
 public class ConfirmPriceIsNullException(string message): Exception(message){}
+public class DealPriceIsNotAvailableException(string message): Exception(message){}

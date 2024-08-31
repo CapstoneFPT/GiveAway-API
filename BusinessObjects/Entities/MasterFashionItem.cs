@@ -31,7 +31,7 @@ public class IndividualFashionItem
     public string? Note { get; set; }
     public decimal? SellingPrice { get; set; }
     public FashionItemStatus Status { get; set; }
-    public decimal RetailPrice { get; set; } = 0;
+    
     public string Color { get; set; } = "N/A";
     public SizeType Size { get; set; }
     public string Condition { get; set; }

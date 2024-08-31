@@ -16,7 +16,7 @@ public class CreateItemVariationRequest
 public class CreateIndividualItemRequest
 {
     public string Condition { get; set; }
-    public decimal RetailPrice { get; set; }
+
     public string Color { get; set; }
     public SizeType Size { get; set; }
     public string Note { get; set; }
@@ -24,22 +24,16 @@ public class CreateIndividualItemRequest
     public string[] Images { get; set; }
 }
 
-public class CreateItemVariationRequestForConsign
+public class NegotiateConsignSaleLineRequest
 {
-    public string Condition { get; set; }
-    public decimal Price { get; set; }
-    public string Color { get; set; }
-    public SizeType Size { get; set; }
+    public decimal DealPrice { get; set; }
+    public string? ResponseFromShop { get; set; }
 }
 
 public class CreateIndividualItemRequestForConsign
 {
-    public required Guid MasterItemId { get; set; }
-    public string Condition { get; set; }
-    public decimal RetailPrice { get; set; }
-    public string Color { get; set; }
-    public SizeType Size { get; set; }
-    public string Note { get; set; }
+    public Guid? MasterItemId { get; set; }
+    public decimal DealPrice { get; set; }
     
-    public string[] Images { get; set; }
+    
 }

@@ -6,7 +6,7 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems;
 public class CreateConsignDetailRequest
 {
     public string Note { get; set; }
-    public decimal DealPrice { get; set; }
+    public decimal ExpectedPrice { get; set; }
     public string ProductName { get; set; }
     public GenderType Gender { get; set; }
     public string Condition { get; set; }

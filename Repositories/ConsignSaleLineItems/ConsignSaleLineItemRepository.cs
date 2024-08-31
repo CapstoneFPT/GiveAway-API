@@ -40,6 +40,7 @@ public class ConsignSaleLineItemRepository : IConsignSaleLineItemRepository
     {
         var result = await GenericDao<ConsignSaleLineItem>.Instance
             .GetQueryable()
+            .Include(c => c.Images)
             .Include(c => c.ConsignSale)
             .ThenInclude(c => c.Shop)
             .SingleOrDefaultAsync(predicate);

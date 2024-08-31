@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleLineItems;
+using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using DotNext;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@ public class ConsignLineItemController : ControllerBase
     }
 
     [HttpPost("{consignLineItemId}/create-individual")]
-    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> CreateIndividualItemFromConsignSaleListItem([FromRoute] Guid consignLineItemId, [FromBody] CreateIndividualItemRequestForConsign request)
     {
@@ -34,7 +35,18 @@ public class ConsignLineItemController : ControllerBase
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
     }
+    [HttpPut("{consignLineItemId}/negotiate-item")]
+    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> NegotiateFromConsignSaleLineItem([FromRoute] Guid consignLineItemId, [FromBody] NegotiateConsignSaleLineRequest request)
+    {
+        var result =
+            await _consignSaleService.NegotiateConsignSaleLineItem(consignLineItemId,request);
 
+        return result.ResultStatus != ResultStatus.Success
+            ? StatusCode((int)HttpStatusCode.InternalServerError, result)
+            : Ok(result);
+    }
     [HttpGet("{consignLineItemId}")]
     [ProducesResponseType<ConsignSaleLineItemDetailedResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -57,16 +69,18 @@ public class ConsignLineItemController : ControllerBase
         return Ok(result.Value);
     }
 
-    [HttpPut("{consignLineItemId}/confirm-price")]
-    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemsListResponse>>((int)HttpStatusCode.OK)]
+    [HttpPost("{consignLineItemId}/create-masteritem")]
+    [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-    public async Task<IActionResult> ConfirmConsignSaleLineItemPrice(Guid consignLineItemId ,decimal price)
+    public async Task<IActionResult> CreateMasterItemFromConsignSaleLineItem([FromRoute] Guid consignLineItemId,
+        [FromBody] CreateMasterItemForConsignRequest detailRequest)
     {
-        var result =
-            await _consignSaleService.ConfirmConsignSaleLineItemPrice(consignLineItemId, price);
+        var result = await _consignSaleService.CreateMasterItemFromConsignSaleLineItem(consignLineItemId, detailRequest);
+        if (result.ResultStatus != ResultStatus.Success)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+        }
 
-        return result.ResultStatus != ResultStatus.Success
-            ? StatusCode((int)HttpStatusCode.InternalServerError, result)
-            : Ok(result);
+        return Ok(result);
     }
 }

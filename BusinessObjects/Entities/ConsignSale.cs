@@ -22,7 +22,7 @@ public class ConsignSale
     public decimal SoldPrice { get; set; }
     public decimal ConsignorReceivedAmount { get; set; }
     public Transaction? Transaction { get; set; }
-    
+    public string? ResponseFromShop { get; set; }
     public string? ConsignorName { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }

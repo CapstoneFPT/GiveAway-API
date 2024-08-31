@@ -17,7 +17,7 @@ namespace BusinessObjects.Dtos.FashionItems
         public string Name { get; set; }
         public string? Note { get; set; }
         public string Description { get; set; }
-        public decimal RetailPrice { get; set; }
+        
         public string Condition { get; set; }
         public FashionItemStatus Status { get; set; }
         public string? ShopAddress { get; set; }
