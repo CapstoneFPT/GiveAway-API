@@ -364,7 +364,8 @@ namespace Services.ConsignSales
                     ConfirmedPrice = lineItem.ConfirmedPrice,
                     Note = lineItem.Note,
                     CreatedDate = lineItem.CreatedDate,
-                    ExpectedPrice = lineItem.ExpectedPrice
+                    ExpectedPrice = lineItem.ExpectedPrice,
+                    DealPrice = lineItem.DealPrice
                 };
 
             try
