@@ -363,6 +363,7 @@ namespace Services.ConsignSales
                     Images = lineItem.Images.Select(x => x.Url ?? string.Empty).ToList(),
                     ConfirmedPrice = lineItem.ConfirmedPrice,
                     Note = lineItem.Note,
+                    ShopResponse = lineItem.ResponseFromShop,
                     CreatedDate = lineItem.CreatedDate,
                     ExpectedPrice = lineItem.ExpectedPrice,
                     DealPrice = lineItem.DealPrice

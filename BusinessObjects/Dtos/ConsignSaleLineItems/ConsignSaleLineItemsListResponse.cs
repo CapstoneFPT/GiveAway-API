@@ -20,6 +20,7 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         public DateTime CreatedDate { get; set; }
         
         public List<string> Images { get; set; } = [];
+        public string? ShopResponse { get; set; }
     }
 
     public class ConsignSaleLineItemDetailedResponse
