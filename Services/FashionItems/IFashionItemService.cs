@@ -20,8 +20,8 @@ namespace Services.FashionItems
         Task<Result<List<MasterItemResponse>>> CreateMasterItemByAdmin(CreateMasterItemRequest masterItemRequest);
         Task<Result<MasterItemResponse>> UpdateMasterItem(Guid masteritemId,UpdateMasterItemRequest masterItemRequest);
 
-        Task<Result<List<IndividualItemListResponse>>> CreateIndividualItems(Guid masterItemId,
-            List<CreateIndividualItemRequest> requests);
+        Task<Result<IndividualItemListResponse>> CreateIndividualItems(Guid masterItemId,
+            CreateIndividualItemRequest requests);
 
         Task<PaginationResponse<MasterItemListResponse>> GetAllMasterItemPagination(MasterItemRequest request);
         /*Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(Guid masterItemId,

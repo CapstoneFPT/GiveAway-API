@@ -512,65 +512,58 @@ namespace Services.FashionItems
             };
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>> CreateIndividualItems(
+        public async Task<BusinessObjects.Dtos.Commons.Result<IndividualItemListResponse>> CreateIndividualItems(
             Guid masterItemId,
-            List<CreateIndividualItemRequest> requests)
+            CreateIndividualItemRequest request)
         {
-            var individualItems = new List<IndividualFashionItem>();
+            var individualItems = new IndividualFashionItem();
             Expression<Func<MasterFashionItem, bool>> predicate = masterItem =>
                 masterItem.MasterItemId == masterItemId;
             var masterItem = await _fashionitemRepository.GetSingleMasterItem(predicate);
-            if (masterItem is null || masterItem.IsConsignment == true)
+            if (masterItem is null || masterItem.IsConsignment)
             {
                 throw new MasterItemNotAvailableException("Master item is not found or unable to add items");
             }
-            if ((masterItem!.IndividualFashionItems.Count + requests.Count) > masterItem.StockCount)
+            if (masterItem!.IndividualFashionItems.Count >= masterItem.StockCount)
             {
                 throw new OverStockException("You have added item more than permitted quantity in stock");
             }
 
-            foreach (var individual in requests)
+            var dataIndividual = new IndividualFashionItem()
             {
-                var dataIndividual = new IndividualFashionItem()
-                {
-                    Note = individual.Note,
+                Note = request.Note,
                     
-                    Size = individual.Size,
-                    Color = individual.Color,
-                    Condition = individual.Condition,
-                    MasterItemId = masterItemId,
-                    CreatedDate = DateTime.UtcNow,
-                    Status = FashionItemStatus.Unavailable,
-                    Type = FashionItemType.ItemBase,
-                    SellingPrice = individual.SellingPrice,
-                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemCode),
-                };
-                // dataIndividual.Status = masterItem.IsConsignment == false ? FashionItemStatus.Unavailable : FashionItemStatus.PendingForConsignSale;
-                dataIndividual = await _fashionitemRepository.AddInvidualFashionItem(dataIndividual);
+                Size = request.Size,
+                Color = request.Color,
+                Condition = request.Condition,
+                MasterItemId = masterItemId,
+                CreatedDate = DateTime.UtcNow,
+                Status = FashionItemStatus.Unavailable,
+                Type = FashionItemType.ItemBase,
+                SellingPrice = request.SellingPrice,
+                ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemCode),
+            };
+            // dataIndividual.Status = masterItem.IsConsignment == false ? FashionItemStatus.Unavailable : FashionItemStatus.PendingForConsignSale;
+            dataIndividual = await _fashionitemRepository.AddInvidualFashionItem(dataIndividual);
 
-                var individualItemImages = new List<Image>();
-                foreach (var image in individual.Images)
+            var individualItemImages = new List<Image>();
+            foreach (var image in request.Images)
+            {
+                var dataItemImage = new Image()
                 {
-                    var dataItemImage = new Image()
-                    {
-                        Url = image,
-                        CreatedDate = DateTime.UtcNow,
-                        IndividualFashionItemId = dataIndividual.ItemId,
-                    };
-                    individualItemImages.Add(dataItemImage);
-                }
-
-                await _imageRepository.AddRangeImage(individualItemImages);
-                dataIndividual.Images = individualItemImages;
-
-                individualItems.Add(dataIndividual);
+                    Url = image,
+                    CreatedDate = DateTime.UtcNow,
+                    IndividualFashionItemId = dataIndividual.ItemId,
+                };
+                individualItemImages.Add(dataItemImage);
             }
 
-            
+            await _imageRepository.AddRangeImage(individualItemImages);
+            dataIndividual.Images = individualItemImages;
 
-            return new BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>()
+            return new BusinessObjects.Dtos.Commons.Result<IndividualItemListResponse>()
             {
-                Data = _mapper.Map<List<IndividualItemListResponse>>(individualItems),
+                Data = _mapper.Map<IndividualItemListResponse>(dataIndividual),
                 ResultStatus = ResultStatus.Success,
                 Messages = new[] { "Add items successfully" }
             };
