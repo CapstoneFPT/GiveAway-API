@@ -11,6 +11,10 @@ public class WithdrawNotFoundException : Exception
 {
 }
 
+public class ItemNotReadyForConsignException : Exception
+{
+}
+
 public class ScheduledTimeOverlappedException : Exception
 {
 }
@@ -82,17 +86,47 @@ public class RefundNoFoundException : Exception
 public class StatusNotAvailableException : Exception
 {
 }
-public class StatusNotAvailableWithMessageException(string message) : Exception(message){}
+
+public class StatusNotAvailableWithMessageException(string message) : Exception(message)
+{
+}
 
 public class ConsignSaleLineItemNotFoundException : Exception
 {
 }
-public class AddressNotFoundException : Exception{}
-public class OrderDetailNotFoundException : Exception{}
-public class MissingFeatureException(string message) : Exception(message){}
-public class OverStockException(string message) : Exception(message){}
-public class MasterItemNotAvailableException(string message): Exception(message){}
-public class CategoryNotFound(string message): Exception(message){}
-public class StockCountUnavailableException(string message): Exception(message){}
-public class ConfirmPriceIsNullException(string message): Exception(message){}
-public class DealPriceIsNotAvailableException(string message): Exception(message){}
+
+public class AddressNotFoundException : Exception
+{
+}
+
+public class OrderDetailNotFoundException : Exception
+{
+}
+
+public class MissingFeatureException(string message) : Exception(message)
+{
+}
+
+public class OverStockException(string message) : Exception(message)
+{
+}
+
+public class MasterItemNotAvailableException(string message) : Exception(message)
+{
+}
+
+public class CategoryNotFound(string message) : Exception(message)
+{
+}
+
+public class StockCountUnavailableException(string message) : Exception(message)
+{
+}
+
+public class ConfirmPriceIsNullException(string message) : Exception(message)
+{
+}
+
+public class DealPriceIsNotAvailableException(string message) : Exception(message)
+{
+}

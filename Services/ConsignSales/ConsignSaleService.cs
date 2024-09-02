@@ -546,9 +546,14 @@ namespace Services.ConsignSales
             Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
                 consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
             var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
-            if (consignSaleDetail == null || !consignSaleDetail.Status.Equals(ConsignSaleLineItemStatus.Negotiating))
+            if (consignSaleDetail == null )
             {
                 throw new ConsignSaleLineItemNotFoundException();
+            }
+
+            if (consignSaleDetail.Status != ConsignSaleLineItemStatus.ReadyForConsignSale)
+            {
+                throw new ItemNotReadyForConsignException();
             }
 
             Expression<Func<MasterFashionItem, bool>> predicateMaster =
@@ -801,4 +806,6 @@ namespace Services.ConsignSales
             }
         }
     }
+
+
 }
