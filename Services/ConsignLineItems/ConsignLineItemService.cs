@@ -48,6 +48,8 @@ public class ConsignLineItemService : IConsignLineItemService
                     Size = item.Size,
                     Gender = item.Gender,
                     Note = item.Note,
+                    IsApproved = item.IsApproved,
+                    ShopResponse = item.ResponseFromShop,
                     FashionItemStatus = item.IndividualFashionItem.Status
                 };
 

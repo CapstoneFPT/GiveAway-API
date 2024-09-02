@@ -41,7 +41,9 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         public string Condition { get; set; } = "N/A";
         public DateTime CreatedDate { get; set; }
         public FashionItemStatus? FashionItemStatus { get; set; }
-        public List<string> Images { get; set; } = [];        
+        public List<string> Images { get; set; } = [];
+        public string? ShopResponse { get; set; }
+        public bool? IsApproved { get; set; }
     }
 
     public class ConsignSaleDetailResponse2
