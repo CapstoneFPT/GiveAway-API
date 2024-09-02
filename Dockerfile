@@ -8,7 +8,7 @@ EXPOSE 8080
 
 VOLUME ["/etc/letsencrypt"]
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0.400 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["WebApi/WebApi.csproj", "WebApi/"]
