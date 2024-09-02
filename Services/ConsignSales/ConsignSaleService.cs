@@ -366,7 +366,8 @@ namespace Services.ConsignSales
                     ShopResponse = lineItem.ResponseFromShop,
                     CreatedDate = lineItem.CreatedDate,
                     ExpectedPrice = lineItem.ExpectedPrice,
-                    DealPrice = lineItem.DealPrice
+                    DealPrice = lineItem.DealPrice,
+                    IsApproved = lineItem.IsApproved
                 };
 
             try

@@ -21,6 +21,7 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         
         public List<string> Images { get; set; } = [];
         public string? ShopResponse { get; set; }
+        public bool? IsApproved { get; set; }
     }
 
     public class ConsignSaleLineItemDetailedResponse
