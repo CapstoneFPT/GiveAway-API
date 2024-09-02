@@ -59,6 +59,7 @@ public class OrderDetailedResponse
     public AddressType AddressType { get; set; }
     public string Email { get; set; } = "N/A";
     public OrderStatus Status { get; set; } 
+    public DateTime CreatedDate { get; set; }
 }
 
 public class DeliveryDetailResponse

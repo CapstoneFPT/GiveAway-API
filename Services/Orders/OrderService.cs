@@ -974,7 +974,8 @@ public class OrderService : IOrderService
             Subtotal = order.OrderLineItems.Sum(x => x.UnitPrice * x.Quantity),
             BidAmount = order.Bid != null ? order.Bid.Amount : 0m,
             ReciepientName = order.RecipientName ?? "N/A",
-            BidCreatedDate = order.Bid != null ? order.Bid.CreatedDate : DateTime.MinValue
+            BidCreatedDate = order.Bid != null ? order.Bid.CreatedDate : DateTime.MinValue,
+            CreatedDate = order.CreatedDate
         };
         try
         {
