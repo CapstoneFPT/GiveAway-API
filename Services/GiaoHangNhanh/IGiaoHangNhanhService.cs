@@ -40,7 +40,7 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
     private readonly string _apiToken;
 
     public GiaoHangNhanhService(HttpClient httpClient, ILogger<GiaoHangNhanhService> logger,
-        IConfiguration configuration,IShopRepository shopRepository)
+        IConfiguration configuration, IShopRepository shopRepository)
     {
         _httpClient = httpClient;
         _logger = logger;
@@ -264,7 +264,7 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
                     new KeyValuePair<string, string?>("phone", request.Phone),
                     new KeyValuePair<string, string?>("name", await _shopRepository.GenerateShopCode()),
                 })));
-
+            _logger.LogInformation("Response message: {ResponseMessage}", response.Content.ReadAsStringAsync().Result);
 
             switch (response.StatusCode)
             {
@@ -353,7 +353,7 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
                     }
 
                     return new Result<GHNApiResponse<GHNShippingFee>, ErrorCode>(ErrorCode.ExternalServiceError);
-                    
+
                 default:
                     _logger.LogWarning("Unexpected status code {StatusCode} from GiaoHangNhanh API",
                         response.StatusCode);
