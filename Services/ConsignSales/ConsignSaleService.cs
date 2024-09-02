@@ -668,6 +668,50 @@ namespace Services.ConsignSales
             };
         }
 
+        public async Task<Result<ConsignSaleDetailedResponse, ErrorCode>> NotifyDelivery(Guid consignsaleId)
+        {
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(x => x.ConsignSaleId == consignsaleId);
+
+            if (consignSale == null)
+            {
+                return new Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            consignSale.Status = ConsignSaleStatus.AwaitDelivery;
+
+            try
+            {
+                await _consignSaleRepository.UpdateConsignSale(consignSale);
+
+                var response = new ConsignSaleDetailedResponse()
+                {
+                    ConsignSaleId = consignSale.ConsignSaleId,
+                    Status = consignSale.Status,
+                    SoldPrice = consignSale.SoldPrice,
+                    CreatedDate = consignSale.CreatedDate,
+                    ConsignSaleCode = consignSale.ConsignSaleCode,
+                    Phone = consignSale.Phone,
+                    Email = consignSale.Email,
+                    Address = consignSale.Address,
+                    Type = consignSale.Type,
+                    StartDate = consignSale.StartDate,
+                    TotalPrice = consignSale.TotalPrice,
+                    EndDate = consignSale.EndDate,
+                    ShopId = consignSale.ShopId,
+                    ConsignSaleMethod = consignSale.ConsignSaleMethod,
+                    MemberReceivedAmount = consignSale.ConsignorReceivedAmount,
+                    MemberId = consignSale.MemberId,
+                    Consginer = consignSale.ConsignorName,
+                };
+
+                return new Result<ConsignSaleDetailedResponse, ErrorCode>(response);
+            }
+            catch (Exception e)
+            {
+                return new Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
             CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId,
                 CreateIndividualItemRequestForConsign request)

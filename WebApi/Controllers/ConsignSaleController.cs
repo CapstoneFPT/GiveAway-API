@@ -104,6 +104,25 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [HttpPut("{consignsaleId}/notify-delivery")]
+        public async Task<IActionResult> NotifyDelivery([FromRoute] Guid consignsaleId)
+        {
+            DotNext.Result<ConsignSaleDetailedResponse, ErrorCode> result =
+                await _consignSaleService.NotifyDelivery(consignsaleId);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error updating consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
+
+            return Ok(result.Value);
+        }
+
         [HttpGet("{consignsaleId}/consignlineitems")]
         [ProducesResponseType<List<ConsignSaleLineItemsListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
