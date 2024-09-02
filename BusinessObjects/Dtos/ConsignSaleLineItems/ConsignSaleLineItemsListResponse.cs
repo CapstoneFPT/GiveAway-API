@@ -44,6 +44,7 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         public List<string> Images { get; set; } = [];
         public string? ShopResponse { get; set; }
         public bool? IsApproved { get; set; }
+        public Guid? IndividualItemId { get; set; }
     }
 
     public class ConsignSaleDetailResponse2

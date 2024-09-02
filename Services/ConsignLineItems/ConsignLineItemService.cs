@@ -14,7 +14,8 @@ public class ConsignLineItemService : IConsignLineItemService
     private readonly IConsignSaleLineItemRepository _consignSaleLineItemRepository;
     private readonly ILogger<ConsignLineItemService> _logger;
 
-    public ConsignLineItemService(IConsignSaleLineItemRepository consignSaleLineItemRepository, ILogger<ConsignLineItemService> logger)
+    public ConsignLineItemService(IConsignSaleLineItemRepository consignSaleLineItemRepository,
+        ILogger<ConsignLineItemService> logger)
     {
         _logger = logger;
         _consignSaleLineItemRepository = consignSaleLineItemRepository;
@@ -50,7 +51,8 @@ public class ConsignLineItemService : IConsignLineItemService
                     Note = item.Note,
                     IsApproved = item.IsApproved,
                     ShopResponse = item.ResponseFromShop,
-                    FashionItemStatus = item.IndividualFashionItem.Status
+                    FashionItemStatus = item.IndividualFashionItem.Status,
+                    IndividualItemId = item.IndividualFashionItem.ItemId
                 };
 
             var result = await query
@@ -69,7 +71,7 @@ public class ConsignLineItemService : IConsignLineItemService
         }
         catch (Exception e)
         {
-            _logger.LogError(e,"Error fetching consign sale line item details");
+            _logger.LogError(e, "Error fetching consign sale line item details");
             return new Result<ConsignSaleLineItemDetailedResponse, ErrorCode>(ErrorCode.ServerError);
         }
     }
