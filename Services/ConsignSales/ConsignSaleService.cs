@@ -847,6 +847,9 @@ namespace Services.ConsignSales
                 throw new ConsignSaleLineItemNotAvailableException("You must update all consign sale line item");
             }
             consignSale.Status = ConsignSaleStatus.ReadyToSale;
+            consignSale.TotalPrice = consignSale.ConsignSaleLineItems
+                .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale)
+                .Sum(c => c.ConfirmedPrice!.Value);
             await _consignSaleRepository.UpdateConsignSale(consignSale);
             // await _emailService.SnedMailNegotiating(consignSale);
             var response = new ConsignSaleDetailedResponse()
@@ -897,11 +900,13 @@ namespace Services.ConsignSales
                 Status = c.Status,
                 Note = c.Note
             }).ToList();
-            if (listConsignSaleLineResponse.Any(c => c.Status != ConsignSaleLineItemStatus.ReadyForConsignSale))
+            if (listConsignSaleLineResponse.Any(c => c.Status != ConsignSaleLineItemStatus.ReadyForConsignSale && c.Status != ConsignSaleLineItemStatus.Returned))
             {
                 throw new ConsignSaleLineItemNotAvailableException(
                     "You need to confirm ready for all consign sale line item");
             }
+
+            consignSale.TotalPrice = consignSale.ConsignSaleLineItems.Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale).Sum(c => c.ConfirmedPrice!.Value);
             try
             {
                 await _consignSaleRepository.UpdateConsignSale(consignSale);
