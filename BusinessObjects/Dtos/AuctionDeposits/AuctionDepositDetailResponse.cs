@@ -49,6 +49,8 @@ public class OrderDetailedResponse
     public PurchaseType PurchaseType { get; set; }
     public DateTime CompletedDate { get; set; }
     public Guid MemberId { get; set; }
+    public string? AuctionTitle { get; set; }
+    public int Quantity { get; set; }
     public string ReciepientName { get; set; } = "N/A";
     public string CustomerName { get; set; }  = "N/A";
     public Guid BidId { get; set; }
