@@ -234,6 +234,8 @@ namespace Services.FashionItems
                     CategoryId = masterItem.CategoryId,
                     IsConsignment = masterItem.IsConsignment,
                     Description = masterItem.Description,
+                    CreatedDate = masterItem.CreatedDate,
+                    StockCount = masterItem.StockCount,
                     MasterItemCode = masterItem.MasterItemCode,
                     Name = masterItem.Name,
                     CategoryName = masterItem.Category.Name,
@@ -587,6 +589,7 @@ namespace Services.FashionItems
                     IsConsignment = item.IsConsignment,
                     ItemInStock = item.IndividualFashionItems.Count,
                     ShopId = item.ShopId,
+                    ShopAddress = item.Shop.Address,
                     StockCount = item.StockCount,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
@@ -608,6 +611,17 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => categoryIds.Contains(item.CategoryId));
             }
 
+            if (request.IsConsignment != null)
+            {
+                if (request.IsConsignment == true)
+                {
+                    predicate = predicate.And(item => item.IsConsignment == true);
+                }
+                else
+                {
+                    predicate = predicate.And(item => item.IsConsignment == false);
+                }
+            }
             if (request.ShopId.HasValue)
             {
                 predicate = predicate.And(item => item.ShopId == request.ShopId);

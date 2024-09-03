@@ -94,7 +94,9 @@ public class StatusNotAvailableWithMessageException(string message) : Exception(
 public class ConsignSaleLineItemNotFoundException : Exception
 {
 }
-
+public class ConsignSaleLineItemNotAvailableException(string message) : Exception(message)
+{
+}
 public class AddressNotFoundException : Exception
 {
 }

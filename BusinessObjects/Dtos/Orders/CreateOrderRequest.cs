@@ -21,4 +21,9 @@ namespace BusinessObjects.Dtos.Orders
         [EmailAddress] public string? Email { get; set; }
         public List<Guid> ItemIds { get; set; } = [];
     }
+
+    public class ConfirmPendingOrderRequest
+    {
+        public FashionItemStatus ItemStatus { get; set; }
+    }
 }

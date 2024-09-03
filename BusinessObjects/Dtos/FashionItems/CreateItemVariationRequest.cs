@@ -30,9 +30,9 @@ public class NegotiateConsignSaleLineRequest
     public string? ResponseFromShop { get; set; }
 }
 
-public class CreateIndividualItemRequestForConsign
+public class ConfirmConsignSaleLineReadyToSaleRequest
 {
-    public Guid MasterItemId { get; set; }
+
     public decimal DealPrice { get; set; }
     
     

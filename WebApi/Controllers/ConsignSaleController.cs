@@ -88,6 +88,34 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+        [HttpPut("{consignSaleId}/negotiating")]
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> NegotiatingConsignSale([FromRoute] Guid consignSaleId)
+        {
+            var result = await _consignSaleService.NegotiatingConsignSale(consignSaleId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+
+            return Ok(result);
+        }
+        [HttpPut("{consignSaleId}/ready-to-sale")]
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> ReadyToSaleConsignSale([FromRoute] Guid consignSaleId)
+        {
+            var result = await _consignSaleService.ReadyToSaleConsignSale(consignSaleId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+
+            return Ok(result);
+        }
         [HttpPut("{consignSaleId}/confirm-received")]
         [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -122,7 +150,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-
+        
         [HttpGet("{consignsaleId}/consignlineitems")]
         [ProducesResponseType<List<ConsignSaleLineItemsListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -130,6 +158,52 @@ namespace WebApi.Controllers
             [FromRoute] Guid consignsaleId)
         {
             var result = await _consignSaleService.GetConsignSaleLineItems(consignsaleId);
+
+            if (!result.IsSuccessful)
+
+            {
+                return result.Error switch
+                {
+                    ErrorCode.ServerError => StatusCode(500,
+                        new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.UnknownError))
+                };
+            }
+
+            return Ok(result.Value);
+        }
+        [HttpPut("{consignsaleId}/continue-consignsale")]
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> ContinueConsignSale([FromRoute] Guid consignsaleId)
+        {
+            var result = await _consignSaleService.ContinueConsignSale(consignsaleId);
+
+            if (!result.IsSuccessful)
+
+            {
+                return result.Error switch
+                {
+                    ErrorCode.ServerError => StatusCode(500,
+                        new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.UnknownError))
+                };
+            }
+
+            return Ok(result.Value);
+        }
+        [HttpPut("{consignsaleId}/cancel-all-consignsaleline")]
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CancelAllConsignSaleLineItems([FromRoute] Guid consignsaleId)
+        {
+            var result = await _consignSaleService.CancelAllConsignSaleLineItems(consignsaleId);
 
             if (!result.IsSuccessful)
 

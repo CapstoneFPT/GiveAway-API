@@ -608,15 +608,23 @@ public class OrderService : IOrderService
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
 
         var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
+        if (order is null)
+        {
+            throw new OrderNotFoundException();
+        }
         var orderDetailFromShop = order!.OrderLineItems
             .Where(c => c.IndividualFashionItem.MasterItem.ShopId == shopId).ToList();
+        if (orderDetailFromShop.Count == 0)
+        {
+            throw new OrderDetailNotFoundException();
+        }
         foreach (var orderDetail in orderDetailFromShop)
         {
             var fashionItem = orderDetail.IndividualFashionItem;
             if (fashionItem is { Status: FashionItemStatus.OnDelivery })
             {
                 fashionItem.Status = FashionItemStatus.Refundable;
-                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(2);
+                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(15);
                 if (order.PaymentMethod.Equals(PaymentMethod.COD))
                     orderDetail.PaymentDate = DateTime.UtcNow;
                 await ScheduleRefundableItemEnding(fashionItem.ItemId, orderDetail.RefundExpirationDate.Value);
@@ -818,7 +826,7 @@ public class OrderService : IOrderService
     }
 
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId,
-        FashionItemStatus itemStatus)
+        ConfirmPendingOrderRequest itemStatus)
     {
         var order = await _orderRepository.GetSingleOrder(c =>
             c.OrderLineItems.Any(c => c.OrderLineItemId == orderdetailId));
@@ -829,12 +837,12 @@ public class OrderService : IOrderService
 
         if (!order.Status.Equals(OrderStatus.Pending))
         {
-            throw new StatusNotAvailableException();
+            throw new StatusNotAvailableWithMessageException("This order is not Pending");
         }
 
-        if (!itemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.Equals(FashionItemStatus.Unavailable))
+        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.ItemStatus.Equals(FashionItemStatus.Unavailable))
         {
-            throw new StatusNotAvailableException();
+            throw new StatusNotAvailableWithMessageException("You can only set OnDelivery or Unavailable");
         }
 
         var orderDetail = order.OrderLineItems.FirstOrDefault(c => c.OrderLineItemId == orderdetailId);
@@ -847,10 +855,10 @@ public class OrderService : IOrderService
 
         if (!orderDetail.IndividualFashionItem!.Status.Equals(FashionItemStatus.PendingForOrder))
         {
-            throw new StatusNotAvailableException();
+            throw new StatusNotAvailableWithMessageException("This item status is not PendingForOrder");
         }
 
-        orderDetail.IndividualFashionItem.Status = itemStatus;
+        orderDetail.IndividualFashionItem.Status = itemStatus.ItemStatus;
         if (order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
             foreach (var detail in order.OrderLineItems)
@@ -863,7 +871,7 @@ public class OrderService : IOrderService
             order.Status = OrderStatus.Cancelled;
         }
 
-        if (order.OrderLineItems.All(c => c.IndividualFashionItem!.Status == FashionItemStatus.OnDelivery))
+        if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
             await _emailService.SendEmailOrder(order);
@@ -922,7 +930,7 @@ public class OrderService : IOrderService
             .Build();
         var endTrigger = TriggerBuilder.Create()
             .WithIdentity($"EndReservedItemTrigger_{itemId}")
-            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(5)))
+            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(15)))
             .Build();
         await schedule.ScheduleJob(endJob, endTrigger);
     }

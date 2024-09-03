@@ -169,6 +169,10 @@ namespace Repositories.ConsignSales
                 }
                 consign!.Status = ConsignSaleStatus.Rejected;
                 consign.ResponseFromShop = request.ResponseFromShop;
+                foreach (var consignSaleLineItem in consign.ConsignSaleLineItems)
+                {
+                    consignSaleLineItem.Status = ConsignSaleLineItemStatus.Rejected;
+                }
             }
             else
             {

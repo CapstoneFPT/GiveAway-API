@@ -14,6 +14,7 @@ public class MasterItemListResponse
     public Guid CategoryId { get; set; }
     public bool IsConsignment { get; set; }
     public Guid ShopId { get; set; }
+    public string ShopAddress { get; set; }
     public int StockCount { get; set; }
     public int? ItemInStock { get; set; }
     public List<string> Images { get; set; } = [];

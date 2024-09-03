@@ -36,7 +36,7 @@ namespace Repositories.FashionItems
 
             if (predicate != null)
             {
-                query = query.Where(predicate);
+                query = query.Where(predicate).OrderByDescending(c => c.CreatedDate);
             }
 
             var count = await query.CountAsync();
