@@ -156,7 +156,8 @@ public class OrderService : IOrderService
         };
     }
 
-    public async Task<DotNext.Result<PaginationResponse<OrderLineItemListResponse>,ErrorCode>> GetOrderLineItemByOrderId(Guid orderId,OrderLineItemRequest request)
+    public async Task<DotNext.Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>>
+        GetOrderLineItemByOrderId(Guid orderId, OrderLineItemRequest request)
     {
         try
         {
@@ -483,32 +484,9 @@ public class OrderService : IOrderService
         return response;
     }
 
-
-    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrders(
-        OrderRequest orderRequest)
+    private Expression<Func<Order, bool>> GetOrderListPredicate(OrderRequest orderRequest)
     {
         Expression<Func<Order, bool>> predicate = order => true;
-        Expression<Func<Order, OrderListResponse>> selector = order => new OrderListResponse()
-        {
-            OrderId = order.OrderId,
-            OrderCode = order.OrderCode,
-            TotalPrice = order.TotalPrice,
-            Status = order.Status,
-            CreatedDate = order.CreatedDate,
-            PaymentDate = order.OrderLineItems.Select(x => x.PaymentDate).Max(),
-            MemberId = order.MemberId,
-            CompletedDate = order.CompletedDate,
-            ContactNumber = order.Phone,
-            RecipientName = order.RecipientName,
-            PurchaseType = order.PurchaseType,
-            Address = order.Address,
-            PaymentMethod = order.PaymentMethod,
-            CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
-            Email = order.Email,
-            Quantity = order.OrderLineItems.Count,
-            AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
-        };
-
         if (orderRequest.Status != null)
         {
             predicate = order => order.Status == orderRequest.Status;
@@ -521,8 +499,9 @@ public class OrderService : IOrderService
 
         if (orderRequest.ShopId.HasValue)
         {
-            // predicate = predicate.And(order =>
-            //     order.OrderDetails.Any(c => c.IndividualFashionItem.ShopId == orderRequest.ShopId.Value));
+            predicate = predicate.And(order =>
+                order.OrderLineItems.Any(c => c.IndividualFashionItem.MasterItem.ShopId == orderRequest.ShopId)
+            );
         }
 
         if (orderRequest.PaymentMethod != null)
@@ -550,9 +529,66 @@ public class OrderService : IOrderService
             predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId == null));
         }
 
+        if (orderRequest.Email != null)
+        {
+            predicate = predicate.And(order =>
+                order.Email != null && EF.Functions.ILike(order.Email, $"%{orderRequest.Email}%"));
+        }
+
+        if (orderRequest.RecipientName != null)
+        {
+            predicate = predicate.And(order =>
+                order.RecipientName != null &&
+                EF.Functions.ILike(order.RecipientName, $"%{orderRequest.RecipientName}%"));
+        }
+
+        if (orderRequest.Phone != null)
+        {
+            predicate = predicate.And(order =>
+                order.Phone != null && EF.Functions.ILike(order.Phone, $"%{orderRequest.Phone}%"));
+        }
+
+        if (orderRequest.CustomerName != null)
+        {
+            predicate = predicate.And(order =>
+                order.Member != null && EF.Functions.ILike(order.Member.Fullname, $"%{orderRequest.CustomerName}%"));
+        }
+
+        return predicate;
+    }
+
+    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrders(
+        OrderRequest orderRequest)
+    {
+        var predicate = GetOrderListPredicate(orderRequest);
+        Expression<Func<Order, OrderListResponse>> selector = order => new OrderListResponse()
+        {
+            OrderId = order.OrderId,
+            OrderCode = order.OrderCode,
+            TotalPrice = order.TotalPrice,
+            Status = order.Status,
+            CreatedDate = order.CreatedDate,
+            PaymentDate = order.OrderLineItems.Select(x => x.PaymentDate).Max(),
+            MemberId = order.MemberId,
+            CompletedDate = order.CompletedDate,
+            ContactNumber = order.Phone,
+            RecipientName = order.RecipientName,
+            PurchaseType = order.PurchaseType,
+            ShippingFee = order.ShippingFee,
+            Discount = order.Discount,
+            Address = order.Address,
+            PaymentMethod = order.PaymentMethod,
+            CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
+            Email = order.Email,
+            Quantity = order.OrderLineItems.Count,
+            AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
+        };
+
+        
+
         (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
             await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
-                orderRequest.PageSize, predicate, selector);
+                orderRequest.PageSize,predicate , selector);
 
         var response = new PaginationResponse<OrderListResponse>()
         {
@@ -979,7 +1015,6 @@ public class OrderService : IOrderService
         };
         try
         {
-
             var result = await query.Include(x => x.OrderLineItems)
                 .Include(x => x.Member)
                 .Include(x => x.Bid)
