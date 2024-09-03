@@ -23,7 +23,7 @@ namespace Services.ConsignSales
         /*Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleLineItem(Guid masteritemId,
             CreateItemVariationRequestForConsign request);*/
 
-        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId, CreateIndividualItemRequestForConsign request);
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> ConfirmConsignSaleLineReadyToSale(Guid consignsaledetailId, ConfirmConsignSaleLineReadyToSaleRequest request);
         Task UpdateConsignPrice(Guid orderId);
 
         Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(
@@ -37,5 +37,7 @@ namespace Services.ConsignSales
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> PostConsignSaleForSelling(Guid consignSaleId);
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> NotifyDelivery(Guid consignsaleId);
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CancelAllConsignSaleLineItems(Guid consignsaleId);
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> NegotiatingConsignSale(Guid consignSaleId);
+        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ReadyToSaleConsignSale(Guid consignSaleId);
     }
 }

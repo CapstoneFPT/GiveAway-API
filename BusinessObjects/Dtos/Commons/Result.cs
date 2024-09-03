@@ -75,6 +75,8 @@ public enum ConsignSaleStatus
     Pending,
     AwaitDelivery,
     Processing,
+    Negotiating,
+    ReadyToSale,
     OnSale,
     Completed,
     Rejected,
@@ -88,6 +90,7 @@ public enum ConsignSaleLineItemStatus
     Negotiating,
     Received,
     Returned,
+    Rejected,
     ReadyForConsignSale,
     OnSale
 }
