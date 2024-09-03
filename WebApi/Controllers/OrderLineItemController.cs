@@ -26,7 +26,7 @@ public class OrderLineItemController : ControllerBase
     [ProducesResponseType<Result<OrderResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> ConfirmPendingOrderLineItemByShop(
-        [FromRoute] Guid orderLineItemId, FashionItemStatus itemStatus)
+        [FromRoute] Guid orderLineItemId, [FromBody] ConfirmPendingOrderRequest itemStatus)
     {
         var result = await _orderService.ConfirmPendingOrder(orderLineItemId, itemStatus);
         if (result.ResultStatus != ResultStatus.Success)

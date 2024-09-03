@@ -587,6 +587,7 @@ namespace Services.FashionItems
                     IsConsignment = item.IsConsignment,
                     ItemInStock = item.IndividualFashionItems.Count,
                     ShopId = item.ShopId,
+                    ShopAddress = item.Shop.Address,
                     StockCount = item.StockCount,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };

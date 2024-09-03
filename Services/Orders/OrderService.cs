@@ -572,8 +572,16 @@ public class OrderService : IOrderService
         var response = new BusinessObjects.Dtos.Commons.Result<OrderResponse>();
 
         var order = await _orderRepository.GetSingleOrder(c => c.OrderId == orderId);
+        if (order is null)
+        {
+            throw new OrderNotFoundException();
+        }
         var orderDetailFromShop = order!.OrderLineItems
             .Where(c => c.IndividualFashionItem.MasterItem.ShopId == shopId).ToList();
+        if (orderDetailFromShop.Count == 0)
+        {
+            throw new OrderDetailNotFoundException();
+        }
         foreach (var orderDetail in orderDetailFromShop)
         {
             var fashionItem = orderDetail.IndividualFashionItem;
@@ -782,7 +790,7 @@ public class OrderService : IOrderService
     }
 
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId,
-        FashionItemStatus itemStatus)
+        ConfirmPendingOrderRequest itemStatus)
     {
         var order = await _orderRepository.GetSingleOrder(c =>
             c.OrderLineItems.Any(c => c.OrderLineItemId == orderdetailId));
@@ -793,12 +801,12 @@ public class OrderService : IOrderService
 
         if (!order.Status.Equals(OrderStatus.Pending))
         {
-            throw new StatusNotAvailableException();
+            throw new StatusNotAvailableWithMessageException("This order is not Pending");
         }
 
-        if (!itemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.Equals(FashionItemStatus.Unavailable))
+        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.ItemStatus.Equals(FashionItemStatus.Unavailable))
         {
-            throw new StatusNotAvailableException();
+            throw new StatusNotAvailableWithMessageException("You can only set OnDelivery or Unavailable");
         }
 
         var orderDetail = order.OrderLineItems.FirstOrDefault(c => c.OrderLineItemId == orderdetailId);
@@ -811,10 +819,10 @@ public class OrderService : IOrderService
 
         if (!orderDetail.IndividualFashionItem!.Status.Equals(FashionItemStatus.PendingForOrder))
         {
-            throw new StatusNotAvailableException();
+            throw new StatusNotAvailableWithMessageException("This item status is not PendingForOrder");
         }
 
-        orderDetail.IndividualFashionItem.Status = itemStatus;
+        orderDetail.IndividualFashionItem.Status = itemStatus.ItemStatus;
         if (order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
             foreach (var detail in order.OrderLineItems)

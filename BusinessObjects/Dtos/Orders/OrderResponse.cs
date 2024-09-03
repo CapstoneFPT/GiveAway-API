@@ -26,6 +26,7 @@ namespace BusinessObjects.Dtos.Orders
         public string? RecipientName { get; set; }
         public string? ContactNumber { get; set; }
         public string? Address { get; set; }
+        public AddressType? AddressType { get; set; }
         public string? Email { get; set; }
         public decimal ShippingFee { get; set; } = 0;
         public decimal Discount { get; set; } = 0;

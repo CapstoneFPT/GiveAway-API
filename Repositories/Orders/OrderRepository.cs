@@ -65,7 +65,7 @@ namespace Repositories.Orders
             order.AddressType = cart.AddressType;
             order.PurchaseType = PurchaseType.Online;
             order.RecipientName = cart.RecipientName;
-            order.AddressType = cart.AddressType;
+            
             order.ShippingFee = cart.ShippingFee;
             order.Discount = cart.Discount;
             order.Phone = cart.Phone;
@@ -133,6 +133,7 @@ namespace Repositories.Orders
                 PaymentMethod = result.PaymentMethod,
                 PurchaseType = result.PurchaseType,
                 Address = result.Address,
+                AddressType = result.AddressType,
                 RecipientName = result.RecipientName,
                 ContactNumber = result.Phone,
                 CustomerName = memberAccount.Fullname,

@@ -147,5 +147,29 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+
+        [HttpPut("{consignsaleId}/cancel-all-consignsaleline")]
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CancelAllConsignSaleLineItems([FromRoute] Guid consignsaleId)
+        {
+            var result = await _consignSaleService.CancelAllConsignSaleLineItems(consignsaleId);
+
+            if (!result.IsSuccessful)
+
+            {
+                return result.Error switch
+                {
+                    ErrorCode.ServerError => StatusCode(500,
+                        new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.UnknownError))
+                };
+            }
+
+            return Ok(result.Value);
+        }
     }
 }

@@ -383,12 +383,15 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().HasMany(x => x.Transaction).WithOne(x => x.Order)
             .HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Order>().Property(x => x.Address).HasColumnType("varchar").HasMaxLength(255);
+        modelBuilder.Entity<Order>().Property(x => x.Address)
+            .HasColumnType("varchar").HasMaxLength(255);
         modelBuilder.Entity<Order>().Property(x => x.RecipientName).HasColumnType("varchar").HasMaxLength(100);
         modelBuilder.Entity<Order>().Property(x => x.Phone).HasColumnType("varchar").HasMaxLength(20);
         modelBuilder.Entity<Order>().Property(x => x.Email).HasColumnType("varchar").HasMaxLength(50)
             .IsRequired(false);
-
+        modelBuilder.Entity<Order>().Property(e => e.AddressType).HasConversion(prop => prop.ToString(),
+                s => (AddressType)Enum.Parse(typeof(AddressType), s))
+            .HasColumnType("varchar").HasMaxLength(30);
         #endregion
 
         #region OrderDetail

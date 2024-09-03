@@ -713,6 +713,70 @@ namespace Services.ConsignSales
             }
         }
 
+        public async Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CancelAllConsignSaleLineItems(Guid consignsaleId)
+        {
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(x => x.ConsignSaleId == consignsaleId);
+
+            if (consignSale == null)
+            {
+                return new Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+            consignSale.Status = ConsignSaleStatus.Cancelled;
+
+            foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
+            {
+                if (consignSaleLineItem.IndividualFashionItem != null)
+                {
+                    consignSaleLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
+                }
+
+                consignSaleLineItem.Status = ConsignSaleLineItemStatus.Returned;
+            }
+
+            var listConsignSaleLineResponse = consignSale.ConsignSaleLineItems.Select(c => new ConsignSaleDetailResponse2()
+            {
+                ConsignSaleLineItemId = c.ConsignSaleLineItemId,
+                ConfirmedPrice = c.ConfirmedPrice!.Value,
+                DealPrice = c.DealPrice!.Value,
+                ExpectedPrice = c.ExpectedPrice,
+                ConsignSaleId = c.ConsignSaleId,
+                Status = c.Status,
+                Note = c.Note
+            }).ToList();
+            try
+            {
+                await _consignSaleRepository.UpdateConsignSale(consignSale);
+
+                var response = new ConsignSaleDetailedResponse()
+                {
+                    ConsignSaleId = consignSale.ConsignSaleId,
+                    Status = consignSale.Status,
+                    SoldPrice = consignSale.SoldPrice,
+                    CreatedDate = consignSale.CreatedDate,
+                    ConsignSaleCode = consignSale.ConsignSaleCode,
+                    Phone = consignSale.Phone,
+                    Email = consignSale.Email,
+                    Address = consignSale.Address,
+                    Type = consignSale.Type,
+                    StartDate = consignSale.StartDate,
+                    TotalPrice = consignSale.TotalPrice,
+                    EndDate = consignSale.EndDate,
+                    ShopId = consignSale.ShopId,
+                    ConsignSaleMethod = consignSale.ConsignSaleMethod,
+                    MemberReceivedAmount = consignSale.ConsignorReceivedAmount,
+                    MemberId = consignSale.MemberId,
+                    Consginer = consignSale.ConsignorName,
+                    ConsignSaleDetails = listConsignSaleLineResponse
+                };
+
+                return new Result<ConsignSaleDetailedResponse, ErrorCode>(response);
+            }
+            catch (Exception e)
+            {
+                return new Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
             CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId,
                 CreateIndividualItemRequestForConsign request)

@@ -36,5 +36,6 @@ namespace Services.ConsignSales
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> CreateIndividualAfterNegotiation(Guid consignLineItemId, CreateIndividualAfterNegotiationRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> PostConsignSaleForSelling(Guid consignSaleId);
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> NotifyDelivery(Guid consignsaleId);
+        Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CancelAllConsignSaleLineItems(Guid consignsaleId);
     }
 }
