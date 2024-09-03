@@ -630,6 +630,7 @@ namespace Services.ConsignSales
                     ConsignSaleLineItemId = consignSaleDetail.ConsignSaleLineItemId,
                     ConsignSaleLineItemStatus = consignSaleDetail.Status,
                     DealPrice = consignSaleDetail.DealPrice!.Value,
+                    ConfirmedPrice = consignSaleDetail.ConfirmedPrice!.Value,
                     IsApproved = consignSaleDetail.IsApproved,
                     ResponseFromShop = consignSaleDetail.ResponseFromShop,
                     IndividualItemId = individualItem.ItemId,
@@ -645,11 +646,16 @@ namespace Services.ConsignSales
         {
             Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
             var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
-            if (consignSale is null || !consignSale.Status.Equals(ConsignSaleStatus.Processing))
+            if (consignSale is null || !consignSale.Status.Equals(ConsignSaleStatus.ReadyToSale))
             {
                 throw new ConsignSaleNotFoundException();
             }
 
+            var listItemInConsign = consignSale.ConsignSaleLineItems.Select(c => c.IndividualFashionItem).ToList();
+            if (listItemInConsign.Count < consignSale.ConsignSaleLineItems.Count)
+            {
+                throw new StockCountUnavailableException("Missing item for consign sale line. Please add more");
+            }
             foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
             {
                 consignSaleLineItem.Status = ConsignSaleLineItemStatus.OnSale;
@@ -777,9 +783,93 @@ namespace Services.ConsignSales
             }
         }
 
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> NegotiatingConsignSale(Guid consignSaleId)
+        {
+            Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+            if (consignSale is null || consignSale.ConsignSaleLineItems.All(c => c.Status != ConsignSaleLineItemStatus.Negotiating))
+            {
+                throw new ConsignSaleNotFoundException();
+            }
+
+            consignSale.Status = ConsignSaleStatus.Negotiating;
+            await _consignSaleRepository.UpdateConsignSale(consignSale);
+            // await _emailService.SnedMailNegotiating(consignSale);
+            var response = new ConsignSaleDetailedResponse()
+            {
+                ConsignSaleId = consignSale.ConsignSaleId,
+                Status = consignSale.Status,
+                SoldPrice = consignSale.SoldPrice,
+                CreatedDate = consignSale.CreatedDate,
+                ConsignSaleCode = consignSale.ConsignSaleCode,
+                Phone = consignSale.Phone,
+                Email = consignSale.Email,
+                Address = consignSale.Address,
+                Type = consignSale.Type,
+                StartDate = consignSale.StartDate,
+                TotalPrice = consignSale.TotalPrice,
+                EndDate = consignSale.EndDate,
+                ShopId = consignSale.ShopId,
+                ConsignSaleMethod = consignSale.ConsignSaleMethod,
+                MemberReceivedAmount = consignSale.ConsignorReceivedAmount,
+                MemberId = consignSale.MemberId,
+                Consginer = consignSale.ConsignorName,
+            };
+            return new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>()
+            {
+                Data = response,
+                Messages = new []{"Send negotiating successfully"},
+                ResultStatus = ResultStatus.Success
+            };
+        }
+
+        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ReadyToSaleConsignSale(Guid consignSaleId)
+        {
+            Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+            if (consignSale is null)
+            {
+                throw new ConsignSaleNotFoundException();
+            }
+
+            if (consignSale.ConsignSaleLineItems.Any(c => c.Status != ConsignSaleLineItemStatus.ReadyForConsignSale))
+            {
+                throw new ConsignSaleLineItemNotAvailableException("You must update all consign sale line item");
+            }
+            consignSale.Status = ConsignSaleStatus.ReadyToSale;
+            await _consignSaleRepository.UpdateConsignSale(consignSale);
+            // await _emailService.SnedMailNegotiating(consignSale);
+            var response = new ConsignSaleDetailedResponse()
+            {
+                ConsignSaleId = consignSale.ConsignSaleId,
+                Status = consignSale.Status,
+                SoldPrice = consignSale.SoldPrice,
+                CreatedDate = consignSale.CreatedDate,
+                ConsignSaleCode = consignSale.ConsignSaleCode,
+                Phone = consignSale.Phone,
+                Email = consignSale.Email,
+                Address = consignSale.Address,
+                Type = consignSale.Type,
+                StartDate = consignSale.StartDate,
+                TotalPrice = consignSale.TotalPrice,
+                EndDate = consignSale.EndDate,
+                ShopId = consignSale.ShopId,
+                ConsignSaleMethod = consignSale.ConsignSaleMethod,
+                MemberReceivedAmount = consignSale.ConsignorReceivedAmount,
+                MemberId = consignSale.MemberId,
+                Consginer = consignSale.ConsignorName,
+            };
+            return new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>()
+            {
+                Data = response,
+                Messages = new []{"Confirm consign sale line item successfully"},
+                ResultStatus = ResultStatus.Success
+            };
+        }
+
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
-            CreateIndividualItemFromConsignSaleLineItem(Guid consignsaledetailId,
-                CreateIndividualItemRequestForConsign request)
+            ConfirmConsignSaleLineReadyToSale(Guid consignsaledetailId,
+                ConfirmConsignSaleLineReadyToSaleRequest request)
         {
             Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
                 consignsaledetail.ConsignSaleLineItemId == consignsaledetailId;
@@ -803,8 +893,8 @@ namespace Services.ConsignSales
             consignSaleDetail.DealPrice = request.DealPrice;
             consignSaleDetail.ConfirmedPrice = request.DealPrice;
             consignSaleDetail.IsApproved = true;
-
-            Expression<Func<MasterFashionItem, bool>> predicateMaster =
+            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
+            /*Expression<Func<MasterFashionItem, bool>> predicateMaster =
                 masterItem => masterItem.MasterItemId == request.MasterItemId;
             var itemMaster = await _fashionItemRepository.GetSingleMasterItem(predicateMaster);
             if (itemMaster is null)
@@ -870,7 +960,7 @@ namespace Services.ConsignSales
                     CreatedDate = DateTime.UtcNow,
                     IndividualFashionItemId = individualItem.ItemId
                 }).ToList();
-            await _fashionItemRepository.AddInvidualFashionItem(individualItem);
+            await _fashionItemRepository.AddInvidualFashionItem(individualItem);*/
 
 
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
@@ -882,8 +972,9 @@ namespace Services.ConsignSales
                     DealPrice = consignSaleDetail.DealPrice!.Value,
                     IsApproved = consignSaleDetail.IsApproved,
                     ResponseFromShop = consignSaleDetail.ResponseFromShop,
-                    IndividualItemId = individualItem.ItemId,
-                    FashionItemStatus = individualItem.Status
+                    ConfirmedPrice = consignSaleDetail.ConfirmedPrice!.Value
+                    /*IndividualItemId = individualItem.ItemId,
+                    FashionItemStatus = individualItem.Status*/
                 },
                 Messages = new[] { "Create individual item successfully" },
                 ResultStatus = ResultStatus.Success

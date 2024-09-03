@@ -611,6 +611,17 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => categoryIds.Contains(item.CategoryId));
             }
 
+            if (request.IsConsignment != null)
+            {
+                if (request.IsConsignment == true)
+                {
+                    predicate = predicate.And(item => item.IsConsignment == true);
+                }
+                else
+                {
+                    predicate = predicate.And(item => item.IsConsignment == false);
+                }
+            }
             if (request.ShopId.HasValue)
             {
                 predicate = predicate.And(item => item.ShopId == request.ShopId);

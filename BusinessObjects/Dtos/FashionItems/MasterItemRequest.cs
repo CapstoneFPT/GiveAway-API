@@ -11,4 +11,5 @@ public class MasterItemRequest
     public Guid? CategoryId { get; set; }
     public Guid? ShopId { get; set; }
     public GenderType? GenderType { get; set; }
+    public bool? IsConsignment { get; set; }
 }

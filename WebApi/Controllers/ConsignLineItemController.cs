@@ -23,13 +23,13 @@ public class ConsignLineItemController : ControllerBase
         _consignLineItemService = consignLineItemService;
     }
 
-    [HttpPost("{consignLineItemId}/create-individual")]
+    [HttpPut("{consignLineItemId}/ready-for-consign")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-    public async Task<IActionResult> CreateIndividualItemFromConsignSaleListItem([FromRoute] Guid consignLineItemId, [FromBody] CreateIndividualItemRequestForConsign request)
+    public async Task<IActionResult> ConfirmConsignSaleLineReadyToSale([FromRoute] Guid consignLineItemId, [FromBody] ConfirmConsignSaleLineReadyToSaleRequest request)
     {
         var result =
-            await _consignSaleService.CreateIndividualItemFromConsignSaleLineItem(consignLineItemId,request);
+            await _consignSaleService.ConfirmConsignSaleLineReadyToSale(consignLineItemId,request);
 
         return result.ResultStatus != ResultStatus.Success
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)

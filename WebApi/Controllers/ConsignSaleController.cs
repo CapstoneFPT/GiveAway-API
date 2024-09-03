@@ -88,6 +88,34 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+        [HttpPut("{consignSaleId}/negotiating")]
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> NegotiatingConsignSale([FromRoute] Guid consignSaleId)
+        {
+            var result = await _consignSaleService.NegotiatingConsignSale(consignSaleId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+
+            return Ok(result);
+        }
+        [HttpPut("{consignSaleId}/ready-to-sale")]
+        [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> ReadyToSaleConsignSale([FromRoute] Guid consignSaleId)
+        {
+            var result = await _consignSaleService.ReadyToSaleConsignSale(consignSaleId);
+
+            if (result.ResultStatus != ResultStatus.Success)
+            {
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            }
+
+            return Ok(result);
+        }
         [HttpPut("{consignSaleId}/confirm-received")]
         [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -122,7 +150,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-
+        
         [HttpGet("{consignsaleId}/consignlineitems")]
         [ProducesResponseType<List<ConsignSaleLineItemsListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
