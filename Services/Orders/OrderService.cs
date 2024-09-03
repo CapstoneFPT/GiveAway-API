@@ -871,7 +871,7 @@ public class OrderService : IOrderService
             order.Status = OrderStatus.Cancelled;
         }
 
-        if (order.OrderLineItems.All(c => c.IndividualFashionItem!.Status == FashionItemStatus.OnDelivery))
+        if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
             await _emailService.SendEmailOrder(order);
