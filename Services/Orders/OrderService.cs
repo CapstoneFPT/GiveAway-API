@@ -624,7 +624,7 @@ public class OrderService : IOrderService
             if (fashionItem is { Status: FashionItemStatus.OnDelivery })
             {
                 fashionItem.Status = FashionItemStatus.Refundable;
-                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(15);
+                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(2);
                 if (order.PaymentMethod.Equals(PaymentMethod.COD))
                     orderDetail.PaymentDate = DateTime.UtcNow;
                 await ScheduleRefundableItemEnding(fashionItem.ItemId, orderDetail.RefundExpirationDate.Value);
@@ -930,7 +930,7 @@ public class OrderService : IOrderService
             .Build();
         var endTrigger = TriggerBuilder.Create()
             .WithIdentity($"EndReservedItemTrigger_{itemId}")
-            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(15)))
+            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(5)))
             .Build();
         await schedule.ScheduleJob(endJob, endTrigger);
     }
