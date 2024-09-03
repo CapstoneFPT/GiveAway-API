@@ -1017,6 +1017,8 @@ public class OrderService : IOrderService
             AddressType = order.AddressType != null ? order.AddressType.Value : default,
             Subtotal = order.OrderLineItems.Sum(x => x.UnitPrice * x.Quantity),
             BidAmount = order.Bid != null ? order.Bid.Amount : 0m,
+            AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
+            Quantity = order.OrderLineItems.Sum(x => x.Quantity),
             ReciepientName = order.RecipientName ?? "N/A",
             BidCreatedDate = order.Bid != null ? order.Bid.CreatedDate : DateTime.MinValue,
             CreatedDate = order.CreatedDate
