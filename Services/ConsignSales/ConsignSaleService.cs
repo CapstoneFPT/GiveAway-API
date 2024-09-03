@@ -367,7 +367,8 @@ namespace Services.ConsignSales
                     CreatedDate = lineItem.CreatedDate,
                     ExpectedPrice = lineItem.ExpectedPrice,
                     DealPrice = lineItem.DealPrice,
-                    IsApproved = lineItem.IsApproved
+                    IsApproved = lineItem.IsApproved,
+                    IndividualItemId = lineItem.IndividualFashionItem.ItemId
                 };
 
             try
