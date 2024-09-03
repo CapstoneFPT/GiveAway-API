@@ -234,6 +234,8 @@ namespace Services.FashionItems
                     CategoryId = masterItem.CategoryId,
                     IsConsignment = masterItem.IsConsignment,
                     Description = masterItem.Description,
+                    CreatedDate = masterItem.CreatedDate,
+                    StockCount = masterItem.StockCount,
                     MasterItemCode = masterItem.MasterItemCode,
                     Name = masterItem.Name,
                     CategoryName = masterItem.Category.Name,
