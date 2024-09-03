@@ -424,8 +424,8 @@ namespace Services.ConsignSales
                 {
                     Url = image,
                     CreatedDate = DateTime.UtcNow,
-                    // MasterFashionItemId = masterItem.MasterItemId,
-                    ConsignLineItemId = consignLineItemId
+                    MasterFashionItemId = masterItem.MasterItemId
+                    
                 };
                 listImage.Add(dataImage);
             }
