@@ -19,4 +19,5 @@ public class Shop
    public DateTime CreatedDate { get; set; }
 
    public ICollection<MasterFashionItem> MasterFashionItems { get; set; } = [];
+   public ICollection<Transaction> Transactions { get; set; } = [];
 }

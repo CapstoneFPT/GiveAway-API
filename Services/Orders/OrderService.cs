@@ -728,8 +728,7 @@ public class OrderService : IOrderService
         return response;
     }
 
-    public async Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId,
-        PayOrderWithCashRequest request)
+    public async Task<Result<PayOrderOfflineResponse, ErrorCode>> OfflinePay(Guid shopId, Guid orderId)
     {
         var order = await _orderRepository.GetOrderById(orderId);
 
@@ -738,44 +737,23 @@ public class OrderService : IOrderService
             throw new InvalidOperationException("Order Already Paid");
         }
 
-        if (request.AmountGiven < order.TotalPrice)
-        {
-            throw new InvalidOperationException("Not enough money");
-        }
-
         if (order.PaymentMethod != PaymentMethod.Cash)
         {
             throw new InvalidOperationException("This order can only be paid with cash");
         }
 
         order.Status = OrderStatus.Completed;
-        // order.PaymentDate = DateTime.UtcNow;
         order.CompletedDate = DateTime.UtcNow;
-        await _orderRepository.UpdateOrder(order);
 
-        var listorderDetail = await _orderLineItemRepository.GetOrderLineItems(c => c.OrderId == orderId);
-        foreach (var itemOrderDetail in listorderDetail)
+        var orderLineItems = order.OrderLineItems; 
+        foreach (var item in orderLineItems)
         {
-            itemOrderDetail.RefundExpirationDate = DateTime.UtcNow;
-            itemOrderDetail.IndividualFashionItem.Status = FashionItemStatus.Refundable;
+            item.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
+            item.PaymentDate = DateTime.UtcNow;
+            item.IndividualFashionItem.Status = FashionItemStatus.Refundable;
         }
-
-        await _orderLineItemRepository.UpdateRange(listorderDetail);
-        Expression<Func<OrderLineItem, bool>> predicate = x => x.OrderId == orderId;
-        Expression<Func<OrderLineItem, OrderLineItemDetailedResponse>> selector = x =>
-            new OrderLineItemDetailedResponse()
-            {
-                OrderLineItemId = x.OrderLineItemId,
-                ItemName = x.IndividualFashionItem.MasterItem.Name,
-                UnitPrice = x.UnitPrice,
-                RefundExpirationDate = x.RefundExpirationDate,
-                PaymentDate = x.PaymentDate
-            };
-        (List<OrderLineItemDetailedResponse> Items, int Page, int PageSize, int TotalCount) orderDetailsResponse =
-            await _orderLineItemRepository.GetOrderLineItemsPaginate<OrderLineItemDetailedResponse>(
-                predicate: predicate,
-                selector: selector, isTracking: false);
-        var orderDetails = orderDetailsResponse.Items;
+        
+        await _orderRepository.UpdateOrder(order);
 
         var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopId);
         var shopAccount = await _accountRepository.GetAccountById(shop!.StaffId);
@@ -786,32 +764,32 @@ public class OrderService : IOrderService
         {
             OrderId = orderId,
             CreatedDate = DateTime.UtcNow,
-            Type = TransactionType.Purchase,
+            ShopId = shopId,
+            Type = TransactionType.Sale,
             Amount = order.TotalPrice,
         };
 
         await _transactionRepository.CreateTransaction(transaction);
 
-        var response = new PayOrderWithCashResponse
+        var response = new PayOrderOfflineResponse
         {
-            AmountGiven = request.AmountGiven, OrderId = orderId,
-            Order = new OrderResponse()
-            {
-                OrderId = order.OrderId,
-                Quantity = orderDetails.Count,
-                OrderCode = order.OrderCode,
-                PaymentMethod = order.PaymentMethod,
-                Status = order.Status,
-                CreatedDate = order.CreatedDate,
-                Address = order.Address,
-                TotalPrice = order.TotalPrice,
-                // PaymentDate = order.PaymentDate,
-                CompletedDate = order.CompletedDate,
-                ContactNumber = order.Phone,
-                RecipientName = order.RecipientName,
-                PurchaseType = order.PurchaseType,
-                OrderLineItems = orderDetails
-            }
+            OrderId = order.OrderId,
+            Quantity = order.OrderLineItems.Count,
+            OrderCode = order.OrderCode,
+            PaymentMethod = order.PaymentMethod,
+            Status = order.Status,
+            CreatedDate = order.CreatedDate,
+            Address = order.Address ?? "N/A",
+            TotalPrice = order.TotalPrice,
+            CompletedDate = order.CompletedDate ,
+            Phone = order.Phone ?? "N/A",
+            ReciepientName = order.RecipientName ?? "N/A",
+            PurchaseType = order.PurchaseType,
+            Email = order.Email ?? "N/A",
+            Discount = order.Discount,
+            ShippingFee = order.ShippingFee,
+            PaymentDate = order.CreatedDate,
+            Subtotal = order.OrderLineItems.Sum(x=>x.UnitPrice * x.Quantity),
         };
         return response;
     }

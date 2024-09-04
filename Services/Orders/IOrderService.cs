@@ -33,7 +33,7 @@ namespace Services.Orders
         Task UpdateFashionItemStatus(Guid orderOrderId);
         Task PayWithPoints(Guid orderId, Guid requestMemberId);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderByShop(Guid shopId, CreateOrderRequest request);
-        Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId, PayOrderWithCashRequest request);
+        Task<DotNext.Result<PayOrderOfflineResponse,ErrorCode>> OfflinePay(Guid shopId, Guid orderId);
         
         Task UpdateAdminBalance(Order order);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmPendingOrder(Guid orderdetailId, ConfirmPendingOrderRequest itemStatus);
