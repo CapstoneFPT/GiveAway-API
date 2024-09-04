@@ -509,6 +509,11 @@ public class OrderService : IOrderService
             predicate = predicate.And(order => order.PaymentMethod == orderRequest.PaymentMethod);
         }
 
+        if (orderRequest.PurchaseType != null)
+        {
+            predicate = predicate.And(order => order.PurchaseType == orderRequest.PurchaseType);
+        }
+
         if (orderRequest.IsFromAuction == true)
         {
             predicate = predicate.And(ord => ord.BidId != null);
@@ -584,11 +589,10 @@ public class OrderService : IOrderService
             AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
         };
 
-        
 
         (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
             await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
-                orderRequest.PageSize,predicate , selector);
+                orderRequest.PageSize, predicate, selector);
 
         var response = new PaginationResponse<OrderListResponse>()
         {
@@ -612,12 +616,14 @@ public class OrderService : IOrderService
         {
             throw new OrderNotFoundException();
         }
+
         var orderDetailFromShop = order!.OrderLineItems
             .Where(c => c.IndividualFashionItem.MasterItem.ShopId == shopId).ToList();
         if (orderDetailFromShop.Count == 0)
         {
             throw new OrderDetailNotFoundException();
         }
+
         foreach (var orderDetail in orderDetailFromShop)
         {
             var fashionItem = orderDetail.IndividualFashionItem;
@@ -840,7 +846,8 @@ public class OrderService : IOrderService
             throw new StatusNotAvailableWithMessageException("This order is not Pending");
         }
 
-        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.ItemStatus.Equals(FashionItemStatus.Unavailable))
+        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.OnDelivery) &&
+            !itemStatus.ItemStatus.Equals(FashionItemStatus.Unavailable))
         {
             throw new StatusNotAvailableWithMessageException("You can only set OnDelivery or Unavailable");
         }
