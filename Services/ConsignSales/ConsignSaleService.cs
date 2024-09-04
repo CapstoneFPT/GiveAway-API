@@ -843,7 +843,7 @@ namespace Services.ConsignSales
             };
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ReadyToSaleConsignSale(
+        /*public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ReadyToSaleConsignSale(
             Guid consignSaleId)
         {
             Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
@@ -890,7 +890,7 @@ namespace Services.ConsignSales
                 Messages = new[] { "Confirm consign sale line item successfully" },
                 ResultStatus = ResultStatus.Success
             };
-        }
+        }*/
 
         public async Task<Result<ConsignSaleDetailedResponse, ErrorCode>> ContinueConsignSale(Guid consignsaleId)
         {
@@ -960,12 +960,19 @@ namespace Services.ConsignSales
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
-            ConfirmConsignSaleLineReadyToSale(Guid consignsaledetailId,
+            ConfirmConsignSaleLineReadyToSale(Guid consignLineItemId,
                 ConfirmConsignSaleLineReadyToSaleRequest request)
         {
-            Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
-                consignsaledetail.ConsignSaleLineItemId == consignsaledetailId;
-            var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
+            Expression<Func<ConsignSale, bool>> predicate = consignsale =>
+                consignsale.ConsignSaleLineItems.Any(c => c.ConsignSaleLineItemId == consignLineItemId);
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+            if (consignSale is null)
+            {
+                throw new ConsignSaleNotFoundException();
+            }
+
+            var consignSaleDetail =
+                consignSale.ConsignSaleLineItems.FirstOrDefault(c => c.ConsignSaleLineItemId == consignLineItemId);
             if (consignSaleDetail == null)
             {
                 throw new ConsignSaleLineItemNotFoundException();
@@ -985,6 +992,11 @@ namespace Services.ConsignSales
             consignSaleDetail.DealPrice = request.DealPrice;
             consignSaleDetail.ConfirmedPrice = request.DealPrice;
             consignSaleDetail.IsApproved = true;
+            if (consignSale.ConsignSaleLineItems.All(
+                    c => c.Status.Equals(ConsignSaleLineItemStatus.ReadyForConsignSale)))
+            {
+                consignSale.Status = ConsignSaleStatus.ReadyToSale;
+            }
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
 
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
