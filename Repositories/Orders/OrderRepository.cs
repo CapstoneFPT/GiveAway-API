@@ -159,8 +159,11 @@ namespace Repositories.Orders
                 .Include(c => c.Member)
                 .Include(order => order.OrderLineItems)
                 .ThenInclude(orderDetail => orderDetail.IndividualFashionItem)
-                
-                .ThenInclude(c => c.MasterItem)
+                .ThenInclude(individualItem => individualItem.MasterItem)
+                // .ThenInclude(masterItem => masterItem.Images) 
+                .Include(order => order.OrderLineItems)
+                .ThenInclude(orderDetail => orderDetail.IndividualFashionItem)
+                .ThenInclude(individualItem => individualItem.Images) 
                 .SingleOrDefaultAsync(predicate);
             return result;
         }
@@ -476,7 +479,7 @@ namespace Repositories.Orders
                 .Where(c => orderRequest.ItemIds.Contains(c.ItemId)).ToListAsync();
 
 
-            decimal totalPrice = 0;
+            
 
             Order order = new Order();
             order.PurchaseType = PurchaseType.Offline;
@@ -486,10 +489,10 @@ namespace Repositories.Orders
             order.Phone = orderRequest.Phone;
             order.Email = orderRequest.Email;
             order.Status = OrderStatus.AwaitingPayment;
-
+            order.Discount = orderRequest.Discount;
 
             order.CreatedDate = DateTime.UtcNow;
-            order.TotalPrice = listItem.Sum(c => c.SellingPrice!.Value);
+            order.TotalPrice = listItem.Sum(c => c.SellingPrice!.Value) - order.Discount;
             order.OrderCode = GenerateUniqueString();
 
             await CreateOrder(order);
@@ -514,7 +517,7 @@ namespace Repositories.Orders
                     .ProjectTo<OrderLineItemDetailedResponse>(_mapper.ConfigurationProvider)
                     .AsNoTracking()
                     .FirstOrDefaultAsync();
-                totalPrice += orderLineItem.UnitPrice;
+                
 
                 listOrderDetailResponse.Add(orderDetailResponse);
             }
