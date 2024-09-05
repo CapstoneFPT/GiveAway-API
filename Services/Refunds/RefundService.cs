@@ -140,7 +140,7 @@ namespace Services.Refunds
 
             if (request.Status != null)
             {
-                predicate = predicate.And(item => item.RefundStatus.Equals(request.Status));
+                predicate = predicate.And(item => request.Status.Contains(item.RefundStatus));
             }
 
             if (request.PreviousTime.HasValue)
