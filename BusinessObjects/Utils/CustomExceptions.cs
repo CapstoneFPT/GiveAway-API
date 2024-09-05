@@ -1,4 +1,6 @@
-﻿namespace BusinessObjects.Utils;
+﻿using BusinessObjects.Dtos.Commons;
+
+namespace BusinessObjects.Utils;
 
 public class AuctionNotFoundException : Exception
 {
@@ -132,3 +134,5 @@ public class ConfirmPriceIsNullException(string message) : Exception(message)
 public class DealPriceIsNotAvailableException(string message) : Exception(message)
 {
 }
+public class ItemUnableToDeleteException(string message) : Exception(message){}
+public class DeleteFashionItemsFailedException(string message, ErrorCode errorCode) : Exception(message){}

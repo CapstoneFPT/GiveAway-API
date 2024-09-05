@@ -326,6 +326,10 @@ namespace Services.FashionItems
             item.Color = request.Color ?? item.Color;
             item.Condition = request.Condition ?? item.Condition;
             item.Size = request.Size ?? item.Size;
+            if (item.Images.Any() && item.Status == FashionItemStatus.Draft)
+            {
+                item.Status = FashionItemStatus.Unavailable;
+            }
             await _fashionitemRepository.UpdateFashionItem(item);
             response.Data =
                 _mapper.Map<FashionItemDetailResponse>(item);
@@ -514,15 +518,13 @@ namespace Services.FashionItems
                 itemMaster.Category = category;
             }
 
-            if (masterItemRequest.StockCount < itemMaster.IndividualFashionItems.Count)
-                throw new StockCountUnavailableException(
-                    "Your new quantity for stock is lower items existing in stock");
+            
             itemMaster.Description = masterItemRequest.Description ?? itemMaster.Description;
             itemMaster.Name = masterItemRequest.Name ?? itemMaster.Name;
             itemMaster.Brand = masterItemRequest.Brand ?? itemMaster.Brand;
 
             itemMaster.Gender = masterItemRequest.Gender ?? itemMaster.Gender;
-            itemMaster.StockCount = masterItemRequest.StockCount ?? itemMaster.StockCount;
+            
 
             itemMaster.Images.Clear();
 
@@ -799,6 +801,30 @@ namespace Services.FashionItems
             return result == null
                 ? new Result<MasterItemDetailResponse, ErrorCode>(ErrorCode.NotFound)
                 : new Result<MasterItemDetailResponse, ErrorCode>(result);
+        }
+
+        public async Task<BusinessObjects.Dtos.Commons.Result<string?>> DeleteDraftItem(List<DeleteDraftItemRequest> deleteDraftItemRequests)
+        {
+            var itemIds = deleteDraftItemRequests.Select(x => x.ItemId).ToList();
+            Expression<Func<IndividualFashionItem, bool>> predicate = individualItem =>
+                itemIds.Contains(individualItem.ItemId);
+            var listIndividual = await _fashionitemRepository.GetFashionItems(predicate);
+            if (listIndividual.Any(c => c.Status != FashionItemStatus.Draft))
+            {
+                throw new ItemUnableToDeleteException("There are items unable to delete. You can only delete draft item");
+            }
+
+            var result = await _fashionitemRepository.DeleteRangeIndividualItems(listIndividual);
+            if (result is false)
+            {
+                throw new DeleteFashionItemsFailedException("Delete failed by sever error", ErrorCode.ServerError);
+            }
+
+            return new BusinessObjects.Dtos.Commons.Result<string?>()
+            {
+                ResultStatus = ResultStatus.Success,
+                Messages = new []{"Delete items successfully"}
+            };
         }
 
         /*public async Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(
