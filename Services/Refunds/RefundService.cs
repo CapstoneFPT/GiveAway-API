@@ -31,7 +31,8 @@ namespace Services.Refunds
         private readonly IEmailService _emailService;
 
         public RefundService(IRefundRepository refundRepository, IOrderRepository orderRepository,
-            ITransactionRepository transactionRepository, IAccountRepository accountRepository, IEmailService emailService)
+            ITransactionRepository transactionRepository, IAccountRepository accountRepository,
+            IEmailService emailService)
         {
             _refundRepository = refundRepository;
             _orderRepository = orderRepository;
@@ -40,15 +41,21 @@ namespace Services.Refunds
             _emailService = emailService;
         }
 
-        public async Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, ApprovalRefundRequest request)
+        public async Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId,
+            ApprovalRefundRequest request)
         {
             var response = new Result<RefundResponse>();
-            var refund = await _refundRepository.GetRefundById(refundId);
-            
+            Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
+            var refund = await _refundRepository.GetSingleRefund(predicate);
+            if (refund is null)
+            {
+                throw new RefundNoFoundException();
+            }
             if (request.Status.Equals(RefundStatus.Pending) || refund.RefundStatus.Equals(request.Status))
             {
                 throw new StatusNotAvailableException();
             }
+
             var data = await _refundRepository.ApprovalRefundFromShop(refundId, request);
             await _emailService.SendEmailRefund(data);
             response.Data = data;
@@ -60,22 +67,40 @@ namespace Services.Refunds
         public async Task<Result<RefundResponse>> GetRefundById(Guid refundId)
         {
             var response = new Result<RefundResponse>();
-            var result = await _refundRepository.GetRefundById(refundId);
-            if (result is null)
+            Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
+            var item = await _refundRepository.GetSingleRefund(predicate);
+            if (item is null)
             {
-                response.ResultStatus = ResultStatus.NotFound;
-                response.Messages = ["Can not found the refund"];
-                return response;
+                throw new RefundNoFoundException();
             }
 
-            response.Data = result;
+            response.Data = new RefundResponse()
+            {
+                ItemCode = item.OrderLineItem.IndividualFashionItem.ItemCode ?? string.Empty,
+                Description = item.Description ?? string.Empty,
+                OrderCode = item.OrderLineItem.Order.OrderCode,
+                CreatedDate = item.CreatedDate,
+                RefundStatus = item.RefundStatus,
+                RefundId = item.RefundId,
+                CustomerEmail = item.OrderLineItem.Order.Email! ?? string.Empty,
+                CustomerName = item.OrderLineItem.Order.RecipientName! ?? string.Empty,
+                RefundAmount = item.OrderLineItem.UnitPrice * item.RefundPercentage / 100,
+                RefundPercentage = item.RefundPercentage,
+                UnitPrice = item.OrderLineItem.UnitPrice,
+                ItemImages = item.OrderLineItem.IndividualFashionItem.Images.Select(c => c.Url).ToArray(),
+                ImagesForCustomer = item.Images.Select(x => x.Url).ToArray(),
+                ItemName = item.OrderLineItem.IndividualFashionItem.MasterItem.Name,
+                OrderLineItemId = item.OrderLineItemId,
+                ResponseFromShop = item.ResponseFromShop,
+                CustomerPhone = item.OrderLineItem.Order.Phone! ?? string.Empty,
+            };
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Successfully"];
             return response;
         }
 
         public async Task<PaginationResponse<RefundResponse>> GetAllRefunds(
-            RefundRequest request) 
+            RefundRequest request)
         {
             Expression<Func<Refund, bool>> predicate = x => true;
             Expression<Func<Refund, RefundResponse>> selector = item => new
@@ -109,7 +134,13 @@ namespace Services.Refunds
 
             if (request.ShopId.HasValue)
             {
-                predicate = predicate.And(item => item.OrderLineItem.IndividualFashionItem.MasterItem.ShopId == request.ShopId);
+                predicate = predicate.And(item =>
+                    item.OrderLineItem.IndividualFashionItem.MasterItem.ShopId == request.ShopId);
+            }
+
+            if (request.Status != null)
+            {
+                predicate = predicate.And(item => item.RefundStatus.Equals(request.Status));
             }
 
             if (request.PreviousTime.HasValue)
@@ -117,6 +148,30 @@ namespace Services.Refunds
                 predicate = predicate.And(item => item.CreatedDate <= request.PreviousTime);
             }
 
+            if (request.CustomerEmail != null)
+            {
+                predicate = predicate.And(item => item.OrderLineItem.Order.Email == request.CustomerEmail);
+            }
+            if (request.CustomerPhone != null)
+            {
+                predicate = predicate.And(item => item.OrderLineItem.Order.Phone == request.CustomerPhone);
+            }
+            if (request.CustomerName != null)
+            {
+                predicate = predicate.And(item => item.OrderLineItem.Order.RecipientName == request.CustomerName);
+            }
+            if (request.OrderCode != null)
+            {
+                predicate = predicate.And(item => item.OrderLineItem.Order.OrderCode == request.OrderCode);
+            }
+            if (request.ItemCode != null)
+            {
+                predicate = predicate.And(item => item.OrderLineItem.IndividualFashionItem.ItemCode == request.ItemCode);
+            }
+            if (request.ItemName != null)
+            {
+                predicate = predicate.And(item => item.OrderLineItem.IndividualFashionItem.MasterItem.Name == request.ItemName);
+            }
             result = await _refundRepository.GetRefundProjections(request.PageNumber, request.PageSize,
                 predicate,
                 selector);
@@ -131,17 +186,19 @@ namespace Services.Refunds
             };
         }
 
-        
 
         public async Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
         {
             var response = new Result<RefundResponse>();
-            var refund = await _refundRepository.GetRefundById(refundId);
+            Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
+            var refund = await _refundRepository.GetSingleRefund(predicate);
             if (refund == null)
             {
                 throw new RefundNoFoundException();
             }
-            var order = await _orderRepository.GetSingleOrder(c => c.OrderLineItems.Select(c => c.OrderLineItemId).Contains(refund.OrderLineItemId));
+
+            var order = await _orderRepository.GetSingleOrder(c =>
+                c.OrderLineItems.Select(c => c.OrderLineItemId).Contains(refund.OrderLineItemId));
             if (order == null)
             {
                 throw new OrderNotFoundException();
@@ -153,6 +210,7 @@ namespace Services.Refunds
                 response.Messages = new[] { "This refund is not available to confirm" };
                 return response;
             }
+
             var refundResponse = await _refundRepository.ConfirmReceivedAndRefund(refundId);
 
             var member = await _accountRepository.GetAccountById(order.MemberId!.Value);
@@ -161,18 +219,19 @@ namespace Services.Refunds
                 throw new AccountNotFoundException();
             }
 
-            member.Balance += refund.RefundAmount!.Value;
+            var refundAmount = refund.OrderLineItem.UnitPrice * refund.RefundPercentage / 100;
+            member.Balance += refundAmount!.Value;
             await _accountRepository.UpdateAccount(member);
 
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= refund.RefundAmount.Value;
+            admin.Balance -= refundAmount.Value;
             await _accountRepository.UpdateAccount(admin);
 
             Transaction refundTransaction = new Transaction()
             {
-                Amount = refund.RefundAmount.Value,
+                Amount = refundAmount.Value,
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Refund,
                 RefundId = refundId,
@@ -198,11 +257,7 @@ namespace Services.Refunds
                 ResponseFromShop = "We accepted refund request at shop"
             };
             await _refundRepository.CreateRefund(refund);
-            var result = await _refundRepository.GetRefundById(refund.RefundId);
-            response.Data = result;
-            response.Messages = new[] { "Success" };
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+            return await GetRefundById(refund.RefundId);
         }
     }
 }

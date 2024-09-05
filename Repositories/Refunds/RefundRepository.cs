@@ -58,9 +58,14 @@ namespace Repositories.Refunds
             }
             
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
-            var response = await GetRefundById(refundId);
-            
-            return response;
+            return new RefundResponse()
+            {
+                RefundId = refund.RefundId,
+                RefundStatus = refund.RefundStatus,
+                RefundPercentage = refund.RefundPercentage,
+                ResponseFromShop = refund.ResponseFromShop,
+                ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode
+            };
         }
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetRefundProjections<T>(int? page, int? pageSize, Expression<Func<Refund, bool>>? predicate, Expression<Func<Refund, T>>? selector)
@@ -95,16 +100,17 @@ namespace Repositories.Refunds
             return (items, pageNum, pageSizeNum, count);
         }
 
-        public async Task<RefundResponse> GetRefundById(Guid refundId)
+        public async Task<Refund?> GetSingleRefund(Expression<Func<Refund, bool>> predicate)
         {
-            var refund = await GenericDao<Refund>.Instance.GetQueryable()
-                .Include(c => c.OrderLineItem).ThenInclude(c => c.Order)
-                .Where(c => c.RefundId == refundId)
-                .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
+            return await GenericDao<Refund>.Instance.GetQueryable()
+                .Include(c => c.OrderLineItem)
+                .ThenInclude(c => c.Order)
+                .Include(c => c.Images)
+                .Include(c => c.OrderLineItem)
+                .ThenInclude(c => c.IndividualFashionItem)
+                .ThenInclude(c => c.MasterItem)
+                .Where(predicate)
                 .FirstOrDefaultAsync();
-
-            
-            return refund;
         }
 
 
@@ -112,10 +118,18 @@ namespace Repositories.Refunds
         {
             var refund = await _giveAwayDbContext.Refunds.AsQueryable().Include(c => c.OrderLineItem)
                 .ThenInclude(c => c.IndividualFashionItem).Where(c => c.RefundId == refundId).FirstOrDefaultAsync();
+            if (refund is null)
+            {
+                throw new RefundNoFoundException();
+            }
             refund.RefundStatus = RefundStatus.Completed;
             refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Unavailable;
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
-            return await GetRefundById(refundId);
+            return new RefundResponse()
+            {
+                RefundId = refund.RefundId,
+                RefundStatus = refund.RefundStatus
+            };
         }
 
         public async Task CreateRefund(Refund refund)

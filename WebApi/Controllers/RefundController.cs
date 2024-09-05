@@ -24,7 +24,9 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{refundId}")]
-        public async Task<ActionResult<Result<RefundResponse>>> GetRefundById([FromRoute] Guid refundId)
+        [ProducesResponseType<RefundResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetRefundById([FromRoute] Guid refundId)
         {
             var result = await _refundService.GetRefundById(refundId);
 
