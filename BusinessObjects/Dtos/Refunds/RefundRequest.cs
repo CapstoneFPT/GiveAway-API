@@ -14,5 +14,6 @@ namespace BusinessObjects.Dtos.Refunds
         public Guid? ShopId { get; set; }
         public RefundStatus[]? Status { get; set; }
         public DateTime? PreviousTime { get; set; }
+        public Guid? MemberId { get; set; }
     }
 }
