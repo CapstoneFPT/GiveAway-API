@@ -12,6 +12,7 @@ public class MasterItemListResponse
     public string Brand { get; set; }
     public GenderType Gender { get; set; }
     public Guid CategoryId { get; set; }
+    public string CategoryName { get; set; }
     public bool IsConsignment { get; set; }
     public Guid ShopId { get; set; }
     public string ShopAddress { get; set; }

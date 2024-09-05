@@ -615,10 +615,10 @@ namespace Services.FashionItems
                     ShopId = item.ShopId,
                     ShopAddress = item.Shop.Address,
                     StockCount = item.IndividualFashionItems.Count,
+                    CategoryName = item.Category.Name,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
-            (List<MasterItemListResponse> Items, int Page, int PageSize, int TotalCount) result =
-                new ValueTuple<List<MasterItemListResponse>, int, int, int>();
+            (List<MasterItemListResponse> Items, int Page, int PageSize, int TotalCount) result;
             if (request.IsLeftInStock)
             {
                 predicate = predicate.And(it =>
