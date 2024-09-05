@@ -261,6 +261,7 @@ public class OrderService : IOrderService
         {
             OrderId = orderResult.OrderId,
             UnitPrice = order.TotalPrice,
+            CreatedDate = DateTime.UtcNow,
             PointPackageId = order.PointPackageId,
         });
 
@@ -362,7 +363,12 @@ public class OrderService : IOrderService
 
         if (request.IsPointPackage == true)
         {
-            predicate = predicate.And(ord => ord.BidId != null);
+            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId != null));
+        }
+
+        if (request.IsPointPackage == false)
+        {
+            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId == null));
         }
 
         if (request.IsFromAuction == true)
