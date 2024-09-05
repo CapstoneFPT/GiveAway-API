@@ -238,7 +238,7 @@ namespace Services.Emails
             var template = GetEmailTemplate("RefundMail");
             template = template.Replace("[Order Code]", order!.OrderCode);
             template = template.Replace("[Status]", request.RefundStatus.ToString());
-            template = template.Replace("[Product Name]", request.OrderLineItemDetailedResponse.ItemName);
+            template = template.Replace("[Product Name]", request.ItemName);
             template = template.Replace("[Created Date]", request.CreatedDate.ToString("G"));
             template = template.Replace("[Refund Percent]", request.RefundPercentage!.Value.ToString());
             template = template.Replace("[Refund Amount]", request.RefundAmount!.Value.ToString("N0"));

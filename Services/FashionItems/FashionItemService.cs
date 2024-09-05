@@ -705,7 +705,11 @@ namespace Services.FashionItems
             {
                 query = query.Where(item => item.Gender == request.GenderType);
             }
-
+            if (request.IsLeftInStock)
+            {
+                query = query.Where(it =>
+                    it.IndividualFashionItems.Any(c => c.Status == FashionItemStatus.Available));
+            }
             var groupedQuery = query
                 .GroupBy(m => new
                 {

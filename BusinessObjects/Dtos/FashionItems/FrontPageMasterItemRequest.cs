@@ -9,5 +9,5 @@ public class FrontPageMasterItemRequest
     public GenderType? GenderType { get; set; }
     public int? PageNumber { get; set; }
     public int? PageSize { get; set; }
-    public bool? IsLeftInStock { get; set; }    
+    public bool IsLeftInStock { get; set; } = true;
 }

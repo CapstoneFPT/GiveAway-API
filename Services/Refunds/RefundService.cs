@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
@@ -9,6 +10,8 @@ using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using LinqKit;
+using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
 using Repositories.OrderLineItems;
@@ -71,23 +74,61 @@ namespace Services.Refunds
             return response;
         }
 
-        public async Task<Result<PaginationResponse<RefundResponse>>> GetAllRefunds(
-            RefundRequest refundRequest) 
+        public async Task<PaginationResponse<RefundResponse>> GetAllRefunds(
+            RefundRequest request) 
         {
-            var response = new Result<PaginationResponse<RefundResponse>>();
-            var result = await _refundRepository.GetAllRefunds(refundRequest);
-            if (result.TotalCount < 1)
+            Expression<Func<Refund, bool>> predicate = x => true;
+            Expression<Func<Refund, RefundResponse>> selector = item => new
+                RefundResponse()
+                {
+                    ItemCode = item.OrderLineItem.IndividualFashionItem.ItemCode ?? string.Empty,
+                    Description = item.Description ?? string.Empty,
+                    OrderCode = item.OrderLineItem.Order.OrderCode,
+                    CreatedDate = item.CreatedDate,
+                    RefundStatus = item.RefundStatus,
+                    RefundId = item.RefundId,
+                    CustomerEmail = item.OrderLineItem.Order.Email! ?? string.Empty,
+                    CustomerName = item.OrderLineItem.Order.RecipientName! ?? string.Empty,
+                    RefundAmount = item.OrderLineItem.UnitPrice * item.RefundPercentage / 100,
+                    RefundPercentage = item.RefundPercentage,
+                    UnitPrice = item.OrderLineItem.UnitPrice,
+                    ItemImages = item.OrderLineItem.IndividualFashionItem.Images.Select(c => c.Url).ToArray(),
+                    ImagesForCustomer = item.Images.Select(x => x.Url).ToArray(),
+                    ItemName = item.OrderLineItem.IndividualFashionItem.MasterItem.Name,
+                    OrderLineItemId = item.OrderLineItemId,
+                    ResponseFromShop = item.ResponseFromShop,
+                    CustomerPhone = item.OrderLineItem.Order.Phone! ?? string.Empty,
+                };
+            (List<RefundResponse> Items, int Page, int PageSize, int TotalCount) result =
+                new ValueTuple<List<RefundResponse>, int, int, int>();
+
+            if (request.MemberId.HasValue)
             {
-                response.Data = result;
-                response.ResultStatus = ResultStatus.Success;
-                response.Messages = ["Empty"];
-                return response;
+                predicate = predicate.And(item => item.OrderLineItem.Order.MemberId == request.MemberId);
             }
 
-            response.Data = result;
-            response.ResultStatus = ResultStatus.Success;
-            response.Messages = ["Results in page: " + result.PageNumber];
-            return response;
+            if (request.ShopId.HasValue)
+            {
+                predicate = predicate.And(item => item.OrderLineItem.IndividualFashionItem.MasterItem.ShopId == request.ShopId);
+            }
+
+            if (request.PreviousTime.HasValue)
+            {
+                predicate = predicate.And(item => item.CreatedDate <= request.PreviousTime);
+            }
+
+            result = await _refundRepository.GetRefundProjections(request.PageNumber, request.PageSize,
+                predicate,
+                selector);
+
+
+            return new PaginationResponse<RefundResponse>()
+            {
+                Items = result.Items!,
+                PageNumber = result.Page,
+                PageSize = result.PageSize,
+                TotalCount = result.TotalCount
+            };
         }
 
         
@@ -114,13 +155,13 @@ namespace Services.Refunds
             }
             var refundResponse = await _refundRepository.ConfirmReceivedAndRefund(refundId);
 
-            var member = await _accountRepository.GetAccountById(order.MemberId.Value);
+            var member = await _accountRepository.GetAccountById(order.MemberId!.Value);
             if (member == null)
             {
                 throw new AccountNotFoundException();
             }
 
-            member.Balance += refund.RefundAmount.Value;
+            member.Balance += refund.RefundAmount!.Value;
             await _accountRepository.UpdateAccount(member);
 
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
@@ -137,15 +178,14 @@ namespace Services.Refunds
                 RefundId = refundId,
                 MemberId = order.MemberId
             };
-
-            refundResponse.TransactionsResponse = await _transactionRepository.CreateTransactionRefund(refundTransaction);
+            await _transactionRepository.CreateTransactionRefund(refundTransaction);
             response.Data = refundResponse;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = new[] { "Confirm item is received and refund to customer successfully" };
             return response;
         }
 
-        public async Task<Result<RefundResponse>> CreateRefundByShop(Guid shopId, CreateRefundRequest request)
+        public async Task<Result<RefundResponse>> CreateRefundByShop(Guid shopId, CreateRefundByShopRequest request)
         {
             var response = new Result<RefundResponse>();
             var refund = new Refund()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -62,6 +63,38 @@ namespace Repositories.Refunds
             return response;
         }
 
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetRefundProjections<T>(int? page, int? pageSize, Expression<Func<Refund, bool>>? predicate, Expression<Func<Refund, T>>? selector)
+        {
+            var query = _giveAwayDbContext.Refunds.AsQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate).OrderByDescending(c => c.CreatedDate);
+            }
+
+            var count = await query.CountAsync();
+
+            var pageNum = page ?? -1;
+            var pageSizeNum = pageSize ?? -1;
+
+            if (pageNum > 0 && pageSizeNum > 0)
+            {
+                query = query.Skip((pageNum - 1) * pageSizeNum).Take(pageSizeNum);
+            }
+
+            List<T> items = new List<T>();
+            if (selector != null)
+            {
+                items = await query.Select(selector).ToListAsync();
+            }
+            else
+            {
+                items = await query.Cast<T>().ToListAsync();
+            }
+
+            return (items, pageNum, pageSizeNum, count);
+        }
+
         public async Task<RefundResponse> GetRefundById(Guid refundId)
         {
             var refund = await GenericDao<Refund>.Instance.GetQueryable()
@@ -74,49 +107,6 @@ namespace Repositories.Refunds
             return refund;
         }
 
-        public async Task<PaginationResponse<RefundResponse>> GetAllRefunds(RefundRequest request)
-        {
-            var query = GenericDao<Refund>.Instance.GetQueryable();
-            if (request.Status != null)
-            {
-                query = query.Where(f => request.Status.Contains(f.RefundStatus));
-            }
-
-            if (request.PreviousTime != null)
-            {
-                query = query.Where(f => f.CreatedDate <= request.PreviousTime);
-            }
-
-            if (request.ShopId != null)
-            {
-                query = query.Where(c => c.OrderLineItem.IndividualFashionItem.MasterItem.ShopId == request.ShopId);
-            }
-
-            if (request.MemberId != null)
-            {
-                query = query.Where(re => re.OrderLineItem.Order.MemberId == request.MemberId);
-            }
-            query = query.OrderByDescending(c => c.CreatedDate);
-            var count = await query.CountAsync();
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
-
-            var items = await query
-                .Include(c => c.OrderLineItem)
-                .ThenInclude(c => c.Order)
-                .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
-                .AsNoTracking().ToListAsync();
-
-            var result = new PaginationResponse<RefundResponse>
-            {
-                Items = items,
-                PageSize = request.PageSize,
-                TotalCount = count,
-                /*Filters = ["Filter created date by ascending"],*/
-                PageNumber = request.PageNumber,
-            };
-            return result;
-        }
 
         public async Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId)
         {

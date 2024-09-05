@@ -68,14 +68,12 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Result<PaginationResponse<RefundResponse>>>> GetAllRefunds(
+        [ProducesResponseType<PaginationResponse<RefundResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetAllRefunds(
             [FromQuery] RefundRequest refundRequest)
         {
             var result = await _refundService.GetAllRefunds(refundRequest);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
             return Ok(result);
         }
     }
