@@ -89,15 +89,21 @@ namespace Repositories.Refunds
 
             if (request.ShopId != null)
             {
-                // query = query.Where(c => c.OrderDetail.IndividualFashionItem.ShopId == request.ShopId);
+                query = query.Where(c => c.OrderLineItem.IndividualFashionItem.MasterItem.ShopId == request.ShopId);
             }
 
-            query = query.OrderBy(c => c.CreatedDate);
+            if (request.MemberId != null)
+            {
+                query = query.Where(re => re.OrderLineItem.Order.MemberId == request.MemberId);
+            }
+            query = query.OrderByDescending(c => c.CreatedDate);
             var count = await query.CountAsync();
             query = query.Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize);
 
             var items = await query
+                .Include(c => c.OrderLineItem)
+                .ThenInclude(c => c.Order)
                 .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
                 .AsNoTracking().ToListAsync();
 

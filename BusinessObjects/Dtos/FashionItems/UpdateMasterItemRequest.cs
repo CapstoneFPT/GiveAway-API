@@ -9,7 +9,7 @@ public class UpdateMasterItemRequest
     public string? Description { get; set; }
     public Guid? CategoryId { get; set; }
     public GenderType? Gender { get; set; }
-    public int? StockCount { get; set; }
+    
     public string[] ImageRequests { get; set; } = [];
 }
 

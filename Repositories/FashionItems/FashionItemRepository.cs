@@ -163,7 +163,7 @@ namespace Repositories.FashionItems
         private static string GenerateRandomString(string masterItemCode)
         {
             int number = random.Next(100000, 1000000);
-            return masterItemCode + number.ToString("D6");
+            return masterItemCode + "-" + number.ToString("D6");
         }
         public async Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode)
         {
@@ -415,7 +415,21 @@ namespace Repositories.FashionItems
         {
             return _giveAwayDbContext.MasterFashionItems.AsQueryable();
         }
-        
+
+        public async Task<bool> DeleteRangeIndividualItems(List<IndividualFashionItem> fashionItems)
+        {
+            try
+            {
+                _giveAwayDbContext.IndividualFashionItems.RemoveRange(fashionItems);
+                await _giveAwayDbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
+            }
+        }
     }
 
     public class SortOptions

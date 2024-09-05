@@ -35,5 +35,6 @@ namespace Services.FashionItems
             FrontPageMasterItemRequest request);
 
         Task<DotNext.Result<MasterItemDetailResponse,ErrorCode>> FindMasterItem(FindMasterItemRequest request);
+        Task<Result<string?>> DeleteDraftItem(List<DeleteDraftItemRequest> deleteDraftItemRequests);
     }
 }

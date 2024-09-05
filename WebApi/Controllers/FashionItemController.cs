@@ -81,5 +81,15 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [HttpDelete]
+        public async Task<IActionResult> DeleteDraftItem([FromBody] List<DeleteDraftItemRequest> deleteDraftItemRequests)
+        {
+            var result = await _fashionItemService.DeleteDraftItem(deleteDraftItemRequests);
+
+            if (result.ResultStatus != ResultStatus.Success)
+                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+
+            return Ok(result);
+        }
     }
 }
