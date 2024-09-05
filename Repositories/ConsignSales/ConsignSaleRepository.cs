@@ -387,6 +387,8 @@ namespace Repositories.ConsignSales
                 .GetQueryable()
                 .Include(cons => cons.ConsignSaleLineItems)
                 .ThenInclude(c => c.IndividualFashionItem)
+                .Include(cons => cons.ConsignSaleLineItems)
+                .ThenInclude(c => c.Images)
                 .Include(c => c.Shop)
                 .SingleOrDefaultAsync(predicate);
             return result;

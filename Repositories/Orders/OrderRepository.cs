@@ -292,9 +292,9 @@ namespace Repositories.Orders
             return prefix + number.ToString("D6");
         }
 
-        private async Task<Order?> IsCodeExisted(string code)
+        private Task<Order?> IsCodeExisted(string code)
         {
-            return await GenericDao<Order>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.OrderCode.Equals(code));
+            return GenericDao<Order>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.OrderCode.Equals(code));
         }
 
         public async Task<List<OrderLineItem>> IsOrderExisted(List<Guid> listItemId, Guid memberId)

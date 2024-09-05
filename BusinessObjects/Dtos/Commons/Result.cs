@@ -40,6 +40,7 @@ public enum FashionItemStatus
     UnSold,
     Reserved,
     Refundable,
+    Draft,
     PendingForConsignSale,
     PendingAuction,
     PendingForRefund,

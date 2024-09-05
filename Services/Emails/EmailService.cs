@@ -9,6 +9,7 @@ using MimeKit.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
@@ -16,6 +17,7 @@ using BusinessObjects.Dtos.Refunds;
 using Repositories.Accounts;
 using BusinessObjects.Entities;
 using Dao;
+using DotNext;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Bcpg.Attr;
 using Repositories.ConsignSales;
@@ -71,9 +73,9 @@ namespace Services.Emails
             await smtp.DisconnectAsync(true);
         }
 
-        public async Task<Result<string>> SendMailRegister(string email, string token)
+        public async Task<BusinessObjects.Dtos.Commons.Result<string>> SendMailRegister(string email, string token)
         {
-            var response = new Result<string>();
+            var response = new BusinessObjects.Dtos.Commons.Result<string>();
             var user = await _accountRepository.FindUserByEmail(email);
             string appDomain = _configuration.GetSection("MailSettings:AppDomain").Value;
             string confirmationLink = _configuration.GetSection("MailSettings:EmailConfirmation").Value;
@@ -94,22 +96,16 @@ namespace Services.Emails
             return response;
         }
 
-        public async Task<Result<string>> SendEmailOrder(Order order)
+        public async Task<bool> SendEmailOrder(Order order)
         {
-            var response = new Result<string>();
+            
             SendEmailRequest content = new SendEmailRequest();
             if (order.MemberId != null)
             {
                 var member = await _accountRepository.GetAccountById(order.MemberId.Value);
-                content.To = member.Email;
-            }
-            else
-            {
-                content.To = order.Email;
-            }
-
-            List<OrderLineItem> listOrderLineItems = order.OrderLineItems.ToList();
-            string orderTemplate = @"
+                content.To = member!.Email;
+                List<OrderLineItem> listOrderLineItems = order.OrderLineItems.ToList();
+                string orderTemplate = @"
 <table align='center' border='0' cellpadding='0' cellspacing='0' class='row row-5' role='presentation'
     style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;' width='100%'>
     <tbody>
@@ -194,42 +190,44 @@ namespace Services.Emails
     </tr>
     </tbody>
 </table>";
-            
-            
-            var template = GetEmailTemplate("OrderMail");
-            StringBuilder htmlBuilder = new StringBuilder();
 
-            foreach (var item in listOrderLineItems)
-            {
-                string filledTemplate = orderTemplate
-                    .Replace("{PRODUCT_NAME}", item.IndividualFashionItem.MasterItem.Name) 
-                    .Replace("{QUANTITY}", item.Quantity.ToString()) 
-                    .Replace("{COLOR}", item.IndividualFashionItem.Color)
-                    .Replace("{Condition}", item.IndividualFashionItem.Condition)
-                    .Replace("{PRODUCT_IMAGE_URL}", item.IndividualFashionItem.Images.Select(c => c.Url).First()) 
-                    .Replace("{SELLING_PRICE}", item.IndividualFashionItem.SellingPrice!.Value.ToString("N0"));
-    
-                htmlBuilder.Append(filledTemplate);
+
+                var template = GetEmailTemplate("OrderMail");
+                StringBuilder htmlBuilder = new StringBuilder();
+
+                foreach (var item in listOrderLineItems)
+                {
+                    string filledTemplate = orderTemplate
+                        .Replace("{PRODUCT_NAME}", item.IndividualFashionItem.MasterItem.Name)
+                        .Replace("{QUANTITY}", item.Quantity.ToString())
+                        .Replace("{COLOR}", item.IndividualFashionItem.Color)
+                        .Replace("{Condition}", item.IndividualFashionItem.Condition)
+                        .Replace("{PRODUCT_IMAGE_URL}", item.IndividualFashionItem.Images.Select(c => c.Url).First())
+                        .Replace("{SELLING_PRICE}", item.IndividualFashionItem.SellingPrice!.Value.ToString("N0"));
+
+                    htmlBuilder.Append(filledTemplate);
+                }
+
+                string finalHtml = htmlBuilder.ToString();
+                template = template.Replace($"[Order Code]", order.OrderCode);
+                template = template.Replace($"[Quantity]", order.OrderLineItems.Count().ToString());
+                template = template.Replace($"[Payment Method]", order.PaymentMethod.ToString());
+                template = template.Replace($"[Order Template]", finalHtml);
+                template = template.Replace($"[Total Price]", order.TotalPrice.ToString("N0"));
+                template = template.Replace($"[Recipient Name]", order.RecipientName);
+                template = template.Replace($"[Phone Number]", order.Phone);
+                template = template.Replace($"[Email]", order.Email);
+                template = template.Replace($"[Address]", order.Address);
+                template = template.Replace($"[Shipping Fee]", order.ShippingFee.ToString("N0"));
+                template = template.Replace($"[Discount]", order.Discount.ToString("N0"));
+                template = template.Replace($"[Payment Date]",
+                    order.OrderLineItems.Select(c => c.PaymentDate).First().ToString());
+                content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY";
+                content.Body = template;
+                await SendEmail(content);
+                return true;
             }
-            string finalHtml = htmlBuilder.ToString();
-            template = template.Replace($"[Order Code]", order.OrderCode);
-            template = template.Replace($"[Quantity]", order.OrderLineItems.Count().ToString());
-            template = template.Replace($"[Payment Method]", order.PaymentMethod.ToString());
-            template = template.Replace($"[Order Template]", finalHtml);
-            template = template.Replace($"[Total Price]", order.TotalPrice.ToString("N0"));
-            template = template.Replace($"[Recipient Name]", order.RecipientName);
-            template = template.Replace($"[Phone Number]", order.Phone);
-            template = template.Replace($"[Email]", order.Email);
-            template = template.Replace($"[Address]", order.Address);
-            template = template.Replace($"[Shipping Fee]", order.ShippingFee.ToString("N0"));
-            template = template.Replace($"[Discount]", order.Discount.ToString("N0"));
-            template = template.Replace($"[Payment Date]", order.OrderLineItems.Select(c => c.PaymentDate).First().ToString());
-            content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY";
-            content.Body = template;
-            await SendEmail(content);
-            response.Messages = ["The invoice has been send to customer mail"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+            return false;
         }
 
         public async Task<bool> SendEmailRefund(RefundResponse request)
@@ -238,12 +236,12 @@ namespace Services.Emails
             var order = await _orderRepository.GetSingleOrder(c =>
                 c.OrderLineItems.Select(c => c.OrderLineItemId).Contains(request.OrderLineItemId));
             var template = GetEmailTemplate("RefundMail");
-            template = template.Replace("[Order Code]", order.OrderCode);
+            template = template.Replace("[Order Code]", order!.OrderCode);
             template = template.Replace("[Status]", request.RefundStatus.ToString());
             template = template.Replace("[Product Name]", request.OrderLineItemDetailedResponse.ItemName);
             template = template.Replace("[Created Date]", request.CreatedDate.ToString("G"));
-            template = template.Replace("[Refund Percent]", request.RefundPercentage.Value.ToString());
-            template = template.Replace("[Refund Amount]", request.RefundAmount.Value.ToString());
+            template = template.Replace("[Refund Percent]", request.RefundPercentage!.Value.ToString());
+            template = template.Replace("[Refund Amount]", request.RefundAmount!.Value.ToString("N0"));
             template = template.Replace("[Customer Name]", request.CustomerName);
             template = template.Replace("[Phone Number]", request.CustomerPhone);
             template = template.Replace("[Email]", request.CustomerEmail);
@@ -253,7 +251,7 @@ namespace Services.Emails
             {
                 var member = await GenericDao<Account>.Instance.GetQueryable().Where(c => c.AccountId == order.MemberId)
                     .FirstOrDefaultAsync();
-                content.To = member.Email;
+                content.To = member!.Email;
                 content.Subject = $"[GIVEAWAY] REFUND RESPONSE FROM GIVEAWAY";
                 content.Body = template;
 
@@ -266,18 +264,20 @@ namespace Services.Emails
 
         public async Task<bool> SendEmailConsignSale(Guid consignSaleId)
         {
-            var consignSale = await _consignSaleRepository.GetConsignSaleById(consignSaleId);
+            Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+            List<ConsignSaleLineItem> listConsignSaleLine = consignSale!.ConsignSaleLineItems.ToList();
             SendEmailRequest content = new SendEmailRequest();
-            if (consignSale.MemberId != null)
+            if (consignSale!.MemberId != null)
             {
                 var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
-                content.To = member.Email;
+                content.To = member!.Email;
 
                 var template = GetEmailTemplate("ConsignSaleMail");
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
                 template = template.Replace("[Type]", consignSale.Type.ToString());
                 template = template.Replace("[Created Date]", consignSale.CreatedDate.ToString("G"));
-                template = template.Replace("[Customer Name]", consignSale.Consginer);
+                template = template.Replace("[Customer Name]", consignSale.ConsignorName);
                 template = template.Replace("[Phone Number]", consignSale.Phone);
                 template = template.Replace("[Email]", consignSale.Email);
                 template = template.Replace("[Address]", consignSale.Address);
@@ -306,17 +306,17 @@ namespace Services.Emails
             return false;
         }
 
-        public async Task<Result<string>> SendMailForgetPassword(string email)
+        public async Task<BusinessObjects.Dtos.Commons.Result<string>> SendMailForgetPassword(string email)
         {
-            var response = new Result<string>();
+            var response = new BusinessObjects.Dtos.Commons.Result<string>();
             var account = await _accountRepository.FindUserByEmail(email);
             var user = await _accountRepository.ResetPasswordToken(account);
-            response.Data = user.PasswordResetToken;
+            response.Data = user!.PasswordResetToken!;
             var template = GetEmailTemplate("ForgotPasswordMail");
             template = template.Replace("[Token]", response.Data);
             SendEmailRequest content = new SendEmailRequest
             {
-                To = $"{account.Email}",
+                To = $"{account!.Email}",
                 Subject = "[GIVEAWAY] RESET PASSWORD",
                 Body = template
             };
@@ -334,7 +334,7 @@ namespace Services.Emails
             if (consignSale.MemberId != null)
             {
                 var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
-                content.To = member.Email;
+                content.To = member!.Email;
 
                 var template = GetEmailTemplate("ConsignSaleReceivedMail");
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
@@ -365,7 +365,7 @@ namespace Services.Emails
             if (consignSale.MemberId != null)
             {
                 var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
-                content.To = member.Email;
+                content.To = member!.Email;
 
                 var template = GetEmailTemplate("ConsignSaleEndedMail");
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);

@@ -17,6 +17,7 @@ using Repositories.Categories;
 using Repositories.ConsignSales;
 using Repositories.FashionItems;
 using Repositories.Images;
+using Repositories.Shops;
 
 namespace Services.FashionItems
 {
@@ -27,16 +28,18 @@ namespace Services.FashionItems
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
         private readonly IConsignSaleRepository _consignSaleRepository;
+        private readonly IShopRepository _shopRepository;
 
         public FashionItemService(IFashionItemRepository fashionitemRepository, IImageRepository imageRepository,
             ICategoryRepository categoryRepository,
-            IMapper mapper, IConsignSaleRepository consignSaleRepository)
+            IMapper mapper, IConsignSaleRepository consignSaleRepository, IShopRepository shopRepository)
         {
             _fashionitemRepository = fashionitemRepository;
             _imageRepository = imageRepository;
             _categoryRepository = categoryRepository;
             _mapper = mapper;
             _consignSaleRepository = consignSaleRepository;
+            _shopRepository = shopRepository;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>> AddFashionItem(Guid shopId,
@@ -94,7 +97,6 @@ namespace Services.FashionItems
                     MasterItemId = item.MasterItemId,
                     ShopId = item.MasterItem.ShopId,
                     ItemCode = item.ItemCode,
-                    
                 };
 
             if (!string.IsNullOrEmpty(request.Name))
@@ -311,6 +313,7 @@ namespace Services.FashionItems
             {
                 throw new FashionItemNotFoundException();
             }
+
             item.Images.Clear();
             item.Images = request.imageUrls
                 .Select(x => new Image()
@@ -355,38 +358,27 @@ namespace Services.FashionItems
         {
             var response = new BusinessObjects.Dtos.Commons.Result<FashionItemDetailResponse>();
             var item = await _fashionitemRepository.GetFashionItemById(c => c.ItemId == itemId);
-            if (item != null)
+            if (item is null || (item.Status != FashionItemStatus.Available &&
+                                 item.Status != FashionItemStatus.Unavailable))
             {
-                if (item.Status.Equals(FashionItemStatus.Unavailable))
-                {
-                    item.Status = FashionItemStatus.Available;
-                    await _fashionitemRepository.UpdateFashionItem(item);
-                    // var consign =
-                    //     await _consignSaleRepository.GetSingleConsignSale(c => c.ConsignSaleDetails.Any(c => c.FashionItemId.Equals(item.ItemId)));
-                    /*if (consign != null)
-                    {
-                        if (!consign.ConsignSaleDetails.Any(c => c.FashionItem.Status.Equals(FashionItemStatus.Unavailable)))
-                        {
-                            consign.Status = ConsignSaleStatus.OnSale;
-                            await _consignSaleRepository.UpdateConsignSale(consign);
-                        }
-                    }*/
-                    response.Messages = ["This item status has successfully changed to available"];
-                    response.Data = _mapper.Map<FashionItemDetailResponse>(item);
-                    response.ResultStatus = ResultStatus.Success;
-                    return response;
-                }
-
-                item.Status = FashionItemStatus.Unavailable;
-                await _fashionitemRepository.UpdateFashionItem(item);
-                response.Data = _mapper.Map<FashionItemDetailResponse>(item);
-                response.Messages = ["This item status has successfully changed to unavailable"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
+                throw new FashionItemNotFoundException();
             }
 
-            response.Messages = ["Can not found the item"];
-            response.ResultStatus = ResultStatus.NotFound;
+            if (item.Status.Equals(FashionItemStatus.Unavailable))
+            {
+                item.Status = FashionItemStatus.Available;
+                response.Messages = ["This item status has successfully changed to available"];
+            }
+            else
+            {
+                item.Status = FashionItemStatus.Unavailable;
+                response.Messages = ["This item status has successfully changed to unavailable"];
+            }
+
+            response.Data = _mapper.Map<FashionItemDetailResponse>(item);
+            response.ResultStatus = ResultStatus.Success;
+            await _fashionitemRepository.UpdateFashionItem(item);
+
             return response;
         }
 
@@ -429,34 +421,69 @@ namespace Services.FashionItems
             CreateMasterItemRequest masterItemRequest)
         {
             var listMasterItemResponse = new List<MasterFashionItem>();
-            foreach (var shop in masterItemRequest.ItemForEachShops)
+            var listShopAvailable = await _shopRepository.GetShopEntities(c => c.StaffId != null);
+
+            if (masterItemRequest.ItemForEachShops.Length == 0)
             {
-                var masterItem = new MasterFashionItem()
+                foreach (var shop in listShopAvailable)
                 {
-                    Name = masterItemRequest.Name,
-                    Gender = masterItemRequest.Gender,
-                    Brand = masterItemRequest.Brand ?? "No Brand",
-                    Description = masterItemRequest.Description,
-                    MasterItemCode =
-                        await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
-                    CategoryId = masterItemRequest.CategoryId,
-                    StockCount = shop.StockCount,
-                    IsConsignment = false,
-                    CreatedDate = DateTime.UtcNow,
-                    ShopId = shop.ShopId
-                };
-                
-                masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
-
-                var imgForMaster = masterItemRequest.Images.Select(
-                    image => new Image()
+                    var masterItem = new MasterFashionItem()
                     {
-                        Url = image, CreatedDate = DateTime.UtcNow, MasterFashionItemId = masterItem.MasterItemId,
-                    }).ToList();
+                        Name = masterItemRequest.Name,
+                        Gender = masterItemRequest.Gender,
+                        Brand = masterItemRequest.Brand ?? "No Brand",
+                        Description = masterItemRequest.Description,
+                        MasterItemCode =
+                            await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
+                        CategoryId = masterItemRequest.CategoryId,
+                        StockCount = 0,
+                        IsConsignment = false,
+                        CreatedDate = DateTime.UtcNow,
+                        ShopId = shop.ShopId
+                    };
+                    masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
 
-                await _imageRepository.AddRangeImage(imgForMaster);
-                masterItem.Images = imgForMaster;
-                listMasterItemResponse.Add(masterItem);
+                    var imgForMaster = masterItemRequest.Images.Select(
+                        image => new Image()
+                        {
+                            Url = image, CreatedDate = DateTime.UtcNow, MasterFashionItemId = masterItem.MasterItemId,
+                        }).ToList();
+
+                    await _imageRepository.AddRangeImage(imgForMaster);
+                    masterItem.Images = imgForMaster;
+                    listMasterItemResponse.Add(masterItem);
+                }
+            }
+            else
+            {
+                foreach (var shop in masterItemRequest.ItemForEachShops!)
+                {
+                    var masterItem = new MasterFashionItem()
+                    {
+                        Name = masterItemRequest.Name,
+                        Gender = masterItemRequest.Gender,
+                        Brand = masterItemRequest.Brand ?? "No Brand",
+                        Description = masterItemRequest.Description,
+                        MasterItemCode =
+                            await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
+                        CategoryId = masterItemRequest.CategoryId,
+                        StockCount = 0,
+                        IsConsignment = false,
+                        CreatedDate = DateTime.UtcNow,
+                        ShopId = shop.ShopId
+                    };
+                    masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
+
+                    var imgForMaster = masterItemRequest.Images.Select(
+                        image => new Image()
+                        {
+                            Url = image, CreatedDate = DateTime.UtcNow, MasterFashionItemId = masterItem.MasterItemId,
+                        }).ToList();
+
+                    await _imageRepository.AddRangeImage(imgForMaster);
+                    masterItem.Images = imgForMaster;
+                    listMasterItemResponse.Add(masterItem);
+                }
             }
 
             return new BusinessObjects.Dtos.Commons.Result<List<MasterItemResponse>>()
@@ -482,6 +509,7 @@ namespace Services.FashionItems
                 {
                     throw new CategoryNotFound("Your new category is not found");
                 }
+
                 itemMaster.CategoryId = masterItemRequest.CategoryId.Value;
                 itemMaster.Category = category;
             }
@@ -492,19 +520,19 @@ namespace Services.FashionItems
             itemMaster.Description = masterItemRequest.Description ?? itemMaster.Description;
             itemMaster.Name = masterItemRequest.Name ?? itemMaster.Name;
             itemMaster.Brand = masterItemRequest.Brand ?? itemMaster.Brand;
-            
+
             itemMaster.Gender = masterItemRequest.Gender ?? itemMaster.Gender;
             itemMaster.StockCount = masterItemRequest.StockCount ?? itemMaster.StockCount;
-            
+
             itemMaster.Images.Clear();
-            
+
             itemMaster.Images = masterItemRequest.ImageRequests
                 .Select(x => new Image()
                 {
                     Url = x,
                     CreatedDate = DateTime.UtcNow,
                 }).ToList();
-            
+
             await _fashionitemRepository.UpdateMasterItem(itemMaster);
             return new BusinessObjects.Dtos.Commons.Result<MasterItemResponse>()
             {
@@ -514,11 +542,10 @@ namespace Services.FashionItems
             };
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<IndividualItemListResponse>> CreateIndividualItems(
+        public async Task<BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>> CreateIndividualItems(
             Guid masterItemId,
             CreateIndividualItemRequest request)
         {
-            var individualItems = new IndividualFashionItem();
             Expression<Func<MasterFashionItem, bool>> predicate = masterItem =>
                 masterItem.MasterItemId == masterItemId;
             var masterItem = await _fashionitemRepository.GetSingleMasterItem(predicate);
@@ -526,46 +553,43 @@ namespace Services.FashionItems
             {
                 throw new MasterItemNotAvailableException("Master item is not found or unable to add items");
             }
-            if (masterItem!.IndividualFashionItems.Count >= masterItem.StockCount)
-            {
-                throw new OverStockException("You have added item more than permitted quantity in stock");
-            }
 
-            var dataIndividual = new IndividualFashionItem()
+            var listIndividualResponse = new List<IndividualFashionItem>();
+            for (int i = 0; i < request.ItemInStock; i++)
             {
-                Note = request.Note,
-                    
-                Size = request.Size,
-                Color = request.Color,
-                Condition = request.Condition,
-                MasterItemId = masterItemId,
-                CreatedDate = DateTime.UtcNow,
-                Status = FashionItemStatus.Unavailable,
-                Type = FashionItemType.ItemBase,
-                SellingPrice = request.SellingPrice,
-                ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemCode),
-            };
-            // dataIndividual.Status = masterItem.IsConsignment == false ? FashionItemStatus.Unavailable : FashionItemStatus.PendingForConsignSale;
-            dataIndividual = await _fashionitemRepository.AddInvidualFashionItem(dataIndividual);
-
-            var individualItemImages = new List<Image>();
-            foreach (var image in request.Images)
-            {
-                var dataItemImage = new Image()
+                var dataIndividual = new IndividualFashionItem()
                 {
-                    Url = image,
+                    Note = request.Note,
+
+                    Size = request.Size,
+                    Color = request.Color,
+                    Condition = request.Condition,
+                    MasterItemId = masterItemId,
                     CreatedDate = DateTime.UtcNow,
-                    IndividualFashionItemId = dataIndividual.ItemId,
+                    Status = FashionItemStatus.Draft,
+                    Type = FashionItemType.ItemBase,
+                    SellingPrice = request.SellingPrice,
+                    ItemCode = await _fashionitemRepository.GenerateIndividualItemCode(masterItem!.MasterItemCode),
                 };
-                individualItemImages.Add(dataItemImage);
+                await _fashionitemRepository.AddInvidualFashionItem(dataIndividual);
+                listIndividualResponse.Add(dataIndividual);
             }
 
-            await _imageRepository.AddRangeImage(individualItemImages);
-            dataIndividual.Images = individualItemImages;
-
-            return new BusinessObjects.Dtos.Commons.Result<IndividualItemListResponse>()
+            return new BusinessObjects.Dtos.Commons.Result<List<IndividualItemListResponse>>()
             {
-                Data = _mapper.Map<IndividualItemListResponse>(dataIndividual),
+                Data = listIndividualResponse.Select(c => new IndividualItemListResponse()
+                {
+                    ItemId = c.ItemId,
+                    MasterItemId = c.MasterItemId,
+                    CreatedDate = c.CreatedDate,
+                    Status = c.Status,
+                    ItemCode = c.ItemCode,
+                    SellingPrice = c.SellingPrice!.Value,
+                    Color = c.Color,
+                    Condition = c.Condition,
+                    Size = c.Size,
+                    Type = c.Type
+                }).ToList(),
                 ResultStatus = ResultStatus.Success,
                 Messages = new[] { "Add items successfully" }
             };
@@ -587,12 +611,19 @@ namespace Services.FashionItems
                     Gender = item.Gender,
                     CategoryId = item.CategoryId,
                     IsConsignment = item.IsConsignment,
-                    ItemInStock = item.IndividualFashionItems.Count,
+                    ItemInStock = item.IndividualFashionItems.Count(c => c.Status == FashionItemStatus.Available),
                     ShopId = item.ShopId,
                     ShopAddress = item.Shop.Address,
-                    StockCount = item.StockCount,
+                    StockCount = item.IndividualFashionItems.Count,
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
+            (List<MasterItemListResponse> Items, int Page, int PageSize, int TotalCount) result =
+                new ValueTuple<List<MasterItemListResponse>, int, int, int>();
+            if (request.IsLeftInStock)
+            {
+                predicate = predicate.And(it =>
+                    it.IndividualFashionItems.Any(c => c.Status == FashionItemStatus.Available));
+            }
 
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
@@ -611,6 +642,7 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => categoryIds.Contains(item.CategoryId));
             }
 
+
             if (request.IsConsignment != null)
             {
                 if (request.IsConsignment == true)
@@ -622,6 +654,7 @@ namespace Services.FashionItems
                     predicate = predicate.And(item => item.IsConsignment == false);
                 }
             }
+
             if (request.ShopId.HasValue)
             {
                 predicate = predicate.And(item => item.ShopId == request.ShopId);
@@ -632,13 +665,14 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => item.Gender == request.GenderType);
             }
 
-            (List<MasterItemListResponse> Items, int Page, int PageSize, int TotalCount) result =
-                await _fashionitemRepository.GetMasterItemProjections(request.PageNumber, request.PageSize, predicate,
-                    selector);
+            result = await _fashionitemRepository.GetMasterItemProjections(request.PageNumber, request.PageSize,
+                predicate,
+                selector);
+
 
             return new PaginationResponse<MasterItemListResponse>()
             {
-                Items = result.Items,
+                Items = result.Items!,
                 PageNumber = result.Page,
                 PageSize = result.PageSize,
                 TotalCount = result.TotalCount
@@ -686,7 +720,8 @@ namespace Services.FashionItems
                     Gender = g.First().Gender,
                     CategoryId = g.First().CategoryId,
                     IsConsignment = g.First().IsConsignment,
-                    StockCount = g.First().StockCount,
+                    StockCount = g.Sum(c => c.IndividualFashionItems.Count()),
+                    ItemInStock = g.Sum(c => c.IndividualFashionItems.Count(ind => ind.Status == FashionItemStatus.Available)),
                     Images = g.First().Images.Select(i => i.Url).ToList()
                 });
 
@@ -712,7 +747,7 @@ namespace Services.FashionItems
             {
                 return new Result<MasterItemDetailResponse, ErrorCode>(ErrorCode.NotFound);
             }
-            
+
             var queryable = _fashionitemRepository.GetMasterQueryable();
 
             Expression<Func<MasterFashionItem, bool>> predicate = item => true;
@@ -835,8 +870,7 @@ namespace Services.FashionItems
                     Color = item.Color,
                     Condition = item.Condition,
                     Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
-                    Size =item.Size,
-                    
+                    Size = item.Size,
                 };
 
             if (!string.IsNullOrEmpty(request.SearchItemCode))

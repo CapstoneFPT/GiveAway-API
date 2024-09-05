@@ -17,6 +17,7 @@ namespace Repositories.FashionItems
         private readonly GiveAwayDbContext _giveAwayDbContext;
         private static HashSet<string> generatedStrings = new HashSet<string>();
         private static readonly string? num = null;
+        private static Random random = new Random();
         /*private readonly string prefixInStock;*/
         public FashionItemRepository(
             IMapper mapper, GiveAwayDbContext dbContext)
@@ -150,18 +151,20 @@ namespace Repositories.FashionItems
 
         public async Task<string> GenerateIndividualItemCode(string masterItemCode)
         {
-            int itemNumber = 1;
-            int totalItemNumber = 0;
-            
-            var individualItems = await _giveAwayDbContext.IndividualFashionItems
-                .Where(item => item.ItemCode.Contains(masterItemCode))
-                .ToListAsync();
-            totalItemNumber = individualItems.Count + 1;
-            string prefix = new string($"{masterItemCode}-{totalItemNumber}");
-            
-            return prefix;
-        }
+            string newString;
+            do
+            {
+                newString = GenerateRandomString(masterItemCode);
+            } while (generatedStrings.Contains(newString));
 
+            generatedStrings.Add(newString);
+            return newString;
+        }
+        private static string GenerateRandomString(string masterItemCode)
+        {
+            int number = random.Next(100000, 1000000);
+            return masterItemCode + number.ToString("D6");
+        }
         public async Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode)
         {
             int totalMasterCode = 0;
