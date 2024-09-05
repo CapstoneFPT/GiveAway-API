@@ -6,6 +6,7 @@ public class MasterItemRequest
 {
     public string? SearchTerm { get; set; }
     public string? SearchItemCode { get; set; }
+    public string? Brand { get; set; }
     public int? PageNumber { get; set; }
     public int? PageSize { get; set; }
     public Guid? CategoryId { get; set; }

@@ -642,6 +642,10 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => categoryIds.Contains(item.CategoryId));
             }
 
+            if (request.Brand != null)
+            {
+                predicate = predicate.And(item => EF.Functions.ILike(item.Brand, $"%{request.Brand}%"));
+            }
 
             if (request.IsConsignment != null)
             {
