@@ -155,42 +155,13 @@ namespace Repositories.OrderLineItems
             };
             var refundCreated = await GenericDao<Refund>.Instance.AddAsync(refund);
 
-            var refundResponse = await GenericDao<Refund>.Instance.GetQueryable()
-                .Include(x => x.OrderLineItem)
-                .ThenInclude(x => x.Order)
-                .ThenInclude(x=>x.Member)
-                .Include(x => x.OrderLineItem)
-                .ThenInclude(x => x.IndividualFashionItem)
-                .Where(x => x.RefundId == refundCreated.RefundId).Select(x => new RefundResponse()
-                {
-                    CreatedDate = refundCreated.CreatedDate,
-                    RefundId = refundCreated.RefundId,
-                    Description = refundRequest.Description,
-                    RefundStatus = refundCreated.RefundStatus,
-                    OrderCode = refund.OrderLineItem.Order.OrderCode,
-                    ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode,
-                    UnitPrice = refund.OrderLineItem.UnitPrice,
-                    ItemName = refund.OrderLineItem.IndividualFashionItem.MasterItem.Name,
-                    CustomerEmail =
-                        refund.OrderLineItem.Order != null ? refund.OrderLineItem.Order.Email : string.Empty,
-                    OrderLineItemId = refundRequest.OrderLineItemId,
-                    CustomerName = refund.OrderLineItem.Order != null
-                        ? refund.OrderLineItem.Order.Member != null
-                            ? refund.OrderLineItem.Order.Member.Fullname
-                            : string.Empty
-                        : string.Empty,
-                    RecipientName = refund.OrderLineItem.Order != null
-                        ? refund.OrderLineItem.Order.RecipientName
-                        : string.Empty,
-                    CustomerPhone =
-                        refund.OrderLineItem.Order != null ? refund.OrderLineItem.Order.Phone : string.Empty,
-                    ItemImages = refund.OrderLineItem.IndividualFashionItem.Images.Select(c => c.Url).ToArray(),
-                    RefundAmount = refund.OrderLineItem.UnitPrice * refund.RefundPercentage / 100,
-                    RefundPercentage = refund.RefundPercentage,
-                    ImagesForCustomer = refund.Images.Select(image => image.Url).ToArray(),
-                    ResponseFromShop = refund.ResponseFromShop
-                }).FirstOrDefaultAsync();
-            return refundResponse;
+            return new RefundResponse()
+            {
+                RefundId = refundCreated.RefundId,
+                Description = refundCreated.Description,
+                CreatedDate = refundCreated.CreatedDate,
+                RefundStatus = refundCreated.RefundStatus
+            };
         }
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)>
