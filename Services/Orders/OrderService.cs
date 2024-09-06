@@ -966,7 +966,8 @@ public class OrderService : IOrderService
                 return new Result<ShippingFeeResult, ErrorCode>(ghnShippingResult.Error);
             }
 
-            shippingFee += ghnShippingResult.Value.Data.ServiceFee;
+            if (ghnShippingResult.Value.Data != null)
+                shippingFee += (int)Math.Round(ghnShippingResult.Value.Data.ServiceFee / 1000) * 1000;
             shopLocation.Add(
                 new ShippingLocation()
                 {

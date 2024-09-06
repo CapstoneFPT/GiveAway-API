@@ -31,6 +31,8 @@ namespace BusinessObjects.Dtos.Refunds
         public string[] ImagesForCustomer { get; set; }
         public string[] ItemImages { get; set; }
         public RefundStatus RefundStatus { get; set; }
+
+        public string RecipientName { get; set; }
         // public OrderLineItemDetailedResponse OrderLineItemDetailedResponse { get; set; }
         // public GetTransactionsResponse? TransactionsResponse { get; set; }
     }

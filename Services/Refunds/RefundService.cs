@@ -49,7 +49,7 @@ namespace Services.Refunds
             var refund = await _refundRepository.GetSingleRefund(predicate);
             if (refund is null)
             {
-                throw new RefundNoFoundException();
+                throw new RefundNotFoundException();
             }
 
             if (refund.RefundStatus != RefundStatus.Pending)
@@ -73,32 +73,40 @@ namespace Services.Refunds
         {
             var response = new Result<RefundResponse>();
             Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
-            var item = await _refundRepository.GetSingleRefund(predicate);
-            if (item is null)
-            {
-                throw new RefundNoFoundException();
-            }
+            var queryable = _refundRepository.GetQueryable();
 
-            response.Data = new RefundResponse()
+            var data = await _refundRepository.GetQueryable()
+                .Where(predicate)
+                .Select(refund => new RefundResponse()
+                {
+                    ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode ?? string.Empty,
+                    Description = refund.Description ?? string.Empty,
+                    OrderCode = refund.OrderLineItem.Order.OrderCode,
+                    CreatedDate = refund.CreatedDate,
+                    RefundStatus = refund.RefundStatus,
+                    RefundId = refund.RefundId,
+                    CustomerEmail = refund.OrderLineItem.Order.Email ?? string.Empty,
+                    CustomerName = refund.OrderLineItem.Order.Member != null
+                        ? refund.OrderLineItem.Order.Member.Fullname
+                        : string.Empty,
+                    RecipientName = refund.OrderLineItem.Order.RecipientName! ?? string.Empty,
+                    RefundAmount = refund.OrderLineItem.UnitPrice * refund.RefundPercentage / 100,
+                    RefundPercentage = refund.RefundPercentage,
+                    UnitPrice = refund.OrderLineItem.UnitPrice,
+                    ItemImages = refund.OrderLineItem.IndividualFashionItem.Images.Select(c => c.Url).ToArray(),
+                    ImagesForCustomer = refund.Images.Select(x => x.Url).ToArray(),
+                    ItemName = refund.OrderLineItem.IndividualFashionItem.MasterItem.Name,
+                    OrderLineItemId = refund.OrderLineItemId,
+                    ResponseFromShop = refund.ResponseFromShop,
+                    CustomerPhone = refund.OrderLineItem.Order.Phone ?? string.Empty,
+                }).FirstOrDefaultAsync();
+
+            if (data is null)
             {
-                ItemCode = item.OrderLineItem.IndividualFashionItem.ItemCode ?? string.Empty,
-                Description = item.Description ?? string.Empty,
-                OrderCode = item.OrderLineItem.Order.OrderCode,
-                CreatedDate = item.CreatedDate,
-                RefundStatus = item.RefundStatus,
-                RefundId = item.RefundId,
-                CustomerEmail = item.OrderLineItem.Order.Email! ?? string.Empty,
-                CustomerName = item.OrderLineItem.Order.RecipientName! ?? string.Empty,
-                RefundAmount = item.OrderLineItem.UnitPrice * item.RefundPercentage / 100,
-                RefundPercentage = item.RefundPercentage,
-                UnitPrice = item.OrderLineItem.UnitPrice,
-                ItemImages = item.OrderLineItem.IndividualFashionItem.Images.Select(c => c.Url).ToArray(),
-                ImagesForCustomer = item.Images.Select(x => x.Url).ToArray(),
-                ItemName = item.OrderLineItem.IndividualFashionItem.MasterItem.Name,
-                OrderLineItemId = item.OrderLineItemId,
-                ResponseFromShop = item.ResponseFromShop,
-                CustomerPhone = item.OrderLineItem.Order.Phone! ?? string.Empty,
-            };
+               throw new RefundNotFoundException(); 
+            }
+            
+            response.Data = data;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Successfully"];
             return response;
@@ -157,26 +165,34 @@ namespace Services.Refunds
             {
                 predicate = predicate.And(item => item.OrderLineItem.Order.Email == request.CustomerEmail);
             }
+
             if (request.CustomerPhone != null)
             {
                 predicate = predicate.And(item => item.OrderLineItem.Order.Phone == request.CustomerPhone);
             }
+
             if (request.CustomerName != null)
             {
                 predicate = predicate.And(item => item.OrderLineItem.Order.RecipientName == request.CustomerName);
             }
+
             if (request.OrderCode != null)
             {
                 predicate = predicate.And(item => item.OrderLineItem.Order.OrderCode == request.OrderCode);
             }
+
             if (request.ItemCode != null)
             {
-                predicate = predicate.And(item => item.OrderLineItem.IndividualFashionItem.ItemCode == request.ItemCode);
+                predicate = predicate.And(item =>
+                    item.OrderLineItem.IndividualFashionItem.ItemCode == request.ItemCode);
             }
+
             if (request.ItemName != null)
             {
-                predicate = predicate.And(item => item.OrderLineItem.IndividualFashionItem.MasterItem.Name == request.ItemName);
+                predicate = predicate.And(item =>
+                    item.OrderLineItem.IndividualFashionItem.MasterItem.Name == request.ItemName);
             }
+
             result = await _refundRepository.GetRefundProjections(request.PageNumber, request.PageSize,
                 predicate,
                 selector);
@@ -199,7 +215,7 @@ namespace Services.Refunds
             var refund = await _refundRepository.GetSingleRefund(predicate);
             if (refund == null)
             {
-                throw new RefundNoFoundException();
+                throw new RefundNotFoundException();
             }
 
             var order = await _orderRepository.GetSingleOrder(c =>
@@ -271,7 +287,7 @@ namespace Services.Refunds
             var refund = await _refundRepository.GetSingleRefund(predicate);
             if (refund == null)
             {
-                throw new RefundNoFoundException();
+                throw new RefundNotFoundException();
             }
 
             if (refund.RefundStatus != RefundStatus.Rejected && refund.RefundStatus == RefundStatus.Approved)
