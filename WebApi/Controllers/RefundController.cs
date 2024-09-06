@@ -78,5 +78,14 @@ namespace WebApi.Controllers
             var result = await _refundService.GetAllRefunds(refundRequest);
             return Ok(result);
         }
+
+        [HttpPut("{refundId}/cancel")]
+        [ProducesResponseType<RefundResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CancelRefund([FromRoute] Guid refundId)
+        {
+            var result = await _refundService.CancelRefund(refundId);
+            return Ok(result);
+        }
     }
 }

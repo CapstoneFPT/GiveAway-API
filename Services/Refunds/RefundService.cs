@@ -51,9 +51,14 @@ namespace Services.Refunds
             {
                 throw new RefundNoFoundException();
             }
-            if (request.Status.Equals(RefundStatus.Pending) || refund.RefundStatus.Equals(request.Status))
+
+            if (refund.RefundStatus != RefundStatus.Pending)
             {
-                throw new StatusNotAvailableException();
+                throw new StatusNotAvailableWithMessageException("This refund is not pending for approval");
+            }
+            if (request.Status != RefundStatus.Approved && request.Status != RefundStatus.Rejected)
+            {
+                throw new StatusNotAvailableWithMessageException("You can only Approve or Reject the refund");
             }
 
             var data = await _refundRepository.ApprovalRefundFromShop(refundId, request);
@@ -258,6 +263,35 @@ namespace Services.Refunds
             };
             await _refundRepository.CreateRefund(refund);
             return await GetRefundById(refund.RefundId);
+        }
+
+        public async Task<Result<RefundResponse>> CancelRefund(Guid refundId)
+        {
+            Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
+            var refund = await _refundRepository.GetSingleRefund(predicate);
+            if (refund == null)
+            {
+                throw new RefundNoFoundException();
+            }
+
+            if (refund.RefundStatus != RefundStatus.Rejected && refund.RefundStatus == RefundStatus.Approved)
+            {
+                throw new StatusNotAvailableWithMessageException("This refund has status can not be cancelled");
+            }
+            refund.RefundStatus = RefundStatus.Cancelled;
+            refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Sold;
+            await _refundRepository.UpdateRefund(refund);
+            return new Result<RefundResponse>()
+            {
+                Data = new RefundResponse()
+                {
+                    RefundId = refund.RefundId,
+                    OrderLineItemId = refund.OrderLineItemId,
+                    RefundStatus = refund.RefundStatus,
+                    CreatedDate = refund.CreatedDate,
+                    ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode
+                }
+            };
         }
     }
 }

@@ -16,5 +16,6 @@ namespace Services.Refunds
         Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, ApprovalRefundRequest request);
         Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId);
         Task<Result<RefundResponse>> CreateRefundByShop(Guid shopId, CreateRefundByShopRequest request);
+        Task<Result<RefundResponse>> CancelRefund(Guid refundId);
     }
 }

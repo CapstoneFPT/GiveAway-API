@@ -862,15 +862,20 @@ public class OrderService : IOrderService
             order.Status = OrderStatus.Cancelled;
         }
 
+        if (order.PaymentMethod == PaymentMethod.COD)
+        {
+            await _emailService.SendEmailOrder(order);
+        }
+
         if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
-            await _emailService.SendEmailOrder(order);
+            
         }
 
         if (order.Status.Equals(OrderStatus.Cancelled) && !order.PaymentMethod.Equals(PaymentMethod.COD))
         {
-            order.Member.Balance += order.TotalPrice;
+            order.Member!.Balance += order.TotalPrice;
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();

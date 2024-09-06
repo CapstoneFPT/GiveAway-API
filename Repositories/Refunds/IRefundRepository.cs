@@ -19,5 +19,6 @@ namespace Repositories.Refunds
         Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, ApprovalRefundRequest request);
         Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId);
         Task CreateRefund(Refund refund);
+        Task UpdateRefund(Refund refund);
     }
 }

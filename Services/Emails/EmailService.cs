@@ -141,7 +141,7 @@ namespace Services.Emails
                         <table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-3' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
                             <tr>
                                 <td class='pad' style='padding-left: 10px; padding-right: 10px;'>
-                                    <div style='color: #393d47; font-family: 'Oswald, Arial', 'Helvetica Neue', Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+                                    <div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
                                         <p style='margin: 0; word-break: break-word'>
                                             <span style='word-break: break-word; color: #b23ab6;'>{SELLING_PRICE} VND</span><br/>
                                         </p>
@@ -152,7 +152,7 @@ namespace Services.Emails
                         <table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-4' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
                             <tr>
                                 <td class='pad' style='padding-bottom: 20px; padding-left: 10px; padding-right: 10px; padding-top: 10px;'>
-                                    <div style='color: #393d47; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+                                    <div style='color: #393d47; font-family: Oswald ,Helvetica Neue, Helvetica, Arial, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
                                         <p style='margin: 0; word-break: break-word'>
                                             <span style='word-break: break-word; color: #b23ab6;'>Quantity:</span> {QUANTITY}<br/>
                                         </p>
@@ -163,7 +163,7 @@ namespace Services.Emails
                         <table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-6' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
                             <tr>
                                 <td class='pad' style='padding-bottom: 20px; padding-left: 10px; padding-right: 10px;'>
-                                    <div style='color: #393d47; font-family: 'Oswald', Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+                                    <div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
                                         <p style='margin: 0; word-break: break-word'>
                                             <span style='word-break: break-word; color: #b23ab6;'>Color: </span> {COLOR}<br/>
                                         </p>
@@ -174,7 +174,7 @@ namespace Services.Emails
                         <table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-6' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
                             <tr>
                                 <td class='pad' style='padding-bottom: 20px; padding-left: 10px; padding-right: 10px;'>
-                                    <div style='color: #393d47; font-family: 'Oswald', Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+                                    <div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
                                         <p style='margin: 0; word-break: break-word'>
                                             <span style='word-break: break-word; color: #b23ab6;'>Condition: </span> {Condition}<br/>
                                         </p>
@@ -267,8 +267,133 @@ namespace Services.Emails
             Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
             var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
             List<ConsignSaleLineItem> listConsignSaleLine = consignSale!.ConsignSaleLineItems.ToList();
+            string consignTemplate = @"
+            <table align='center' border='0' cellpadding='0' cellspacing='0' class='row row-5' role='presentation'
+						   style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;' width='100%'>
+						<tbody>
+						<tr>
+							<td>
+								<table align='center' border='0' cellpadding='0' cellspacing='0' class='row-content stack'
+									   role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #060e21; background-image: url(https://firebasestorage.googleapis.com/v0/b/give-away-a58b2.appspot.com/o/images%2Flogo%2F16a4fb29-7166-41c8-8dcd-c438768c806f.jpg?alt=media&token=fceb70e6-8bf8-484a-bc75-c18cfd8edd9a); color: #000000; width: 650px; margin: 0 auto;' width='650'>
+									<tbody>
+									<tr>
+										<td class='column column-1' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 20px; padding-right: 20px; padding-top: 5px; vertical-align: top; border-top: 0px; border-right: 0px; border-bottom: 0px; border-left: 0px;' width='50%'>
+											<table border='0' cellpadding='0' cellspacing='0' class='image_block block-1' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt;' width='100%'>
+												<tr>
+													<td class='pad' style='width: 100%; padding-right: 0px; padding-left: 0px;'>
+														<div align='center' class='alignment' style='line-height: 10px'>
+															<div style='max-width: 242.25px'>
+																<img alt='{PRODUCT_NAME}' height='100px' src='{PRODUCT_IMAGE_URL}' style='display: block; height: auto; border: 0; width: 70%;' title='{PRODUCT_NAME}' width='242.25'/>
+															</div>
+														</div>
+													</td>
+												</tr>
+											</table>
+										</td>
+										<td class='column column-2' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; padding-bottom: 5px; padding-left: 20px; padding-right: 20px; padding-top: 5px; vertical-align: top; border-top: 0px; border-right: 0px; border-bottom: 0px; border-left: 0px;' width='50%'>
+											<table border='0' cellpadding='0' cellspacing='0' class='heading_block block-2' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt;' width='100%'>
+												<tr>
+													<td class='pad' style='padding-left: 10px; padding-right: 10px; text-align: center; width: 100%;'>
+														<h2 style='margin: 0; color: #b23ab6; direction: ltr; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 24px; font-weight: normal; letter-spacing: normal; line-height: 120%; text-align: left; margin-top: 0; margin-bottom: 0; mso-line-height-alt: 28.799999999999997px;'>
+															<strong>{PRODUCT_NAME}</strong>
+														</h2>
+													</td>
+												</tr>
+											</table>
+											<table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-3' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
+												<tr>
+													<td class='pad' style='padding-left: 10px; padding-right: 10px;'>
+														<div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+														<p style='margin: 0; word-break: break-word'>
+															<span style='word-break: break-word; color: #b23ab6;'>Expected Price: </span>{EXPECTED_PRICE} VND<br/>
+														</p>
+														</div>
+													</td>
+												</tr>
+											</table>
+											<table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-4' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
+												<tr>
+													<td class='pad' style='padding-left: 10px; padding-right: 10px; padding-top: 10px;'>
+														<div style='color: #393d47; font-family: Oswald, Helvetica Neue, Helvetica, Arial, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+														<p style='margin: 0; word-break: break-word'>
+															<span style='word-break: break-word; color: #b23ab6;'>Gender: </span>{GENDER}<br/>
+														</p>
+														</div>
+													</td>
+												</tr>
+											</table>
+											<table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-6' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
+												<tr>
+													<td class='pad' style='padding-left: 10px; padding-right: 10px;'>
+														<div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+														<p style='margin: 0; word-break: break-word'>
+															<span style='word-break: break-word; color: #b23ab6;'>Color: </span> {COLOR}<br/>
+														</p>
+														</div>
+													</td>
+												</tr>
+											</table>
+											<table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-6' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
+												<tr>
+													<td class='pad' style='padding-left: 10px; padding-right: 10px;'>
+														<div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+														<p style='margin: 0; word-break: break-word'>
+															<span style='word-break: break-word; color: #b23ab6;'>Condition: </span> {Condition}<br/>
+														</p>
+														</div>
+													</td>
+												</tr>
+											</table>
+											<table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-6' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
+												<tr>
+													<td class='pad' style='padding-left: 10px; padding-right: 10px;'>
+														<div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+														<p style='margin: 0; word-break: break-word'>
+															<span style='word-break: break-word; color: #b23ab6;'>Size: </span> {SIZE}<br/>
+														</p>
+														</div>
+													</td>
+												</tr>
+											</table>
+											<table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-6' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
+												<tr>
+													<td class='pad' style='padding-bottom: 10px; padding-left: 10px; padding-right: 10px;'>
+														<div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+														<p style='margin: 0; word-break: break-word'>
+															<span style='word-break: break-word; color: #b23ab6;'>Note: </span> {NOTE}<br/>
+														</p>
+														</div>
+													</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+									</tbody>
+								</table>
+							</td>
+						</tr>
+						</tbody>
+					</table>";
             SendEmailRequest content = new SendEmailRequest();
-            if (consignSale!.MemberId != null)
+            StringBuilder htmlBuilder = new StringBuilder();
+
+            foreach (var item in listConsignSaleLine)
+            {
+                string filledTemplate = consignTemplate
+                    .Replace("{PRODUCT_NAME}", item.ProductName)
+                    .Replace("{GENDER}", item.Gender.ToString())
+                    .Replace("{SIZE}", item.Size.ToString())
+                    .Replace("{COLOR}", item.Color)
+                    .Replace("{NOTE}", item.Note)
+                    .Replace("{Condition}", item.Condition)
+                    .Replace("{PRODUCT_IMAGE_URL}", item.IndividualFashionItem.Images.Select(c => c.Url).First())
+                    .Replace("{EXPECTED_PRICE}", item.ExpectedPrice.ToString("N0"));
+
+                htmlBuilder.Append(filledTemplate);
+            }
+
+            string finalHtml = htmlBuilder.ToString();
+            if (consignSale.MemberId != null)
             {
                 var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
                 content.To = member!.Email;
@@ -279,6 +404,7 @@ namespace Services.Emails
                 template = template.Replace("[Created Date]", consignSale.CreatedDate.ToString("G"));
                 template = template.Replace("[Customer Name]", consignSale.ConsignorName);
                 template = template.Replace("[Phone Number]", consignSale.Phone);
+                template = template.Replace("[ConsignTemplate]", finalHtml);
                 template = template.Replace("[Email]", consignSale.Email);
                 template = template.Replace("[Address]", consignSale.Address);
                 if (consignSale.Status.Equals(ConsignSaleStatus.AwaitDelivery))
@@ -296,7 +422,7 @@ namespace Services.Emails
                     template = template.Replace("[ConsignSale Duration]", "0 Day");
                 }
 
-                content.Subject = $"[GIVEAWAY] CONSIGNSALE INVOICE FROM GIVEAWAY";
+                content.Subject = $"[GIVEAWAY] CONSIGN SALE ANNOUNCEMENT FROM GIVEAWAY";
                 content.Body = template;
 
                 await SendEmail(content);
