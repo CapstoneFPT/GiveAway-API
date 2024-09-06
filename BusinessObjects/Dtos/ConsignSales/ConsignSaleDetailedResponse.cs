@@ -19,6 +19,7 @@ namespace BusinessObjects.Dtos.ConsignSales
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public Guid ShopId { get; set; }
+        public string? ShopAddress { get; set; }
         public Guid? MemberId { get; set; }
         public ConsignSaleStatus Status { get; set; }
         public ConsignSaleMethod ConsignSaleMethod { get; set; }
