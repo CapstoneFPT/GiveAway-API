@@ -156,11 +156,13 @@ namespace Repositories.OrderLineItems
             }
 
             await GenericDao<Image>.Instance.AddRange(listImage);
-            var refundResponse = await GenericDao<Refund>.Instance.GetQueryable()
-                .Where(c => c.OrderLineItemId == refundRequest.OrderLineItemId)
-                .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync();
-            return refundResponse;
+            return new RefundResponse()
+            {
+                RefundId = refund.RefundId,
+                Description = refund.Description,
+                CreatedDate = refund.CreatedDate,
+                RefundStatus = refund.RefundStatus
+            };
         }
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)>

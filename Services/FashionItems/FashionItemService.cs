@@ -425,69 +425,40 @@ namespace Services.FashionItems
             CreateMasterItemRequest masterItemRequest)
         {
             var listMasterItemResponse = new List<MasterFashionItem>();
-            var listShopAvailable = await _shopRepository.GetShopEntities(c => c.StaffId != null);
+            
 
             if (masterItemRequest.ItemForEachShops.Length == 0)
             {
-                foreach (var shop in listShopAvailable)
-                {
-                    var masterItem = new MasterFashionItem()
-                    {
-                        Name = masterItemRequest.Name,
-                        Gender = masterItemRequest.Gender,
-                        Brand = masterItemRequest.Brand ?? "No Brand",
-                        Description = masterItemRequest.Description,
-                        MasterItemCode =
-                            await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
-                        CategoryId = masterItemRequest.CategoryId,
-                        StockCount = 0,
-                        IsConsignment = false,
-                        CreatedDate = DateTime.UtcNow,
-                        ShopId = shop.ShopId
-                    };
-                    masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
-
-                    var imgForMaster = masterItemRequest.Images.Select(
-                        image => new Image()
-                        {
-                            Url = image, CreatedDate = DateTime.UtcNow, MasterFashionItemId = masterItem.MasterItemId,
-                        }).ToList();
-
-                    await _imageRepository.AddRangeImage(imgForMaster);
-                    masterItem.Images = imgForMaster;
-                    listMasterItemResponse.Add(masterItem);
-                }
+                throw new MissingFeatureException("Please choose shops to create master item");
             }
-            else
+            
+            foreach (var shop in masterItemRequest.ItemForEachShops!)
             {
-                foreach (var shop in masterItemRequest.ItemForEachShops!)
+                var masterItem = new MasterFashionItem()
                 {
-                    var masterItem = new MasterFashionItem()
+                    Name = masterItemRequest.Name,
+                    Gender = masterItemRequest.Gender,
+                    Brand = masterItemRequest.Brand ?? "No Brand",
+                    Description = masterItemRequest.Description,
+                    MasterItemCode =
+                        await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
+                    CategoryId = masterItemRequest.CategoryId,
+                    StockCount = 0,
+                    IsConsignment = false,
+                    CreatedDate = DateTime.UtcNow,
+                    ShopId = shop.ShopId
+                };
+                masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
+
+                var imgForMaster = masterItemRequest.Images.Select(
+                    image => new Image()
                     {
-                        Name = masterItemRequest.Name,
-                        Gender = masterItemRequest.Gender,
-                        Brand = masterItemRequest.Brand ?? "No Brand",
-                        Description = masterItemRequest.Description,
-                        MasterItemCode =
-                            await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
-                        CategoryId = masterItemRequest.CategoryId,
-                        StockCount = 0,
-                        IsConsignment = false,
-                        CreatedDate = DateTime.UtcNow,
-                        ShopId = shop.ShopId
-                    };
-                    masterItem = await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
+                        Url = image, CreatedDate = DateTime.UtcNow, MasterFashionItemId = masterItem.MasterItemId,
+                    }).ToList();
 
-                    var imgForMaster = masterItemRequest.Images.Select(
-                        image => new Image()
-                        {
-                            Url = image, CreatedDate = DateTime.UtcNow, MasterFashionItemId = masterItem.MasterItemId,
-                        }).ToList();
-
-                    await _imageRepository.AddRangeImage(imgForMaster);
-                    masterItem.Images = imgForMaster;
-                    listMasterItemResponse.Add(masterItem);
-                }
+                await _imageRepository.AddRangeImage(imgForMaster);
+                masterItem.Images = imgForMaster;
+                listMasterItemResponse.Add(masterItem);
             }
 
             return new BusinessObjects.Dtos.Commons.Result<List<MasterItemResponse>>()
