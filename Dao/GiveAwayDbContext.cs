@@ -529,6 +529,10 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.MasterFashionItems)
             .WithOne(x => x.Shop)
             .HasForeignKey(x => x.ShopId);
+        modelBuilder.Entity<Shop>()
+            .HasMany(x => x.Transactions)
+            .WithOne(x => x.Shop)
+            .HasForeignKey(x => x.ShopId);
         #endregion
 
         #region PointPackage

@@ -48,8 +48,6 @@ namespace Services.Emails
 
         public string GetEmailTemplate(string templateName)
         {
-            string pathTon = Path.Combine("D:\\Captstone\\GiveAway-API\\Services\\MailTemplate\\",
-                $"{templateName}.html");
             // string pathLocal = Path.Combine("C:\\FPT_University_FULL\\CAPSTONE_API\\Services\\MailTemplate\\", $"{templateName}.html");*/
             string path = Path.Combine(_configuration.GetSection("EmailTemplateDirectory").Value,
                 $"{templateName}.html");
