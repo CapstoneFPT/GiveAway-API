@@ -13,6 +13,13 @@ public class WithdrawNotFoundException : Exception
 {
 }
 
+public class UnableToCalculateRefundAmountException : Exception
+{
+    public UnableToCalculateRefundAmountException(string orderOrOrderlineitemNotFound) : base(
+        orderOrOrderlineitemNotFound)
+    {
+    }
+}
 
 public class ItemNotReadyForConsignException : Exception
 {

@@ -16,12 +16,14 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Refunds;
 using Repositories.Accounts;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Dao;
 using DotNext;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Bcpg.Attr;
 using Repositories.ConsignSales;
 using Repositories.Orders;
+using Repositories.Refunds;
 
 namespace Services.Emails
 {
@@ -31,21 +33,21 @@ namespace Services.Emails
         private readonly IAccountRepository _accountRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly IConsignSaleRepository _consignSaleRepository;
+        private readonly IRefundRepository _refundRepository;
 
         public EmailService(IConfiguration configuration, IAccountRepository accountRepository,
             IOrderRepository orderRepository,
-            IConsignSaleRepository consignSaleRepository)
+            IConsignSaleRepository consignSaleRepository, IRefundRepository refundRepository)
         {
             _configuration = configuration;
             _accountRepository = accountRepository;
             _orderRepository = orderRepository;
             _consignSaleRepository = consignSaleRepository;
+            _refundRepository = refundRepository;
         }
 
         public string GetEmailTemplate(string templateName)
         {
-            string pathTon = Path.Combine("D:\\Captstone\\GiveAway-API\\Services\\MailTemplate\\",
-                $"{templateName}.html");
             // string pathLocal = Path.Combine("C:\\FPT_University_FULL\\CAPSTONE_API\\Services\\MailTemplate\\", $"{templateName}.html");*/
             string path = Path.Combine(_configuration.GetSection("EmailTemplateDirectory").Value,
                 $"{templateName}.html");
@@ -230,28 +232,50 @@ namespace Services.Emails
             return false;
         }
 
-        public async Task<bool> SendEmailRefund(RefundResponse request)
+        public async Task<bool> SendEmailRefund(Guid refundId)
         {
             SendEmailRequest content = new SendEmailRequest();
-            var order = await _orderRepository.GetSingleOrder(c =>
-                c.OrderLineItems.Select(c => c.OrderLineItemId).Contains(request.OrderLineItemId));
+            Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
+            var refund = await _refundRepository.GetSingleRefund(predicate);
+            if (refund is null)
+            {
+                throw new RefundNotFoundException();
+            }
+
+            var order = refund.OrderLineItem.Order;
+            var item = refund.OrderLineItem.IndividualFashionItem;
+            var refundAmount = refund.OrderLineItem.UnitPrice * refund.RefundPercentage / 100;
             var template = GetEmailTemplate("RefundMail");
+            template = template.Replace("{PRODUCT_NAME}", item.MasterItem.Name);
+            template = template.Replace("{COLOR}", item.Color);
+            template = template.Replace("{SIZE}", item.Size.ToString());
+            template = template.Replace("{Condition}", item.Condition);
+            template = template.Replace("{NOTE}", item.Note);
+            template = template.Replace("{PRODUCT_IMAGE_URL}",
+                item.Images.Select(c => c.Url).First());
+            template = template.Replace("{SELLING_PRICE}", item.SellingPrice!.Value.ToString("N0"));    
+            
             template = template.Replace("[Order Code]", order!.OrderCode);
-            template = template.Replace("[Status]", request.RefundStatus.ToString());
-            template = template.Replace("[Product Name]", request.ItemName);
-            template = template.Replace("[Created Date]", request.CreatedDate.ToString("G"));
-            template = template.Replace("[Refund Percent]", request.RefundPercentage!.Value.ToString());
-            template = template.Replace("[Refund Amount]", request.RefundAmount!.Value.ToString("N0"));
-            template = template.Replace("[Customer Name]", request.CustomerName);
-            template = template.Replace("[Phone Number]", request.CustomerPhone);
-            template = template.Replace("[Email]", request.CustomerEmail);
-            template = template.Replace("[Description]", request.Description);
-            template = template.Replace("[Response]", request.ResponseFromShop);
+            template = template.Replace("[Status]", refund.RefundStatus.ToString());
+            template = template.Replace("[Product Name]", item.MasterItem.Name);
+            template = template.Replace("[Created Date]", refund.CreatedDate.ToString("G"));
+            template = template.Replace("[Refund Percent]", refund.RefundPercentage!.Value.ToString());
+            template = template.Replace("[Refund Amount]", refundAmount!.Value.ToString("N0"));
+            
+            template = template.Replace("[Description]", refund.Description);
+            template = template.Replace("[Response]", refund.ResponseFromShop);
             if (order.MemberId != null)
             {
                 var member = await GenericDao<Account>.Instance.GetQueryable().Where(c => c.AccountId == order.MemberId)
                     .FirstOrDefaultAsync();
-                content.To = member!.Email;
+                if (member is null)
+                {
+                    return false;
+                }
+                template = template.Replace("[Customer Name]", member.Fullname);
+                template = template.Replace("[Phone Number]", member.Phone);
+                template = template.Replace("[Email]", member.Email);
+                content.To = member.Email;
                 content.Subject = $"[GIVEAWAY] REFUND RESPONSE FROM GIVEAWAY";
                 content.Body = template;
 

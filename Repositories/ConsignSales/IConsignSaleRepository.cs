@@ -7,13 +7,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using DotNext;
 
 namespace Repositories.ConsignSales
 {
     public interface IConsignSaleRepository
     {
         Task<PaginationResponse<ConsignSaleDetailedResponse>> GetAllConsignSale(Guid accountId, ConsignSaleRequest request);
-        Task<ConsignSaleDetailedResponse> GetConsignSaleById(Guid consignId);
+        Task<ConsignSaleDetailedResponse?> GetConsignSaleById(Guid consignId);
         Task<ConsignSaleDetailedResponse> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request);
         Task<ConsignSaleDetailedResponse> ApprovalConsignSale(Guid consignId, ApproveConsignSaleRequest request);
         Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId,bool isTracking = false);

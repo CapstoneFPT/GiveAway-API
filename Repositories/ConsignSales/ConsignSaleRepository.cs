@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Dao;
+using DotNext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Repositories.ConsignSales;
@@ -127,11 +128,34 @@ namespace Repositories.ConsignSales
             return result;
         }
 
-        public async Task<ConsignSaleDetailedResponse> GetConsignSaleById(Guid consignId)
+        public async Task<ConsignSaleDetailedResponse?> GetConsignSaleById(Guid consignId)
         {
             var consignSale = await GenericDao<ConsignSale>.Instance.GetQueryable()
                 .Where(c => c.ConsignSaleId == consignId)
-                .ProjectTo<ConsignSaleDetailedResponse>(_mapper.ConfigurationProvider).FirstOrDefaultAsync();
+                .Select(x=>new ConsignSaleDetailedResponse()
+                {
+                    CreatedDate = x.CreatedDate,
+                    ShopId = x.ShopId,
+                    MemberId = x.MemberId,
+                    ShopAddress = x.Shop.Address,
+                    Type = x.Type,
+                    Address = x.Address,
+                    TotalPrice = x.TotalPrice,
+                    ConsignSaleId = x.ConsignSaleId,
+                    Status = x.Status,
+                    SoldPrice = x.SoldPrice,
+                    ConsignSaleCode = x.ConsignSaleCode,
+                    ConsignSaleMethod = x.ConsignSaleMethod,
+                    EndDate = x.EndDate,
+                    Email =     x.Email,
+                    StartDate = x.StartDate,
+                    Phone = x.Phone,
+                    ResponseFromShop = x.ResponseFromShop,
+                    MemberReceivedAmount = x.ConsignorReceivedAmount,
+                    Consginer = x.ConsignorName,
+                })
+                .FirstOrDefaultAsync();
+            
             return consignSale;
         }
 
