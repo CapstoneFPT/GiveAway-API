@@ -142,5 +142,9 @@ namespace Repositories.Refunds
             return _giveAwayDbContext.Refunds.AsQueryable();
         }
     
+        public async Task UpdateRefund(Refund refund)
+        {
+            await GenericDao<Refund>.Instance.UpdateAsync(refund);
+        }
     }
 }

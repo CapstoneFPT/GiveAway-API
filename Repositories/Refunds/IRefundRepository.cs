@@ -20,5 +20,6 @@ namespace Repositories.Refunds
         Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId);
         Task CreateRefund(Refund refund);
         IQueryable<Refund> GetQueryable();
+        Task UpdateRefund(Refund refund);
     }
 }

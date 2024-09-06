@@ -41,7 +41,8 @@ public enum ErrorCode
     NotFound,
     UnsupportedShipping,
     DuplicateBankAccount,
-    NoBankAccountLeft
+    NoBankAccountLeft,
+    RefundStatusNotAvailable
 }
 
 public enum ErrorType
@@ -57,5 +58,6 @@ public enum ErrorType
     OrderError,
     PaymentError,
     AccountError,
-    ShippingError
+    ShippingError,
+    RefundError
 }

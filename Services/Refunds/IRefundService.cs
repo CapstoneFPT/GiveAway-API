@@ -17,5 +17,6 @@ namespace Services.Refunds
         Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, ApprovalRefundRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId);
         Task<Result<RefundResponse, ErrorCode>> CreateRefundByShop(Guid shopId, CreateRefundByShopRequest request);
+        Task<Result<RefundResponse,ErrorCode>> CancelRefund(Guid refundId);
     }
 }

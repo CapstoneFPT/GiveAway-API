@@ -53,9 +53,13 @@ namespace Services.Refunds
                 throw new RefundNotFoundException();
             }
 
-            if (request.Status.Equals(RefundStatus.Pending) || refund.RefundStatus.Equals(request.Status))
+            if (refund.RefundStatus != RefundStatus.Pending)
             {
-                throw new StatusNotAvailableException();
+                throw new StatusNotAvailableWithMessageException("This refund is not pending for approval");
+            }
+            if (request.Status != RefundStatus.Approved && request.Status != RefundStatus.Rejected)
+            {
+                throw new StatusNotAvailableWithMessageException("You can only Approve or Reject the refund");
             }
 
             var data = await _refundRepository.ApprovalRefundFromShop(refundId, request);
@@ -279,6 +283,43 @@ namespace Services.Refunds
             await _refundRepository.CreateRefund(refund);
             var result = await GetRefundById(refund.RefundId);
             return result.IsSuccessful ? result : new Result<RefundResponse, ErrorCode>(result.Error);
+        }
+
+        public async Task<Result<RefundResponse,ErrorCode>> CancelRefund(Guid refundId)
+        {
+
+            try
+            {
+                Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
+                var refund = await _refundRepository.GetSingleRefund(predicate);
+                if (refund == null)
+                {
+                    return new Result<RefundResponse, ErrorCode>(ErrorCode.NotFound);
+                }
+
+                if (refund.RefundStatus != RefundStatus.Pending && refund.RefundStatus != RefundStatus.Approved)
+                {
+                    return new Result<RefundResponse, ErrorCode>(ErrorCode.RefundStatusNotAvailable);
+                }
+                refund.RefundStatus = RefundStatus.Cancelled;
+                refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Sold;
+                await _refundRepository.UpdateRefund(refund);
+            
+                var data = new RefundResponse()
+                {
+                    RefundId = refund.RefundId,
+                    OrderLineItemId = refund.OrderLineItemId,
+                    RefundStatus = refund.RefundStatus,
+                    CreatedDate = refund.CreatedDate,
+                    ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode
+                };
+
+                return data;
+            }
+            catch (Exception e)
+            {
+                return new Result<RefundResponse, ErrorCode>(ErrorCode.ServerError);
+            }
         }
     }
 }

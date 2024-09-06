@@ -88,5 +88,29 @@ namespace WebApi.Controllers
             var result = await _refundService.GetAllRefunds(refundRequest);
             return Ok(result);
         }
+
+        [HttpPut("{refundId}/cancel")]
+        [ProducesResponseType<RefundResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CancelRefund([FromRoute] Guid refundId)
+        {
+            var result = await _refundService.CancelRefund(refundId);
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => NotFound(new ErrorResponse("Refund not found", ErrorType.RefundError,
+                        HttpStatusCode.NotFound, result.Error)),
+                    ErrorCode.RefundStatusNotAvailable => StatusCode((int)HttpStatusCode.Conflict,
+                        new ErrorResponse("Refund status not available", ErrorType.RefundError, HttpStatusCode.Conflict,
+                            result.Error)),
+                    _ => StatusCode((int)HttpStatusCode.InternalServerError,
+                        new ErrorResponse("Internal server error", ErrorType.RefundError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
+
+            return Ok(result.Value);
+        }
     }
 }
