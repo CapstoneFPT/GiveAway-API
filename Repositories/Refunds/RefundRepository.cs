@@ -36,7 +36,7 @@ namespace Repositories.Refunds
                 .FirstOrDefaultAsync(c => c.RefundId == refundId);
             if (refund == null)
             {
-                throw new RefundNoFoundException();
+                throw new RefundNotFoundException();
             }
             if (request.Status.Equals(RefundStatus.Approved))
             {
@@ -120,7 +120,7 @@ namespace Repositories.Refunds
                 .ThenInclude(c => c.IndividualFashionItem).Where(c => c.RefundId == refundId).FirstOrDefaultAsync();
             if (refund is null)
             {
-                throw new RefundNoFoundException();
+                throw new RefundNotFoundException();
             }
             refund.RefundStatus = RefundStatus.Completed;
             refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Unavailable;
@@ -136,5 +136,11 @@ namespace Repositories.Refunds
         {
             await GenericDao<Refund>.Instance.AddAsync(refund);
         }
+
+        public IQueryable<Refund> GetQueryable()
+        {
+            return _giveAwayDbContext.Refunds.AsQueryable();
+        }
+    
     }
 }
