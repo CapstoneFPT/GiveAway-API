@@ -290,7 +290,7 @@ namespace Services.Refunds
                 throw new RefundNotFoundException();
             }
 
-            if (refund.RefundStatus != RefundStatus.Rejected && refund.RefundStatus == RefundStatus.Approved)
+            if (refund.RefundStatus != RefundStatus.Pending && refund.RefundStatus != RefundStatus.Approved)
             {
                 throw new StatusNotAvailableWithMessageException("This refund has status can not be cancelled");
             }
