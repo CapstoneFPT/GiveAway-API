@@ -50,5 +50,6 @@ namespace Repositories.FashionItems
         Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode);
         IQueryable<IndividualFashionItem> GetIndividualQueryable();
         IQueryable<MasterFashionItem> GetMasterQueryable();
+        Task<bool> DeleteRangeIndividualItems(List<IndividualFashionItem> fashionItems);
     }
 }

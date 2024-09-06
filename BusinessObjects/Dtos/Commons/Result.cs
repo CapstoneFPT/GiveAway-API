@@ -40,6 +40,7 @@ public enum FashionItemStatus
     UnSold,
     Reserved,
     Refundable,
+    Draft,
     PendingForConsignSale,
     PendingAuction,
     PendingForRefund,
@@ -108,7 +109,8 @@ public enum RefundStatus
     Pending,
     Approved,
     Rejected,
-    Completed
+    Completed,
+    Cancelled
 }
 
 public enum PointPackageStatus
@@ -133,7 +135,8 @@ public enum TransactionType
     Purchase,
     Refund,
     Recharge,
-    Payout
+    Payout,
+    Sale
 }
 
 public enum WithdrawStatus

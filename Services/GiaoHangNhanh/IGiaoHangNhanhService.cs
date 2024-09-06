@@ -74,7 +74,7 @@ public class GiaoHangNhanhService : IGiaoHangNhanhService
                         return new Result<GHNApiResponse<List<GHNProvinceResponse>>, ErrorCode>(
                             ErrorCode.DeserializationError);
                     }
-
+                    
 
                     return new Result<GHNApiResponse<List<GHNProvinceResponse>>, ErrorCode>(content);
                 }

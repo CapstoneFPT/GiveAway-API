@@ -83,11 +83,11 @@ namespace Repositories
             //     .ReverseMap();
             CreateMap<Shop, ShopDetailResponse>() .ReverseMap();
             CreateMap<Refund, RefundResponse>()
-                .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.Select(c => c.Url)))
-                .ForMember(dest => dest.OrderLineItemDetailedResponse, opt => opt.MapFrom(src => src.OrderLineItem))
-                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member.Fullname))
-                .ForMember(dest => dest.CustomerEmail, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member.Email))
-                .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member.Phone))
+                .ForMember(dest => dest.ImagesForCustomer, opt => opt.MapFrom(src => src.Images.Select(c => c.Url)))
+                .ForMember(dest => dest.ItemImages, opt => opt.MapFrom(src => src.OrderLineItem.IndividualFashionItem.Images.Select(c => c.Url)))
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member!.Fullname))
+                .ForMember(dest => dest.CustomerEmail, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member!.Email))
+                .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.OrderLineItem.Order.Member!.Phone))
                 .ForMember(dest => dest.RefundPercentage, opt => opt.MapFrom(src => src.RefundPercentage))
                 .ForMember(dest => dest.RefundAmount, opt => opt.MapFrom(src => src.RefundPercentage / 100 * src.OrderLineItem.UnitPrice ))
                 .ReverseMap();

@@ -5,16 +5,18 @@ using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Refunds;
+using DotNext;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Services.Refunds
 {
     public interface IRefundService
     {
-        Task<Result<PaginationResponse<RefundResponse>>> GetAllRefunds(RefundRequest refundRequest);
-        Task<Result<RefundResponse>> GetRefundById(Guid refundId);
-        Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, ApprovalRefundRequest request);
-        Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId);
-        Task<Result<RefundResponse>> CreateRefundByShop(Guid shopId, CreateRefundRequest request);
+        Task<PaginationResponse<RefundResponse>> GetAllRefunds(RefundRequest refundRequest);
+        Task<Result<RefundResponse, ErrorCode>> GetRefundById(Guid refundId);
+        Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId, ApprovalRefundRequest request);
+        Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId);
+        Task<Result<RefundResponse, ErrorCode>> CreateRefundByShop(Guid shopId, CreateRefundByShopRequest request);
+        Task<Result<RefundResponse,ErrorCode>> CancelRefund(Guid refundId);
     }
 }

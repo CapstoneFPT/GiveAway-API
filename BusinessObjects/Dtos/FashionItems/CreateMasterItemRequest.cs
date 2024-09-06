@@ -12,11 +12,11 @@ public class CreateMasterItemRequest
     public required GenderType Gender { get; set; }
     
     public required string[] Images { get; set; }
-    public required List<DistributeItemForEachShop> ItemForEachShops { get; set; }
+    public DistributeItemForEachShop[] ItemForEachShops { get; set; } = [];
 }
 
 public class DistributeItemForEachShop
 {
     public Guid ShopId { get; set; }
-    public int StockCount { get; set; }
+    
 }

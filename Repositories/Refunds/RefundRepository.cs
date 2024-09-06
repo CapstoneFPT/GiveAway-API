@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -35,7 +36,7 @@ namespace Repositories.Refunds
                 .FirstOrDefaultAsync(c => c.RefundId == refundId);
             if (refund == null)
             {
-                throw new RefundNoFoundException();
+                throw new RefundNotFoundException();
             }
             if (request.Status.Equals(RefundStatus.Approved))
             {
@@ -57,74 +58,93 @@ namespace Repositories.Refunds
             }
             
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
-            var response = await GetRefundById(refundId);
-            
-            return response;
-        }
-
-        public async Task<RefundResponse> GetRefundById(Guid refundId)
-        {
-            var refund = await GenericDao<Refund>.Instance.GetQueryable()
-                .Include(c => c.OrderLineItem).ThenInclude(c => c.Order)
-                .Where(c => c.RefundId == refundId)
-                .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync();
-
-            
-            return refund;
-        }
-
-        public async Task<PaginationResponse<RefundResponse>> GetAllRefunds(RefundRequest request)
-        {
-            var query = GenericDao<Refund>.Instance.GetQueryable();
-            if (request.Status != null)
+            return new RefundResponse()
             {
-                query = query.Where(f => request.Status.Contains(f.RefundStatus));
-            }
-
-            if (request.PreviousTime != null)
-            {
-                query = query.Where(f => f.CreatedDate <= request.PreviousTime);
-            }
-
-            if (request.ShopId != null)
-            {
-                // query = query.Where(c => c.OrderDetail.IndividualFashionItem.ShopId == request.ShopId);
-            }
-
-            query = query.OrderBy(c => c.CreatedDate);
-            var count = await query.CountAsync();
-            query = query.Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
-
-            var items = await query
-                .ProjectTo<RefundResponse>(_mapper.ConfigurationProvider)
-                .AsNoTracking().ToListAsync();
-
-            var result = new PaginationResponse<RefundResponse>
-            {
-                Items = items,
-                PageSize = request.PageSize,
-                TotalCount = count,
-                /*Filters = ["Filter created date by ascending"],*/
-                PageNumber = request.PageNumber,
+                RefundId = refund.RefundId,
+                RefundStatus = refund.RefundStatus,
+                RefundPercentage = refund.RefundPercentage,
+                ResponseFromShop = refund.ResponseFromShop,
+                ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode
             };
-            return result;
         }
+
+        public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetRefundProjections<T>(int? page, int? pageSize, Expression<Func<Refund, bool>>? predicate, Expression<Func<Refund, T>>? selector)
+        {
+            var query = _giveAwayDbContext.Refunds.AsQueryable();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate).OrderByDescending(c => c.CreatedDate);
+            }
+
+            var count = await query.CountAsync();
+
+            var pageNum = page ?? -1;
+            var pageSizeNum = pageSize ?? -1;
+
+            if (pageNum > 0 && pageSizeNum > 0)
+            {
+                query = query.Skip((pageNum - 1) * pageSizeNum).Take(pageSizeNum);
+            }
+
+            List<T> items = new List<T>();
+            if (selector != null)
+            {
+                items = await query.Select(selector).ToListAsync();
+            }
+            else
+            {
+                items = await query.Cast<T>().ToListAsync();
+            }
+
+            return (items, pageNum, pageSizeNum, count);
+        }
+
+        public async Task<Refund?> GetSingleRefund(Expression<Func<Refund, bool>> predicate)
+        {
+            return await GenericDao<Refund>.Instance.GetQueryable()
+                .Include(c => c.OrderLineItem)
+                .ThenInclude(c => c.Order)
+                .Include(c => c.Images)
+                .Include(c => c.OrderLineItem)
+                .ThenInclude(c => c.IndividualFashionItem)
+                .ThenInclude(c => c.MasterItem)
+                .Where(predicate)
+                .FirstOrDefaultAsync();
+        }
+
 
         public async Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId)
         {
             var refund = await _giveAwayDbContext.Refunds.AsQueryable().Include(c => c.OrderLineItem)
                 .ThenInclude(c => c.IndividualFashionItem).Where(c => c.RefundId == refundId).FirstOrDefaultAsync();
+            if (refund is null)
+            {
+                throw new RefundNotFoundException();
+            }
             refund.RefundStatus = RefundStatus.Completed;
             refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Unavailable;
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
-            return await GetRefundById(refundId);
+            return new RefundResponse()
+            {
+                RefundId = refund.RefundId,
+                RefundStatus = refund.RefundStatus
+            };
         }
 
         public async Task CreateRefund(Refund refund)
         {
             await GenericDao<Refund>.Instance.AddAsync(refund);
+        }
+
+        public IQueryable<Refund> GetQueryable()
+        {
+            return _giveAwayDbContext.Refunds.AsQueryable();
+        }
+    
+        public async Task UpdateRefund(Refund refund)
+        {
+            await GenericDao<Refund>.Instance.UpdateAsync(refund);
         }
     }
 }

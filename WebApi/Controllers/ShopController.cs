@@ -93,19 +93,30 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("{shopId}/orders/{orderId}/pay-with-cash")]
-        public async Task<
-            ActionResult<PayOrderWithCashResponse>> PayWithCash([FromRoute] Guid shopId, [FromRoute] Guid orderId,
-            [FromBody] PayOrderWithCashRequest request)
+        [HttpPost("{shopId}/orders/{orderId}/pay-offline")]
+        [ProducesResponseType<PayOrderOfflineResponse>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> PayWithCash([FromRoute] Guid shopId, [FromRoute] Guid orderId)
         {
-            PayOrderWithCashResponse result = await _orderService.PayWithCash(shopId, orderId, request);
-            return Ok(result);
+            var result = await _orderService.OfflinePay(shopId, orderId);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error paying order", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                            result.Error))
+                };
+            }
+
+            return Ok(result.Value);
         }
+
         [HttpPut("{shopId}/orders/{OrderId}/confirm-deliveried")]
         public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrderDelivered(
-           [FromRoute] Guid shopId ,[FromRoute] Guid OrderId)
+            [FromRoute] Guid shopId, [FromRoute] Guid OrderId)
         {
-            var result = await _orderService.ConfirmOrderDeliveried(shopId ,OrderId);
+            var result = await _orderService.ConfirmOrderDeliveried(shopId, OrderId);
 
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
@@ -114,7 +125,8 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{shopId}/consignsales")]
-        public async Task<ActionResult<Result<ConsignSaleDetailedResponse>>> CreateConsignSaleByShop([FromRoute] Guid shopId,
+        public async Task<ActionResult<Result<ConsignSaleDetailedResponse>>> CreateConsignSaleByShop(
+            [FromRoute] Guid shopId,
             [FromBody] CreateConsignSaleByShopRequest consignRequest)
         {
             var result = await _consignSaleService.CreateConsignSaleByShop(shopId, consignRequest);
@@ -126,16 +138,24 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{shopId}/refunds")]
-        public async Task<ActionResult<Result<RefundResponse>>> CreateRefundByShop([FromRoute] Guid shopId,
-            CreateRefundRequest request)
+        [ProducesResponseType<RefundResponse>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CreateRefundByShop([FromRoute] Guid shopId,
+            CreateRefundByShopRequest request)
         {
             var result = await _refundService.CreateRefundByShop(shopId, request);
-            if (result.ResultStatus != ResultStatus.Success)
+
+            if (!result.IsSuccessful)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+                return result.Error switch
+                {
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error creating refund", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                            result.Error))
+                };
             }
 
-            return Ok(result);
+            return Ok(result.Value);
         }
 
 
@@ -170,7 +190,7 @@ namespace WebApi.Controllers
             {
                 ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized access to GiaoHangNhanh API",
                     ErrorType.ApiError, HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
-                
+
                 _ => StatusCode(500,
                     new ErrorResponse("Unexpected error from GiaoHangNhanh API", ErrorType.ApiError,
                         HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError))
@@ -183,17 +203,17 @@ namespace WebApi.Controllers
         public async Task<IActionResult> CreateGhnShop([FromBody] GHNShopCreateRequest request)
         {
             var result = await _giaoHangNhanhService.CreateShop(request);
-            
+
             if (result.IsSuccessful)
             {
                 return Ok(result.Value);
             }
-            
+
             return result.Error switch
             {
                 ErrorCode.Unauthorized => Unauthorized(new ErrorResponse("Unauthorized access to GiaoHangNhanh API",
                     ErrorType.ApiError, HttpStatusCode.Unauthorized, ErrorCode.Unauthorized)),
-                
+
                 _ => StatusCode(500,
                     new ErrorResponse("Unexpected error from GiaoHangNhanh API", ErrorType.ApiError,
                         HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError))
@@ -201,40 +221,37 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType<CreateShopResponse>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<CreateShopResponse>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> CreateShop([FromBody] CreateShopRequest request)
         {
-           var result = await _shopService.CreateShop(request);
+            var result = await _shopService.CreateShop(request);
 
-           if (result.IsSuccessful)
-           {
-               return Ok(result.Value);
-           }
-           
-           return result.Error switch
-           {
-               ErrorCode.Unauthorized => Unauthorized(new ErrorResponse(
-                   "Unauthorized access to External Service",
-                   ErrorType.ApiError, 
-                   HttpStatusCode.Unauthorized, 
-                   ErrorCode.Unauthorized)),
-               
-               ErrorCode.ServerError => StatusCode(500, new ErrorResponse(
-                   "Unexpected error from server", 
-                   ErrorType.ApiError,
-                   HttpStatusCode.InternalServerError,
-                   ErrorCode.ServerError)),
-               
-               _ => StatusCode(500, new ErrorResponse(
-                   "Unexpected error from server", 
-                       ErrorType.ApiError,
-                       HttpStatusCode.InternalServerError, 
-                       ErrorCode.ExternalServiceError))
-           };
+            if (result.IsSuccessful)
+            {
+                return Ok(result.Value);
+            }
+
+            return result.Error switch
+            {
+                ErrorCode.Unauthorized => Unauthorized(new ErrorResponse(
+                    "Unauthorized access to External Service",
+                    ErrorType.ApiError,
+                    HttpStatusCode.Unauthorized,
+                    ErrorCode.Unauthorized)),
+
+                ErrorCode.ServerError => StatusCode(500, new ErrorResponse(
+                    "Unexpected error from server",
+                    ErrorType.ApiError,
+                    HttpStatusCode.InternalServerError,
+                    ErrorCode.ServerError)),
+
+                _ => StatusCode(500, new ErrorResponse(
+                    "Unexpected error from server",
+                    ErrorType.ApiError,
+                    HttpStatusCode.InternalServerError,
+                    ErrorCode.ExternalServiceError))
+            };
         }
-        
     }
-
-  
 }

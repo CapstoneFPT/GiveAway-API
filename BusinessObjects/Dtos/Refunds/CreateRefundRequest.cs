@@ -12,6 +12,13 @@ namespace BusinessObjects.Dtos.Refunds
         public Guid OrderLineItemId { get; set; }
         public required string Description { get; set; }
         public required string[] Images { get; set; }
+        // public int RefundPercentage { get; set; }
+    }
+    public class CreateRefundByShopRequest{
+        [Required]
+        public Guid OrderLineItemId { get; set; }
+        public required string Description { get; set; }
+        public required string[] Images { get; set; }
         public int RefundPercentage { get; set; }
     }
 }

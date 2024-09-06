@@ -24,14 +24,26 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{refundId}")]
-        public async Task<ActionResult<Result<RefundResponse>>> GetRefundById([FromRoute] Guid refundId)
+        [ProducesResponseType<RefundResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetRefundById([FromRoute] Guid refundId)
         {
             var result = await _refundService.GetRefundById(refundId);
 
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => StatusCode((int)HttpStatusCode.InternalServerError,
+                        new ErrorResponse("Refund not found", ErrorType.ApiError, HttpStatusCode.NotFound,
+                            result.Error)),
+                    _ => StatusCode((int)HttpStatusCode.InternalServerError,
+                        new ErrorResponse("Internal server error", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
 
-            return Ok(result);
+            return Ok(result.Value);
         }
 
         [HttpPut("{refundId}/approval")]
@@ -68,15 +80,37 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Result<PaginationResponse<RefundResponse>>>> GetAllRefunds(
+        [ProducesResponseType<PaginationResponse<RefundResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetAllRefunds(
             [FromQuery] RefundRequest refundRequest)
         {
             var result = await _refundService.GetAllRefunds(refundRequest);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
             return Ok(result);
+        }
+
+        [HttpPut("{refundId}/cancel")]
+        [ProducesResponseType<RefundResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CancelRefund([FromRoute] Guid refundId)
+        {
+            var result = await _refundService.CancelRefund(refundId);
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => NotFound(new ErrorResponse("Refund not found", ErrorType.RefundError,
+                        HttpStatusCode.NotFound, result.Error)),
+                    ErrorCode.RefundStatusNotAvailable => StatusCode((int)HttpStatusCode.Conflict,
+                        new ErrorResponse("Refund status not available", ErrorType.RefundError, HttpStatusCode.Conflict,
+                            result.Error)),
+                    _ => StatusCode((int)HttpStatusCode.InternalServerError,
+                        new ErrorResponse("Internal server error", ErrorType.RefundError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
+
+            return Ok(result.Value);
         }
     }
 }

@@ -14,6 +14,7 @@ namespace BusinessObjects.Dtos.Orders
         public Guid? ShopId { get; set; }
         public OrderStatus? Status { get; set; }
         public PaymentMethod? PaymentMethod { get; set; }
+        public PurchaseType? PurchaseType { get; set; }
         public string? Phone { get; set; }
         public string? RecipientName { get; set; }
         public string? Email { get; set; }

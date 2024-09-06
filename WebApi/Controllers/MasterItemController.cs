@@ -104,7 +104,7 @@ public class MasterItemController : ControllerBase
     }
 
     [HttpPost("{masterItemId}/individual-items")]
-    [ProducesResponseType<Result<IndividualItemListResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<Result<List<IndividualItemListResponse>>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> CreateIndividualItems([FromRoute] Guid masterItemId,
         CreateIndividualItemRequest request)

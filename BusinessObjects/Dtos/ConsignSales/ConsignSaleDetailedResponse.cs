@@ -16,7 +16,6 @@ namespace BusinessObjects.Dtos.ConsignSales
         public ConsignSaleType Type { get; set; }
         public string ConsignSaleCode { get; set; }
         public DateTime CreatedDate { get; set; }
-        
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public Guid ShopId { get; set; }

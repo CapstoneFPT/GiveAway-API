@@ -21,7 +21,7 @@ public class CreateIndividualItemRequest
     public SizeType Size { get; set; }
     public string Note { get; set; }
     public decimal SellingPrice { get; set; }
-    public string[] Images { get; set; }
+    public required int ItemInStock { get; set; }
 }
 
 public class NegotiateConsignSaleLineRequest

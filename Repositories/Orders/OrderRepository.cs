@@ -159,8 +159,11 @@ namespace Repositories.Orders
                 .Include(c => c.Member)
                 .Include(order => order.OrderLineItems)
                 .ThenInclude(orderDetail => orderDetail.IndividualFashionItem)
-                
-                .ThenInclude(c => c.MasterItem)
+                .ThenInclude(individualItem => individualItem.MasterItem)
+                // .ThenInclude(masterItem => masterItem.Images) 
+                .Include(order => order.OrderLineItems)
+                .ThenInclude(orderDetail => orderDetail.IndividualFashionItem)
+                .ThenInclude(individualItem => individualItem.Images) 
                 .SingleOrDefaultAsync(predicate);
             return result;
         }
@@ -289,9 +292,9 @@ namespace Repositories.Orders
             return prefix + number.ToString("D6");
         }
 
-        private async Task<Order?> IsCodeExisted(string code)
+        private Task<Order?> IsCodeExisted(string code)
         {
-            return await GenericDao<Order>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.OrderCode.Equals(code));
+            return GenericDao<Order>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.OrderCode.Equals(code));
         }
 
         public async Task<List<OrderLineItem>> IsOrderExisted(List<Guid> listItemId, Guid memberId)
@@ -474,10 +477,7 @@ namespace Repositories.Orders
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                 // .Include(c => c.Shop)
                 .Where(c => orderRequest.ItemIds.Contains(c.ItemId)).ToListAsync();
-
-
-            decimal totalPrice = 0;
-
+            
             Order order = new Order();
             order.PurchaseType = PurchaseType.Offline;
             order.PaymentMethod = PaymentMethod.Cash;
@@ -485,17 +485,14 @@ namespace Repositories.Orders
             order.RecipientName = orderRequest.RecipientName;
             order.Phone = orderRequest.Phone;
             order.Email = orderRequest.Email;
-            order.Status = OrderStatus.AwaitingPayment;
-
+            order.Status = OrderStatus.Completed;
+            order.Discount = orderRequest.Discount;
 
             order.CreatedDate = DateTime.UtcNow;
-            order.TotalPrice = listItem.Sum(c => c.SellingPrice!.Value);
+            order.TotalPrice = listItem.Sum(c => c.SellingPrice!.Value) - order.Discount;
             order.OrderCode = GenerateUniqueString();
-
-            await CreateOrder(order);
-
-            var listOrderDetailResponse = new List<OrderLineItemDetailedResponse>();
-
+            await GenericDao<Order>.Instance.AddAsync(order);
+            var listOrderLineItem = new List<OrderLineItem>();
             foreach (var item in listItem)
             {
                 OrderLineItem orderLineItem = new OrderLineItem();
@@ -503,26 +500,29 @@ namespace Repositories.Orders
                 orderLineItem.UnitPrice = item.SellingPrice!.Value;
                 orderLineItem.CreatedDate = DateTime.UtcNow;
                 orderLineItem.Quantity = 1;
+                orderLineItem.PaymentDate = DateTime.UtcNow;
                 orderLineItem.IndividualFashionItemId = item.ItemId;
-
-                await GenericDao<OrderLineItem>.Instance.AddAsync(orderLineItem);
-                item.Status = FashionItemStatus.OnDelivery;
+                listOrderLineItem.Add(orderLineItem);
+                
+                item.Status = FashionItemStatus.Refundable;
                 await GenericDao<IndividualFashionItem>.Instance.UpdateAsync(item);
 
-                var orderDetailResponse = await _giveAwayDbContext.OrderLineItems.AsQueryable()
-                    .Where(c => c.IndividualFashionItemId == item.ItemId)
-                    .ProjectTo<OrderLineItemDetailedResponse>(_mapper.ConfigurationProvider)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-                totalPrice += orderLineItem.UnitPrice;
-
-                listOrderDetailResponse.Add(orderDetailResponse);
             }
+            await GenericDao<OrderLineItem>.Instance.AddRange(listOrderLineItem);
 
+            var orderTransaction = new Transaction()
+            {
+                OrderId = order.OrderId,
+                CreatedDate = DateTime.UtcNow,
+                Type = TransactionType.Purchase,
+                Amount = order.TotalPrice,
+                ShopId = shopId
+            };
+            await GenericDao<Transaction>.Instance.AddAsync(orderTransaction);
             var orderResponse = new OrderResponse()
             {
                 OrderId = order.OrderId,
-                Quantity = listOrderDetailResponse.Count,
+                Quantity = orderRequest.ItemIds.Count,
                 TotalPrice = order.TotalPrice,
                 CreatedDate = order.CreatedDate,
                 Address = order.Address,
@@ -531,9 +531,17 @@ namespace Repositories.Orders
                 Email = order.Email,
                 PaymentMethod = order.PaymentMethod,
                 PurchaseType = order.PurchaseType,
+                Discount = order.Discount,
                 OrderCode = order.OrderCode,
                 Status = order.Status,
-                OrderLineItems = listOrderDetailResponse
+                OrderLineItems = listOrderLineItem.Select(c => new OrderLineItemDetailedResponse()
+                {
+                    OrderLineItemId = c.OrderLineItemId,
+                    UnitPrice = c.UnitPrice,
+                    CreatedDate = c.CreatedDate,
+                    Quantity = c.Quantity,
+                    PaymentDate = c.PaymentDate,
+                }).ToList()
             };
             return orderResponse;
         }

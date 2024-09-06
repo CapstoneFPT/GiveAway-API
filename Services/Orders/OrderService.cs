@@ -261,6 +261,7 @@ public class OrderService : IOrderService
         {
             OrderId = orderResult.OrderId,
             UnitPrice = order.TotalPrice,
+            CreatedDate = DateTime.UtcNow,
             PointPackageId = order.PointPackageId,
         });
 
@@ -362,7 +363,12 @@ public class OrderService : IOrderService
 
         if (request.IsPointPackage == true)
         {
-            predicate = predicate.And(ord => ord.BidId != null);
+            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId != null));
+        }
+
+        if (request.IsPointPackage == false)
+        {
+            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId == null));
         }
 
         if (request.IsFromAuction == true)
@@ -509,6 +515,11 @@ public class OrderService : IOrderService
             predicate = predicate.And(order => order.PaymentMethod == orderRequest.PaymentMethod);
         }
 
+        if (orderRequest.PurchaseType != null)
+        {
+            predicate = predicate.And(order => order.PurchaseType == orderRequest.PurchaseType);
+        }
+
         if (orderRequest.IsFromAuction == true)
         {
             predicate = predicate.And(ord => ord.BidId != null);
@@ -584,11 +595,10 @@ public class OrderService : IOrderService
             AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
         };
 
-        
 
         (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
             await _orderRepository.GetOrdersProjection<OrderListResponse>(orderRequest.PageNumber,
-                orderRequest.PageSize,predicate , selector);
+                orderRequest.PageSize, predicate, selector);
 
         var response = new PaginationResponse<OrderListResponse>()
         {
@@ -612,12 +622,14 @@ public class OrderService : IOrderService
         {
             throw new OrderNotFoundException();
         }
+
         var orderDetailFromShop = order!.OrderLineItems
             .Where(c => c.IndividualFashionItem.MasterItem.ShopId == shopId).ToList();
         if (orderDetailFromShop.Count == 0)
         {
             throw new OrderDetailNotFoundException();
         }
+
         foreach (var orderDetail in orderDetailFromShop)
         {
             var fashionItem = orderDetail.IndividualFashionItem;
@@ -722,8 +734,7 @@ public class OrderService : IOrderService
         return response;
     }
 
-    public async Task<PayOrderWithCashResponse> PayWithCash(Guid shopId, Guid orderId,
-        PayOrderWithCashRequest request)
+    public async Task<Result<PayOrderOfflineResponse, ErrorCode>> OfflinePay(Guid shopId, Guid orderId)
     {
         var order = await _orderRepository.GetOrderById(orderId);
 
@@ -732,44 +743,23 @@ public class OrderService : IOrderService
             throw new InvalidOperationException("Order Already Paid");
         }
 
-        if (request.AmountGiven < order.TotalPrice)
-        {
-            throw new InvalidOperationException("Not enough money");
-        }
-
         if (order.PaymentMethod != PaymentMethod.Cash)
         {
             throw new InvalidOperationException("This order can only be paid with cash");
         }
 
         order.Status = OrderStatus.Completed;
-        // order.PaymentDate = DateTime.UtcNow;
         order.CompletedDate = DateTime.UtcNow;
-        await _orderRepository.UpdateOrder(order);
 
-        var listorderDetail = await _orderLineItemRepository.GetOrderLineItems(c => c.OrderId == orderId);
-        foreach (var itemOrderDetail in listorderDetail)
+        var orderLineItems = order.OrderLineItems; 
+        foreach (var item in orderLineItems)
         {
-            itemOrderDetail.RefundExpirationDate = DateTime.UtcNow;
-            itemOrderDetail.IndividualFashionItem.Status = FashionItemStatus.Refundable;
+            item.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
+            item.PaymentDate = DateTime.UtcNow;
+            item.IndividualFashionItem.Status = FashionItemStatus.Refundable;
         }
-
-        await _orderLineItemRepository.UpdateRange(listorderDetail);
-        Expression<Func<OrderLineItem, bool>> predicate = x => x.OrderId == orderId;
-        Expression<Func<OrderLineItem, OrderLineItemDetailedResponse>> selector = x =>
-            new OrderLineItemDetailedResponse()
-            {
-                OrderLineItemId = x.OrderLineItemId,
-                ItemName = x.IndividualFashionItem.MasterItem.Name,
-                UnitPrice = x.UnitPrice,
-                RefundExpirationDate = x.RefundExpirationDate,
-                PaymentDate = x.PaymentDate
-            };
-        (List<OrderLineItemDetailedResponse> Items, int Page, int PageSize, int TotalCount) orderDetailsResponse =
-            await _orderLineItemRepository.GetOrderLineItemsPaginate<OrderLineItemDetailedResponse>(
-                predicate: predicate,
-                selector: selector, isTracking: false);
-        var orderDetails = orderDetailsResponse.Items;
+        
+        await _orderRepository.UpdateOrder(order);
 
         var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopId);
         var shopAccount = await _accountRepository.GetAccountById(shop!.StaffId);
@@ -780,32 +770,32 @@ public class OrderService : IOrderService
         {
             OrderId = orderId,
             CreatedDate = DateTime.UtcNow,
-            Type = TransactionType.Purchase,
+            ShopId = shopId,
+            Type = TransactionType.Sale,
             Amount = order.TotalPrice,
         };
 
         await _transactionRepository.CreateTransaction(transaction);
 
-        var response = new PayOrderWithCashResponse
+        var response = new PayOrderOfflineResponse
         {
-            AmountGiven = request.AmountGiven, OrderId = orderId,
-            Order = new OrderResponse()
-            {
-                OrderId = order.OrderId,
-                Quantity = orderDetails.Count,
-                OrderCode = order.OrderCode,
-                PaymentMethod = order.PaymentMethod,
-                Status = order.Status,
-                CreatedDate = order.CreatedDate,
-                Address = order.Address,
-                TotalPrice = order.TotalPrice,
-                // PaymentDate = order.PaymentDate,
-                CompletedDate = order.CompletedDate,
-                ContactNumber = order.Phone,
-                RecipientName = order.RecipientName,
-                PurchaseType = order.PurchaseType,
-                OrderLineItems = orderDetails
-            }
+            OrderId = order.OrderId,
+            Quantity = order.OrderLineItems.Count,
+            OrderCode = order.OrderCode,
+            PaymentMethod = order.PaymentMethod,
+            Status = order.Status,
+            CreatedDate = order.CreatedDate,
+            Address = order.Address ?? "N/A",
+            TotalPrice = order.TotalPrice,
+            CompletedDate = order.CompletedDate ,
+            Phone = order.Phone ?? "N/A",
+            ReciepientName = order.RecipientName ?? "N/A",
+            PurchaseType = order.PurchaseType,
+            Email = order.Email ?? "N/A",
+            Discount = order.Discount,
+            ShippingFee = order.ShippingFee,
+            PaymentDate = order.CreatedDate,
+            Subtotal = order.OrderLineItems.Sum(x=>x.UnitPrice * x.Quantity),
         };
         return response;
     }
@@ -840,7 +830,8 @@ public class OrderService : IOrderService
             throw new StatusNotAvailableWithMessageException("This order is not Pending");
         }
 
-        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.OnDelivery) && !itemStatus.ItemStatus.Equals(FashionItemStatus.Unavailable))
+        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.OnDelivery) &&
+            !itemStatus.ItemStatus.Equals(FashionItemStatus.Unavailable))
         {
             throw new StatusNotAvailableWithMessageException("You can only set OnDelivery or Unavailable");
         }
@@ -871,15 +862,20 @@ public class OrderService : IOrderService
             order.Status = OrderStatus.Cancelled;
         }
 
+        if (order.PaymentMethod == PaymentMethod.COD)
+        {
+            await _emailService.SendEmailOrder(order);
+        }
+
         if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
-            await _emailService.SendEmailOrder(order);
+            
         }
 
         if (order.Status.Equals(OrderStatus.Cancelled) && !order.PaymentMethod.Equals(PaymentMethod.COD))
         {
-            order.Member.Balance += order.TotalPrice;
+            order.Member!.Balance += order.TotalPrice;
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
@@ -970,7 +966,8 @@ public class OrderService : IOrderService
                 return new Result<ShippingFeeResult, ErrorCode>(ghnShippingResult.Error);
             }
 
-            shippingFee += ghnShippingResult.Value.Data.ServiceFee;
+            if (ghnShippingResult.Value.Data != null)
+                shippingFee += (int)Math.Round(ghnShippingResult.Value.Data.ServiceFee / 1000) * 1000;
             shopLocation.Add(
                 new ShippingLocation()
                 {

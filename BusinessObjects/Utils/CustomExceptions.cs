@@ -1,4 +1,6 @@
-﻿namespace BusinessObjects.Utils;
+﻿using BusinessObjects.Dtos.Commons;
+
+namespace BusinessObjects.Utils;
 
 public class AuctionNotFoundException : Exception
 {
@@ -10,6 +12,7 @@ public class BankAccountNotSetException(string message)
 public class WithdrawNotFoundException : Exception
 {
 }
+
 
 public class ItemNotReadyForConsignException : Exception
 {
@@ -79,7 +82,7 @@ public class WrongPaymentMethodException(string message) : Exception(message);
 
 public class RefundExpiredException(string message) : Exception(message);
 
-public class RefundNoFoundException : Exception
+public class RefundNotFoundException : Exception
 {
 }
 
@@ -94,9 +97,11 @@ public class StatusNotAvailableWithMessageException(string message) : Exception(
 public class ConsignSaleLineItemNotFoundException : Exception
 {
 }
+
 public class ConsignSaleLineItemNotAvailableException(string message) : Exception(message)
 {
 }
+
 public class AddressNotFoundException : Exception
 {
 }
@@ -130,5 +135,13 @@ public class ConfirmPriceIsNullException(string message) : Exception(message)
 }
 
 public class DealPriceIsNotAvailableException(string message) : Exception(message)
+{
+}
+
+public class ItemUnableToDeleteException(string message) : Exception(message)
+{
+}
+
+public class DeleteFashionItemsFailedException(string message, ErrorCode errorCode) : Exception(message)
 {
 }
