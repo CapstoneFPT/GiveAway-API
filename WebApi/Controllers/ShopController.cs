@@ -138,16 +138,24 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("{shopId}/refunds")]
-        public async Task<ActionResult<Result<RefundResponse>>> CreateRefundByShop([FromRoute] Guid shopId,
+        [ProducesResponseType<RefundResponse>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CreateRefundByShop([FromRoute] Guid shopId,
             CreateRefundByShopRequest request)
         {
             var result = await _refundService.CreateRefundByShop(shopId, request);
-            if (result.ResultStatus != ResultStatus.Success)
+
+            if (!result.IsSuccessful)
             {
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+                return result.Error switch
+                {
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error creating refund", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                            result.Error))
+                };
             }
 
-            return Ok(result);
+            return Ok(result.Value);
         }
 
 

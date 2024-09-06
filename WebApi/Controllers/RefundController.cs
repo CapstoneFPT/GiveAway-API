@@ -30,10 +30,20 @@ namespace WebApi.Controllers
         {
             var result = await _refundService.GetRefundById(refundId);
 
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => StatusCode((int)HttpStatusCode.InternalServerError,
+                        new ErrorResponse("Refund not found", ErrorType.ApiError, HttpStatusCode.NotFound,
+                            result.Error)),
+                    _ => StatusCode((int)HttpStatusCode.InternalServerError,
+                        new ErrorResponse("Internal server error", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
 
-            return Ok(result);
+            return Ok(result.Value);
         }
 
         [HttpPut("{refundId}/approval")]

@@ -10,6 +10,7 @@ using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -41,10 +42,10 @@ namespace Services.Refunds
             _emailService = emailService;
         }
 
-        public async Task<Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId,
+        public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId,
             ApprovalRefundRequest request)
         {
-            var response = new Result<RefundResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<RefundResponse>();
             Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
             var refund = await _refundRepository.GetSingleRefund(predicate);
             if (refund is null)
@@ -65,47 +66,50 @@ namespace Services.Refunds
             return response;
         }
 
-        public async Task<Result<RefundResponse>> GetRefundById(Guid refundId)
+        public async Task<DotNext.Result<RefundResponse,ErrorCode>> GetRefundById(Guid refundId)
         {
-            var response = new Result<RefundResponse>();
-            Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
-            var queryable = _refundRepository.GetQueryable();
-
-            var data = await _refundRepository.GetQueryable()
-                .Where(predicate)
-                .Select(refund => new RefundResponse()
-                {
-                    ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode ?? string.Empty,
-                    Description = refund.Description ?? string.Empty,
-                    OrderCode = refund.OrderLineItem.Order.OrderCode,
-                    CreatedDate = refund.CreatedDate,
-                    RefundStatus = refund.RefundStatus,
-                    RefundId = refund.RefundId,
-                    CustomerEmail = refund.OrderLineItem.Order.Email ?? string.Empty,
-                    CustomerName = refund.OrderLineItem.Order.Member != null
-                        ? refund.OrderLineItem.Order.Member.Fullname
-                        : string.Empty,
-                    RecipientName = refund.OrderLineItem.Order.RecipientName! ?? string.Empty,
-                    RefundAmount = refund.OrderLineItem.UnitPrice * refund.RefundPercentage / 100,
-                    RefundPercentage = refund.RefundPercentage,
-                    UnitPrice = refund.OrderLineItem.UnitPrice,
-                    ItemImages = refund.OrderLineItem.IndividualFashionItem.Images.Select(c => c.Url).ToArray(),
-                    ImagesForCustomer = refund.Images.Select(x => x.Url).ToArray(),
-                    ItemName = refund.OrderLineItem.IndividualFashionItem.MasterItem.Name,
-                    OrderLineItemId = refund.OrderLineItemId,
-                    ResponseFromShop = refund.ResponseFromShop,
-                    CustomerPhone = refund.OrderLineItem.Order.Phone ?? string.Empty,
-                }).FirstOrDefaultAsync();
-
-            if (data is null)
+            try
             {
-               throw new RefundNotFoundException(); 
+                Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
+                var queryable = _refundRepository.GetQueryable();
+
+                var data = await _refundRepository.GetQueryable()
+                    .Where(predicate)
+                    .Select(refund => new RefundResponse()
+                    {
+                        ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode ?? string.Empty,
+                        Description = refund.Description ?? string.Empty,
+                        OrderCode = refund.OrderLineItem.Order.OrderCode,
+                        CreatedDate = refund.CreatedDate,
+                        RefundStatus = refund.RefundStatus,
+                        RefundId = refund.RefundId,
+                        CustomerEmail = refund.OrderLineItem.Order.Email ?? string.Empty,
+                        CustomerName = refund.OrderLineItem.Order.Member != null
+                            ? refund.OrderLineItem.Order.Member.Fullname
+                            : string.Empty,
+                        RecipientName = refund.OrderLineItem.Order.RecipientName! ?? string.Empty,
+                        RefundAmount = refund.OrderLineItem.UnitPrice * refund.RefundPercentage / 100,
+                        RefundPercentage = refund.RefundPercentage,
+                        UnitPrice = refund.OrderLineItem.UnitPrice,
+                        ItemImages = refund.OrderLineItem.IndividualFashionItem.Images.Select(c => c.Url).ToArray(),
+                        ImagesForCustomer = refund.Images.Select(x => x.Url).ToArray(),
+                        ItemName = refund.OrderLineItem.IndividualFashionItem.MasterItem.Name,
+                        OrderLineItemId = refund.OrderLineItemId,
+                        ResponseFromShop = refund.ResponseFromShop,
+                        CustomerPhone = refund.OrderLineItem.Order.Phone ?? string.Empty,
+                    }).FirstOrDefaultAsync();
+
+                if (data is null)
+                {
+                    return new Result<RefundResponse, ErrorCode>(ErrorCode.NotFound);
+                }
+
+                return new Result<RefundResponse, ErrorCode>(data);
             }
-            
-            response.Data = data;
-            response.ResultStatus = ResultStatus.Success;
-            response.Messages = ["Successfully"];
-            return response;
+            catch (Exception e)
+            {
+                return new Result<RefundResponse, ErrorCode>(ErrorCode.ServerError);
+            }
         }
 
         public async Task<PaginationResponse<RefundResponse>> GetAllRefunds(
@@ -204,9 +208,9 @@ namespace Services.Refunds
         }
 
 
-        public async Task<Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
         {
-            var response = new Result<RefundResponse>();
+            var response = new BusinessObjects.Dtos.Commons.Result<RefundResponse>();
             Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
             var refund = await _refundRepository.GetSingleRefund(predicate);
             if (refund == null)
@@ -261,9 +265,8 @@ namespace Services.Refunds
             return response;
         }
 
-        public async Task<Result<RefundResponse>> CreateRefundByShop(Guid shopId, CreateRefundByShopRequest request)
+        public async Task<Result<RefundResponse,ErrorCode>> CreateRefundByShop(Guid shopId, CreateRefundByShopRequest request)
         {
-            var response = new Result<RefundResponse>();
             var refund = new Refund()
             {
                 Description = request.Description,
@@ -274,7 +277,8 @@ namespace Services.Refunds
                 ResponseFromShop = "We accepted refund request at shop"
             };
             await _refundRepository.CreateRefund(refund);
-            return await GetRefundById(refund.RefundId);
+            var result = await GetRefundById(refund.RefundId);
+            return result.IsSuccessful ? result : new Result<RefundResponse, ErrorCode>(result.Error);
         }
     }
 }
