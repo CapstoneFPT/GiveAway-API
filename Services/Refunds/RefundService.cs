@@ -31,16 +31,18 @@ namespace Services.Refunds
         private readonly ITransactionRepository _transactionRepository;
         private readonly IAccountRepository _accountRepository;
         private readonly IEmailService _emailService;
+        private readonly IOrderLineItemRepository _orderLineItemRepository;
 
         public RefundService(IRefundRepository refundRepository, IOrderRepository orderRepository,
             ITransactionRepository transactionRepository, IAccountRepository accountRepository,
-            IEmailService emailService)
+            IEmailService emailService, IOrderLineItemRepository orderLineItemRepository)
         {
             _refundRepository = refundRepository;
             _orderRepository = orderRepository;
             _transactionRepository = transactionRepository;
             _accountRepository = accountRepository;
             _emailService = emailService;
+            _orderLineItemRepository = orderLineItemRepository;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId,
@@ -212,6 +214,28 @@ namespace Services.Refunds
             };
         }
 
+        private async Task<decimal> CalculateRefundAmount(Guid orderId, Guid orderLineItemId, int percentageRefund)
+        {
+            var orderQuery = _orderRepository.GetQueryable();
+            var orderLineItemQuery = _orderLineItemRepository.GetQueryable();
+            var lineItemsCount = await orderQuery.Include(x => x.OrderLineItems)
+                .CountAsync();
+            var order = await orderQuery.FirstOrDefaultAsync(x=> x.OrderId == orderId);
+            var orderLineItem = await orderLineItemQuery.FirstOrDefaultAsync(x => x.OrderLineItemId == orderLineItemId);
+
+            if (order == null || orderLineItem == null)
+            {
+                throw new UnableToCalculateRefundAmountException("Order or OrderLineItem not found");
+            }
+
+            var discount = order.Discount;
+            var shippingFee = order.ShippingFee;
+            var unitPrice = orderLineItem.UnitPrice;
+            
+            var refundAmount = Math.Round((unitPrice - discount/lineItemsCount + shippingFee/lineItemsCount) * percentageRefund / 100);
+            
+            return refundAmount;
+        }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
         {
@@ -224,7 +248,7 @@ namespace Services.Refunds
             }
 
             var order = await _orderRepository.GetSingleOrder(c =>
-                c.OrderLineItems.Select(c => c.OrderLineItemId).Contains(refund.OrderLineItemId));
+                c.OrderLineItems.Select(orderLineItem => orderLineItem.OrderLineItemId).Contains(refund.OrderLineItemId));
             if (order == null)
             {
                 throw new OrderNotFoundException();
@@ -245,19 +269,19 @@ namespace Services.Refunds
                 throw new AccountNotFoundException();
             }
 
-            var refundAmount = refund.OrderLineItem.UnitPrice * refund.RefundPercentage / 100;
-            member.Balance += refundAmount!.Value;
+            var refundAmount = await CalculateRefundAmount(order.OrderId, refund.OrderLineItemId, refund.RefundPercentage!.Value);
+            member.Balance += refundAmount;
             await _accountRepository.UpdateAccount(member);
 
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= refundAmount.Value;
+            admin.Balance -= refundAmount;
             await _accountRepository.UpdateAccount(admin);
 
             Transaction refundTransaction = new Transaction()
             {
-                Amount = refundAmount.Value,
+                Amount = refundAmount,
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Refund,
                 RefundId = refundId,
@@ -367,4 +391,6 @@ namespace Services.Refunds
             }
         }
     }
+
+    
 }
