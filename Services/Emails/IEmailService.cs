@@ -15,7 +15,7 @@ namespace Services.Emails
         Task SendEmail(SendEmailRequest request);
         Task<Result<string>> SendMailRegister(string mail, string token);
         Task<bool> SendEmailOrder(Order order);
-        Task<bool> SendEmailRefund(RefundResponse request);
+        Task<bool> SendEmailRefund(Guid refundId);
         Task<bool> SendEmailConsignSale(Guid consignSaleId);
         Task<Result<string>> SendMailForgetPassword(string email);
         Task<bool> SendEmailConsignSaleReceived(Guid consignId);

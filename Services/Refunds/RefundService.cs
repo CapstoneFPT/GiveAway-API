@@ -13,6 +13,7 @@ using BusinessObjects.Utils;
 using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
 using Repositories.OrderLineItems;
@@ -63,7 +64,7 @@ namespace Services.Refunds
             }
 
             var data = await _refundRepository.ApprovalRefundFromShop(refundId, request);
-            await _emailService.SendEmailRefund(data);
+            await _emailService.SendEmailRefund(refundId);
             response.Data = data;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Successfully"];
@@ -315,6 +316,50 @@ namespace Services.Refunds
                 };
 
                 return data;
+            }
+            catch (Exception e)
+            {
+                return new Result<RefundResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        public async Task<Result<RefundResponse, ErrorCode>> UpdateRefund(Guid refundId, UpdateRefundRequest request)
+        {
+            try
+            {
+                Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
+                var refund = await _refundRepository.GetSingleRefund(predicate);
+                if (refund == null)
+                {
+                    return new Result<RefundResponse, ErrorCode>(ErrorCode.NotFound);
+                }
+                if (refund.RefundStatus != RefundStatus.Pending || request.Description!.Trim().IsNullOrEmpty())
+                {
+                    return new Result<RefundResponse, ErrorCode>(ErrorCode.RefundStatusNotAvailable);
+                }
+
+                if (request.RefundImages.Length == 0)
+                {
+                    return new Result<RefundResponse, ErrorCode>(ErrorCode.MissingFeature);
+                }
+                refund.Description = request.Description ?? refund.Description;
+                refund.Images.Clear();
+                refund.Images = request.RefundImages.Select(imageUrl => new Image()
+                {
+                    RefundId = refund.RefundId,
+                    Url = imageUrl,
+                    CreatedDate = DateTime.UtcNow
+                }).ToList();
+                await _refundRepository.UpdateRefund(refund);
+                return new RefundResponse()
+                {
+                    RefundId = refund.RefundId,
+                    OrderLineItemId = refund.OrderLineItemId,
+                    RefundStatus = refund.RefundStatus,
+                    CreatedDate = refund.CreatedDate,
+                    ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode,
+                    ImagesForCustomer = refund.Images.Select(c => c.Url).ToArray()
+                };
             }
             catch (Exception e)
             {

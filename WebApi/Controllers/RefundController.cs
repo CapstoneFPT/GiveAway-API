@@ -112,5 +112,31 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+        [HttpPut("{refundId}/update")]
+        [ProducesResponseType<RefundResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> UpdateRefund([FromRoute] Guid refundId, [FromBody] UpdateRefundRequest request)
+        {
+            var result = await _refundService.UpdateRefund(refundId, request);
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => NotFound(new ErrorResponse("Refund not found", ErrorType.RefundError,
+                        HttpStatusCode.NotFound, result.Error)),
+                    ErrorCode.RefundStatusNotAvailable => StatusCode((int)HttpStatusCode.Conflict,
+                        new ErrorResponse("Refund status not available", ErrorType.RefundError, HttpStatusCode.Conflict,
+                            result.Error)),
+                    ErrorCode.MissingFeature => StatusCode((int)HttpStatusCode.NotAcceptable,
+                        new ErrorResponse("Missing valid feature", ErrorType.RefundError, HttpStatusCode.NotAcceptable,
+                            result.Error)),
+                    _ => StatusCode((int)HttpStatusCode.InternalServerError,
+                        new ErrorResponse("Internal server error", ErrorType.RefundError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
+
+            return Ok(result.Value);
+        }
     }
 }
