@@ -55,6 +55,13 @@ public class GiveAwayDbContext : DbContext
 
     private static string? GetConnectionString()
     {
+        var envConnectionString = Environment.GetEnvironmentVariable("ASPNETCORE_ConnectionStrings__DefaultDB");
+
+        if(!string.IsNullOrEmpty(envConnectionString))
+        {
+            return envConnectionString;
+        }
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
