@@ -15,14 +15,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2 
 
-    - name: Debug information
-      run: |
-        whoami
-        groups
-        which docker
-        which docker compose
-        sudo docker info
-
     - name: Build
       env: 
         GHN_API_TOKEN: ${{ secrets.GIAO_HANG_NHANH_TOKEN }}
