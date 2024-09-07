@@ -43,7 +43,8 @@ public enum ErrorCode
     DuplicateBankAccount,
     NoBankAccountLeft,
     RefundStatusNotAvailable,
-    MissingFeature
+    MissingFeature,
+    InvalidOperation
 }
 
 public enum ErrorType

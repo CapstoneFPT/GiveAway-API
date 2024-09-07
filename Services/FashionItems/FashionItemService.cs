@@ -568,6 +568,46 @@ namespace Services.FashionItems
             };
         }
 
+        public async Task<Result<FashionItemDetailResponse, ErrorCode>> AddReturnedItemToShop(Guid itemId)
+        {
+            var returnedItem = await _fashionitemRepository.GetIndividualQueryable()
+                .FirstOrDefaultAsync(x=>x.ItemId == itemId);
+
+            if (returnedItem is null)
+            {
+                return new Result<FashionItemDetailResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            if (returnedItem.Status != FashionItemStatus.Returned)
+            {
+                return new Result<FashionItemDetailResponse, ErrorCode>(ErrorCode.InvalidOperation);
+            }
+            
+            returnedItem.Status = FashionItemStatus.Available;
+            await _fashionitemRepository.UpdateFashionItem(returnedItem);
+            return new FashionItemDetailResponse
+            {
+                ItemId = returnedItem.ItemId,
+                Status = returnedItem.Status,
+                ItemCode = returnedItem.ItemCode,
+                SellingPrice = returnedItem.SellingPrice!.Value,
+                Color = returnedItem.Color,
+                Condition = returnedItem.Condition,
+                Size = returnedItem.Size,
+                Type = returnedItem.Type,
+                ShopAddress = returnedItem.MasterItem.Shop.Address,
+                CategoryName = returnedItem.MasterItem.Category.Name,
+                Description = returnedItem.MasterItem.Description ?? string.Empty,
+                ShopId = returnedItem.MasterItem.ShopId,
+                Brand = returnedItem.MasterItem.Brand,
+                Gender = returnedItem.MasterItem.Gender,
+                CategoryId = returnedItem.MasterItem.CategoryId,
+                IsConsignment = returnedItem.MasterItem.IsConsignment,
+                Name = returnedItem.MasterItem.Name,
+                Note = returnedItem.Note,
+            };
+        }
+
         public async Task<PaginationResponse<MasterItemListResponse>> GetAllMasterItemPagination(
             MasterItemRequest request)
         {

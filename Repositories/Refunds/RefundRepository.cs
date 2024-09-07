@@ -43,7 +43,7 @@ namespace Repositories.Refunds
                 refund.RefundStatus = RefundStatus.Approved;
                 refund.RefundPercentage = request.RefundPercentage;
                 refund.ResponseFromShop = request.Description;
-                refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
+                refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.AwaitingReturn;
             }
             else if (request.Status.Equals(RefundStatus.Rejected))
             {
@@ -123,7 +123,7 @@ namespace Repositories.Refunds
                 throw new RefundNotFoundException();
             }
             refund.RefundStatus = RefundStatus.Completed;
-            refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Unavailable;
+            refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
             await GenericDao<Refund>.Instance.UpdateAsync(refund);
             return new RefundResponse()
             {
