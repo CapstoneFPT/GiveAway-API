@@ -592,7 +592,7 @@ namespace Services.FashionItems
                     Images = item.Images.Select(x => x.Url).ToList()
                 };
             (List<MasterItemListResponse> Items, int Page, int PageSize, int TotalCount) result;
-            if (request.IsLeftInStock)
+            if (request.IsLeftInStock != null)
             {
                 predicate = predicate.And(it =>
                     it.IndividualFashionItems.Any(c => c.Status == FashionItemStatus.Available));

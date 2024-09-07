@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-          os: [self-hosted-vps]
+          os: [self-hosted]
     steps:
     - name: Checkout code
       uses: actions/checkout@v2 
@@ -18,6 +18,15 @@ jobs:
     - name: Build
       env: 
         GHN_API_TOKEN: ${{ secrets.GIAO_HANG_NHANH_TOKEN }}
+        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        DEFAULT_DB_CONNECTION_STRING: ${{ secrets.DEFAULTDB_CONNECTION_STRINGS }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENTID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        MAIL_SETTINGS_MAIL: ${{ secrets.MAIL_SETTINGS_MAIL }}
+        MAIL_SETTINGS_PASSWORD: ${{ secrets.MAIL_SETTINGS_PASSWORD }}
+        VNPAY_TMNCODE: ${{ secrets.VNPAY_TMNCODE }}
+        VNPAY_HASHSECRET: ${{ secrets.VNPAY_HASHSECRET }}
+        VNPAY_PAYMENTURL: ${{ secrets.VNPAY_PAYMENTURL }}
       run: |
         docker compose down
         docker compose build --no-cache

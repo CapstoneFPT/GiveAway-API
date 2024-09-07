@@ -46,6 +46,7 @@ public enum FashionItemStatus
     PendingForRefund,
     PendingForOrder,
     AwaitingAuction,
+    AwaitingReturn,
     Bidding,
     Rejected,
     Returned,

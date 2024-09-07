@@ -15,6 +15,27 @@ services:
       - ASPNETCORE_Kestrel__Endpoints__Http__Url=http://0.0.0.0:80
       - ASPNETCORE_HOSTNAME=giveawayproject.jettonetto.org
       - ASPNETCORE_GiaoHangNhanh__ApiToken=${GHN_API_TOKEN}
+      - Jwt__JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - Jwt__JWT_ISSUER=giveawayapi.com
+      - Jwt__JWT_AUDIENCE=giveaway.com
+      - Jwt__JWT_TOKEN_EXPIRE_TIME_IN_MINUTES=43200
+      - Google__ClientId=${GOOGLE_CLIENT_ID}
+      - Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      - ConnectionStrings__DefaultDB=${DEFAULT_DB_CONNECTION_STRING}
+      - MailSettings__Mail=${MAIL_SETTINGS_MAIL}
+      - MailSettings__DisplayName=GIVEAWAY
+      - MailSettings__Password=${MAIL_SETTINGS_PASSWORD}
+      - MailSettings__Host=smtp.gmail.com
+      - MailSettings__Port=587
+      - MailSettings__AppDomain=https://giveawayproject.jettonetto.org:8443/api/auth/
+      - MailSettings__EmailConfirmation=confirm-email?id={0}&token={1}
+      - VNPay__TmnCode=${VNPAY_TMNCODE}
+      - VNPay__HashSecret=${VNPAY_HASHSECRET}
+      - VNPay__PaymentUrl=${VNPAY_PAYMENTURL}
+      - AdminAccount__Email=admin@gmail.com
+      - AdminAccount__Password=admin
+      - EmailTemplateDirectory=Services/MailTemplate/
+      - RedirectDirectory=https://giveawayproject.jettonetto.org/
     ports:
       - "8443:443"
       - "8080:8080"
@@ -43,4 +64,3 @@ services:
 #      - ./grafana:/var/lib/grafana
 #    depends_on:
 #      - prometheus
-  
