@@ -20,7 +20,7 @@ jobs:
         whoami
         groups
         which docker
-        which docker-compose
+        which docker compose
         docker info
 
     - name: Build
