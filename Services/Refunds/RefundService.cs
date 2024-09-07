@@ -13,6 +13,7 @@ using BusinessObjects.Utils;
 using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
@@ -32,10 +33,11 @@ namespace Services.Refunds
         private readonly IAccountRepository _accountRepository;
         private readonly IEmailService _emailService;
         private readonly IOrderLineItemRepository _orderLineItemRepository;
+        private readonly ILogger<RefundService> _logger;
 
         public RefundService(IRefundRepository refundRepository, IOrderRepository orderRepository,
             ITransactionRepository transactionRepository, IAccountRepository accountRepository,
-            IEmailService emailService, IOrderLineItemRepository orderLineItemRepository)
+            IEmailService emailService, IOrderLineItemRepository orderLineItemRepository, ILogger<RefundService> logger)
         {
             _refundRepository = refundRepository;
             _orderRepository = orderRepository;
@@ -43,6 +45,7 @@ namespace Services.Refunds
             _accountRepository = accountRepository;
             _emailService = emailService;
             _orderLineItemRepository = orderLineItemRepository;
+            _logger = logger;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId,
@@ -231,6 +234,9 @@ namespace Services.Refunds
             var discount = order.Discount;
             var shippingFee = order.ShippingFee;
             var unitPrice = orderLineItem.UnitPrice;
+            
+            
+            _logger.LogInformation("Discount: {Discount}, ShippingFee: {ShippingFee}, UnitPrice: {UnitPrice}", discount, shippingFee, unitPrice);
             
             var refundAmount = Math.Round((unitPrice - discount/lineItemsCount + shippingFee/lineItemsCount) * percentageRefund / 100);
             
