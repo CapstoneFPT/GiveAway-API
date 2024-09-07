@@ -28,11 +28,11 @@ jobs:
         VNPAY_HASHSECRET: ${{ secrets.VNPAY_HASHSECRET }}
         VNPAY_PAYMENTURL: ${{ secrets.VNPAY_PAYMENTURL }}
       run: |
-        docker compose down
-        docker compose build --no-cache
-        docker compose up -d
+        sudo docker compose down
+        sudo docker compose build --no-cache
+        sudo docker compose up -d
         
     - name: Clean up old images
       run: |
-        docker image prune -f
+        sudo docker image prune -f
  
