@@ -30,7 +30,7 @@ services:
       - ASPNETCORE_MailSettings__AppDomain=https://giveawayproject.jettonetto.org:8443/api/auth/
       - ASPNETCORE_MailSettings__EmailConfirmation=confirm-email?id={0}&token={1}
       - ASPNETCORE_VNPay__TmnCode=${VNPAY_TMNCODE}
-      - VNPay__HashSecret=${VNPAY_HASHSECRET}
+      - ASPNETCORE_VNPay__HashSecret=${VNPAY_HASHSECRET}
       - ASPNETCORE_VNPay__PaymentUrl=${VNPAY_PAYMENTURL}
       - ASPNETCORE_AdminAccount__Email=admin@gmail.com
       - ASPNETCORE_AdminAccount__Password=admin
