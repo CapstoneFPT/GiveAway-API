@@ -221,7 +221,8 @@ namespace Services.Refunds
         {
             var orderQuery = _orderRepository.GetQueryable();
             var orderLineItemQuery = _orderLineItemRepository.GetQueryable();
-            var lineItemsCount = await orderQuery.Include(x => x.OrderLineItems)
+            var lineItemsCount = await orderQuery.Where(x=> x.OrderId == orderId)
+                .Include(x => x.OrderLineItems)
                 .CountAsync();
             var order = await orderQuery.FirstOrDefaultAsync(x=> x.OrderId == orderId);
             var orderLineItem = await orderLineItemQuery.FirstOrDefaultAsync(x => x.OrderLineItemId == orderLineItemId);
@@ -237,8 +238,12 @@ namespace Services.Refunds
             
             
             _logger.LogInformation("Discount: {Discount}, ShippingFee: {ShippingFee}, UnitPrice: {UnitPrice}", discount, shippingFee, unitPrice);
+            _logger.LogInformation("PercentageRefund: {PercentageRefund}", percentageRefund);
+            _logger.LogInformation("LineItemsCount: {LineItemsCount}", lineItemsCount);
             
             var refundAmount = Math.Round((unitPrice - discount/lineItemsCount + shippingFee/lineItemsCount) * percentageRefund / 100);
+            
+            _logger.LogInformation("RefundAmount: {RefundAmount}", refundAmount);
             
             return refundAmount;
         }
