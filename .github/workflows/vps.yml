@@ -21,7 +21,7 @@ jobs:
         groups
         which docker
         which docker compose
-        docker info
+        sudo docker info
 
     - name: Build
       env: 
