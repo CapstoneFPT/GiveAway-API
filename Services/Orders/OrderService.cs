@@ -12,7 +12,7 @@ using BusinessObjects.Dtos.OrderLineItems;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Repositories.Accounts;
 using Repositories.AuctionItems;
-using Repositories.PointPackages;
+using Repositories.Recharges;
 using Repositories.Shops;
 using Repositories.Transactions;
 using BusinessObjects.Dtos.Email;
@@ -40,7 +40,7 @@ public class OrderService : IOrderService
     private readonly IAuctionItemRepository _auctionItemRepository;
     private readonly IMapper _mapper;
     private readonly IAccountRepository _accountRepository;
-    private readonly IPointPackageRepository _pointPackageRepository;
+    private readonly IRechargeRepository _rechargeRepository;
     private readonly IShopRepository _shopRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IConfiguration _configuration;
@@ -52,7 +52,7 @@ public class OrderService : IOrderService
 
     public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
         IMapper mapper, IOrderLineItemRepository orderLineItemRepository, IAuctionItemRepository auctionItemRepository,
-        IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
+        IAccountRepository accountRepository, IRechargeRepository rechargeRepository,
         IShopRepository shopRepository, ITransactionRepository transactionRepository,
         IConfiguration configuration, IEmailService emailService, IRefundRepository refundRepository,
         IGiaoHangNhanhService giaoHangNhanhService, ILogger<OrderService> logger, ISchedulerFactory schedulerFactory)
@@ -62,7 +62,7 @@ public class OrderService : IOrderService
         _mapper = mapper;
         _orderLineItemRepository = orderLineItemRepository;
         _auctionItemRepository = auctionItemRepository;
-        _pointPackageRepository = pointPackageRepository;
+        _rechargeRepository = rechargeRepository;
         _accountRepository = accountRepository;
         _shopRepository = shopRepository;
         _transactionRepository = transactionRepository;
@@ -243,53 +243,6 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateOrder(order);
     }
 
-
-    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreatePointPackageOrder(
-        PointPackageOrder order)
-    {
-        var orderResult = await _orderRepository.CreateOrder(new Order()
-        {
-            OrderCode = _orderRepository.GenerateUniqueString(),
-            CreatedDate = DateTime.UtcNow,
-            MemberId = order.MemberId,
-            TotalPrice = order.TotalPrice,
-            PaymentMethod = order.PaymentMethod,
-            Status = OrderStatus.AwaitingPayment,
-        });
-
-        var orderDetailResult = await _orderLineItemRepository.CreateOrderLineItem(new OrderLineItem()
-        {
-            OrderId = orderResult.OrderId,
-            UnitPrice = order.TotalPrice,
-            CreatedDate = DateTime.UtcNow,
-            PointPackageId = order.PointPackageId,
-        });
-
-        return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
-        {
-            Data = new OrderResponse()
-            {
-                OrderId = orderResult.OrderId,
-                OrderCode = orderResult.OrderCode,
-                TotalPrice = orderResult.TotalPrice,
-                OrderLineItems = new List<OrderLineItemDetailedResponse>()
-                {
-                    new OrderLineItemDetailedResponse()
-                    {
-                        OrderLineItemId = orderDetailResult.OrderLineItemId,
-                        UnitPrice = orderDetailResult.UnitPrice,
-                        RefundExpirationDate = null,
-                        PointPackageId = orderDetailResult.PointPackageId
-                    }
-                },
-                CreatedDate = orderResult.CreatedDate,
-                // PaymentDate = orderResult.PaymentDate,
-            },
-            ResultStatus = ResultStatus.Success
-        };
-    }
-
-
     public async Task<Order?> GetOrderById(Guid orderId)
     {
         var result = await _orderRepository.GetSingleOrder(x => x.OrderId == orderId);
@@ -359,16 +312,6 @@ public class OrderService : IOrderService
         if (request.IsFromAuction == false)
         {
             predicate = predicate.And(ord => ord.BidId == null);
-        }
-
-        if (request.IsPointPackage == true)
-        {
-            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId != null));
-        }
-
-        if (request.IsPointPackage == false)
-        {
-            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId == null));
         }
 
         if (request.IsFromAuction == true)
@@ -528,16 +471,6 @@ public class OrderService : IOrderService
         if (orderRequest.IsFromAuction == false)
         {
             predicate = predicate.And(ord => ord.BidId == null);
-        }
-
-        if (orderRequest.IsPointPackage == true)
-        {
-            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId != null));
-        }
-
-        if (orderRequest.IsPointPackage == false)
-        {
-            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId == null));
         }
 
         if (orderRequest.Email != null)

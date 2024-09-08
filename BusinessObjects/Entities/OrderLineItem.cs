@@ -15,8 +15,6 @@ public class OrderLineItem
     public DateTime? RefundExpirationDate { get; set; }
     public IndividualFashionItem IndividualFashionItem { get; set; }
     public Guid? IndividualFashionItemId { get; set; }
-    public PointPackage? PointPackage { get; set; }
-    public Guid? PointPackageId { get; set; }
     public Feedback? Feedback { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime? PaymentDate { get; set; }

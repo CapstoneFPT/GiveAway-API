@@ -27,6 +27,7 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Member> Members { get; set; }
     public DbSet<Staff> Staffs { get; set; }
     public DbSet<Admin> Admins { get; set; }
+    public DbSet<Recharge> Recharges { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
@@ -542,15 +543,27 @@ public class GiveAwayDbContext : DbContext
             .HasForeignKey(x => x.ShopId);
         #endregion
 
-        #region PointPackage
+        #region Recharge
 
-        modelBuilder.Entity<PointPackage>().ToTable("PointPackage").HasKey(e => e.PointPackageId);
+        modelBuilder.Entity<Recharge>().ToTable("Recharge").HasKey(e => e.RechargeId);
 
-        modelBuilder.Entity<PointPackage>().Property(e => e.Status)
+        modelBuilder.Entity<Recharge>().Property(e => e.Status)
             .HasConversion(prop => prop.ToString(),
-                s => (PointPackageStatus)Enum.Parse(typeof(PointPackageStatus), s)
+                s => (RechargeStatus)Enum.Parse(typeof(RechargeStatus), s)
             ).HasColumnType("varchar")
             .HasMaxLength(20);
+        
+        modelBuilder.Entity<Recharge>()
+            .Property(x=>x.PaymentMethod)
+            .HasConversion(prop => prop.ToString(),
+                s => (PaymentMethod)Enum.Parse(typeof(PaymentMethod), s)
+            ).HasColumnType("varchar")
+            .HasMaxLength(20);
+
+        modelBuilder.Entity<Recharge>()
+            .HasOne<Transaction>(x => x.Transaction)
+            .WithOne(x => x.Recharge)
+            .HasForeignKey<Transaction>(x => x.RechargeId);
 
         #endregion
 

@@ -44,7 +44,8 @@ public enum ErrorCode
     NoBankAccountLeft,
     RefundStatusNotAvailable,
     MissingFeature,
-    InvalidOperation
+    InvalidOperation,
+    PaymentFailed
 }
 
 public enum ErrorType

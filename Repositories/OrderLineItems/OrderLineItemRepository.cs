@@ -56,11 +56,10 @@ namespace Repositories.OrderLineItems
                         ItemSize = order.IndividualFashionItem.Size,
                         PaymentDate = order.PaymentDate,
                         ShopAddress = order.IndividualFashionItem.MasterItem.Shop.Address,
-                        PointPackageId = order.PointPackageId,
                         RefundExpirationDate = order.RefundExpirationDate
                     };
 
-                query = query.Include(c => c.PointPackage)
+                query = query
                     .Include(c => c.IndividualFashionItem)
                     .ThenInclude(c => c.MasterItem)
                     .ThenInclude(c => c.Shop)

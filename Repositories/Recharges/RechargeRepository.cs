@@ -1,25 +1,49 @@
 ﻿using System.Linq.Expressions;
-using BusinessObjects.Dtos.PointPackages;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 
-namespace Repositories.PointPackages;
+namespace Repositories.Recharges;
 
-public class PointPackageRepository : IPointPackageRepository
+public class RechargeRepository : IRechargeRepository
 {
     private readonly GiveAwayDbContext _giveAwayDbContext;
 
-    public PointPackageRepository(GiveAwayDbContext giveAwayDbContext)
+    public RechargeRepository(GiveAwayDbContext giveAwayDbContext)
     {
         _giveAwayDbContext = giveAwayDbContext;
     }
 
-    public async Task<T?> GetSingle<T>(Expression<Func<PointPackage, bool>> predicate,
-        Expression<Func<PointPackage, T>>? selector)
+    public async Task<Recharge?> CreateRecharge(Recharge recharge)
     {
-        var query = GenericDao<PointPackage>.Instance.GetQueryable();
+        await _giveAwayDbContext.Recharges.AddAsync(recharge);
+        await _giveAwayDbContext.SaveChangesAsync();
+        return recharge;
+    }
+
+    public async Task<Recharge?> GetRechargeById(Guid rechargeId)
+    {
+        return await _giveAwayDbContext.Recharges
+            .Include(r => r.Member)
+            .FirstOrDefaultAsync(r => r.RechargeId == rechargeId);
+    }
+
+    public async Task UpdateRecharge(Recharge recharge)
+    {
+        _giveAwayDbContext.Recharges.Update(recharge);
+        await _giveAwayDbContext.SaveChangesAsync();
+    }
+
+    public IQueryable<Recharge> GetQueryable()
+    {
+        return _giveAwayDbContext.Recharges.AsQueryable();
+    }
+
+    public async Task<T?> GetSingle<T>(Expression<Func<Recharge, bool>> predicate,
+        Expression<Func<Recharge, T>>? selector)
+    {
+        var query = _giveAwayDbContext.Recharges.AsQueryable();
 
         if (selector != null)
         {
@@ -51,10 +75,10 @@ public class PointPackageRepository : IPointPackageRepository
 
     public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetPointPackages<T>(
         int page, int pageSize,
-        Expression<Func<PointPackage, bool>> predicate,
-        Expression<Func<PointPackage, T>> selector)
+        Expression<Func<Recharge, bool>> predicate,
+        Expression<Func<Recharge, T>> selector)
     {
-        var query = GenericDao<PointPackage>.Instance.GetQueryable();
+        var query = _giveAwayDbContext.Recharges.AsQueryable();
         if (predicate != null)
         {
             query = query.Where(predicate);
@@ -79,4 +103,5 @@ public class PointPackageRepository : IPointPackageRepository
 
         return (items, page, pageSize, total);
     }
+
 }

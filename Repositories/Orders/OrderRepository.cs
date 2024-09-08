@@ -172,7 +172,6 @@ namespace Repositories.Orders
         {
             var query = _giveAwayDbContext.Orders.AsQueryable();
             query = query.Include(c => c.Member)
-                .Where(c => c.MemberId == accountId && c.OrderLineItems.Any(c => c.PointPackageId == null))
                 .OrderByDescending(c => c.CreatedDate);
 
             if (request.Status != null)

@@ -13,6 +13,8 @@ public class Transaction
     public Order? Order { get; set; }
     public Guid? OrderId { get; set; }
     public Refund? Refund { get; set; }
+    public Guid? RechargeId { get; set; }
+    public Recharge? Recharge { get; set; }
     public Guid? ShopId { get; set; }
     public Shop? Shop { get; set; }
     public Guid? RefundId { get; set; }

@@ -24,7 +24,6 @@ namespace Services.Orders
         Task<Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrders(OrderRequest orderRequest);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
-        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderById(Guid orderId);
         Task UpdateOrder(Order? order);
         Task<List<Order?>> GetOrdersToCancel();

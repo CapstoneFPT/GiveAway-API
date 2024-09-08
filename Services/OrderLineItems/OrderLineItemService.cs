@@ -66,7 +66,6 @@ namespace Services.OrderLineItems
                     PaymentDate = item.PaymentDate,
                     ShopAddress = item.IndividualFashionItem.MasterItem.Shop.Address,
                     ShopId = item.IndividualFashionItem.MasterItem.ShopId,
-                    PointPackageId = item.PointPackage != null ? item.PointPackage.PointPackageId : null
                 };
             try
             {
@@ -125,9 +124,6 @@ namespace Services.OrderLineItems
                     PaymentDate = orderLineItem.PaymentDate,
                     ShopAddress = orderLineItem.IndividualFashionItem.MasterItem.Shop.Address,
                     ShopId = orderLineItem.IndividualFashionItem.MasterItem.ShopId,
-                    PointPackageId = orderLineItem.PointPackage != null
-                        ? orderLineItem.PointPackage.PointPackageId
-                        : null
                 };
 
             try

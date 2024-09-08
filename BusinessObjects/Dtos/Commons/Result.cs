@@ -13,7 +13,7 @@ public enum ResultStatus
     NotFound,
     Duplicated,
     Error,
-    
+
 }
 
 public enum Roles
@@ -29,6 +29,14 @@ public enum AccountStatus
     Active,
     Inactive,
     NotVerified
+}
+
+public enum RechargeStatus
+{
+    Pending,
+    Completed,
+    Failed,
+    Cancelled
 }
 
 public enum FashionItemStatus
