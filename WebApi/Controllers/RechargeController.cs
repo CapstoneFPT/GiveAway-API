@@ -130,7 +130,7 @@ public class RechargeController : ControllerBase
                     "Recharge successful. RechargeId: {RechargeId}, Amount: {Amount}", response.OrderId,
                     recharge.Amount);
 
-                return Redirect($"{redirectUrl}?payementstatus=success&message={Uri.EscapeDataString("Recharge successful")}");
+                return Redirect($"{redirectUrl}?paymentstatus=success&message={Uri.EscapeDataString("Recharge successful")}");
             }
             catch (Exception ex)
             {
