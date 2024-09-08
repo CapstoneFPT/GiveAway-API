@@ -1,4 +1,5 @@
-﻿using BusinessObjects.Dtos.Commons;
+﻿using System.ComponentModel.DataAnnotations;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Services.Recharges;
@@ -170,5 +171,6 @@ public class RechargePurchaseResponse
 public class InitiateRechargeRequest
 {
     public Guid MemberId { get; set; }
+    [Range(1000, 250000000, ErrorMessage = "Amount must be between 1000 VND and 250000000 VND")]
     public decimal Amount { get; set; }
 }
