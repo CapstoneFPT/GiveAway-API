@@ -7,6 +7,7 @@ public class Recharge
 {
   public Guid RechargeId { get; set; }
   public decimal Amount { get; set; }
+  public string RechargeCode { get; set; } = default!;
   public DateTime CreatedDate { get; set; }
   public RechargeStatus Status { get; set; }
   public PaymentMethod PaymentMethod { get; set; }

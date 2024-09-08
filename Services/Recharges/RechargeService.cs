@@ -42,6 +42,11 @@ public class RechargeService : IRechargeService
             predicate = predicate.And(recharge => recharge.Status == request.RechargeStatus.Value);
         }
 
+        if (request.RechargeCode != null)
+        {
+            predicate = predicate.And(recharge => EF.Functions.ILike(recharge.RechargeCode, $"%{request.RechargeCode}%"));
+        }
+
         return predicate;
     }
 
