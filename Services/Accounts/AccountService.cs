@@ -280,16 +280,55 @@ namespace Services.Accounts
             };
         }
 
-        public async Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId,
-            GetTransactionsRequest request)
+        private Expression<Func<Transaction, bool>> GetPredicate(GetTransactionsRequest request)
         {
-            Expression<Func<Transaction, bool>> predicate = transaction => transaction.MemberId == accountId;
+            Expression<Func<Transaction, bool>> predicate = transaction => true;
 
             if (request.Types.Length != 0)
             {
                 predicate = predicate.And(x => request.Types.Contains(x.Type));
             }
 
+            if (!string.IsNullOrWhiteSpace(request.OrderCode))
+            {
+                predicate = predicate.And(x =>
+                    x.Order != null && EF.Functions.ILike(x.Order.OrderCode, $"%{request.OrderCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.ConsignSaleCode))
+            {
+                predicate = predicate.And(x =>
+                    x.ConsignSale != null &&
+                    EF.Functions.ILike(x.ConsignSale.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.RechargeCode))
+            {
+                predicate = predicate.And(x =>
+                    x.Recharge != null && EF.Functions.ILike(x.Recharge.RechargeCode, $"%{request.RechargeCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.DepositCode))
+            {
+                predicate = predicate.And(x =>
+                    x.AuctionDeposit != null &&
+                    EF.Functions.ILike(x.AuctionDeposit.DepositCode, $"%{request.DepositCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.TransactionCode))
+            {
+                predicate = predicate.And(x => EF.Functions.ILike(x.TransactionCode, $"%{request.TransactionCode}%"));
+            }
+
+            return predicate;
+        }
+
+        public async Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId,
+            GetTransactionsRequest request)
+        {
+            Expression<Func<Transaction, bool>> predicate = GetPredicate(request);
+            predicate = predicate.And(x=>x.MemberId == accountId);
+            
             Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
             Expression<Func<Transaction, GetTransactionsResponse>> selector = transaction =>
                 new GetTransactionsResponse()
@@ -300,7 +339,13 @@ namespace Services.Accounts
                     Type = transaction.Type,
                     CreatedDate = transaction.CreatedDate,
                     OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
-                    ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null
+                    ConsignSaleCode = transaction.ConsignSale != null
+                        ? transaction.ConsignSale.ConsignSaleCode
+                        : null,
+                    RechargeCode = transaction.Recharge != null ? transaction.Recharge.RechargeCode : null,
+                    DepositCode =
+                        transaction.AuctionDeposit != null ? transaction.AuctionDeposit.DepositCode : null,
+                    TransactionCode = transaction.TransactionCode
                 };
 
             (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await
@@ -328,6 +373,12 @@ namespace Services.Accounts
             }
 
 
+            if (!string.IsNullOrWhiteSpace(request.WithdrawCode))
+            {
+                predicate = predicate.And(x => EF.Functions.ILike(x.WithdrawCode, $"%{request.WithdrawCode}%"));
+            }
+
+
             Expression<Func<Withdraw, GetWithdrawsResponse>> selector = withdraw => new GetWithdrawsResponse()
             {
                 WithdrawId = withdraw.WithdrawId,
@@ -337,6 +388,7 @@ namespace Services.Accounts
                 Bank = withdraw.Bank,
                 BankAccountName = withdraw.BankAccountName,
                 BankAccountNumber = withdraw.BankAccountNumber,
+                WithdrawCode = withdraw.WithdrawCode,
                 CreatedDate = withdraw.CreatedDate
             };
 
@@ -440,15 +492,10 @@ namespace Services.Accounts
                 return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
             }
 
-            // if (request is { BankName: not null, BankAccountName: not null, BankAccountNumber: not null } &&
-            //     await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
-            // {
-            //     return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
-            // }
-
             existedBankAccount.Bank = request.BankName ?? existedBankAccount.Bank;
             existedBankAccount.BankAccountName = request.BankAccountName ?? existedBankAccount.BankAccountName;
-            existedBankAccount.BankAccountNumber = request.BankAccountNumber ?? existedBankAccount.BankAccountNumber;
+            existedBankAccount.BankAccountNumber =
+                request.BankAccountNumber ?? existedBankAccount.BankAccountNumber;
             existedBankAccount.BankLogo = request.BankLogo ?? existedBankAccount.BankLogo;
             existedBankAccount.IsDefault = request.IsDefault ?? existedBankAccount.IsDefault;
 

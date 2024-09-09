@@ -12,6 +12,7 @@ public class AuctionDepositDetailResponse
     public Guid TransactionId { get; set; }
     public TransactionDetailResponse Transaction { get; set; }
     public DateTime CreatedDate { get; set; }
+    public string DepositCode { get; set; }
 }
 
 public class TransactionDetailResponse

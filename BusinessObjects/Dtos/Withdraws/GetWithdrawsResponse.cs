@@ -12,4 +12,5 @@ public class GetWithdrawsResponse
     public string? Bank { get; set; }
     public string? BankAccountName { get; set; }
     public string? BankAccountNumber { get; set; }
+    public string WithdrawCode { get; set; }
 }
