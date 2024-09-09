@@ -12,6 +12,7 @@ public class AuctionListResponse
     public decimal DepositFee { get; set; }
     public string AuctionCode { get; set; }
     public string ItemCode { get; set; }
+    public decimal? SucessfulBidAmount { get; set; }
     public AuctionStatus Status { get; set; }
     public string ImageUrl { get; set; }
     public Guid ShopId { get; set; }

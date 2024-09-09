@@ -690,6 +690,7 @@ namespace Services.Accounts
                 EndDate = auction.EndDate,
                 ImageUrl = auction.IndividualAuctionFashionItem.Images.First().Url,
                 IsWon = auction.Bids.Any(x=>x.IsWinning ==true),
+                SucessfulBidAmount = auction.Bids.Where(x => x.IsWinning == true).Sum(x => x.Amount),
                 ShopId = auction.ShopId,
                 StartDate = auction.StartDate,
                 AuctionItemId = auction.IndividualAuctionFashionItemId,
