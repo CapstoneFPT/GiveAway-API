@@ -29,5 +29,6 @@ namespace Services.Auctions
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> EndAuction(Guid id);
         Task StartAuction(Guid auctionId);
         Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request);
+        Task<Result<AuctionItemDetailResponse,ErrorCode>> GetAuctionItem(Guid id);
     }
 }

@@ -190,6 +190,39 @@ namespace Services.Auctions
             return result;
         }
 
+        public async Task<Result<AuctionItemDetailResponse, ErrorCode>> GetAuctionItem(Guid id)
+        {
+            var query = _auctionRepository.GetQueryable();
+            var result = await query.Select(x => x.IndividualAuctionFashionItem)
+                .Select(x => new AuctionItemDetailResponse()
+                {
+                    Brand = x.MasterItem.Brand,
+                    Status = x.Status,
+                    Images = x.Images.Select(image => image.Url).ToList(),
+                    CategoryName = x.MasterItem.Category.Name,
+                    Color = x.Color,
+                    Condition = x.Condition,
+                    Description = x.MasterItem.Description ?? "N/A",
+                    Gender = x.MasterItem.Gender,
+                    Name = x.MasterItem.Name,
+                    Note = x.Note ?? "N/A",
+                    ItemCode = x.ItemCode,
+                    ShopAddress = x.MasterItem.Shop.Address,
+                    InitialPrice = x.InitialPrice,
+                    Size = x.Size,
+                    ItemId = x.ItemId,
+                    SellingPrice = x.SellingPrice ?? 0,
+                    FashionItemType = x.Type
+                }).FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new Result<AuctionItemDetailResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            return new Result<AuctionItemDetailResponse, ErrorCode>(result);
+        }
+
         public async Task<PaginationResponse<AuctionListResponse>> GetAuctionList(GetAuctionsRequest request)
         {
             Expression<Func<Auction, bool>> predicate = auction => true;

@@ -36,9 +36,10 @@ public class AuctionItemDetailResponse
     public GenderType Gender { get; set; }
     public string Description { get; set; }
     public decimal? InitialPrice { get; set; }
-    public ShopAuctionDetailResponse Shop { get; set; }
-    public List<FashionItemImage> Images { get; set; } = [];
-    public AuctionItemCategory Category { get; set; }
+    public List<string> Images { get; set; } = [];
+    public string CategoryName { get; set; }
+    public string ShopAddress { get; set; }
+    public string ItemCode { get; set; }
 }
 
 public class AuctionItemCategory
