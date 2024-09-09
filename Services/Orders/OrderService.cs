@@ -785,7 +785,7 @@ public class OrderService : IOrderService
         orderDetail.IndividualFashionItem.Status = itemStatus.ItemStatus;
         if (order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
-            foreach (var detail in order.OrderLineItems)
+            foreach (var detail in order.OrderLineItems.Where(c => c.IndividualFashionItem.Status != FashionItemStatus.Unavailable))
             {
                 detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
                 await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId);
