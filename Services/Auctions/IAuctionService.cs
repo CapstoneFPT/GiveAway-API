@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
+using DotNext;
 
 namespace Services.Auctions
 {
@@ -25,7 +26,7 @@ namespace Services.Auctions
         Task<BidDetailResponse?> PlaceBid(Guid id, CreateBidRequest request);
         Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request);
         Task<BidDetailResponse?> GetLargestBid(Guid auctionId);
-        Task<Result<OrderResponse>> EndAuction(Guid id);
+        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> EndAuction(Guid id);
         Task StartAuction(Guid auctionId);
         Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request);
     }

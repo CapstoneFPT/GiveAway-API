@@ -14,4 +14,5 @@ public class Bid
     public Order Order { get; set; }
     public Guid MemberId { get; set; }
     public bool IsWinning { get; set; }
+    public string BidCode { get; set; }
 }

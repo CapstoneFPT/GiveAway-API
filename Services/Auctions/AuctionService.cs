@@ -11,6 +11,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,16 +61,57 @@ namespace Services.Auctions
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
-            var result = await _auctionRepository.CreateAuction(request);
+            var auctionItemQuery = _auctionItemRepository.GetQueryable();
+
+            var auctionItem = await
+                auctionItemQuery
+                    .Where(x => x.ItemId == request.AuctionItemId)
+                    .FirstOrDefaultAsync();
+
+            if (auctionItem == null)
+            {
+                throw new AuctionItemNotFoundException();
+            }
+
+            if (auctionItem.Status != FashionItemStatus.PendingAuction)
+            {
+                throw new AuctionItemNotAvailableForAuctioningException();
+            }
+
+            if (await AuctionRepository.IsDateTimeOverlapped(request.StartTime, request.EndTime))
+            {
+                throw new ScheduledTimeOverlappedException();
+            }
+
+            if (auctionItem.InitialPrice == null)
+            {
+                throw new InvalidInitialPriceException("This item doesn't have an initial price");
+            }
+
+
+            var auction = new Auction()
+            {
+                EndDate = request.EndTime,
+                StartDate = request.StartTime,
+                Title = request.Title,
+                Status = AuctionStatus.Pending,
+                DepositFee = request.DepositFee,
+                IndividualAuctionFashionItemId = request.AuctionItemId,
+                ShopId = request.ShopId,
+                CreatedDate = DateTime.UtcNow,
+                StepIncrement = auctionItem.InitialPrice.Value * (request.StepIncrementPercentage / 100)
+            };
+
+            var result = await _auctionRepository.CreateAuction(auction);
             return result;
         }
 
-        public async Task<Result<OrderResponse>> EndAuction(Guid id)
+        public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> EndAuction(Guid id)
         {
             var auction = await _auctionRepository.GetAuction(id);
             if (auction is null)
             {
-                return new Result<OrderResponse>()
+                return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.NotFound,
                     Messages = new[] { "Auction Not Found" }
@@ -78,7 +120,7 @@ namespace Services.Auctions
 
             if (auction.Status != AuctionStatus.OnGoing)
             {
-                return new Result<OrderResponse>()
+                return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.Error,
                     Messages = new[] { "Auction is not on going" }
@@ -89,7 +131,7 @@ namespace Services.Auctions
             if (winningBid is null)
             {
                 await _auctionRepository.UpdateAuctionStatus(auctionId: id, auctionStatus: AuctionStatus.Finished);
-                return new Result<OrderResponse>()
+                return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.Success, Messages = new[] { "No Bids" }
                 };
@@ -113,7 +155,7 @@ namespace Services.Auctions
 
             if (orderResult.ResultStatus != ResultStatus.Success)
             {
-                return new Result<OrderResponse>()
+                return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.Error,
                     Messages = new[] { "Failed to create order" }
@@ -122,7 +164,7 @@ namespace Services.Auctions
 
             await _auctionRepository.UpdateAuctionStatus(auctionId: id, auctionStatus: AuctionStatus.Finished);
 
-            return new Result<OrderResponse>()
+            return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
             {
                 ResultStatus = ResultStatus.Success,
                 Messages = new[] { "Auction Ended Successfully and Order Created" }, Data = orderResult.Data
@@ -157,16 +199,22 @@ namespace Services.Auctions
                 predicate = auction => auction.EndDate >= DateTime.UtcNow;
             }
 
-            if (request.SearchTerm is not null)
+            if (!string.IsNullOrEmpty(request.Title))
             {
-                predicate = predicate.And(auction => EF.Functions.ILike(auction.Title, $"%{request.SearchTerm}%"));
+                predicate = predicate.And(auction => EF.Functions.ILike(auction.Title, $"%{request.Title}%"));
             }
 
-            if (request.Status.Length > 0)
+            if (!string.IsNullOrEmpty(request.AuctionCode))
             {
-                predicate = predicate.And(auction => request.Status.Contains(auction.Status));
+                predicate = predicate.And(
+                    auction => EF.Functions.ILike(auction.AuctionCode, $"%{request.AuctionCode}%"));
             }
-            
+
+            if (request.Statuses.Length > 0)
+            {
+                predicate = predicate.And(auction => request.Statuses.Contains(auction.Status));
+            }
+
             Expression<Func<Auction, AuctionListResponse>> selector = auction => new AuctionListResponse()
             {
                 AuctionId = auction.AuctionId,
@@ -175,7 +223,10 @@ namespace Services.Auctions
                 EndDate = auction.EndDate,
                 Status = auction.Status,
                 DepositFee = auction.DepositFee,
-                ImageUrl = auction.IndividualAuctionFashionItem.Images.FirstOrDefault().Url,
+                ImageUrl = auction.IndividualAuctionFashionItem.Images.FirstOrDefault() != null
+                    ? auction.IndividualAuctionFashionItem.Images.FirstOrDefault().Url
+                    : null,
+                AuctionCode = auction.AuctionCode,
                 AuctionItemId = auction.IndividualAuctionFashionItemId,
                 ShopId = auction.ShopId
             };
@@ -194,55 +245,35 @@ namespace Services.Auctions
 
         public async Task<AuctionDetailResponse?> GetAuction(Guid id)
         {
-            var result = await _auctionRepository.GetAuction(id, true);
+            var queryable = _auctionRepository.GetQueryable();
+
+            var result = await queryable
+                .Include(x => x.IndividualAuctionFashionItem)
+                .Include(x => x.Shop)
+                .Where(x => x.AuctionId == id)
+                .Select(x => new AuctionDetailResponse()
+                {
+                    AuctionId = x.AuctionId,
+                    Title = x.Title,
+                    StartDate = x.StartDate,
+                    EndDate = x.EndDate,
+                    Status = x.Status,
+                    CreatedDate = x.CreatedDate,
+                    IndividualItemCode = x.IndividualAuctionFashionItem.ItemCode,
+                    ShopAddress = x.Shop.Address,
+                    AuctionCode = x.AuctionCode,
+                    DepositFee = x.DepositFee,
+                    StepIncrement = x.StepIncrement,
+                    Won = x.Bids.Any(bid => bid.IsWinning == true),
+                })
+                .FirstOrDefaultAsync();
 
             if (result == null)
             {
                 throw new AuctionNotFoundException();
             }
 
-            return new AuctionDetailResponse()
-            {
-                AuctionId = result.AuctionId,
-                Title = result.Title,
-                StartDate = result.StartDate,
-                EndDate = result.EndDate,
-                Status = result.Status,
-                DepositFee = result.DepositFee,
-                StepIncrement = result.StepIncrement,
-                AuctionItem = new AuctionItemDetailResponse()
-                {
-                    ItemId = result.IndividualAuctionFashionItemId,
-                    Name = result.IndividualAuctionFashionItem.MasterItem.Name,
-                    FashionItemType = result.IndividualAuctionFashionItem.Type,
-                    SellingPrice = result.IndividualAuctionFashionItem.SellingPrice ?? 0,
-                    InitialPrice = result.IndividualAuctionFashionItem.InitialPrice,
-                    Size = result.IndividualAuctionFashionItem.Size,
-                    Color = result.IndividualAuctionFashionItem.Color,
-                    Gender = result.IndividualAuctionFashionItem.MasterItem.Gender,
-                    Description = result.IndividualAuctionFashionItem.MasterItem.Description,
-                    Brand = result.IndividualAuctionFashionItem.MasterItem.Brand ?? "N/A",
-                    Condition = result.IndividualAuctionFashionItem.Condition ?? "N/A",
-                    Note = result.IndividualAuctionFashionItem.Note,
-                    Category = new AuctionItemCategory()
-                    {
-                        CategoryId = result.IndividualAuctionFashionItem.MasterItem.CategoryId,
-                        CategoryName = result.IndividualAuctionFashionItem.MasterItem.Category.Name,
-                        Level = result.IndividualAuctionFashionItem.MasterItem.Category.Level
-                    },
-                    Shop = new ShopAuctionDetailResponse()
-                    {
-                        ShopId = result.Shop.ShopId,
-                        Address = result.Shop.Address,
-                    },
-                    Images = result.IndividualAuctionFashionItem.Images.Count > 0 ? result.IndividualAuctionFashionItem.Images.Select(
-                        img => new FashionItemImage()
-                        {
-                            ImageId = img.ImageId,
-                            ImageUrl = img.Url
-                        }).ToList() : []
-                }
-            };
+            return result;
         }
 
         public Task<AuctionDetailResponse?> DeleteAuction(Guid id)
@@ -278,8 +309,14 @@ namespace Services.Auctions
             };
             var transactionResult = await _transactionRepository.CreateTransaction(transaction);
 
-            var result = await _auctionDepositRepository.CreateDeposit(auctionId, request,transactionResult.TransactionId);
-            return result;
+            if (transactionResult != null)
+            {
+                var result =
+                    await _auctionDepositRepository.CreateDeposit(auctionId, request, transactionResult.TransactionId);
+                return result;
+            }
+
+            throw new TransactionFailedException();
         }
 
         public async Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)

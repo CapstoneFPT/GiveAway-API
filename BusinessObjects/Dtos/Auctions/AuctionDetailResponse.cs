@@ -14,7 +14,11 @@ public class AuctionDetailResponse
     public decimal DepositFee { get; set; }
     public AuctionStatus Status { get; set; }
     public decimal StepIncrement { get; set; }
-    public AuctionItemDetailResponse AuctionItem { get; set; }
+    public string AuctionCode { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public string IndividualItemCode { get; set; }
+    public string ShopAddress { get; set; }
+    public bool Won { get; set; }
 }
 
 public class AuctionItemDetailResponse

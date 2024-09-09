@@ -143,7 +143,7 @@ namespace Repositories.FashionItems
             int totalMasterCode = 0;
             var listMasterItemCode = await _giveAwayDbContext.MasterFashionItems.AsQueryable()
                 .Where(c => c.MasterItemCode.Contains(itemCode))
-                .Select(c => c.MasterItemCode).ToListAsync();
+                .Select(c => c.MasterItemCode).Distinct().ToListAsync();
             totalMasterCode = listMasterItemCode.Count + 1;
             string prefixInStock = new string($"IS-GAS-{itemCode.ToUpper()}{totalMasterCode}");
             return prefixInStock;

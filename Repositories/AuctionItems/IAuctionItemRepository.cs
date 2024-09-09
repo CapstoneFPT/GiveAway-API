@@ -11,5 +11,6 @@ namespace Repositories.AuctionItems
     public interface IAuctionItemRepository
     {
         Task<IndividualAuctionFashionItem> UpdateAuctionItemStatus(Guid auctionFashionItemId, FashionItemStatus fashionItemStatus);
+        IQueryable<IndividualAuctionFashionItem> GetQueryable();
     }
 }

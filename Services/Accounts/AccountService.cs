@@ -12,6 +12,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
+using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
@@ -21,6 +22,7 @@ using DotNext;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Repositories.Auctions;
 using Repositories.BankAccounts;
 using Repositories.Inquiries;
 using Repositories.Transactions;
@@ -35,11 +37,12 @@ namespace Services.Accounts
         private readonly IWithdrawRepository _withdrawRepository;
         private readonly ITransactionRepository _transactionRepository;
         private readonly IBankAccountRepository _bankAccountRepository;
+        private readonly IAuctionRepository _auctionRepository;
         private readonly IMapper _mapper;
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
             IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository,
-            IBankAccountRepository bankAccountRepository)
+            IBankAccountRepository bankAccountRepository, IAuctionRepository auctionRepository)
         {
             _account = repository;
             _mapper = mapper;
@@ -47,6 +50,7 @@ namespace Services.Accounts
             _withdrawRepository = withdrawRepository;
             _transactionRepository = transactionRepository;
             _bankAccountRepository = bankAccountRepository;
+            _auctionRepository = auctionRepository;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> BanAccountById(Guid id)
@@ -327,8 +331,8 @@ namespace Services.Accounts
             GetTransactionsRequest request)
         {
             Expression<Func<Transaction, bool>> predicate = GetPredicate(request);
-            predicate = predicate.And(x=>x.MemberId == accountId);
-            
+            predicate = predicate.And(x => x.MemberId == accountId);
+
             Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
             Expression<Func<Transaction, GetTransactionsResponse>> selector = transaction =>
                 new GetTransactionsResponse()
@@ -643,6 +647,75 @@ namespace Services.Accounts
             {
                 return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
             }
+        }
+
+        private Expression<Func<Auction, bool>> GetAuctionPredicate(GetAccountAuctionsRequest request)
+        {
+            Expression<Func<Auction, bool>> predicate = auction => true;
+
+            if (!string.IsNullOrEmpty(request.AuctionCode))
+            {
+                predicate = predicate.And(
+                    auction => EF.Functions.ILike(auction.AuctionCode, $"%{request.AuctionCode}%"));
+            }
+
+            if (request.Statuses.Length > 0)
+            {
+                predicate = predicate.And(auction => request.Statuses.Contains(auction.Status));
+            }
+
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                predicate = predicate.And(auction => EF.Functions.ILike(auction.Title, $"%{request.Title}%"));
+            }
+
+            return predicate;
+        }
+
+        public async Task<DotNext.Result<PaginationResponse<AuctionListResponse>>> GetAuctions(Guid accountId,
+            GetAccountAuctionsRequest request)
+        {
+            var queryable = _auctionRepository.GetQueryable();
+            var predicate = GetAuctionPredicate(request);
+            predicate = predicate.And(auction =>
+                auction.AuctionDeposits.Any(auctionDeposit => auctionDeposit.MemberId == accountId));
+
+            Expression<Func<Auction, AuctionListResponse>> selector = auction => new AuctionListResponse()
+            {
+                Status = auction.Status,
+                Title = auction.Title,
+                AuctionCode = auction.AuctionCode,
+                AuctionId = auction.AuctionId,
+                DepositFee = auction.DepositFee,
+                EndDate = auction.EndDate,
+                ImageUrl = auction.IndividualAuctionFashionItem.Images.First().Url,
+                IsWon = auction.Bids.Any(x=>x.IsWinning ==true),
+                ShopId = auction.ShopId,
+                StartDate = auction.StartDate,
+                AuctionItemId = auction.IndividualAuctionFashionItemId,
+                ItemCode = auction.IndividualAuctionFashionItem.ItemCode
+            };
+
+            queryable = queryable.Where(predicate);
+            var count = await queryable.CountAsync();
+
+            if (request.Page != null && request.PageSize != null && request.Page > 0 && request.PageSize > 0)
+            {
+                queryable = queryable.Skip((request.Page.Value -1) * request.PageSize.Value).Take(request.PageSize.Value);
+            }
+
+            queryable = queryable.OrderByDescending(x => x.StartDate);
+            
+            var data = await queryable.Select(selector).ToListAsync();
+
+            return new DotNext.Result<PaginationResponse<AuctionListResponse>>(
+                new PaginationResponse<AuctionListResponse>()
+                {
+                    PageSize = request.PageSize ?? -1,
+                    PageNumber = request.Page ?? -1,
+                    TotalCount = count,
+                    Items = data,
+                });
         }
 
         private Task<bool> CheckBankAccountExisted(string bank, string accountName, string accountNumber)
