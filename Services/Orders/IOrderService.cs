@@ -17,7 +17,8 @@ namespace Services.Orders
 {
     public interface IOrderService
     {
-        Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(Guid accountId, OrderRequest request);
+        Task<Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrdersByAccountId(Guid accountId,
+            OrderRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrder(Guid accountId, CartRequest cart);
         Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrder(Guid orderId);
         Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrderByAdmin(Guid orderId);

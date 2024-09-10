@@ -254,7 +254,7 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateOrder(order);
     }
 
-    public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(
+    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>,ErrorCode>> GetOrdersByAccountId(
         Guid accountId,
         OrderRequest request)
     {
@@ -266,7 +266,6 @@ public class OrderService : IOrderService
             TotalPrice = order.TotalPrice,
             Status = order.Status,
             CreatedDate = order.CreatedDate,
-            // PaymentDate = order.PaymentDate,
             MemberId = order.MemberId,
             CompletedDate = order.CompletedDate,
             ContactNumber = order.Phone,
@@ -282,6 +281,7 @@ public class OrderService : IOrderService
             Discount = order.Discount
         };
 
+        
         if (request.Status != null)
         {
             predicate = order => order.Status == request.Status;
@@ -314,27 +314,17 @@ public class OrderService : IOrderService
             predicate = predicate.And(ord => ord.BidId == null);
         }
 
-        if (request.IsFromAuction == true)
-        {
-            predicate = predicate.And(ord => ord.BidId != null);
-        }
-
         (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
             await _orderRepository.GetOrdersProjection<OrderListResponse>(request.PageNumber,
                 request.PageSize, predicate, selector);
 
-        return new BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>()
+        return new Result<PaginationResponse<OrderListResponse>, ErrorCode>(new PaginationResponse<OrderListResponse>()
         {
-            Data = new PaginationResponse<OrderListResponse>()
-            {
-                Items = Items,
-                PageNumber = Page,
-                PageSize = PageSize,
-                TotalCount = TotalCount,
-                SearchTerm = request.OrderCode
-            },
-            ResultStatus = ResultStatus.Success
-        };
+            Items = Items,
+            PageNumber = request.PageNumber ?? -1,
+            PageSize = request.PageSize ?? -1,
+            TotalCount = TotalCount
+        });
     }
 
     public async Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrder(Guid orderId)
