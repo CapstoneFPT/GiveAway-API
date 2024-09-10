@@ -690,15 +690,22 @@ namespace Services.ConsignSales
                     CreatedDate = DateTime.UtcNow,
                     IndividualFashionItemId = individualItem.ItemId
                 }).ToList();
-            await _fashionItemRepository.AddInvidualFashionItem(individualItem);
-            if (consignSale.ConsignSaleLineItems.All(c => c.IndividualFashionItem != null))
+            consignSaleDetail.IndividualFashionItem = individualItem;
+            var listItemInConsign = consignSale.ConsignSaleLineItems
+                .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale)
+                .Select(c => c.IndividualFashionItem).ToList();
+            if (listItemInConsign.Count ==
+                consignSale.ConsignSaleLineItems.Count(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale))
             {
                 foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
                 {
+                    consignSaleLineItem.Status = ConsignSaleLineItemStatus.OnSale;
                     consignSaleLineItem.IndividualFashionItem.Status = FashionItemStatus.Available;
                 }
-
+                
                 consignSale.Status = ConsignSaleStatus.OnSale;
+                consignSale.StartDate = DateTime.UtcNow;
+                consignSale.EndDate = DateTime.UtcNow.AddDays(60);
             }
             await _consignSaleRepository.UpdateConsignSale(consignSale);
 
