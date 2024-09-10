@@ -8,6 +8,8 @@ namespace Repositories.Withdraws;
 public class WithdrawRepository : IWithdrawRepository
 {
     private readonly GiveAwayDbContext _giveAwayDbContext;
+    private const string Prefix = "WDR";
+    private static Random _random = new();
 
     public WithdrawRepository(GiveAwayDbContext giveAwayDbContext)
     {
@@ -16,8 +18,35 @@ public class WithdrawRepository : IWithdrawRepository
 
     public async Task<Withdraw> CreateWithdraw(Withdraw withdraw)
     {
+        withdraw.WithdrawCode = await GenerateUniqueString();
         return await GenericDao<Withdraw>.Instance.AddAsync(withdraw);
     }
+
+    public async Task<string> GenerateUniqueString()
+    {
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            string code = GenerateCode();
+            bool isCodeExisted = await _giveAwayDbContext.Recharges.AnyAsync(r => r.RechargeCode == code);
+
+            if (!isCodeExisted)
+            {
+                return code;
+            }
+
+            await Task.Delay(100 * (int)Math.Pow(2, attempt));
+        }
+
+        throw new Exception("Failed to generate unique code after multiple attempts");
+    }
+
+    private static string GenerateCode()
+    {
+        string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        string randomString = _random.Next(1000, 9999).ToString();
+        return $"{Prefix}-{timestamp}-{randomString}";
+    }
+
 
     public async Task<Withdraw?> GetSingleWithdraw(Expression<Func<Withdraw, bool>> predicate)
     {
@@ -42,7 +71,7 @@ public class WithdrawRepository : IWithdrawRepository
         {
             query = query.Where(predicate);
         }
-        
+
         if (!isTracking)
         {
             query = query.AsNoTracking();
@@ -59,7 +88,7 @@ public class WithdrawRepository : IWithdrawRepository
         }
 
         List<T> result;
-        
+
         if (selector != null)
         {
             result = await query.OrderByDescending(orderBy).Select(selector).ToListAsync();

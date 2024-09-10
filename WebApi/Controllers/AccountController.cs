@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Deliveries;
@@ -263,6 +264,29 @@ public class AccountController : ControllerBase
         
         return Ok(result.Value);
     }
+    
+    [HttpGet("{accountId}/auctions")]
+    [ProducesResponseType<PaginationResponse<AuctionListResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetAuctions([FromRoute] Guid accountId,
+        [FromQuery] GetAccountAuctionsRequest request)
+    {
+        DotNext.Result<PaginationResponse<AuctionListResponse>> result =
+            await _accountService.GetAuctions(accountId, request);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.ServerError))
+            };
+        }
+
+        return Ok(result.Value);
+    }
+        
 
     [HttpGet("{accountId}/withdraws")]
     [ProducesResponseType<PaginationResponse<GetWithdrawsResponse>>((int)HttpStatusCode.OK)]

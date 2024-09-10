@@ -8,6 +8,7 @@ public class RechargeListResponse
     public Guid MemberId { get; set; }
     public decimal Amount { get; set; }
     public RechargeStatus Status { get; set; }
+    public string RechargeCode { get; set; }
     public DateTime CreatedDate { get; set; }
     public PaymentMethod PaymentMethod { get; set; }
 }

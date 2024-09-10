@@ -26,4 +26,5 @@ public class Transaction
     public Member? Member { get; set; }
     public string? VnPayTransactionNumber { get; set; }
     public AuctionDeposit? AuctionDeposit { get; set; }
+    public string TransactionCode { get; set; }
 }

@@ -395,7 +395,7 @@ namespace Services.ConsignSales
             var consignSaleLineItem =
                 await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(c =>
                     c.ConsignSaleLineItemId == consignLineItemId);
-            if (consignSaleLineItem is null || !consignSaleLineItem.Status.Equals(ConsignSaleLineItemStatus.Received))
+            if (consignSaleLineItem is null || !consignSaleLineItem.Status.Equals(ConsignSaleLineItemStatus.ReadyForConsignSale))
             {
                 throw new ConsignSaleLineItemNotFoundException();
             }

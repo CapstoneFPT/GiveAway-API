@@ -13,6 +13,17 @@ public class WithdrawNotFoundException : Exception
 {
 }
 
+public class TransactionFailedException : Exception
+{
+}
+
+public class InvalidInitialPriceException : Exception
+{
+    public InvalidInitialPriceException(string message) : base(message)
+    {
+    }
+}
+
 public class UnableToCalculateRefundAmountException : Exception
 {
     public UnableToCalculateRefundAmountException(string orderOrOrderlineitemNotFound) : base(

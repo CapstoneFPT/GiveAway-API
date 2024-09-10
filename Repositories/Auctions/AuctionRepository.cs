@@ -13,10 +13,39 @@ namespace Repositories.Auctions
     public class AuctionRepository : IAuctionRepository
     {
         private readonly ILogger _logger;
+        private const string Prefix = "AU";
+        private static Random _random = new Random();
+        private readonly GiveAwayDbContext _giveAwayDbContext;
 
-        public AuctionRepository(ILogger<AuctionRepository> logger)
+        public AuctionRepository(ILogger<AuctionRepository> logger, GiveAwayDbContext giveAwayDbContext)
         {
             _logger = logger;
+            _giveAwayDbContext = giveAwayDbContext;
+        }
+
+        public async Task<string> GenerateUniqueString()
+        {
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                string code = GenerateCode();
+                bool isCodeExisted = await _giveAwayDbContext.Recharges.AnyAsync(r => r.RechargeCode == code);
+
+                if (!isCodeExisted)
+                {
+                    return code;
+                }
+
+                await Task.Delay(100 * (int)Math.Pow(2, attempt));
+            }
+
+            throw new Exception("Failed to generate unique code after multiple attempts");
+        }
+
+        private static string GenerateCode()
+        {
+            string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            string randomString = _random.Next(1000, 9999).ToString();
+            return $"{Prefix}-{timestamp}-{randomString}";
         }
 
         private static DateTime GetUtcDateTimeFromLocalDateTime(DateTime scheduledDate
@@ -27,7 +56,7 @@ namespace Repositories.Auctions
             return utcTime;
         }
 
-        private static async Task<bool> IsDateTimeOverlapped(DateTime startDate, DateTime endDate,
+        public static async Task<bool> IsDateTimeOverlapped(DateTime startDate, DateTime endDate,
             Guid? excludingAuction = null)
         {
             var query = GenericDao<Auction>.Instance.GetQueryable();
@@ -53,15 +82,23 @@ namespace Repositories.Auctions
             return startDate < existingAuctionEndDate && existingAuctionStartDate < endDate;
         }
 
-        public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
+        public async Task<AuctionDetailResponse> CreateAuction(Auction request)
         {
-            _logger.LogInformation(
-                @"CreateAuction
-Request Body: 
-{StepIncrementPercentage},
-{AuctionItemId}
-", request.StepIncrementPercentage,
-                request.AuctionItemId);
+            request.AuctionCode = await GenerateUniqueString();
+            _giveAwayDbContext.Auctions.Add(request);
+            await _giveAwayDbContext.SaveChangesAsync();
+
+            return new AuctionDetailResponse
+            {
+                AuctionId = request.AuctionId,
+                Status = request.Status,
+                DepositFee = request.DepositFee,
+                Title = request.Title,
+                StartDate = request.StartDate,
+                EndDate = request.EndDate,
+                StepIncrement = request.StepIncrement
+            };
+
             //
             // var auctionItem = await GenericDao<IndividualAuctionFashionItem>.Instance.GetQueryable().Include(x => x.Category)
             //     .Include(x => x.Images)
@@ -128,36 +165,32 @@ Request Body:
             //     DepositFee = auctionDetail.DepositFee,
             //     StepIncrement = auctionDetail.StepIncrement,
             //     Title = auctionDetail.Title,
-                // AuctionItem = new AuctionItemDetailResponse()
-                // {
-                //     ItemId = auctionItem.ItemId,
-                //     Name = auctionItem.Name,
-                //     FashionItemType = auctionItem.Type,
-                //     Condition = auctionItem.Condition,
-                //     InitialPrice = auctionItem.InitialPrice,
-                //     Note = auctionItem.Note,
-                //     Images = auctionItem.Images.Count > 0 ? auctionItem.Images.Select(x => new AuctionItemImage()
-                //     {
-                //         ImageId = x.ImageId,
-                //         ImageUrl = x.Url
-                //     }).ToList() : [],
-                //     Status = auctionItem.Status,
-                //     Shop = new ShopAuctionDetailResponse()
-                //     {
-                //         ShopId = shop.ShopId,
-                //         Address = shop.Address,
-                //     },
-                //     Category =
-                //     {
-                //         CategoryId = auctionItem.CategoryId.Value,
-                //         CategoryName = auctionItem.Category.Name
-                //     }
-                // },
+            // AuctionItem = new AuctionItemDetailResponse()
+            // {
+            //     ItemId = auctionItem.ItemId,
+            //     Name = auctionItem.Name,
+            //     FashionItemType = auctionItem.Type,
+            //     Condition = auctionItem.Condition,
+            //     InitialPrice = auctionItem.InitialPrice,
+            //     Note = auctionItem.Note,
+            //     Images = auctionItem.Images.Count > 0 ? auctionItem.Images.Select(x => new AuctionItemImage()
+            //     {
+            //         ImageId = x.ImageId,
+            //         ImageUrl = x.Url
+            //     }).ToList() : [],
+            //     Status = auctionItem.Status,
+            //     Shop = new ShopAuctionDetailResponse()
+            //     {
+            //         ShopId = shop.ShopId,
+            //         Address = shop.Address,
+            //     },
+            //     Category =
+            //     {
+            //         CategoryId = auctionItem.CategoryId.Value,
+            //         CategoryName = auctionItem.Category.Name
+            //     }
+            // },
             // };
-            return new AuctionDetailResponse()
-            {
-
-            };
         }
 
 
@@ -378,6 +411,11 @@ Request Body:
             }
 
             return (result, page, pageSize, totalCount);
+        }
+
+        public IQueryable<Auction> GetQueryable()
+        {
+            return GenericDao<Auction>.Instance.GetQueryable();
         }
     }
 }

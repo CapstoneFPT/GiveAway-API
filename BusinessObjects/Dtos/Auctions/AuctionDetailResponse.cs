@@ -14,7 +14,11 @@ public class AuctionDetailResponse
     public decimal DepositFee { get; set; }
     public AuctionStatus Status { get; set; }
     public decimal StepIncrement { get; set; }
-    public AuctionItemDetailResponse AuctionItem { get; set; }
+    public string AuctionCode { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public string IndividualItemCode { get; set; }
+    public string ShopAddress { get; set; }
+    public bool Won { get; set; }
 }
 
 public class AuctionItemDetailResponse
@@ -32,9 +36,10 @@ public class AuctionItemDetailResponse
     public GenderType Gender { get; set; }
     public string Description { get; set; }
     public decimal? InitialPrice { get; set; }
-    public ShopAuctionDetailResponse Shop { get; set; }
-    public List<FashionItemImage> Images { get; set; } = [];
-    public AuctionItemCategory Category { get; set; }
+    public List<string> Images { get; set; } = [];
+    public string CategoryName { get; set; }
+    public string ShopAddress { get; set; }
+    public string ItemCode { get; set; }
 }
 
 public class AuctionItemCategory

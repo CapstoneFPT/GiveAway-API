@@ -66,6 +66,28 @@ public class AuctionController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id}/auction-item")]
+    [ProducesResponseType<AuctionItemDetailResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetAuctionItem([FromRoute] Guid id)
+    {
+        DotNext.Result<AuctionItemDetailResponse,ErrorCode> result = await _auctionService.GetAuctionItem(id);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                ErrorCode.NotFound => NotFound(new ErrorResponse("Not found", ErrorType.AuctionError, HttpStatusCode.NotFound
+                    , result.Error)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Something went wrong!", ErrorType.AuctionError,
+                        HttpStatusCode.InternalServerError, result.Error)),
+            };
+        }
+        
+        return Ok(result.Value);
+    }
+
     [HttpGet("{id}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
     [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]

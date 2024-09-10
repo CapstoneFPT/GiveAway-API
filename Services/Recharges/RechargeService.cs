@@ -61,6 +61,7 @@ public class RechargeService : IRechargeService
             MemberId = recharge.MemberId,
             Amount = recharge.Amount,
             Status = recharge.Status,
+            RechargeCode = recharge.RechargeCode,
             CreatedDate = recharge.CreatedDate,
             PaymentMethod = recharge.PaymentMethod
         };

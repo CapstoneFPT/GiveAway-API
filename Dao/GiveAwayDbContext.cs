@@ -190,6 +190,10 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.Bids)
             .WithOne(x => x.Auction)
             .HasForeignKey(x => x.AuctionId);
+        modelBuilder.Entity<Auction>()
+            .HasMany(x=>x.AuctionDeposits)
+            .WithOne(x=>x.Auction)
+            .HasForeignKey(x=>x.AuctionId);
 
         #endregion
 

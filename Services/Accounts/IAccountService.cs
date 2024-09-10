@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
+using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
@@ -31,5 +32,6 @@ namespace Services.Accounts
         Task<Result<UpdateBankAccountResponse,ErrorCode>> UpdateBankAccount(Guid accountId, Guid bankAccountId, UpdateBankAccountRequest request);
         Task<Result<DeleteBankAccountResponse,ErrorCode>> DeleteBankAccount(Guid accountId, Guid bankAccountId);
         Task<Result<UpdateBankAccountResponse, ErrorCode>> SetDefaultBankAccount(Guid accountId, Guid bankAccountId);
+        Task<DotNext.Result<PaginationResponse<AuctionListResponse>>> GetAuctions(Guid accountId, GetAccountAuctionsRequest request);
     }
 }
