@@ -675,42 +675,36 @@ namespace Services.Accounts
         public async Task<DotNext.Result<PaginationResponse<AuctionListResponse>>> GetAuctions(Guid accountId,
             GetAccountAuctionsRequest request)
         {
-            var queryable = _auctionRepository.GetQueryable();
-            var predicate = GetAuctionPredicate(request);
-            predicate = predicate.And(auction =>
-                auction.AuctionDeposits.Any(auctionDeposit => auctionDeposit.MemberId == accountId));
+            var query = _auctionRepository.GetQueryable()
+                .Where(GetAuctionPredicate(request))
+                .Where(auction => auction.AuctionDeposits.Any(deposit => deposit.MemberId == accountId));
 
-            Expression<Func<Auction, AuctionListResponse>> selector = auction => new AuctionListResponse()
-            {
-                Status = auction.Status,
-                Title = auction.Title,
-                AuctionCode = auction.AuctionCode,
-                AuctionId = auction.AuctionId,
-                DepositFee = auction.DepositFee,
-                EndDate = auction.EndDate,
-                ImageUrl = auction.IndividualAuctionFashionItem.Images.First().Url,
-                IsWon = auction.Bids.Any(x=>x.IsWinning ==true),
-                SucessfulBidAmount = auction.Bids.Where(x => x.IsWinning == true).Sum(x => x.Amount),
-                ShopId = auction.ShopId,
-                StartDate = auction.StartDate,
-                AuctionItemId = auction.IndividualAuctionFashionItemId,
-                ItemCode = auction.IndividualAuctionFashionItem.ItemCode
-            };
+            var count = await query.CountAsync();
 
-            queryable = queryable.Where(predicate);
-            var count = await queryable.CountAsync();
-
-            if (request.Page != null && request.PageSize != null && request.Page > 0 && request.PageSize > 0)
-            {
-                queryable = queryable.Skip((request.Page.Value -1) * request.PageSize.Value).Take(request.PageSize.Value);
-            }
-
-            queryable = queryable.OrderByDescending(x => x.StartDate);
-            
-            var data = await queryable.Select(selector).ToListAsync();
+            var data = await query
+                .OrderByDescending(x => x.StartDate)
+                .Skip(((request.Page ?? 1) - 1) * (request.PageSize ?? int.MaxValue))
+                .Take(request.PageSize ?? int.MaxValue)
+                .Select(auction => new AuctionListResponse
+                {
+                    Status = auction.Status,
+                    Title = auction.Title,
+                    AuctionCode = auction.AuctionCode,
+                    AuctionId = auction.AuctionId,
+                    DepositFee = auction.DepositFee,
+                    EndDate = auction.EndDate,
+                    ImageUrl = auction.IndividualAuctionFashionItem.Images.First().Url,
+                    IsWon = auction.Bids.Any(x => x.IsWinning == true),
+                    SucessfulBidAmount = auction.Bids.Where(x => x.IsWinning == true).Sum(x => x.Amount),
+                    ShopId = auction.ShopId,
+                    StartDate = auction.StartDate,
+                    AuctionItemId = auction.IndividualAuctionFashionItemId,
+                    ItemCode = auction.IndividualAuctionFashionItem.ItemCode
+                })
+                .ToListAsync();
 
             return new DotNext.Result<PaginationResponse<AuctionListResponse>>(
-                new PaginationResponse<AuctionListResponse>()
+                new PaginationResponse<AuctionListResponse>
                 {
                     PageSize = request.PageSize ?? -1,
                     PageNumber = request.Page ?? -1,
