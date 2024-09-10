@@ -10,7 +10,8 @@ namespace Services.ConsignSales
 {
     public interface IConsignSaleService
     {
-        Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleDetailedResponse>>> GetAllConsignSales(Guid accountId, ConsignSaleRequest request);
+        Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetAllConsignSales(Guid accountId,
+            ConsignSaleRequest request);
         Task<DotNext.Result<ConsignSaleDetailedResponse,ErrorCode>> GetConsignSaleById(Guid consignId);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ApprovalConsignSale(Guid consignId, ApproveConsignSaleRequest request);

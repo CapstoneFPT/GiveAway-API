@@ -198,16 +198,24 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/consignsales")]
-    [ProducesResponseType<Result<PaginationResponse<ConsignSaleDetailedResponse>>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<PaginationResponse<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> GetAllConsignSale(
         [FromRoute] Guid accountId, [FromQuery] ConsignSaleRequest request)
     {
         var result = await _consignSaleService.GetAllConsignSales(accountId, request);
 
-        if (result.ResultStatus != ResultStatus.Success)
-            return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-        return Ok(result);
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500, new ErrorResponse("Error getting consign sales", ErrorType.ApiError,
+                    HttpStatusCode.InternalServerError, result.Error)),
+            };
+        }
+        
+        return Ok(result.Value);
+     
     }
 
     [HttpPost("{accountId}/consignsales")]

@@ -22,6 +22,7 @@ using Repositories.FashionItems;
 using Repositories.Images;
 using Repositories.Orders;
 using Repositories.Schedules;
+using Repositories.Utils;
 using Services.Emails;
 
 namespace Services.ConsignSales
@@ -191,23 +192,70 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleDetailedResponse>>>
+        private Expression<Func<ConsignSale, bool>> GetPredicate(ConsignSaleRequest request)
+        {
+            Expression<Func<ConsignSale, bool>> predicate = x => true;
+            if (request.Status != null)
+                predicate = predicate.And(sale => sale.Status == request.Status);
+
+            if (request.Type != null)
+                predicate = predicate.And(sale => sale.Type == request.Type);
+
+            if (request.StartDate != null)
+                predicate = predicate.And(sale => sale.StartDate >= request.StartDate);
+
+            if (request.EndDate != null)
+                predicate = predicate.And(sale => sale.EndDate <= request.EndDate);
+            
+
+            return predicate;
+        }
+
+        public async Task<DotNext.Result<PaginationResponse<ConsignSaleListResponse>,ErrorCode>>
             GetAllConsignSales(Guid accountId,
                 ConsignSaleRequest request)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleDetailedResponse>>();
-            var listConsign = await _consignSaleRepository.GetAllConsignSale(accountId, request);
-            if (listConsign == null)
-            {
-                response.Messages = ["You don't have any consignment"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
-            }
+            var query = _consignSaleRepository.GetQueryable();
+            Expression<Func<ConsignSale, bool>> predicate = sale => sale.MemberId == accountId;
+            predicate = predicate.And(GetPredicate(request));
 
-            response.Data = listConsign;
-            response.Messages = ["There are " + listConsign.TotalCount + " consignment"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+            var count = await query.Where(predicate).CountAsync();
+
+            var result = await
+                query.Where(predicate
+                    ).OrderByDescending(x => x.CreatedDate)
+                    .Skip(PaginationUtils.GetSkip(request.PageNumber,request.PageSize))
+                    .Take(PaginationUtils.GetTake(request.PageSize))
+                    .Select(x => new ConsignSaleListResponse()
+                    {
+                        CreatedDate = x.CreatedDate,
+                        ConsignSaleCode = x.ConsignSaleCode,
+                        MemberId = x.MemberId,
+                        EndDate = x.EndDate,
+                        ShopId = x.ShopId,
+                        ConsignSaleMethod = x.ConsignSaleMethod,
+                        MemberReceivedAmount = x.ConsignorReceivedAmount,
+                        Address = x.Address,
+                        Type = x.Type,
+                        StartDate = x.StartDate,
+                        TotalPrice = x.TotalPrice,
+                        ConsignSaleId = x.ConsignSaleId,
+                        Status = x.Status,
+                        SoldPrice = x.SoldPrice,
+                        Email = x.Email,
+                        Phone = x.Phone,
+                        Consginor = x.ConsignorName
+                    })
+                    .ToListAsync();
+
+            return new DotNext.Result<PaginationResponse<ConsignSaleListResponse>,ErrorCode>(
+                new PaginationResponse<ConsignSaleListResponse>()
+                {
+                    PageNumber = request.PageNumber ?? -1,
+                    PageSize = request.PageSize ?? -1,
+                    TotalCount = count,
+                    Items = result
+                });
         }
 
         public async Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(
@@ -395,7 +443,8 @@ namespace Services.ConsignSales
             var consignSaleLineItem =
                 await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(c =>
                     c.ConsignSaleLineItemId == consignLineItemId);
-            if (consignSaleLineItem is null || !consignSaleLineItem.Status.Equals(ConsignSaleLineItemStatus.ReadyForConsignSale))
+            if (consignSaleLineItem is null ||
+                !consignSaleLineItem.Status.Equals(ConsignSaleLineItemStatus.ReadyForConsignSale))
             {
                 throw new ConsignSaleLineItemNotFoundException();
             }
@@ -1000,6 +1049,7 @@ namespace Services.ConsignSales
             {
                 consignSale.Status = ConsignSaleStatus.ReadyToSale;
             }
+
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
 
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
