@@ -167,16 +167,21 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/orders")]
-    [ProducesResponseType<Result<PaginationResponse<OrderResponse>>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<PaginationResponse<OrderResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> GetOrdersByAccountId(
         [FromRoute] Guid accountId, [FromQuery] OrderRequest request)
     {
         var result = await _orderService.GetOrdersByAccountId(accountId, request);
-
-        if (result.ResultStatus != ResultStatus.Success)
-            return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-        return Ok(result);
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500, new ErrorResponse("Error getting orders", ErrorType.ApiError,
+                    HttpStatusCode.InternalServerError, result.Error)),
+            };
+        }
+        return Ok(result.Value);
     }
 
     [HttpPost("{accountId}/orders")]
