@@ -614,6 +614,7 @@ namespace Services.Emails
                 template = template.Replace("{SIZE}", auction.IndividualAuctionFashionItem.Size.ToString());
                 template = template.Replace("{NOTE}", auction.IndividualAuctionFashionItem.Note);
                 template = template.Replace("[Title]", auction.Title);
+                template = template.Replace("[Auction Code]", auction.AuctionCode);
                 template = template.Replace("[StartTime]", auction.StartDate.AddHours(7).ToString("G"));
                 template = template.Replace("[EndTime]", auction.EndDate.AddHours(7).ToString("G"));
                     
