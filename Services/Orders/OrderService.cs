@@ -775,16 +775,21 @@ public class OrderService : IOrderService
         orderDetail.IndividualFashionItem.Status = itemStatus.ItemStatus;
         if (order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
-            foreach (var detail in order.OrderLineItems.Where(c => c.IndividualFashionItem.Status != FashionItemStatus.Unavailable))
+            foreach (var detail in order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
             {
                 detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
                 await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId);
                 // gui mail thong bao 
             }
 
-            order.Status = OrderStatus.Cancelled;
+            
         }
 
+        if (order.OrderLineItems.All(it => it.IndividualFashionItem.Status != FashionItemStatus.PendingForOrder) && 
+            order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
+        {
+            order.Status = OrderStatus.Cancelled;
+        }
         if (order.PaymentMethod == PaymentMethod.COD)
         {
             await _emailService.SendEmailOrder(order);

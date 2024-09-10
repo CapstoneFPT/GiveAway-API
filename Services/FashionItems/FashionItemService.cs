@@ -237,7 +237,7 @@ namespace Services.FashionItems
                     IsConsignment = masterItem.IsConsignment,
                     Description = masterItem.Description,
                     CreatedDate = masterItem.CreatedDate,
-                    StockCount = masterItem.StockCount,
+                    StockCount = masterItem.IndividualFashionItems.Count,
                     MasterItemCode = masterItem.MasterItemCode,
                     Name = masterItem.Name,
                     CategoryName = masterItem.Category.Name,
@@ -443,7 +443,7 @@ namespace Services.FashionItems
                     MasterItemCode =
                         await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
                     CategoryId = masterItemRequest.CategoryId,
-                    StockCount = 0,
+
                     IsConsignment = false,
                     CreatedDate = DateTime.UtcNow,
                     ShopId = shop.ShopId
@@ -785,7 +785,7 @@ namespace Services.FashionItems
                     IsConsignment = item.IsConsignment,
                     CreatedDate = item.CreatedDate,
                     CategoryName = item.Category.Name,
-                    StockCount = item.StockCount,
+                    StockCount = item.IndividualFashionItems.Count,
                     Images = item.Images.Select(x => new FashionItemImage()
                     {
                         ImageId = x.ImageId,
