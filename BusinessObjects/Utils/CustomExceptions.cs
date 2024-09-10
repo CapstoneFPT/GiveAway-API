@@ -163,3 +163,4 @@ public class ItemUnableToDeleteException(string message) : Exception(message)
 public class DeleteFashionItemsFailedException(string message, ErrorCode errorCode) : Exception(message)
 {
 }
+public class BalanceIsNotEnoughException(ErrorCode errorCode) : Exception{}

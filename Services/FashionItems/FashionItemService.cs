@@ -741,8 +741,8 @@ namespace Services.FashionItems
                     Gender = g.First().Gender,
                     CategoryId = g.First().CategoryId,
                     IsConsignment = g.First().IsConsignment,
-                    StockCount = g.Sum(c => c.IndividualFashionItems.Count()),
-                    ItemInStock = g.Sum(c => c.IndividualFashionItems.Count(ind => ind.Status == FashionItemStatus.Available)),
+                    StockCount = g.Sum(c => c.IndividualFashionItems.Count),
+                    ItemInStock = g.Sum(c => c.IndividualFashionItems.Count(ind => ind.Status == FashionItemStatus.Available && ind.Type != FashionItemType.ConsignedForAuction)),
                     Images = g.First().Images.Select(i => i.Url).ToList()
                 });
 

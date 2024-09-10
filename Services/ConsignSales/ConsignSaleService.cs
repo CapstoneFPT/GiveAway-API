@@ -692,7 +692,7 @@ namespace Services.ConsignSales
                 }).ToList();
             consignSaleDetail.IndividualFashionItem = individualItem;
             var listItemInConsign = consignSale.ConsignSaleLineItems
-                .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale)
+                .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale && c.IndividualFashionItem != null)
                 .Select(c => c.IndividualFashionItem).ToList();
             if (listItemInConsign.Count ==
                 consignSale.ConsignSaleLineItems.Count(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale))
