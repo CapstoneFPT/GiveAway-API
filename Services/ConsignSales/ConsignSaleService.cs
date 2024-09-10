@@ -207,6 +207,9 @@ namespace Services.ConsignSales
             if (request.EndDate != null)
                 predicate = predicate.And(sale => sale.EndDate <= request.EndDate);
             
+            if(request.ConsignSaleCode != null)
+                predicate = predicate.And(sale => EF.Functions.ILike(sale.ConsignSaleCode, $"%{ request.ConsignSaleCode}%"));
+            
 
             return predicate;
         }
