@@ -753,7 +753,7 @@ public class OrderService : IOrderService
             throw new StatusNotAvailableWithMessageException("This order is not Pending");
         }
 
-        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.OnDelivery) &&
+        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.ReadyForDelivery) &&
             !itemStatus.ItemStatus.Equals(FashionItemStatus.Unavailable))
         {
             throw new StatusNotAvailableWithMessageException("You can only set OnDelivery or Unavailable");
@@ -790,6 +790,13 @@ public class OrderService : IOrderService
             await _emailService.SendEmailOrder(order);
         }
 
+        if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
+        {
+            foreach (var orderLineItem in order.OrderLineItems)
+            {
+                orderLineItem.IndividualFashionItem.Status = FashionItemStatus.OnDelivery;
+            }
+        }
         if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
