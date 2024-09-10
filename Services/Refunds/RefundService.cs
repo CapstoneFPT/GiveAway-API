@@ -398,6 +398,7 @@ namespace Services.Refunds
             }
             catch (Exception e)
             {
+                _logger.LogError(e, "Error updating refund {RefundId}", refundId);
                 return new Result<RefundResponse, ErrorCode>(ErrorCode.ServerError);
             }
         }
