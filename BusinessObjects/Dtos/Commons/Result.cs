@@ -44,6 +44,7 @@ public enum FashionItemStatus
     Available,
     Unavailable,
     OnDelivery,
+    ReadyForDelivery,
     Sold,
     UnSold,
     Reserved,

@@ -226,7 +226,7 @@ namespace Services.Emails
                 template = template.Replace($"[Shipping Fee]", order.ShippingFee.ToString("N0"));
                 template = template.Replace($"[Discount]", order.Discount.ToString("N0"));
                 template = template.Replace($"[Payment Date]",
-                    order.OrderLineItems.Select(c => c.PaymentDate).FirstOrDefault().ToString());
+                    order.OrderLineItems.Select(c => c.PaymentDate!.Value.AddHours(7)).FirstOrDefault().ToString("G"));
                 content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY";
                 content.Body = template;
                 await SendEmail(content);
@@ -450,7 +450,7 @@ namespace Services.Emails
                 var template = GetEmailTemplate("ConsignSaleMail");
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
                 template = template.Replace("[Type]", consignSale.Type.ToString());
-                template = template.Replace("[Created Date]", consignSale.CreatedDate.ToString("G"));
+                template = template.Replace("[Created Date]", consignSale.CreatedDate.AddHours(7).ToString("G"));
                 template = template.Replace("[Customer Name]", consignSale.ConsignorName);
                 template = template.Replace("[Phone Number]", consignSale.Phone);
                 template = template.Replace("[ConsignTemplate]", finalHtml);
@@ -515,14 +515,14 @@ namespace Services.Emails
                 var template = GetEmailTemplate("ConsignSaleReceivedMail");
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
                 template = template.Replace("[Type]", consignSale.Type.ToString());
-                template = template.Replace("[Start Date]", consignSale.StartDate.GetValueOrDefault().ToString("G"));
+                template = template.Replace("[Start Date]", consignSale.StartDate!.Value.AddHours(7).ToString("G"));
                 template = template.Replace("[Customer Name]", consignSale.ConsignorName);
                 template = template.Replace("[Phone Number]", consignSale.Phone);
                 template = template.Replace("[Email]", consignSale.Email);
                 template = template.Replace("[Address]", consignSale.Address);
                 template = template.Replace("[Response]",
                     "Thank you for trusting and using the consignment service at Give Away store.");
-                template = template.Replace("[End Date]", consignSale.EndDate.GetValueOrDefault().ToString("G"));
+                template = template.Replace("[End Date]", consignSale.EndDate!.Value.AddHours(7).ToString("G"));
 
                 content.Subject = $"[GIVEAWAY] RECEIVED CONSIGNSALE FROM GIVEAWAY";
                 content.Body = template;
