@@ -606,9 +606,15 @@ namespace Services.ConsignSales
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
             CreateIndividualAfterNegotiation(Guid consignLineItemId, CreateIndividualAfterNegotiationRequest request)
         {
-            Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
-                consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
-            var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
+            Expression<Func<ConsignSale, bool>> predicate = consignsale =>
+                consignsale.ConsignSaleLineItems.Any(c => c.ConsignSaleLineItemId == consignLineItemId);
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+            if (consignSale is null)
+            {
+                throw new ConsignSaleNotFoundException();
+            }
+            var consignSaleDetail =
+                consignSale.ConsignSaleLineItems.FirstOrDefault(c => c.ConsignSaleLineItemId == consignLineItemId);
             if (consignSaleDetail == null)
             {
                 throw new ConsignSaleLineItemNotFoundException();
@@ -632,8 +638,7 @@ namespace Services.ConsignSales
                 throw new MasterItemNotAvailableException("You can not choose master in stock");
             }
 
-            itemMaster.StockCount += 1;
-            await _fashionItemRepository.UpdateMasterItem(itemMaster);
+            
             var individualItem = new IndividualFashionItem()
             {
                 Note = consignSaleDetail.Note,
@@ -677,7 +682,7 @@ namespace Services.ConsignSales
                     break;
             }
 
-            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
+            
             individualItem.Images = consignSaleDetail.Images
                 .Select(x => new Image()
                 {
@@ -686,7 +691,16 @@ namespace Services.ConsignSales
                     IndividualFashionItemId = individualItem.ItemId
                 }).ToList();
             await _fashionItemRepository.AddInvidualFashionItem(individualItem);
+            if (consignSale.ConsignSaleLineItems.All(c => c.IndividualFashionItem != null))
+            {
+                foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
+                {
+                    consignSaleLineItem.IndividualFashionItem.Status = FashionItemStatus.Available;
+                }
 
+                consignSale.Status = ConsignSaleStatus.OnSale;
+            }
+            await _consignSaleRepository.UpdateConsignSale(consignSale);
 
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
             {
