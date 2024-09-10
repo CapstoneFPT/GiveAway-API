@@ -311,7 +311,7 @@ namespace Repositories.Orders
             {
                 var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                     .FirstOrDefaultAsync(c => c.ItemId == itemId);
-                if (item is null || !item.Status.Equals(FashionItemStatus.Available))
+                if (item is null || (item.Status != FashionItemStatus.Available && item.Status != FashionItemStatus.Reserved))
                 {
                     listItemNotAvailable.Add(itemId);
                 }

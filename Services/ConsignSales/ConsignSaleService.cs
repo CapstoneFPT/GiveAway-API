@@ -612,6 +612,9 @@ namespace Services.ConsignSales
                         Status = FashionItemStatus.PendingForConsignSale,
                         ConsignSaleLineItemId = consignLineItemId,
                         Type = FashionItemType.ConsignedForAuction,
+                        Condition = consignSaleDetail.Condition,
+                        Color = consignSaleDetail.Color,
+                        Size = consignSaleDetail.Size,
                         InitialPrice = consignSaleDetail.ConfirmedPrice,
                         SellingPrice = 0,
                     };
