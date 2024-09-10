@@ -298,7 +298,7 @@ namespace Services.Refunds
                 RefundId = refundId,
                 MemberId = order.MemberId
             };
-            await _transactionRepository.CreateTransactionRefund(refundTransaction);
+            await _transactionRepository.CreateTransaction(refundTransaction);
             response.Data = refundResponse;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = new[] { "Confirm item is received and refund to customer successfully" };

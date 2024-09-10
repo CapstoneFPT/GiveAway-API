@@ -57,11 +57,7 @@ namespace Repositories.Transactions
             return result;
         }
 
-        public async Task<GetTransactionsResponse> CreateTransactionRefund(Transaction transaction)
-        {
-            var result = await GenericDao<Transaction>.Instance.AddAsync(transaction);
-            return _mapper.Map<GetTransactionsResponse>(result);
-        }
+        
 
         public async Task<(List<T> Items, int Page, int PageSize, int Total)> GetTransactionsProjection<T>(
             int? transactionRequestPage,

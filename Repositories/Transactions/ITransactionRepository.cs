@@ -17,6 +17,6 @@ namespace Repositories.Transactions
             int? transactionRequestPageSize, Expression<Func<Transaction, bool>>? predicate,
             Expression<Func<Transaction, DateTime>> orderBy,
             Expression<Func<Transaction, T>>? selector);
-        Task<GetTransactionsResponse> CreateTransactionRefund(Transaction transaction);
+        
     }
 }
