@@ -23,6 +23,7 @@ using Repositories.OrderLineItems;
 using Repositories.Orders;
 using Repositories.Transactions;
 using Services.Accounts;
+using Services.Emails;
 using Services.Orders;
 using Services.Transactions;
 
@@ -39,13 +40,14 @@ namespace Services.Auctions
         private readonly ITransactionRepository _transactionRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly ISchedulerFactory _schedulerFactory;
+        private readonly IEmailService _emailService;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
             IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
             IAuctionItemRepository auctionItemRepository,
             IAccountService accountService,
             ITransactionRepository transactionRepository, IOrderRepository orderRepository,
-            ISchedulerFactory schedulerFactory)
+            ISchedulerFactory schedulerFactory, IEmailService emailService)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
@@ -56,6 +58,7 @@ namespace Services.Auctions
             _transactionRepository = transactionRepository;
             _orderRepository = orderRepository;
             _schedulerFactory = schedulerFactory;
+            _emailService = emailService;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -279,6 +282,7 @@ namespace Services.Auctions
             var transactionResult = await _transactionRepository.CreateTransaction(transaction);
 
             var result = await _auctionDepositRepository.CreateDeposit(auctionId, request,transactionResult.TransactionId);
+            await _emailService.SendEmailAuctionIsComing(auctionId, request.MemberId);
             return result;
         }
 

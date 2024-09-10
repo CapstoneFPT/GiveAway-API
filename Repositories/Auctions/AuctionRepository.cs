@@ -168,8 +168,10 @@ Request Body:
             if (includeRelations)
             {
                 query = query.Include(x => x.IndividualAuctionFashionItem)
-                    .ThenInclude(x => x.Images);
-                // .Include(x => x.IndividualAuctionFashionItem).ThenInclude(x => x.Category)
+                    .ThenInclude(x => x.Images)
+                    .Include(x => x.IndividualAuctionFashionItem)
+                    .ThenInclude(x => x.MasterItem)
+                    .Include(x => x.AuctionDeposits).ThenInclude(deposit => deposit.Member);
                 // .Include(x => x.Shop);
             }
 
