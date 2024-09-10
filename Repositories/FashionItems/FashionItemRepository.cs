@@ -16,6 +16,7 @@ namespace Repositories.FashionItems
         private readonly IMapper _mapper;
         private readonly GiveAwayDbContext _giveAwayDbContext;
         private static HashSet<string> generatedStrings = new HashSet<string>();
+        private static HashSet<string> generatedMasterStrings = new HashSet<string>();
         private static readonly string? num = null;
         private static Random random = new Random();
         /*private readonly string prefixInStock;*/
@@ -140,12 +141,13 @@ namespace Repositories.FashionItems
 
         public async Task<string> GenerateMasterItemCode(string itemCode)
         {
-            int totalMasterCode = 0;
-            var listMasterItemCode = await _giveAwayDbContext.MasterFashionItems.AsQueryable()
-                .Where(c => c.MasterItemCode.Contains(itemCode))
-                .Select(c => c.MasterItemCode).Distinct().ToListAsync();
-            totalMasterCode = listMasterItemCode.Count + 1;
-            string prefixInStock = new string($"IS-GAS-{itemCode.ToUpper()}{totalMasterCode}");
+            string newString;
+            do
+            {
+                newString = GenerateRandomMasterString();
+            } while (generatedMasterStrings.Contains(newString));
+            string prefixInStock = new string($"IS-GAS-{itemCode.ToUpper()}{newString}");
+            generatedMasterStrings.Add(prefixInStock);
             return prefixInStock;
         }
 
@@ -165,14 +167,20 @@ namespace Repositories.FashionItems
             int number = random.Next(100000, 1000000);
             return masterItemCode + "-" + number.ToString("D6");
         }
+
+        private static string GenerateRandomMasterString()
+        {
+            return random.Next(100, 1000).ToString();
+        }
         public async Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode)
         {
-            int totalMasterCode = 0;
-            var listMasterItemCode = await _giveAwayDbContext.MasterFashionItems.AsQueryable()
-                .Where(c => c.MasterItemCode.Contains(itemCode))
-                .Select(c => c.MasterItemCode).ToListAsync();
-            totalMasterCode = listMasterItemCode.Count + 1;
-            string prefixInStock = new string($"CS-{shopCode}-{itemCode.ToUpper()}{totalMasterCode}");
+            string newString;
+            do
+            {
+                newString = GenerateRandomMasterString();
+            } while (generatedMasterStrings.Contains(newString));
+            string prefixInStock = new string($"CS-{shopCode}-{itemCode.ToUpper()}{newString}");
+            generatedMasterStrings.Add(prefixInStock);
             return prefixInStock;
         }
 
