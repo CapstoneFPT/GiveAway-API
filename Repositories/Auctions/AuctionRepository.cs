@@ -95,8 +95,10 @@ namespace Repositories.Auctions
                 DepositFee = request.DepositFee,
                 Title = request.Title,
                 StartDate = request.StartDate,
+                CreatedDate = request.CreatedDate,
                 EndDate = request.EndDate,
-                StepIncrement = request.StepIncrement
+                StepIncrement = request.StepIncrement,
+                AuctionCode = request.AuctionCode
             };
 
             //
@@ -287,6 +289,7 @@ namespace Repositories.Auctions
         public async Task<AuctionDetailResponse?> ApproveAuction(Guid id)
         {
             var toBeApproved = await GenericDao<Auction>.Instance.GetQueryable()
+                .Include(c => c.IndividualAuctionFashionItem)
                 .FirstOrDefaultAsync(x => x.AuctionId == id);
 
             if (toBeApproved == null)
@@ -300,6 +303,7 @@ namespace Repositories.Auctions
             }
 
             toBeApproved.Status = AuctionStatus.Approved;
+            toBeApproved.IndividualAuctionFashionItem.Status = FashionItemStatus.AwaitingAuction;
             await GenericDao<Auction>.Instance.UpdateAsync(toBeApproved);
             return new AuctionDetailResponse()
             {

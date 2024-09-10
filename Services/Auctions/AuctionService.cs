@@ -76,7 +76,7 @@ namespace Services.Auctions
                 throw new AuctionItemNotFoundException();
             }
 
-            if (auctionItem.Status != FashionItemStatus.PendingAuction)
+            if (auctionItem.Status != FashionItemStatus.Available)
             {
                 throw new AuctionItemNotAvailableForAuctioningException();
             }
@@ -106,6 +106,7 @@ namespace Services.Auctions
             };
 
             var result = await _auctionRepository.CreateAuction(auction);
+            await _auctionItemRepository.UpdateAuctionItemStatus(auctionItem.ItemId, FashionItemStatus.PendingAuction);
             return result;
         }
 
