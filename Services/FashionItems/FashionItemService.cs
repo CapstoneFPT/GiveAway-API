@@ -97,6 +97,7 @@ namespace Services.FashionItems
                     MasterItemId = item.MasterItemId,
                     ShopId = item.MasterItem.ShopId,
                     ItemCode = item.ItemCode,
+                    InitialPrice = (item as IndividualAuctionFashionItem).InitialPrice ?? 0
                 };
 
             if (!string.IsNullOrEmpty(request.Name))
@@ -296,7 +297,8 @@ namespace Services.FashionItems
                 ItemCode = item.ItemCode,
                 IsOrderedYet = memberId != null &&
                                _fashionitemRepository.CheckItemIsInOrder(item.ItemId, memberId.Value),
-                IsItemConsigned = memberId != null && item.ConsignSaleLineItemId != null && _fashionitemRepository.CheckIsItemConsigned(item.ItemId, memberId.Value)
+                IsItemConsigned = memberId != null && item.ConsignSaleLineItemId != null &&
+                                  _fashionitemRepository.CheckIsItemConsigned(item.ItemId, memberId.Value)
             };
 
             response.Data = result;
@@ -331,6 +333,7 @@ namespace Services.FashionItems
             {
                 item.Status = FashionItemStatus.Unavailable;
             }
+
             await _fashionitemRepository.UpdateFashionItem(item);
             response.Data =
                 _mapper.Map<FashionItemDetailResponse>(item);
@@ -426,13 +429,13 @@ namespace Services.FashionItems
             CreateMasterItemRequest masterItemRequest)
         {
             var listMasterItemResponse = new List<MasterFashionItem>();
-            
+
 
             if (masterItemRequest.ItemForEachShops.Length == 0)
             {
                 throw new MissingFeatureException("Please choose shops to create master item");
             }
-            
+
             foreach (var shop in masterItemRequest.ItemForEachShops!)
             {
                 var masterItem = new MasterFashionItem()
@@ -490,13 +493,13 @@ namespace Services.FashionItems
                 itemMaster.Category = category;
             }
 
-            
+
             itemMaster.Description = masterItemRequest.Description ?? itemMaster.Description;
             itemMaster.Name = masterItemRequest.Name ?? itemMaster.Name;
             itemMaster.Brand = masterItemRequest.Brand ?? itemMaster.Brand;
 
             itemMaster.Gender = masterItemRequest.Gender ?? itemMaster.Gender;
-            
+
 
             itemMaster.Images.Clear();
 
@@ -572,7 +575,7 @@ namespace Services.FashionItems
         public async Task<Result<FashionItemDetailResponse, ErrorCode>> AddReturnedItemToShop(Guid itemId)
         {
             var returnedItem = await _fashionitemRepository.GetIndividualQueryable()
-                .FirstOrDefaultAsync(x=>x.ItemId == itemId);
+                .FirstOrDefaultAsync(x => x.ItemId == itemId);
 
             if (returnedItem is null)
             {
@@ -583,7 +586,7 @@ namespace Services.FashionItems
             {
                 return new Result<FashionItemDetailResponse, ErrorCode>(ErrorCode.InvalidOperation);
             }
-            
+
             returnedItem.Status = FashionItemStatus.Available;
             await _fashionitemRepository.UpdateFashionItem(returnedItem);
             return new FashionItemDetailResponse
@@ -717,11 +720,13 @@ namespace Services.FashionItems
             {
                 query = query.Where(item => item.Gender == request.GenderType);
             }
+
             if (request.IsLeftInStock)
             {
                 query = query.Where(it =>
                     it.IndividualFashionItems.Any(c => c.Status == FashionItemStatus.Available));
             }
+
             var groupedQuery = query
                 .GroupBy(m => new
                 {
@@ -743,7 +748,8 @@ namespace Services.FashionItems
                     CategoryId = g.First().CategoryId,
                     IsConsignment = g.First().IsConsignment,
                     StockCount = g.Sum(c => c.IndividualFashionItems.Count),
-                    ItemInStock = g.Sum(c => c.IndividualFashionItems.Count(ind => ind.Status == FashionItemStatus.Available && ind.Type != FashionItemType.ConsignedForAuction)),
+                    ItemInStock = g.Sum(c => c.IndividualFashionItems.Count(ind =>
+                        ind.Status == FashionItemStatus.Available && ind.Type != FashionItemType.ConsignedForAuction)),
                     Images = g.First().Images.Select(i => i.Url).ToList()
                 });
 
@@ -819,7 +825,8 @@ namespace Services.FashionItems
                 : new Result<MasterItemDetailResponse, ErrorCode>(result);
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<string?>> DeleteDraftItem(List<DeleteDraftItemRequest> deleteDraftItemRequests)
+        public async Task<BusinessObjects.Dtos.Commons.Result<string?>> DeleteDraftItem(
+            List<DeleteDraftItemRequest> deleteDraftItemRequests)
         {
             var itemIds = deleteDraftItemRequests.Select(x => x.ItemId).ToList();
             Expression<Func<IndividualFashionItem, bool>> predicate = individualItem =>
@@ -827,7 +834,8 @@ namespace Services.FashionItems
             var listIndividual = await _fashionitemRepository.GetFashionItems(predicate);
             if (listIndividual.Any(c => c.Status != FashionItemStatus.Draft))
             {
-                throw new ItemUnableToDeleteException("There are items unable to delete. You can only delete draft item");
+                throw new ItemUnableToDeleteException(
+                    "There are items unable to delete. You can only delete draft item");
             }
 
             var result = await _fashionitemRepository.DeleteRangeIndividualItems(listIndividual);
@@ -839,7 +847,7 @@ namespace Services.FashionItems
             return new BusinessObjects.Dtos.Commons.Result<string?>()
             {
                 ResultStatus = ResultStatus.Success,
-                Messages = new []{"Delete items successfully"}
+                Messages = new[] { "Delete items successfully" }
             };
         }
 
