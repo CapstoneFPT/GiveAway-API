@@ -175,5 +175,11 @@ namespace Repositories.Bids
 
             return result;
         }
+
+        public IQueryable<Bid> GetQueryable()
+        {
+            return _giveAwayDbContext.Bids.AsQueryable();
+        }
+    
     }
 }

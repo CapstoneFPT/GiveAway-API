@@ -66,6 +66,26 @@ public class AuctionController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id}/leaderboard")]
+    [ProducesResponseType<AuctionLeaderboardResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetAuctionLeaderboard([FromRoute] Guid id, [FromQuery] AuctionLeaderboardRequest request)
+    {
+        DotNext.Result<AuctionLeaderboardResponse,ErrorCode> result = await _auctionService.GetAuctionLeaderboard(id,request);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500,
+                    new ErrorResponse("Something went wrong!", ErrorType.AuctionError,
+                        HttpStatusCode.InternalServerError, result.Error))
+            };
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpGet("{id}/auction-item")]
     [ProducesResponseType<AuctionItemDetailResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]

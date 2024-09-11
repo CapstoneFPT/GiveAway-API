@@ -30,5 +30,7 @@ namespace Services.Auctions
         Task StartAuction(Guid auctionId);
         Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request);
         Task<Result<AuctionItemDetailResponse,ErrorCode>> GetAuctionItem(Guid id);
+        Task<Result<AuctionLeaderboardResponse, ErrorCode>> GetAuctionLeaderboard(Guid id,
+            AuctionLeaderboardRequest request);
     }
 }

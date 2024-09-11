@@ -40,6 +40,7 @@ public class AuctionItemDetailResponse
     public string CategoryName { get; set; }
     public string ShopAddress { get; set; }
     public string ItemCode { get; set; }
+    public Guid AuctionId { get; set; }
 }
 
 public class AuctionItemCategory

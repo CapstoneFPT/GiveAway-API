@@ -23,6 +23,7 @@ using Repositories.Bids;
 using Repositories.OrderLineItems;
 using Repositories.Orders;
 using Repositories.Transactions;
+using Repositories.Utils;
 using Services.Accounts;
 using Services.Emails;
 using Services.Orders;
@@ -227,6 +228,44 @@ namespace Services.Auctions
             return new Result<AuctionItemDetailResponse, ErrorCode>(result);
         }
 
+        public async Task<Result<AuctionLeaderboardResponse, ErrorCode>> GetAuctionLeaderboard(Guid id,
+            AuctionLeaderboardRequest request)
+        {
+            var auctionQuery
+                = _auctionRepository.GetQueryable();
+            var bidQuery = _bidRepository.GetQueryable();
+
+            var leaderBoardQuery = bidQuery
+                .Where(x => x.AuctionId == id)
+                .GroupBy(x => new { x.MemberId, x.Member.Phone })
+                .Select(grouping => new LeaderboardItemListResponse()
+                {
+                    MemberId = grouping.Key.MemberId,
+                    Phone = grouping.Key.Phone,
+                    HighestBid = grouping.Max(b => b.Amount), IsWon = grouping.Any(bid => bid.IsWinning)
+                }).OrderByDescending(x => x.HighestBid);
+            var count = await leaderBoardQuery.CountAsync();
+
+            var data = await leaderBoardQuery
+                .Skip(PaginationUtils.GetSkip(request.Page, request.PageSize))
+                .Take(PaginationUtils.GetTake(request.PageSize))
+                .ToListAsync();
+            var paginationResponse = new PaginationResponse<LeaderboardItemListResponse>()
+            {
+                PageSize = request.PageSize ?? -1,
+                PageNumber = request.Page ?? -1,
+                TotalCount = count,
+                Items = data
+            };
+
+            return new Result<AuctionLeaderboardResponse, ErrorCode>(
+                new AuctionLeaderboardResponse()
+                {
+                    AuctionId = id,
+                    Leaderboard = paginationResponse
+                });
+        }
+
         public async Task<PaginationResponse<AuctionListResponse>> GetAuctionList(GetAuctionsRequest request)
         {
             Expression<Func<Auction, bool>> predicate = auction => true;
@@ -234,7 +273,7 @@ namespace Services.Auctions
             if (!request.GetExpiredAuctions)
             {
                 predicate = predicate.And(auction => auction.EndDate >= DateTime.UtcNow);
-            } 
+            }
 
             if (!string.IsNullOrEmpty(request.Title))
             {
