@@ -284,7 +284,7 @@ public class OrderService : IOrderService
         
         if (request.Status != null)
         {
-            predicate = order => order.Status == request.Status;
+            predicate = predicate.And(order => order.Status == request.Status);
         }
 
         if (!string.IsNullOrEmpty(request.OrderCode))
