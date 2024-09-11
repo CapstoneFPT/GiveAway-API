@@ -428,7 +428,7 @@ public class OrderService : IOrderService
         Expression<Func<Order, bool>> predicate = order => true;
         if (orderRequest.Status != null)
         {
-            predicate = order => order.Status == orderRequest.Status;
+            predicate = predicate.And(order => order.Status == orderRequest.Status);
         }
 
         if (!string.IsNullOrEmpty(orderRequest.OrderCode))
