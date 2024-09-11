@@ -749,7 +749,7 @@ namespace Services.FashionItems
 
             var totalCount = await groupedQuery.CountAsync();
 
-            var items = await groupedQuery
+            var items = await groupedQuery.Where(c => c.ItemInStock > 0)
                 .Skip(((request.PageNumber ?? 1) - 1) * (request.PageSize ?? 10))
                 .Take(request.PageSize ?? 10)
                 .ToListAsync();
