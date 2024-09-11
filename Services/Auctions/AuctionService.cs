@@ -231,7 +231,7 @@ namespace Services.Auctions
         {
             Expression<Func<Auction, bool>> predicate = auction => true;
 
-            if (!request.GetExpiredAuctions)
+            if (request.GetExpiredAuctions != null)
             {
                 predicate = auction => auction.EndDate >= DateTime.UtcNow;
             }
