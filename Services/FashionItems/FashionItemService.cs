@@ -295,7 +295,8 @@ namespace Services.FashionItems
                 IsConsignment = item.MasterItem.IsConsignment,
                 ItemCode = item.ItemCode,
                 IsOrderedYet = memberId != null &&
-                               _fashionitemRepository.CheckItemIsInOrder(item.ItemId, memberId.Value)
+                               _fashionitemRepository.CheckItemIsInOrder(item.ItemId, memberId.Value),
+                IsItemConsigned = memberId != null && item.ConsignSaleLineItemId != null && _fashionitemRepository.CheckIsItemConsigned(item.ItemId, memberId.Value)
             };
 
             response.Data = result;

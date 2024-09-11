@@ -107,14 +107,12 @@ namespace Repositories.FashionItems
                 .FirstOrDefaultAsync();
         }
 
-        /*public async Task<FashionItemVariation?> GetSingleFashionItemVariation(Expression<Func<FashionItemVariation?, bool>> predicate)
+        public bool CheckIsItemConsigned(Guid itemId, Guid? memberId)
         {
-            return await GenericDao<FashionItemVariation>.Instance.GetQueryable()
-                .Include(c => c.MasterItem)
-                .Include(c => c.IndividualItems)
-                .Where(predicate)
-                .FirstOrDefaultAsync();
-        }*/
+            var result = _giveAwayDbContext.IndividualFashionItems
+                .Any(ind => ind.ItemId == itemId && ind.ConsignSaleLineItem!.ConsignSale.MemberId == memberId);
+            return memberId.HasValue && result;
+        }
 
         public bool CheckItemIsInOrder(Guid itemId, Guid? memberId)
         {

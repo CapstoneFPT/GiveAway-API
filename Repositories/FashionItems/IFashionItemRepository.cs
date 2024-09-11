@@ -44,6 +44,7 @@ namespace Repositories.FashionItems
         Task<MasterFashionItem?> GetSingleMasterItem(Expression<Func<MasterFashionItem, bool>> predicate);
         /*Task<FashionItemVariation?> GetSingleFashionItemVariation(Expression<Func<FashionItemVariation?, bool>> predicate);*/
         bool CheckItemIsInOrder(Guid itemId, Guid? memberId);
+        bool CheckIsItemConsigned(Guid itemId, Guid? memberId);
         Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);
         Task<string> GenerateMasterItemCode(string itemCode);
         Task<string> GenerateIndividualItemCode(string masterItemCode);
