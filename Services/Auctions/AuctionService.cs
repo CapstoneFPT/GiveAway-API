@@ -233,8 +233,8 @@ namespace Services.Auctions
 
             if (!request.GetExpiredAuctions)
             {
-                predicate = auction => auction.EndDate >= DateTime.UtcNow;
-            }
+                predicate = predicate.And(auction => auction.EndDate >= DateTime.UtcNow);
+            } 
 
             if (!string.IsNullOrEmpty(request.Title))
             {
