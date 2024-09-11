@@ -734,7 +734,9 @@ public class OrderService : IOrderService
             throw new AccountNotFoundException();
         }
 
+        _logger.LogInformation("Update Admin Balance: {Balance} + {TotalPrice}", account.Balance, order.TotalPrice);
         account!.Balance += order.TotalPrice;
+        _logger.LogInformation("Update Admin Balance After: {Balance}", account.Balance);
         await _accountRepository.UpdateAccount(account);
     }
 

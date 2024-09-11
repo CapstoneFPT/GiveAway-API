@@ -111,9 +111,9 @@ public class AuctionController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
     [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAuction([FromRoute] Guid id)
+    public async Task<IActionResult> GetAuction([FromRoute] Guid id, [FromQuery] Guid? memberId)
     {
-        var result = await _auctionService.GetAuction(id);
+        var result = await _auctionService.GetAuction(id,memberId);
         if (result == null)
         {
             return NotFound();

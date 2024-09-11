@@ -16,6 +16,7 @@ using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
+using Repositories.Accounts;
 using Repositories.AuctionDeposits;
 using Repositories.AuctionItems;
 using Repositories.Auctions;
@@ -43,13 +44,14 @@ namespace Services.Auctions
         private readonly IOrderRepository _orderRepository;
         private readonly ISchedulerFactory _schedulerFactory;
         private readonly IEmailService _emailService;
+        private readonly IAccountRepository _accountRepository;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
             IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
             IAuctionItemRepository auctionItemRepository,
             IAccountService accountService,
             ITransactionRepository transactionRepository, IOrderRepository orderRepository,
-            ISchedulerFactory schedulerFactory, IEmailService emailService)
+            ISchedulerFactory schedulerFactory, IEmailService emailService, IAccountRepository accountRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
@@ -61,6 +63,7 @@ namespace Services.Auctions
             _orderRepository = orderRepository;
             _schedulerFactory = schedulerFactory;
             _emailService = emailService;
+            _accountRepository = accountRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -322,7 +325,7 @@ namespace Services.Auctions
             };
         }
 
-        public async Task<AuctionDetailResponse?> GetAuction(Guid id)
+        public async Task<AuctionDetailResponse?> GetAuction(Guid id, Guid? memberId)
         {
             var queryable = _auctionRepository.GetQueryable();
 
@@ -343,7 +346,7 @@ namespace Services.Auctions
                     AuctionCode = x.AuctionCode,
                     DepositFee = x.DepositFee,
                     StepIncrement = x.StepIncrement,
-                    Won = x.Bids.Any(bid => bid.IsWinning == true),
+                    Won = x.Bids.Where(bid=>bid.MemberId == memberId).Any(bid => bid.IsWinning == true),
                 })
                 .FirstOrDefaultAsync();
 
@@ -371,13 +374,21 @@ namespace Services.Auctions
             CreateAuctionDepositRequest request)
         {
             var auction = await _auctionRepository.GetAuction(auctionId);
+            var admin = await _accountRepository.FindOne(account => account.Role == Roles.Admin);
 
             if (auction is null)
             {
                 throw new AuctionNotFoundException();
             }
 
+            if (admin == null)
+            {
+                throw new AccountNotFoundException();
+            }
+
             await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
+            admin.Balance += auction.DepositFee;
+            await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 Amount = auction.DepositFee,
