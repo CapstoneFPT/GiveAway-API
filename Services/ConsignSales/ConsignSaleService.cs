@@ -652,22 +652,16 @@ namespace Services.ConsignSales
                 Color = consignSaleDetail.Color,
                 Size = consignSaleDetail.Size
             };
-            individualItem.Images = consignSaleDetail.Images
-                .Select(x => new Image()
-                {
-                    Url = x.Url,
-                    CreatedDate = DateTime.UtcNow,
-                    IndividualFashionItemId = individualItem.ItemId
-                }).ToList();
+            
             switch (consignSaleDetail.ConsignSale.Type)
             {
                 case ConsignSaleType.ForSale:
                     individualItem.Type = FashionItemType.ItemBase;
                     individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
-                    consignSaleDetail.IndividualFashionItem = individualItem;
+                    
                     break;
                 case ConsignSaleType.ConsignedForAuction:
-                    var individualAuctionItem = new IndividualAuctionFashionItem()
+                    individualItem = new IndividualAuctionFashionItem()
                     {
                         Note = consignSaleDetail.Note,
                         CreatedDate = DateTime.UtcNow,
@@ -683,17 +677,23 @@ namespace Services.ConsignSales
                         InitialPrice = consignSaleDetail.ConfirmedPrice,
                         SellingPrice = 0,
                     };
-                    consignSaleDetail.IndividualFashionItem = individualAuctionItem;
+                    
                     break;
                 case ConsignSaleType.ConsignedForSale:
                     individualItem.Type = FashionItemType.ConsignedForSale;
                     individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
-                    consignSaleDetail.IndividualFashionItem = individualItem;
+                    
                     break;
             }
-
+            individualItem.Images = consignSaleDetail.Images
+                .Select(x => new Image()
+                {
+                    Url = x.Url,
+                    CreatedDate = DateTime.UtcNow,
+                    IndividualFashionItemId = individualItem.ItemId
+                }).ToList();
             
-            
+            consignSaleDetail.IndividualFashionItem = individualItem;
             
             var listItemInConsign = consignSale.ConsignSaleLineItems
                 .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale && c.IndividualFashionItem != null)
