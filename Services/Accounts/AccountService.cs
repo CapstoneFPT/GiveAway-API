@@ -153,14 +153,14 @@ namespace Services.Accounts
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
-                predicate = account => EF.Functions.ILike(account.Fullname, $"%{
+                predicate = predicate.And(account => EF.Functions.ILike(account.Fullname, $"%{
                     request.SearchTerm
-                }%");
+                }%"));
             }
 
             if (!string.IsNullOrWhiteSpace(request.Phone))
             {
-                predicate = account => EF.Functions.ILike(account.Phone, $"%{request.Phone}%");
+                predicate = predicate.And(account => EF.Functions.ILike(account.Phone, $"%{request.Phone}%"));
             }
 
             if (request.Status != null && request.Status.Length != 0)
