@@ -231,10 +231,10 @@ namespace Services.Auctions
         {
             Expression<Func<Auction, bool>> predicate = auction => true;
 
-            if (request.GetExpiredAuctions != null)
+            if (!request.GetExpiredAuctions)
             {
-                predicate = auction => auction.EndDate >= DateTime.UtcNow;
-            }
+                predicate = predicate.And(auction => auction.EndDate >= DateTime.UtcNow);
+            } 
 
             if (!string.IsNullOrEmpty(request.Title))
             {
