@@ -198,9 +198,12 @@ namespace Services.Auctions
         public async Task<Result<AuctionItemDetailResponse, ErrorCode>> GetAuctionItem(Guid id)
         {
             var query = _auctionRepository.GetQueryable();
-            var result = await query.Select(x => x.IndividualAuctionFashionItem)
+            var result = await query
+                .Where(x=>x.AuctionId == id)
+                .Select(x => x.IndividualAuctionFashionItem)
                 .Select(x => new AuctionItemDetailResponse()
                 {
+                    AuctionId = id,
                     Brand = x.MasterItem.Brand,
                     Status = x.Status,
                     Images = x.Images.Select(image => image.Url).ToList(),
