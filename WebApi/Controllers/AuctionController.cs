@@ -256,12 +256,17 @@ public class AuctionController : ControllerBase
 
 
     [HttpGet("current-time")]
+    [ProducesResponseType<CurrentTimeResponse>((int)HttpStatusCode.OK)]
     public IActionResult GetCurrentTime()
     {
-        return Ok(new { currentTime = DateTime.UtcNow });
+        return Ok(new CurrentTimeResponse() { CurrentTime = DateTime.UtcNow });
     }
 }
 
+public class CurrentTimeResponse
+{
+    public DateTime CurrentTime { get; set; }
+}
 public class CheckDepositRequest
 {
     public Guid MemberId { get; set; }
