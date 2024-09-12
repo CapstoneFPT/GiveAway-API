@@ -14,4 +14,5 @@ public class TransactionResponse
     public DateTime CreatedDate { get; set; }
     public string? CustomerName { get; set; }
     public string? CustomerPhone { get; set; }
+    public Guid? ShopId { get; set; }
 }

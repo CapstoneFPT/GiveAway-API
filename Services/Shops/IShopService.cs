@@ -17,7 +17,7 @@ namespace Services.Shops
         Task<BusinessObjects.Dtos.Commons.Result<List<ShopDetailResponse>>> GetAllShop();
         Task<BusinessObjects.Dtos.Commons.Result<ShopDetailResponse>> GetShopById(Guid shopid);
         
-        Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(Guid shopId, TransactionRequest transactionRequest);
+        // Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(TransactionRequest transactionRequest);
         Task<FeedbackResponse> CreateFeedbackForShop(Guid shopId, CreateFeedbackRequest feedbackRequest);
         Task<Result<CreateShopResponse, ErrorCode>> CreateShop(CreateShopRequest request);
     }

@@ -133,7 +133,7 @@ namespace Services.Transactions
                 Expression<Func<Transaction, bool>> predicate = transaction => true;
                 if (transactionRequest.ShopId.HasValue)
                 {
-                    predicate = predicate.And(transaction => transaction.Order!.PurchaseType.Equals(PurchaseType.Offline));
+                    predicate = predicate.And(transaction => transaction.Order!.PurchaseType.Equals(PurchaseType.Offline) && transaction.ShopId == transactionRequest.ShopId);
                 }
 
                 if (transactionRequest.TransactionType.HasValue)
@@ -156,7 +156,8 @@ namespace Services.Transactions
                         : transaction.ConsignSale!.ConsignorName,
                     CustomerPhone = transaction.Order!.Phone != null
                         ? transaction.Order!.Phone
-                        : transaction.ConsignSale!.Phone
+                        : transaction.ConsignSale!.Phone,
+                    ShopId = transaction.ShopId
                 };
                 Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
                 (List<TransactionResponse> Items, int Page, int PageSize, int Total) result =
