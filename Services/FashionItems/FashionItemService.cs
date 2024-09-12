@@ -628,7 +628,8 @@ namespace Services.FashionItems
                     Gender = item.Gender,
                     CategoryId = item.CategoryId,
                     IsConsignment = item.IsConsignment,
-                    ItemInStock = item.IndividualFashionItems.Count(c => c.Status == FashionItemStatus.Available),
+                    ItemInStock = request.IsForSale == true ? item.IndividualFashionItems.Count(c => c.Status == FashionItemStatus.Available && c.Type != FashionItemType.ConsignedForAuction)
+                        :  item.IndividualFashionItems.Count(c => c.Status == FashionItemStatus.Available),
                     ShopId = item.ShopId,
                     ShopAddress = item.Shop.Address,
                     StockCount = item.IndividualFashionItems.Count,
@@ -641,7 +642,7 @@ namespace Services.FashionItems
                 predicate = predicate.And(it =>
                     it.IndividualFashionItems.Any(c => c.Status == FashionItemStatus.Available));
             }
-
+            
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
                 predicate = predicate.And(item => EF.Functions.ILike(item.Name, $"%{request.SearchTerm}%"));
@@ -952,6 +953,10 @@ namespace Services.FashionItems
                 predicate = predicate.And(item => request.Types.Contains(item.Type));
             }
 
+            if (request.IsForSale)
+            {
+                predicate = predicate.And(item => item.Type != FashionItemType.ConsignedForAuction);
+            }
             (List<IndividualItemListResponse> Items, int Page, int PageSize, int TotalCount) result =
                 await _fashionitemRepository.GetIndividualItemProjections(request.PageNumber, request.PageSize,
                     predicate,

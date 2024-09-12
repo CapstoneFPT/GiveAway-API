@@ -62,7 +62,8 @@ namespace Services.Transactions
                             VnPayTransactionNumber = vnPayResponse.TransactionId,
                             SenderId = order.MemberId,
                             ReceiverId = admin.AccountId,
-                            Type = transactionType
+                            Type = transactionType,
+                            PaymentMethod = PaymentMethod.QRCode
                         };
                         break;
                     case TransactionType.Recharge:
@@ -118,7 +119,8 @@ namespace Services.Transactions
                 Amount = order.TotalPrice,
                 SenderId = requestMemberId,
                 ReceiverId = admin.AccountId,
-                Type = transactionType
+                Type = transactionType,
+                PaymentMethod = PaymentMethod.Point
             }; 
             await _transactionRepository.CreateTransaction(transaction);
         }

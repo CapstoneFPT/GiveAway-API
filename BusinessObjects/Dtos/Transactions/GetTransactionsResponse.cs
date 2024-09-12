@@ -15,4 +15,5 @@ public class GetTransactionsResponse
     public Guid? SenderId { get; set; }
     public Guid? ReceiverId { get; set; }
     public string? DepositCode { get; set; }
+    public PaymentMethod? PaymentMethod { get; set; }
 }

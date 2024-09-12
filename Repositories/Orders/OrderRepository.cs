@@ -515,7 +515,8 @@ namespace Repositories.Orders
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Purchase,
                 Amount = order.TotalPrice,
-                ShopId = shopId
+                ShopId = shopId,
+                PaymentMethod = PaymentMethod.Cash
             };
             await GenericDao<Transaction>.Instance.AddAsync(orderTransaction);
             var orderResponse = new OrderResponse()

@@ -351,7 +351,8 @@ namespace Services.Accounts
                     RechargeCode = transaction.Recharge != null ? transaction.Recharge.RechargeCode : null,
                     DepositCode =
                         transaction.AuctionDeposit != null ? transaction.AuctionDeposit.DepositCode : null,
-                    TransactionCode = transaction.TransactionCode
+                    TransactionCode = transaction.TransactionCode,
+                    PaymentMethod = transaction.PaymentMethod
                 };
 
             (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await

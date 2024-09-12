@@ -14,4 +14,5 @@ public class MasterItemRequest
     public GenderType? GenderType { get; set; }
     public bool? IsConsignment { get; set; }
     public bool? IsLeftInStock { get; set; }
+    public bool IsForSale { get; set; } = true;
 }
