@@ -14,6 +14,7 @@ WORKDIR /src
 COPY ["WebApi/WebApi.csproj", "WebApi/"]
 COPY ["Services/Services.csproj", "Services/"]
 COPY ["Repositories/Repositories.csproj", "Repositories/"]
+COPY ["Dao/Dao.csproj", "Dao/"]
 COPY ["BusinessObjects/BusinessObjects.csproj", "BusinessObjects/"]
 RUN dotnet restore "./WebApi/WebApi.csproj"
 COPY . .
