@@ -265,9 +265,10 @@ namespace Services.Accounts
             {
                 Amount = result.Amount,
                 CreatedDate = DateTime.UtcNow,
-                ReceiverId = result.MemberId,
-                SenderId = admin.AccountId,
+                SenderId = result.MemberId,
+                ReceiverId = admin.AccountId,
                 Type = TransactionType.Withdraw,
+                PaymentMethod = PaymentMethod.Banking
             };
 
             await _transactionRepository.CreateTransaction(transaction);

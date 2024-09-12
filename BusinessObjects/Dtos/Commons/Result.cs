@@ -140,13 +140,14 @@ public enum AuctionStatus
 
 public enum TransactionType
 {
-    AuctionDeposit,
-    Withdraw,
+    
     Purchase,
-    Refund,
-    Recharge,
-    Payout,
-    Sale,
+    CustomerSale,
+    AddFund,
+    Withdraw,
+    RefundProduct,
+    AuctionDeposit,
+    ConsignPayout,
     RefundAuctionDeposit
 }
 
@@ -206,7 +207,7 @@ public enum PaymentMethod
 {
     COD,
     Point,
-    QRCode,
+    Banking,
     Cash
 }
 

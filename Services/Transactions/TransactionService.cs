@@ -63,10 +63,10 @@ namespace Services.Transactions
                             SenderId = order.MemberId,
                             ReceiverId = admin.AccountId,
                             Type = transactionType,
-                            PaymentMethod = PaymentMethod.QRCode
+                            PaymentMethod = PaymentMethod.Banking
                         };
                         break;
-                    case TransactionType.Recharge:
+                    case TransactionType.AddFund:
                         var recharge = await _rechargeRepository.GetQueryable()
                             .FirstOrDefaultAsync(x => x.RechargeId == new Guid(vnPayResponse.OrderId));
                         
@@ -81,7 +81,7 @@ namespace Services.Transactions
                             ReceiverId = recharge.MemberId,
                             SenderId = admin.AccountId,
                             Type = transactionType,
-                            PaymentMethod = PaymentMethod.QRCode
+                            PaymentMethod = PaymentMethod.Banking
                         };
                         break;
                     default:

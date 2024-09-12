@@ -298,10 +298,11 @@ namespace Services.Refunds
             {
                 Amount = refundAmount,
                 CreatedDate = DateTime.UtcNow,
-                Type = TransactionType.Refund,
+                Type = TransactionType.RefundProduct,
                 RefundId = refundId,
                 ReceiverId = order.MemberId,
-                SenderId = admin.AccountId
+                SenderId = admin.AccountId,
+                PaymentMethod = PaymentMethod.Point
             };
             await _transactionRepository.CreateTransaction(refundTransaction);
             response.Data = refundResponse;

@@ -132,9 +132,9 @@ namespace WebApi.Controllers
                 throw new OrderNotFoundException();
             }
 
-            if (order.PaymentMethod != PaymentMethod.QRCode)
+            if (order.PaymentMethod != PaymentMethod.Banking)
             {
-                throw new WrongPaymentMethodException("Order is not paid by QRCode");
+                throw new WrongPaymentMethodException("Order is not paid by Banking");
             }
 
             if (order.Status != OrderStatus.AwaitingPayment)

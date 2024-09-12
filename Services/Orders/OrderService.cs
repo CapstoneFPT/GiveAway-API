@@ -356,7 +356,8 @@ public class OrderService : IOrderService
                 SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
-                Type = TransactionType.Refund
+                Type = TransactionType.RefundProduct,
+                PaymentMethod = PaymentMethod.Point
             };
             await _transactionRepository.CreateTransaction(transaction);
         }
@@ -403,7 +404,7 @@ public class OrderService : IOrderService
                 SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
-                Type = TransactionType.Refund
+                Type = TransactionType.RefundProduct
             };
             await _transactionRepository.CreateTransaction(transaction);
         }
@@ -764,7 +765,7 @@ public class OrderService : IOrderService
             OrderId = orderId,
             CreatedDate = DateTime.UtcNow,
             ShopId = shopId,
-            Type = TransactionType.Sale,
+            Type = TransactionType.CustomerSale,
             Amount = order.TotalPrice,
         };
 
@@ -895,7 +896,7 @@ public class OrderService : IOrderService
                 SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
-                Type = TransactionType.Refund
+                Type = TransactionType.RefundProduct
             };
             await _transactionRepository.CreateTransaction(transaction);
         }

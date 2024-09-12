@@ -63,8 +63,9 @@ public class FashionItemRefundEndingJob : IJob
                     ReceiverId = refundItemToEnd.ConsignSaleLineItem.ConsignSale.MemberId,
                     Amount = refundItemToEnd.SellingPrice!.Value,
                     CreatedDate = DateTime.UtcNow,
-                    Type = TransactionType.Payout,
-                    ConsignSaleId = refundItemToEnd.ConsignSaleLineItem.ConsignSaleId
+                    Type = TransactionType.ConsignPayout,
+                    ConsignSaleId = refundItemToEnd.ConsignSaleLineItem.ConsignSaleId,
+                    PaymentMethod = PaymentMethod.Point
                 };
                 await _transactionRepository.CreateTransaction(transaction);
             }

@@ -59,7 +59,7 @@ public class RechargeController : ControllerBase
             Amount = request.Amount,
             Status = RechargeStatus.Pending,
             CreatedDate = DateTime.UtcNow,
-            PaymentMethod = PaymentMethod.QRCode
+            PaymentMethod = PaymentMethod.Banking
         };
 
         var rechargeResult = await _rechargeService.CreateRecharge(recharge);
@@ -117,7 +117,7 @@ public class RechargeController : ControllerBase
                         $"{redirectUrl}?paymentstatus=warning&message={Uri.EscapeDataString("Recharge already processed")}");
                 }
 
-                await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Recharge);
+                await _transactionService.CreateTransactionFromVnPay(response, TransactionType.AddFund);
                 var completeResult = await _rechargeService.CompleteRecharge(recharge.RechargeId, recharge.Amount);
 
                 if (!completeResult.IsSuccessful)
