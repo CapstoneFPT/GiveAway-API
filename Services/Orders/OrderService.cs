@@ -652,8 +652,76 @@ public class OrderService : IOrderService
             ];
             return response;
         }
-
-        response.Data = await _orderRepository.CreateOrderByShop(shopId, request);
+        var listItem = await _fashionItemRepository.GetIndividualQueryable()
+            .Where(c => request.ItemIds.Contains(c.ItemId)).ToListAsync();
+        var isMember = await _accountRepository.FindUserByPhone(request.Phone);
+        Order order = new Order()
+        {
+            PurchaseType = PurchaseType.Offline,
+            PaymentMethod = PaymentMethod.Cash,
+            Address = request.Address,
+            RecipientName = request.RecipientName,
+            Phone = request.Phone,
+            Email = request.Email,
+            Status = OrderStatus.Completed,
+            Discount = request.Discount,
+            CreatedDate = DateTime.UtcNow,
+            TotalPrice = listItem.Sum(c => c.SellingPrice!.Value),
+            OrderCode = _orderRepository.GenerateUniqueString(),
+            MemberId = isMember?.AccountId
+        };
+        await _orderRepository.CreateOrder(order);
+        var listOrderLineItem = new List<OrderLineItem>();
+        foreach (var item in listItem)
+        {
+            OrderLineItem orderLineItem = new OrderLineItem();
+            orderLineItem.OrderId = order.OrderId;
+            orderLineItem.UnitPrice = item.SellingPrice!.Value;
+            orderLineItem.CreatedDate = DateTime.UtcNow;
+            orderLineItem.Quantity = 1;
+            orderLineItem.PaymentDate = DateTime.UtcNow;
+            orderLineItem.IndividualFashionItemId = item.ItemId;
+            listOrderLineItem.Add(orderLineItem);
+            
+            item.Status = FashionItemStatus.Refundable;
+            await _fashionItemRepository.UpdateFashionItem(item);
+            await _orderLineItemRepository.CreateOrderLineItem(orderLineItem);
+        }
+        var orderTransaction = new Transaction()
+        {
+            OrderId = order.OrderId,
+            CreatedDate = DateTime.UtcNow,
+            Type = TransactionType.Purchase,
+            Amount = order.TotalPrice,
+            ShopId = shopId,
+            SenderId = isMember?.AccountId,
+            PaymentMethod = PaymentMethod.Cash,
+        };
+        await _transactionRepository.CreateTransaction(orderTransaction);
+        response.Data = new OrderResponse()
+        {
+            OrderId = order.OrderId,
+            Quantity = listOrderLineItem.Count,
+            TotalPrice = order.TotalPrice,
+            CreatedDate = order.CreatedDate,
+            Address = order.Address,
+            ContactNumber = order.Phone,
+            RecipientName = order.RecipientName,
+            Email = order.Email,
+            PaymentMethod = order.PaymentMethod,
+            PurchaseType = order.PurchaseType,
+            Discount = order.Discount,
+            OrderCode = order.OrderCode,
+            Status = order.Status,
+            OrderLineItems = listOrderLineItem.Select(c => new OrderLineItemDetailedResponse()
+            {
+                OrderLineItemId = c.OrderLineItemId,
+                UnitPrice = c.UnitPrice,
+                CreatedDate = c.CreatedDate,
+                Quantity = c.Quantity,
+                PaymentDate = c.PaymentDate,
+            }).ToList()
+        };
         response.Messages = ["Create Successfully"];
         response.ResultStatus = ResultStatus.Success;
         return response;

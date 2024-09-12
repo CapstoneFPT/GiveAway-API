@@ -43,14 +43,14 @@ public class AuctionEndingJob : IJob
             return;
         }
 
-        if (auctionToEnd.Bids.Count == 0)
+        /*if (auctionToEnd.Bids.Count == 0)
         {
             Console.WriteLine("No bids");
 
             dbContext.Auctions.Update(auctionToEnd);
             await dbContext.SaveChangesAsync();
             return;
-        }
+        }*/
 
         try
         {

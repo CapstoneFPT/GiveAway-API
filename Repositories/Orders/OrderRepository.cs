@@ -471,7 +471,7 @@ namespace Repositories.Orders
             await GenericDao<Order>.Instance.UpdateRange(ordersToUpdate);
         }
 
-        public async Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
+        public async Task<OrderResponse>    CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                 // .Include(c => c.Shop)
@@ -516,7 +516,7 @@ namespace Repositories.Orders
                 Type = TransactionType.Purchase,
                 Amount = order.TotalPrice,
                 ShopId = shopId,
-                PaymentMethod = PaymentMethod.Cash
+                PaymentMethod = PaymentMethod.Cash,
             };
             await GenericDao<Transaction>.Instance.AddAsync(orderTransaction);
             var orderResponse = new OrderResponse()
