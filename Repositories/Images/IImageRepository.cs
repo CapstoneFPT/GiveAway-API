@@ -13,5 +13,6 @@ namespace Repositories.Images
         Task AddRangeImage(List<Image> images);
         Task<Image?> GetImageById(Guid imageId);
         Task UpdateSingleImage(Image image);
+        void ClearImages(ICollection<Image> images);
     }
 }

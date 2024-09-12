@@ -12,10 +12,23 @@ namespace Repositories.Images
     public class ImageRepository : IImageRepository
     {
         
+        private readonly GiveAwayDbContext _giveAwayDbContext;
+
+        public ImageRepository(GiveAwayDbContext giveAwayDbContext)
+        {
+            _giveAwayDbContext = giveAwayDbContext;
+        }
 
         public async Task UpdateSingleImage(Image image)
         {
             await GenericDao<Image>.Instance.UpdateAsync(image);
+        }
+
+        public void ClearImages(ICollection<Image> images)
+        {
+             _giveAwayDbContext.Images 
+                .RemoveRange(images);
+            _giveAwayDbContext.SaveChanges();
         }
 
         public async Task AddImage(Image image)

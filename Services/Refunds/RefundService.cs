@@ -17,11 +17,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
+using Repositories.Images;
 using Repositories.OrderLineItems;
 using Repositories.Orders;
 using Repositories.Refunds;
 using Repositories.Transactions;
 using Services.Emails;
+using Services.Images;
 
 namespace Services.Refunds
 {
@@ -34,10 +36,11 @@ namespace Services.Refunds
         private readonly IEmailService _emailService;
         private readonly IOrderLineItemRepository _orderLineItemRepository;
         private readonly ILogger<RefundService> _logger;
+        private readonly IImageRepository _imageRepository;
 
         public RefundService(IRefundRepository refundRepository, IOrderRepository orderRepository,
             ITransactionRepository transactionRepository, IAccountRepository accountRepository,
-            IEmailService emailService, IOrderLineItemRepository orderLineItemRepository, ILogger<RefundService> logger)
+            IEmailService emailService, IOrderLineItemRepository orderLineItemRepository, ILogger<RefundService> logger, IImageRepository imageRepository)
         {
             _refundRepository = refundRepository;
             _orderRepository = orderRepository;
@@ -46,6 +49,7 @@ namespace Services.Refunds
             _emailService = emailService;
             _orderLineItemRepository = orderLineItemRepository;
             _logger = logger;
+            _imageRepository = imageRepository;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId,
@@ -368,23 +372,28 @@ namespace Services.Refunds
                 {
                     return new Result<RefundResponse, ErrorCode>(ErrorCode.NotFound);
                 }
-                if (refund.RefundStatus != RefundStatus.Pending || request.Description!.Trim().IsNullOrEmpty())
+                if (refund.RefundStatus != RefundStatus.Pending)
                 {
                     return new Result<RefundResponse, ErrorCode>(ErrorCode.RefundStatusNotAvailable);
                 }
 
-                if (request.RefundImages.Length == 0)
+                if (!string.IsNullOrWhiteSpace(request.Description))
                 {
-                    return new Result<RefundResponse, ErrorCode>(ErrorCode.MissingFeature);
+                    refund.Description = request.Description;
                 }
-                refund.Description = request.Description ?? refund.Description;
-                refund.Images.Clear();
-                refund.Images = request.RefundImages.Select(imageUrl => new Image()
+
+                if (request.RefundImages != null && request.RefundImages.Length > 0)
                 {
-                    RefundId = refund.RefundId,
-                    Url = imageUrl,
-                    CreatedDate = DateTime.UtcNow
-                }).ToList();
+                    
+                    _imageRepository.ClearImages(refund.Images);
+                    refund.Images = request.RefundImages.Select(imageUrl => new Image()
+                    {
+                        RefundId = refund.RefundId,
+                        Url = imageUrl,
+                        CreatedDate = DateTime.UtcNow
+                    }).ToList();
+                }
+
                 await _refundRepository.UpdateRefund(refund);
                 return new RefundResponse()
                 {
@@ -393,7 +402,8 @@ namespace Services.Refunds
                     RefundStatus = refund.RefundStatus,
                     CreatedDate = refund.CreatedDate,
                     ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode,
-                    ImagesForCustomer = refund.Images.Select(c => c.Url).ToArray()
+                    ImagesForCustomer = refund.Images.Select(c => c.Url).ToArray(),
+                    Description = refund.Description
                 };
             }
             catch (Exception e)
