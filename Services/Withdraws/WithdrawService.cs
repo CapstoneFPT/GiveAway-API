@@ -28,6 +28,7 @@ public class WithdrawService : IWithdrawService
     public async Task<CompleteWithdrawResponse> CompleteWithdrawRequest(Guid withdrawId)
     {
         Expression<Func<Withdraw, bool>> predicate = x => x.WithdrawId == withdrawId;
+        var admin = await _accountRepository.FindOne(x => x.Role == Roles.Admin);
         var withdraw = await _withdrawRepository.GetSingleWithdraw(predicate);
 
         if (withdraw == null)
@@ -41,8 +42,10 @@ public class WithdrawService : IWithdrawService
         }
 
         withdraw.Status = WithdrawStatus.Completed;
+        admin.Balance -= withdraw.Amount;
 
         await _withdrawRepository.UpdateWithdraw(withdraw);
+        await _accountRepository.UpdateAccount(admin);
         
         return new CompleteWithdrawResponse()
         {
