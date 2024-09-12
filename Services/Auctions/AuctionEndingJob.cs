@@ -137,7 +137,8 @@ public class AuctionEndingJob : IJob
                         dbContext.Admins.Update(admin);
                         var refundDepositTransaction = new Transaction()
                         {
-                            MemberId = member.AccountId,
+                            SenderId = admin.AccountId,
+                            ReceiverId = member.AccountId,
                             CreatedDate = DateTime.UtcNow,
                             Amount = auctionToEnd.DepositFee,
                             Type = TransactionType.RefundAuctionDeposit,

@@ -291,7 +291,7 @@ namespace Services.Refunds
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= refundAmount;
+            admin.Balance += refundAmount;
             await _accountRepository.UpdateAccount(admin);
 
             Transaction refundTransaction = new Transaction()
@@ -300,7 +300,8 @@ namespace Services.Refunds
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Refund,
                 RefundId = refundId,
-                MemberId = order.MemberId
+                ReceiverId = order.MemberId,
+                SenderId = admin.AccountId
             };
             await _transactionRepository.CreateTransaction(refundTransaction);
             response.Data = refundResponse;

@@ -257,7 +257,7 @@ namespace Services.Accounts
             };
 
             var result = await _withdrawRepository.CreateWithdraw(newWithdraw);
-
+            var admin = await _account.FindOne(c => c.Role == Roles.Admin);
             account.Balance -= request.Amount;
             await _account.UpdateAccount(account);
 
@@ -265,7 +265,8 @@ namespace Services.Accounts
             {
                 Amount = result.Amount,
                 CreatedDate = DateTime.UtcNow,
-                MemberId = result.MemberId,
+                ReceiverId = result.MemberId,
+                SenderId = admin.AccountId,
                 Type = TransactionType.Withdraw,
             };
 
@@ -331,14 +332,15 @@ namespace Services.Accounts
             GetTransactionsRequest request)
         {
             Expression<Func<Transaction, bool>> predicate = GetPredicate(request);
-            predicate = predicate.And(x => x.MemberId == accountId);
+            predicate = predicate.And(x => x.SenderId == accountId || x.ReceiverId == accountId);
 
             Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
             Expression<Func<Transaction, GetTransactionsResponse>> selector = transaction =>
                 new GetTransactionsResponse()
                 {
                     TransactionId = transaction.TransactionId,
-                    MemberId = transaction.MemberId,
+                    SenderId = transaction.SenderId,
+                    ReceiverId = transaction.ReceiverId,
                     Amount = transaction.Amount,
                     Type = transaction.Type,
                     CreatedDate = transaction.CreatedDate,

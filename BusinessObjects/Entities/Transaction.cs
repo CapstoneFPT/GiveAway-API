@@ -22,9 +22,12 @@ public class Transaction
     public ConsignSale? ConsignSale { get; set; }
     public Guid? WithdrawId { get; set; }
     public Withdraw? Withdraw { get; set; }
-    public Guid? MemberId { get; set; }
-    public Member? Member { get; set; }
+    public Guid? SenderId { get; set; }
+    public Account? Sender { get; set; }
+    public Guid? ReceiverId { get; set; }
+    public Account? Receiver { get; set; }
     public string? VnPayTransactionNumber { get; set; }
     public AuctionDeposit? AuctionDeposit { get; set; }
     public string TransactionCode { get; set; }
+    public PaymentMethod PaymentMethod { get; set; }
 }

@@ -12,6 +12,7 @@ public class GetTransactionsResponse
     public decimal Amount { get; set; }
     public DateTime CreatedDate { get; set; }
     public TransactionType Type { get; set; }
-    public Guid? MemberId { get; set; }
+    public Guid? SenderId { get; set; }
+    public Guid? ReceiverId { get; set; }
     public string? DepositCode { get; set; }
 }

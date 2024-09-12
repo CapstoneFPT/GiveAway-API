@@ -347,12 +347,13 @@ public class OrderService : IOrderService
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= order.TotalPrice;
+            admin.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 OrderId = orderId,
-                MemberId = order.MemberId,
+                ReceiverId = order.MemberId,
+                SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Refund
@@ -393,12 +394,13 @@ public class OrderService : IOrderService
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= order.TotalPrice;
+            admin.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 OrderId = orderId,
-                MemberId = order.MemberId,
+                ReceiverId = order.MemberId,
+                SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Refund
@@ -735,7 +737,7 @@ public class OrderService : IOrderService
         }
 
         _logger.LogInformation("Update Admin Balance: {Balance} + {TotalPrice}", account.Balance, order.TotalPrice);
-        account!.Balance += order.TotalPrice;
+        account!.Balance -= order.TotalPrice;
         _logger.LogInformation("Update Admin Balance After: {Balance}", account.Balance);
         await _accountRepository.UpdateAccount(account);
     }
@@ -816,12 +818,13 @@ public class OrderService : IOrderService
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= order.TotalPrice;
+            admin.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 OrderId = order.OrderId,
-                MemberId = order.MemberId,
+                ReceiverId = order.MemberId,
+                SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Refund

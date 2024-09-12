@@ -387,13 +387,14 @@ namespace Services.Auctions
             }
 
             await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
-            admin.Balance += auction.DepositFee;
+            admin.Balance -= auction.DepositFee;
             await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 Amount = auction.DepositFee,
                 Type = TransactionType.AuctionDeposit,
-                MemberId = request.MemberId,
+                SenderId = request.MemberId,
+                ReceiverId = admin.AccountId,
                 CreatedDate = DateTime.UtcNow,
                 VnPayTransactionNumber = "N/A"
             };

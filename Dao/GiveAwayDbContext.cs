@@ -120,7 +120,14 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Account>().Property(e => e.Phone).HasColumnType("varchar").HasMaxLength(10);
         modelBuilder.Entity<Account>().HasIndex(x => x.Email).IsUnique();
         modelBuilder.Entity<Account>().HasIndex(x => x.Phone).IsUnique();
-
+        modelBuilder.Entity<Account>()
+            .HasMany(x => x.SentTransactions)
+            .WithOne(x => x.Sender)
+            .HasForeignKey(x => x.SenderId);
+        modelBuilder.Entity<Account>()
+            .HasMany(x => x.ReceivedTransactions)
+            .WithOne(x => x.Receiver)
+            .HasForeignKey(x => x.ReceiverId);
         #endregion
 
         #region Withdraw
@@ -145,10 +152,7 @@ public class GiveAwayDbContext : DbContext
             .HasForeignKey(x => x.MemberId);
 
 
-        modelBuilder.Entity<Member>()
-            .HasMany(x => x.Transactions)
-            .WithOne(x => x.Member)
-            .HasForeignKey(x => x.MemberId);
+        
 
 
         modelBuilder.Entity<Member>()
@@ -529,7 +533,10 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<Transaction>().HasOne(x => x.AuctionDeposit).WithOne(x => x.Transaction)
             .HasForeignKey<AuctionDeposit>(x => x.TransactionId).OnDelete(DeleteBehavior.Cascade);
-
+        modelBuilder.Entity<Transaction>()
+            .Property(x => x.PaymentMethod)
+            .HasConversion(prop => prop.ToString(), s => (PaymentMethod)Enum.Parse(typeof(PaymentMethod), s))
+            .HasColumnType("varchar").HasMaxLength(30);
         #endregion
 
         #region Shop

@@ -13,6 +13,7 @@ using BusinessObjects.Utils;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Repositories.Accounts;
 using Repositories.Orders;
 using Repositories.Recharges;
 using Repositories.Transactions;
@@ -26,14 +27,15 @@ namespace Services.Transactions
         private readonly IOrderRepository _orderRepository;
         private readonly IRechargeRepository _rechargeRepository;
         private readonly ILogger<TransactionService> _logger;
-
+        private readonly IAccountRepository _accountRepository;
         public TransactionService(ITransactionRepository transactionRepository, IOrderRepository orderRepository,
-            IRechargeRepository rechargeRepository , ILogger<TransactionService> logger)
+            IRechargeRepository rechargeRepository , ILogger<TransactionService> logger, IAccountRepository accountRepository)
         {
             _transactionRepository = transactionRepository;
             _orderRepository = orderRepository;
             _rechargeRepository = rechargeRepository;
             _logger = logger;
+            _accountRepository = accountRepository;
         }
 
         public async Task<Result<TransactionDetailResponse>> CreateTransactionFromVnPay(VnPaymentResponse vnPayResponse,
@@ -41,6 +43,7 @@ namespace Services.Transactions
         {
             try
             {
+                var admin = await _accountRepository.FindOne(c => c.Role == Roles.Admin);
                 Transaction transaction = null!;
                 switch (transactionType)
                 {
@@ -57,7 +60,8 @@ namespace Services.Transactions
                             CreatedDate = DateTime.UtcNow,
                             Amount = order.TotalPrice,
                             VnPayTransactionNumber = vnPayResponse.TransactionId,
-                            MemberId = order.MemberId,
+                            SenderId = order.MemberId,
+                            ReceiverId = admin.AccountId,
                             Type = transactionType
                         };
                         break;
@@ -73,7 +77,8 @@ namespace Services.Transactions
                             CreatedDate = DateTime.UtcNow,
                             Amount = recharge.Amount,
                             VnPayTransactionNumber = vnPayResponse.TransactionId,
-                            MemberId = recharge.MemberId,
+                            ReceiverId = recharge.MemberId,
+                            SenderId = admin.AccountId,
                             Type = transactionType
                         };
                         break;
@@ -103,17 +108,19 @@ namespace Services.Transactions
             }
         }
 
-        public Task CreateTransactionFromPoints(Order order, Guid requestMemberId, TransactionType transactionType)
+        public async Task CreateTransactionFromPoints(Order order, Guid requestMemberId, TransactionType transactionType)
         {
+            var admin = await _accountRepository.FindOne(c => c.Role == Roles.Admin);
             var transaction = new Transaction
             {
                 OrderId = order.OrderId,
                 CreatedDate = DateTime.UtcNow,
                 Amount = order.TotalPrice,
-                MemberId = requestMemberId,
+                SenderId = requestMemberId,
+                ReceiverId = admin.AccountId,
                 Type = transactionType
-            };
-            return _transactionRepository.CreateTransaction(transaction);
+            }; 
+            await _transactionRepository.CreateTransaction(transaction);
         }
 
         public async Task<Result<PaginationResponse<TransactionResponse>>> GetAllTransaction(
