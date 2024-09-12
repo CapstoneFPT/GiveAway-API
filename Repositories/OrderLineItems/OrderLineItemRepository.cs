@@ -40,6 +40,7 @@ namespace Repositories.OrderLineItems
                         CreatedDate = order.CreatedDate,
                         OrderCode = order.Order.OrderCode,
                         ItemCode = order.IndividualFashionItem.ItemCode,
+                        ItemId = order.IndividualFashionItemId,
                         ItemColor = order.IndividualFashionItem.Color,
                         Condition = order.IndividualFashionItem.Condition,
                         CategoryName = order.IndividualFashionItem.MasterItem.Category.Name,

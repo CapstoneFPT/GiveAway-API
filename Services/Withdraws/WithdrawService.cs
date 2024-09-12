@@ -1,7 +1,10 @@
 ﻿using System.Linq.Expressions;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Withdraws;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using DotNext;
+using LinqKit;
 using Repositories.Accounts;
 using Repositories.Transactions;
 using Repositories.Withdraws;
@@ -48,6 +51,47 @@ public class WithdrawService : IWithdrawService
             Amount = withdraw.Amount,
             CreatedDate = withdraw.CreatedDate,
             MemberId = withdraw.MemberId
+        };
+    }
+
+    public async Task<Result<PaginationResponse<GetWithdrawsResponse>, ErrorCode>> GetAllPaginationWithdraws(GetWithdrawByAdminRequest request)
+    {
+        Expression<Func<Withdraw, GetWithdrawsResponse>> selector = withdraw => new GetWithdrawsResponse()
+        {
+            WithdrawId = withdraw.WithdrawId,
+            MemberId = withdraw.MemberId,
+            CreatedDate = withdraw.CreatedDate,
+            Amount = withdraw.Amount,
+            Status = withdraw.Status,
+            Bank = withdraw.Bank,
+            BankAccountName = withdraw.BankAccountName,
+            BankAccountNumber = withdraw.BankAccountNumber,
+            WithdrawCode = withdraw.WithdrawCode
+        };
+        Expression<Func<Withdraw, bool>> predicate = withdraw => true;
+        if (request.WithdrawCode != null)
+        {
+            predicate = predicate.And(c => c.WithdrawCode == request.WithdrawCode);
+        }
+
+        if (request.MemberId != null)
+        {
+            predicate = predicate.And(c => c.MemberId == request.MemberId);
+        }
+
+        if (request.Status != null)
+        {
+            predicate = predicate.And(c => c.Status.Equals(request.Status));
+        }
+        Expression<Func<Withdraw, DateTime>> orderBy = withdraw => withdraw.CreatedDate;
+        (List<GetWithdrawsResponse> Items, int Page, int PageSize, int TotalCount) data =
+            await _withdrawRepository.GetWithdraws(request.Page, request.PageSize, predicate, selector, false, orderBy);
+        return new PaginationResponse<GetWithdrawsResponse>()
+        {
+            Items = data.Items,
+            PageSize = data.PageSize,
+            PageNumber = data.Page,
+            TotalCount = data.TotalCount
         };
     }
 }
