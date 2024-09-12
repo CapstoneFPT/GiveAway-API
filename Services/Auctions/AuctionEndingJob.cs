@@ -126,13 +126,13 @@ public class AuctionEndingJob : IJob
                     {
                         if (dbContext.Bids.Any(c => c.MemberId == auctionDeposit.MemberId))
                         {
-                            if (winningBid.MemberId != auctionDeposit.MemberId) continue;
+                            if (winningBid.MemberId == auctionDeposit.MemberId) continue;
                             var member = await dbContext.Members.FirstOrDefaultAsync(c => c.AccountId == auctionDeposit.MemberId);
                             if (member is not { Status: AccountStatus.Active }) continue;
                             var admin = await dbContext.Admins.FirstOrDefaultAsync();
                             if (admin is not { Status: AccountStatus.Active }) continue;
                             member.Balance += auctionToEnd.DepositFee;
-                            admin.Balance -= auctionToEnd.DepositFee;
+                            admin.Balance += auctionToEnd.DepositFee;
                             dbContext.Members.Update(member);
                             dbContext.Admins.Update(admin);
                             var refundDepositTransaction = new Transaction()
