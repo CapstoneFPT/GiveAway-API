@@ -306,35 +306,32 @@ public class AuthService : IAuthService
         }
 
         CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-        Member? member = new Member();
-        member.Email = request.Email;
-        /*account.AccountId = new Guid();*/
-        member.PasswordHash = passwordHash;
-        member.PasswordSalt = passwordSalt;
-        member.Fullname = request.Fullname;
-        member.Phone = request.Phone;
-        member.Role = Roles.Member;
-        member.Status = AccountStatus.NotVerified;
-        member.CreatedDate = DateTime.UtcNow;
+        Member? member = new Member
+        {
+            Email = request.Email,
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            Fullname = request.Fullname,
+            Phone = request.Phone,
+            Role = Roles.Member,
+            Status = AccountStatus.NotVerified,
+            CreatedDate = DateTime.UtcNow
+        };
 
         var user = await _accountRepository.Register(member);
 
         var token = _accountRepository.CreateRandomToken();
         var cacheEntryOption = new MemoryCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromSeconds(190))
+            .SetSlidingExpiration(TimeSpan.FromMinutes(10))
             .SetPriority(CacheItemPriority.Normal);
         _cache.Set(tempdata, token, cacheEntryOption);
-        var mail = _emailService.SendMailRegister(member.Email, token);
+        var mail = await _emailService.SendMailRegister(member.Email, token);
 
         response.ResultStatus = ResultStatus.Success;
-        response.Messages = mail.Result.Messages;
+        response.Messages = new []{"Register successfully! Please check your email for verification in 10 minutes"};
         response.Data = _mapper.Map<AccountResponse>(user);
         return response;
-        /*var cacheEntryOption = new MemoryCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromSeconds(60))
-                .SetPriority(CacheItemPriority.Normal);
-            _cache.Set(newuser, account, cacheEntryOption);
-            return await SendMailRegister(request.Email);*/
+        
     }
 
     public async Task<Result<string>> ResendVerifyEmail(string email)

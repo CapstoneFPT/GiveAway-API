@@ -54,22 +54,26 @@ namespace Repositories.Orders
                 .FirstOrDefaultAsync(c => c.AccountId == accountId);
 
             
-            Order order = new Order();
-            order.MemberId = accountId;
+            Order order = new Order
+            {
+                MemberId = accountId,
+                PaymentMethod = cart.PaymentMethod,
+                Address = cart.Address,
+                GhnDistrictId = cart.GhnDistrictId,
+                GhnWardCode = cart.GhnWardCode,
+                GhnProvinceId = cart.GhnProvinceId,
+                AddressType = cart.AddressType,
+                PurchaseType = PurchaseType.Online,
+                RecipientName = cart.RecipientName,
+                ShippingFee = cart.ShippingFee,
+                Discount = cart.Discount,
+                Phone = cart.Phone,
+                Email = memberAccount.Email
+            };
 
-            order.PaymentMethod = cart.PaymentMethod;
-            order.Address = cart.Address;
-            order.GhnDistrictId = cart.GhnDistrictId;
-            order.GhnWardCode = cart.GhnWardCode;
-            order.GhnProvinceId = cart.GhnProvinceId;
-            order.AddressType = cart.AddressType;
-            order.PurchaseType = PurchaseType.Online;
-            order.RecipientName = cart.RecipientName;
             
-            order.ShippingFee = cart.ShippingFee;
-            order.Discount = cart.Discount;
-            order.Phone = cart.Phone;
-            order.Email = memberAccount.Email;
+            
+            
             if (cart.PaymentMethod.Equals(PaymentMethod.COD))
             {
                 order.Status = OrderStatus.Pending;
@@ -471,7 +475,7 @@ namespace Repositories.Orders
             await GenericDao<Order>.Instance.UpdateRange(ordersToUpdate);
         }
 
-        public async Task<OrderResponse>    CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
+        public async Task<OrderResponse> CreateOrderByShop(Guid shopId, CreateOrderRequest orderRequest)
         {
             var listItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                 // .Include(c => c.Shop)

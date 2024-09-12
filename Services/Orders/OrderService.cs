@@ -934,7 +934,7 @@ public class OrderService : IOrderService
             .Build();
         var endTrigger = TriggerBuilder.Create()
             .WithIdentity($"EndReservedItemTrigger_{itemId}")
-            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(15)))
+            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(30)))
             .Build();
         await schedule.ScheduleJob(endJob, endTrigger);
     }

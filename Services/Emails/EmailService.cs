@@ -96,7 +96,7 @@ namespace Services.Emails
                 Body = template,
             };
             await SendEmail(content);
-            response.Messages = ["Register successfully! Please check your email for verification in 3 minutes"];
+            // response.Messages = [""];
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
