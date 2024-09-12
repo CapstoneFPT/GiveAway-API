@@ -73,7 +73,9 @@ namespace Repositories.Transactions
             }
 
             var total = await query.CountAsync();
-
+            
+            query = query.OrderByDescending(orderBy);
+            
             var page = transactionRequestPage ?? -1;
             var pageSize = transactionRequestPageSize ?? -1;
 
@@ -81,15 +83,16 @@ namespace Repositories.Transactions
             {
                 query = query.Skip((page - 1) * pageSize).Take(pageSize);
             }
+            
 
             List<T> result;
             if (selector != null)
             {
-                result = await query.OrderByDescending(orderBy).Select(selector).ToListAsync();
+                result = await query.Select(selector).ToListAsync();
             }
             else
             {
-                result = await query.OrderByDescending(orderBy).Cast<T>().ToListAsync();
+                result = await query.Cast<T>().ToListAsync();
             }
 
             return (result, page, pageSize, total);
