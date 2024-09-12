@@ -92,7 +92,7 @@ public class AuctionEndingJob : IJob
                         await dbContext.Addresses.FirstOrDefaultAsync(x =>
                             x.MemberId == orderRequest.MemberId && x.IsDefault);
 
-                    var member = await dbContext.Members.FirstOrDefaultAsync(x => x.AccountId == orderRequest.MemberId);
+                    var memberWinning = await dbContext.Members.FirstOrDefaultAsync(x => x.AccountId == orderRequest.MemberId);
 
 
                     var newOrder = new Order()
@@ -105,7 +105,7 @@ public class AuctionEndingJob : IJob
                         TotalPrice = orderRequest.TotalPrice - auctionToEnd.DepositFee,
                         Address = address?.Residence,
                         RecipientName = address?.RecipientName,
-                        Email = member!.Email,
+                        Email = memberWinning!.Email,
                         Phone = address?.Phone,
                         CreatedDate = DateTime.UtcNow,
                         Status = OrderStatus.AwaitingPayment
@@ -122,31 +122,31 @@ public class AuctionEndingJob : IJob
                     };
 
                     dbContext.OrderLineItems.Add(orderDetail);
-                }
-
-                foreach (var auctionDeposit in auctionToEnd.AuctionDeposits)
-                {
-                    if (dbContext.Bids.Any(c => c.MemberId == auctionDeposit.MemberId))
+                    foreach (var auctionDeposit in auctionToEnd.AuctionDeposits)
                     {
-                        var member = await dbContext.Members.FirstOrDefaultAsync(c => c.AccountId == auctionDeposit.MemberId);
-                        if (member is not { Status: AccountStatus.Active }) continue;
-                        var admin = await dbContext.Admins.FirstOrDefaultAsync();
-                        if (admin is not { Status: AccountStatus.Active }) continue;
-                        member.Balance += auctionToEnd.DepositFee;
-                        admin.Balance -= auctionToEnd.DepositFee;
-                        dbContext.Members.Update(member);
-                        dbContext.Admins.Update(admin);
-                        var refundDepositTransaction = new Transaction()
+                        if (dbContext.Bids.Any(c => c.MemberId == auctionDeposit.MemberId))
                         {
-                            SenderId = admin.AccountId,
-                            ReceiverId = member.AccountId,
-                            CreatedDate = DateTime.UtcNow,
-                            Amount = auctionToEnd.DepositFee,
-                            Type = TransactionType.RefundAuctionDeposit,
-                            TransactionCode = await _transactionRepository.GenerateUniqueString()
-                        };
-                        dbContext.Transactions.Add(refundDepositTransaction);
+                            if (winningBid.MemberId != auctionDeposit.MemberId) continue;
+                            var member = await dbContext.Members.FirstOrDefaultAsync(c => c.AccountId == auctionDeposit.MemberId);
+                            if (member is not { Status: AccountStatus.Active }) continue;
+                            var admin = await dbContext.Admins.FirstOrDefaultAsync();
+                            if (admin is not { Status: AccountStatus.Active }) continue;
+                            member.Balance += auctionToEnd.DepositFee;
+                            admin.Balance -= auctionToEnd.DepositFee;
+                            dbContext.Members.Update(member);
+                            dbContext.Admins.Update(admin);
+                            var refundDepositTransaction = new Transaction()
+                            {
+                                SenderId = admin.AccountId,
+                                ReceiverId = member.AccountId,
+                                CreatedDate = DateTime.UtcNow,
+                                Amount = auctionToEnd.DepositFee,
+                                Type = TransactionType.RefundAuctionDeposit,
+                                TransactionCode = await _transactionRepository.GenerateUniqueString()
+                            };
+                            dbContext.Transactions.Add(refundDepositTransaction);
 
+                        }
                     }
                 }
             }
