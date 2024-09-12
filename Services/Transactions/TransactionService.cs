@@ -80,7 +80,8 @@ namespace Services.Transactions
                             VnPayTransactionNumber = vnPayResponse.TransactionId,
                             ReceiverId = recharge.MemberId,
                             SenderId = admin.AccountId,
-                            Type = transactionType
+                            Type = transactionType,
+                            PaymentMethod = PaymentMethod.QRCode
                         };
                         break;
                     default:

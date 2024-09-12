@@ -9,6 +9,7 @@ using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
+using Repositories.Accounts;
 using Repositories.Recharges;
 
 namespace Services.Recharges;
@@ -18,14 +19,16 @@ public class RechargeService : IRechargeService
     private readonly IRechargeRepository _rechargeRepository;
     private readonly ILogger<RechargeService> _logger;
     private readonly ISchedulerFactory _schedulerFactory;
+    private readonly IAccountRepository _accountRepository;
 
     public RechargeService(IRechargeRepository rechargeRepository, ILogger<RechargeService> logger,
-        ISchedulerFactory schedulerFactory)
+        ISchedulerFactory schedulerFactory, IAccountRepository accountRepository)
 
     {
         _rechargeRepository = rechargeRepository;
         _logger = logger;
         _schedulerFactory = schedulerFactory;
+        _accountRepository = accountRepository;
     }
 
     private Expression<Func<Recharge, bool>> GetPredicate(GetRechargesRequest request)
@@ -168,7 +171,13 @@ public class RechargeService : IRechargeService
             recharge.Member.Balance += amount;
 
             await _rechargeRepository.UpdateRecharge(recharge);
-
+            var admin = await _accountRepository.FindOne(c => c.Role == Roles.Admin);
+            if (admin is null)
+            {
+                Console.WriteLine("No admin account");
+            }
+            admin.Balance += recharge.Amount;
+            await _accountRepository.UpdateAccount(admin);
             var scheduler = await _schedulerFactory.GetScheduler();
             await scheduler.UnscheduleJob(new TriggerKey($"RechargeExpirationTrigger-{recharge.RechargeId}"));
 
