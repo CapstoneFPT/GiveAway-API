@@ -689,14 +689,28 @@ namespace Services.ConsignSales
             Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
                 consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
             var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
+            var consignSale = await _consignSaleRepository.GetQueryable()
+                .FirstOrDefaultAsync(x => x.ConsignSaleId == consignSaleDetail.ConsignSaleId);
             if (consignSaleDetail == null || !consignSaleDetail.Status.Equals(ConsignSaleLineItemStatus.Negotiating))
             {
                 throw new ConsignSaleLineItemNotFoundException();
             }
 
+
             consignSaleDetail.IsApproved = false;
             consignSaleDetail.Status = ConsignSaleLineItemStatus.Returned;
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
+
+            var consignLineItemCount = await _consignSaleLineItemRepository.GetQueryable()
+                .Where(x => x.ConsignSaleId == consignSaleDetail.ConsignSaleId)
+                .CountAsync();
+
+            if (consignLineItemCount == 1)
+            {
+                consignSale.Status = ConsignSaleStatus.Cancelled;
+                await _consignSaleRepository.UpdateConsignSale(consignSale);
+            }
+
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
             {
                 Data = new ConsignSaleLineItemResponse()
