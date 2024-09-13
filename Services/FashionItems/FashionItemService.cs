@@ -436,6 +436,7 @@ namespace Services.FashionItems
                 throw new MissingFeatureException("Please choose shops to create master item");
             }
 
+            var masterItemCode = await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode);
             foreach (var shop in masterItemRequest.ItemForEachShops!)
             {
                 var masterItem = new MasterFashionItem()
@@ -444,8 +445,7 @@ namespace Services.FashionItems
                     Gender = masterItemRequest.Gender,
                     Brand = masterItemRequest.Brand ?? "No Brand",
                     Description = masterItemRequest.Description,
-                    MasterItemCode =
-                        await _fashionitemRepository.GenerateMasterItemCode(masterItemRequest.MasterItemCode),
+                    MasterItemCode = masterItemCode,
                     CategoryId = masterItemRequest.CategoryId,
 
                     IsConsignment = false,
