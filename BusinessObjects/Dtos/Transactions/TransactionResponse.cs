@@ -5,6 +5,7 @@ namespace BusinessObjects.Dtos.Transactions;
 public class TransactionResponse
 {
     public Guid TransactionId { get; set; }
+    public string? TransactionCode { get; set; }
     public Guid? OrderId { get; set; }
     public string? OrderCode { get; set; }
     public Guid? ConsignSaleId { get; set; }

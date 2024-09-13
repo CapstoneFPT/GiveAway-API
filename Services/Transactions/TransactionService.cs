@@ -155,6 +155,7 @@ namespace Services.Transactions
                 {
                     TransactionId = transaction.TransactionId,
                     TransactionType = transaction.Type,
+                    TransactionCode = transaction.TransactionCode,
                     OrderId = transaction.OrderId,
                     OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
                     ConsignSaleId = transaction.ConsignSaleId,
