@@ -43,15 +43,6 @@ public class AuctionEndingJob : IJob
             return;
         }
 
-        /*if (auctionToEnd.Bids.Count == 0)
-        {
-            Console.WriteLine("No bids");
-
-            dbContext.Auctions.Update(auctionToEnd);
-            await dbContext.SaveChangesAsync();
-            return;
-        }*/
-
         try
         {
             if (auctionToEnd.AuctionDeposits.Count == 0)
@@ -124,7 +115,7 @@ public class AuctionEndingJob : IJob
                     dbContext.OrderLineItems.Add(orderDetail);
                     foreach (var auctionDeposit in auctionToEnd.AuctionDeposits)
                     {
-                        if (dbContext.Bids.Any(c => c.MemberId == auctionDeposit.MemberId))
+                        if (await dbContext.Bids.AnyAsync(c => c.MemberId == auctionDeposit.MemberId))
                         {
                             if (winningBid.MemberId == auctionDeposit.MemberId) continue;
                             var member = await dbContext.Members.FirstOrDefaultAsync(c => c.AccountId == auctionDeposit.MemberId);
