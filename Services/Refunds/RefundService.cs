@@ -320,11 +320,24 @@ namespace Services.Refunds
                 Description = request.Description,
                 CreatedDate = DateTime.UtcNow,
                 OrderLineItemId = request.OrderLineItemId,
-                RefundStatus = RefundStatus.Approved,
+                RefundStatus = RefundStatus.Completed,
                 RefundPercentage = request.RefundPercentage,
                 ResponseFromShop = "We accepted refund request at shop"
             };
             await _refundRepository.CreateRefund(refund);
+            var orderLineItem = await _orderLineItemRepository.GetOrderLineItemById(request.OrderLineItemId);
+            orderLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
+            await _orderLineItemRepository.UpdateOrderLine(orderLineItem);
+            var transaction = new Transaction()
+            {
+                CreatedDate = DateTime.UtcNow,
+                Type = TransactionType.RefundProduct,
+                ShopId = shopId,
+                Amount = refund.RefundPercentage.Value * orderLineItem.UnitPrice / 100,
+                PaymentMethod = PaymentMethod.Cash,
+                OrderId = orderLineItem.OrderId
+            };
+            await _transactionRepository.CreateTransaction(transaction);
             var result = await GetRefundById(refund.RefundId);
             return result.IsSuccessful ? result : new Result<RefundResponse, ErrorCode>(result.Error);
         }
