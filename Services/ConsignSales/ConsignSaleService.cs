@@ -104,7 +104,7 @@ namespace Services.ConsignSales
 
             var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
             // await ScheduleConsignEnding(result);
-            await _emailService.SendEmailConsignSaleReceived(consignId);
+            // await _emailService.SendEmailConsignSaleReceived(consignId);
             response.Data = result;
             response.Messages = ["Confirm received successfully"];
             response.ResultStatus = ResultStatus.Success;
@@ -710,9 +710,10 @@ namespace Services.ConsignSales
                 consignSale.Status = ConsignSaleStatus.OnSale;
                 consignSale.StartDate = DateTime.UtcNow;
                 consignSale.EndDate = DateTime.UtcNow.AddDays(60);
+                await _emailService.SendEmailConsignSaleReceived(consignSale);
             }
             await _consignSaleRepository.UpdateConsignSale(consignSale);
-
+            
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
             {
                 Data = new ConsignSaleLineItemResponse()

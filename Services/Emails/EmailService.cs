@@ -223,10 +223,10 @@ namespace Services.Emails
                 template = template.Replace($"[Phone Number]", order.Phone);
                 template = template.Replace($"[Email]", order.Email);
                 template = template.Replace($"[Address]", order.Address);
-                template = template.Replace($"[Shipping Fee]", order.ShippingFee.ToString("N0"));
+                template = template.Replace($"[Shipping Fee]", order.ShippingFee.ToString("N0")) ?? "N/A";
                 template = template.Replace($"[Discount]", order.Discount.ToString("N0"));
                 template = template.Replace($"[Payment Date]",
-                    order.OrderLineItems.Select(c => c.PaymentDate!.Value.AddHours(7)).FirstOrDefault().ToString("G"));
+                    order.OrderLineItems.Select(c => c.PaymentDate).FirstOrDefault()!.Value.AddHours(7).ToString("G")) ?? "N/A";
                 content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY";
                 content.Body = template;
                 await SendEmail(content);
@@ -502,10 +502,9 @@ namespace Services.Emails
             return response;
         }
 
-        public async Task<bool> SendEmailConsignSaleReceived(Guid consignSaleId)
+        public async Task<bool> SendEmailConsignSaleReceived(ConsignSale consignSale)
         {
-            Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
-            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+            
             SendEmailRequest content = new SendEmailRequest();
             if (consignSale.MemberId != null)
             {
@@ -602,8 +601,10 @@ namespace Services.Emails
                 {
                     return false;
                 }
-                SendEmailRequest content = new SendEmailRequest();
-                content.Subject = $"[GIVEAWAY] AUCTION IS COMING";
+                SendEmailRequest content = new SendEmailRequest
+                {
+                    Subject = $"[GIVEAWAY] AUCTION IS COMING"
+                };
                 var template = GetEmailTemplate("AuctionComingMail");
                 template = template.Replace("{PRODUCT_NAME}", auction.IndividualAuctionFashionItem.MasterItem.Name);
                 template = template.Replace("{INITIAL_PRICE}", auction.IndividualAuctionFashionItem.InitialPrice!.Value.ToString("N0"));
@@ -622,6 +623,7 @@ namespace Services.Emails
                 template = template.Replace("[Customer Name]", member.Fullname);
                 template = template.Replace("[Email]", member.Email);
                 template = template.Replace("[Phone Number]", member.Phone);
+                content.Body = template;
                 await SendEmail(content);
                 return true;
             }
