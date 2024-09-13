@@ -124,37 +124,6 @@ namespace Repositories.Bids
             };
         }
 
-        public async Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
-        {
-            var items = await GenericDao<Bid>.Instance.GetQueryable()
-                .Where(x => x.AuctionId == id)
-                .Take(request.PageSize)
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .OrderByDescending(x => x.CreatedDate)
-                .Select(x => new BidListResponse
-                {
-                    Amount = x.Amount,
-                    AuctionId = x.AuctionId,
-                    Id = x.BidId,
-                    MemberId = x.MemberId,
-                    CreatedDate = x.CreatedDate,
-                    IsWinning = x.IsWinning,
-                    BidCode = x.BidCode
-                })
-                .ToListAsync();
-
-            var count = await GenericDao<Bid>.Instance.GetQueryable().Where(x => x.AuctionId == id).CountAsync();
-
-            return new PaginationResponse<BidListResponse>
-            {
-                Items = items,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
-                TotalCount = count,
-                Filters = ["AuctionId"],
-                OrderBy = "-CreatedDate"
-            };
-        }
 
         public async Task<BidDetailResponse?> GetLargestBid(Guid auctionId)
         {
@@ -180,6 +149,5 @@ namespace Repositories.Bids
         {
             return _giveAwayDbContext.Bids.AsQueryable();
         }
-    
     }
 }

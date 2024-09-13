@@ -12,7 +12,6 @@ namespace Repositories.Bids
     public interface IBidRepository
     {
         Task<BidDetailResponse?> CreateBid(Guid id, CreateBidRequest request);
-        Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request);
         Task<BidDetailResponse?> GetLargestBid(Guid auctionId);
         IQueryable<Bid> GetQueryable();
     }

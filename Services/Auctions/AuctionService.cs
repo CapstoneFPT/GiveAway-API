@@ -468,6 +468,7 @@ namespace Services.Auctions
 
             await scheduler.ScheduleJob(startJob, startTrigger);
         }
+
         private async Task ScheduleAuctionEnd(AuctionDetailResponse auction)
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -502,10 +503,43 @@ namespace Services.Auctions
         }
 
 
-        public Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
+        public async Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request)
         {
-            var result = _bidRepository.GetBids(id, request);
-            return result;
+            var query = _bidRepository.GetQueryable();
+
+            Expression<Func<Bid, bool>> predicate = bid => bid.AuctionId == id;
+
+            if (request.MemberId != null)
+            {
+                predicate = predicate.And(bid => bid.MemberId == request.MemberId);
+            }
+
+            var count = await query.Where(predicate).CountAsync();
+
+            var items = await query
+                .Where(predicate)
+                .Skip(PaginationUtils.GetSkip(request.PageNumber, request.PageSize))
+                .Take(PaginationUtils.GetTake(request.PageSize))
+                .OrderByDescending(bid => bid.CreatedDate)
+                .Select(bid => new BidListResponse()
+                {
+                    AuctionId = bid.AuctionId,
+                    MemberId = bid.MemberId,
+                    Amount = bid.Amount,
+                    Phone = bid.Member.Phone,
+                    CreatedDate = bid.CreatedDate,
+                    IsWinning = bid.IsWinning,
+                    BidCode = bid.BidCode,
+                    Id = bid.BidId
+                }).ToListAsync();
+
+            return new PaginationResponse<BidListResponse>()
+            {
+                Items = items,
+                PageNumber = request.PageNumber ?? -1,
+                PageSize = request.PageSize ?? -1,
+                TotalCount = count
+            };
         }
 
         public Task<BidDetailResponse?> GetLargestBid(Guid auctionId)
