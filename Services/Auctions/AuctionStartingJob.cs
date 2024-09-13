@@ -42,10 +42,14 @@ public class AuctionStartingJob : IJob
                 auctionToStart.Status = AuctionStatus.Cancelled;
                 auctionToStart.IndividualAuctionFashionItem.Status = FashionItemStatus.Available;
             }
-            else
+            if(auctionToStart.Status == AuctionStatus.Approved)
             {
                 auctionToStart.Status = AuctionStatus.OnGoing;
                 auctionToStart.IndividualAuctionFashionItem.Status = FashionItemStatus.Bidding;
+            }
+            else
+            {
+                return;
             }
             dbContext.Auctions.Update(auctionToStart);
             await dbContext.SaveChangesAsync();

@@ -87,7 +87,7 @@ namespace Services.Auctions
 
             if (await AuctionRepository.IsDateTimeOverlapped(request.StartTime, request.EndTime))
             {
-                throw new ScheduledTimeOverlappedException();
+                throw new ScheduledTimeOverlappedException("There is an auction on time");
             }
 
             if (auctionItem.InitialPrice == null)

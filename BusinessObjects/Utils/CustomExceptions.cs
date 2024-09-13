@@ -36,7 +36,7 @@ public class ItemNotReadyForConsignException : Exception
 {
 }
 
-public class ScheduledTimeOverlappedException : Exception
+public class ScheduledTimeOverlappedException(string message) : Exception(message)
 {
 }
 
