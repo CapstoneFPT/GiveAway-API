@@ -163,30 +163,139 @@ namespace Services.ConsignSales
             CreateConsignSaleByShopRequest request)
         {
             var response = new BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>();
-            var isMemberExisted = await _accountRepository.FindUserByPhone(request.Phone);
-            if (isMemberExisted != null)
+            if (request.ConsignDetailRequests.Count == 0)
             {
-                var account = await _accountRepository.GetAccountById(isMemberExisted.AccountId);
-                if (account == null || account.Status.Equals(AccountStatus.Inactive) ||
-                    account.Status.Equals(AccountStatus.NotVerified))
+                throw new MissingFeatureException("You must have at least one product");
+            }
+
+            var listMasterId = request.ConsignDetailRequests.Select(c => c.MasterItemId);
+            var listMasterItem = await _fashionItemRepository.GetMasterQueryable()
+                .Where(c => listMasterId.Contains(c.MasterItemId)).ToListAsync();
+            if (listMasterItem.Any(c => c.IsConsignment == false))
+            {
+                throw new MasterItemNotAvailableException("There are master that not allow to choose");
+            }
+
+            var newConsign = new ConsignSale()
+            {
+                Type = request.Type,
+                CreatedDate = DateTime.UtcNow,
+                Status = ConsignSaleStatus.OnSale,
+                ConsignSaleMethod = ConsignSaleMethod.Offline,
+                StartDate = DateTime.UtcNow,
+                EndDate = DateTime.UtcNow.AddDays(60),
+                TotalPrice = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice),
+                SoldPrice = 0,
+                ShopId = shopId,
+                ConsignorReceivedAmount = 0,
+                ConsignSaleCode = await _consignSaleRepository.GenerateUniqueString(),
+                ConsignorName = request.ConsignorName,
+                Address = request.Address,
+                Email = request.Email,
+                Phone = request.Phone
+            };
+
+            await _consignSaleRepository.CreateConsignSaleByShop(newConsign);
+
+            foreach (var consignDetailRequest in request.ConsignDetailRequests)
+            {
+                var consignLineItem = new ConsignSaleLineItem()
                 {
-                    response.Messages = ["This account is not available to consign"];
-                    response.ResultStatus = ResultStatus.Error;
-                    return response;
+                    ConfirmedPrice = consignDetailRequest.ExpectedPrice,
+                    DealPrice = consignDetailRequest.ExpectedPrice,
+                    ConsignSaleId = newConsign.ConsignSaleId,
+                    Note = consignDetailRequest.Note,
+                    CreatedDate = DateTime.UtcNow,
+                    Size = consignDetailRequest.Size,
+                    Gender = consignDetailRequest.Gender,
+                    ProductName = consignDetailRequest.ProductName,
+                    Condition = consignDetailRequest.Condition,
+                    Color = consignDetailRequest.Color,
+                    Status = ConsignSaleLineItemStatus.OnSale,
+                    Brand = consignDetailRequest.Brand,
+                    IsApproved = true,
+                    ExpectedPrice = consignDetailRequest.ExpectedPrice
+                };
+                consignLineItem.Images = consignDetailRequest.ImageUrls.Select(url => new Image()
+                {
+                    ConsignLineItemId = consignLineItem.ConsignSaleId,
+                    Url = url,
+                    CreatedDate = DateTime.UtcNow
+                }).ToList();
+                await _consignSaleLineItemRepository.AddConsignSaleLineItem(consignLineItem);
+                var masterItemCode = listMasterItem.Where(c => c.MasterItemId == consignDetailRequest.MasterItemId)
+                    .Select(c => c.MasterItemCode).FirstOrDefault();
+                var individualItem = new IndividualFashionItem()
+                {
+                    Note = consignLineItem.Note,
+                    CreatedDate = DateTime.UtcNow,
+                    MasterItemId = consignDetailRequest.MasterItemId,
+                    ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(masterItemCode!),
+                    Status = FashionItemStatus.Available,
+                    ConsignSaleLineItemId = consignLineItem.ConsignSaleLineItemId,
+                    Condition = consignLineItem.Condition,
+                    Color = consignLineItem.Color,
+                    Size = consignLineItem.Size
+                };
+
+                switch (newConsign.Type)
+                {
+                    case ConsignSaleType.ForSale:
+                        individualItem.Type = FashionItemType.ItemBase;
+                        individualItem.SellingPrice = consignLineItem.ConfirmedPrice;
+                        break;
+                    case ConsignSaleType.ConsignedForAuction:
+                        individualItem = new IndividualAuctionFashionItem()
+                        {
+                            Note = consignLineItem.Note,
+                            CreatedDate = DateTime.UtcNow,
+                            MasterItemId = consignDetailRequest.MasterItemId,
+                            ItemCode =
+                                await _fashionItemRepository.GenerateIndividualItemCode(masterItemCode!),
+                            Status = FashionItemStatus.Available,
+                            ConsignSaleLineItemId = consignLineItem.ConsignSaleLineItemId,
+                            Type = FashionItemType.ConsignedForAuction,
+                            Condition = consignLineItem.Condition,
+                            Color = consignLineItem.Color,
+                            Size = consignLineItem.Size,
+                            InitialPrice = consignDetailRequest.ExpectedPrice,
+                            SellingPrice = 0,
+                        };
+                        break;
+                    case ConsignSaleType.ConsignedForSale:
+                        individualItem.Type = FashionItemType.ConsignedForSale;
+                        individualItem.SellingPrice = consignDetailRequest.ExpectedPrice;
+                        break;
                 }
+
+                individualItem.Images = consignDetailRequest.ImageUrls
+                    .Select(url => new Image()
+                    {
+                        Url = url,
+                        CreatedDate = DateTime.UtcNow,
+                        IndividualFashionItemId = individualItem.ItemId
+                    }).ToList();
+                consignLineItem.IndividualFashionItem = individualItem;
+                await _consignSaleLineItemRepository.UpdateConsignLineItem(consignLineItem);
             }
 
-            //tao moi' 1 consign form
-            var consign = await _consignSaleRepository.CreateConsignSaleByShop(shopId, request);
-            if (consign == null)
+            await ScheduleConsignEnding(newConsign);
+            response.Data = new ConsignSaleDetailedResponse()
             {
-                response.Messages = ["There is an error. Can not find consign"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
-            }
-
-            // await ScheduleConsignEnding(consign);
-            response.Data = consign;
+                ConsignSaleId = newConsign.ConsignSaleId,
+                Status = newConsign.Status,
+                SoldPrice = newConsign.SoldPrice,
+                TotalPrice = newConsign.TotalPrice,
+                CreatedDate = newConsign.CreatedDate,
+                ConsignSaleCode = newConsign.ConsignSaleCode,
+                ConsignSaleMethod = newConsign.ConsignSaleMethod,
+                StartDate = newConsign.StartDate,
+                EndDate = newConsign.EndDate,
+                Type = newConsign.Type,
+                Phone = newConsign.Phone,
+                Consginer = newConsign.ConsignorName,
+                ShopId = newConsign.ShopId,
+            };
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
             return response;
@@ -206,15 +315,16 @@ namespace Services.ConsignSales
 
             if (request.EndDate != null)
                 predicate = predicate.And(sale => sale.EndDate <= request.EndDate);
-            
-            if(request.ConsignSaleCode != null)
-                predicate = predicate.And(sale => EF.Functions.ILike(sale.ConsignSaleCode, $"%{ request.ConsignSaleCode}%"));
-            
+
+            if (request.ConsignSaleCode != null)
+                predicate = predicate.And(sale =>
+                    EF.Functions.ILike(sale.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
+
 
             return predicate;
         }
 
-        public async Task<DotNext.Result<PaginationResponse<ConsignSaleListResponse>,ErrorCode>>
+        public async Task<DotNext.Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>>
             GetAllConsignSales(Guid accountId,
                 ConsignSaleRequest request)
         {
@@ -227,7 +337,7 @@ namespace Services.ConsignSales
             var result = await
                 query.Where(predicate
                     ).OrderByDescending(x => x.CreatedDate)
-                    .Skip(PaginationUtils.GetSkip(request.PageNumber,request.PageSize))
+                    .Skip(PaginationUtils.GetSkip(request.PageNumber, request.PageSize))
                     .Take(PaginationUtils.GetTake(request.PageSize))
                     .Select(x => new ConsignSaleListResponse()
                     {
@@ -251,7 +361,7 @@ namespace Services.ConsignSales
                     })
                     .ToListAsync();
 
-            return new DotNext.Result<PaginationResponse<ConsignSaleListResponse>,ErrorCode>(
+            return new DotNext.Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>(
                 new PaginationResponse<ConsignSaleListResponse>()
                 {
                     PageNumber = request.PageNumber ?? -1,
@@ -613,6 +723,7 @@ namespace Services.ConsignSales
             {
                 throw new ConsignSaleNotFoundException();
             }
+
             var consignSaleDetail =
                 consignSale.ConsignSaleLineItems.FirstOrDefault(c => c.ConsignSaleLineItemId == consignLineItemId);
             if (consignSaleDetail == null)
@@ -638,7 +749,7 @@ namespace Services.ConsignSales
                 throw new MasterItemNotAvailableException("You can not choose master in stock");
             }
 
-            
+
             var individualItem = new IndividualFashionItem()
             {
                 Note = consignSaleDetail.Note,
@@ -652,13 +763,13 @@ namespace Services.ConsignSales
                 Color = consignSaleDetail.Color,
                 Size = consignSaleDetail.Size
             };
-            
+
             switch (consignSaleDetail.ConsignSale.Type)
             {
                 case ConsignSaleType.ForSale:
                     individualItem.Type = FashionItemType.ItemBase;
                     individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
-                    
+
                     break;
                 case ConsignSaleType.ConsignedForAuction:
                     individualItem = new IndividualAuctionFashionItem()
@@ -677,14 +788,15 @@ namespace Services.ConsignSales
                         InitialPrice = consignSaleDetail.ConfirmedPrice,
                         SellingPrice = 0,
                     };
-                    
+
                     break;
                 case ConsignSaleType.ConsignedForSale:
                     individualItem.Type = FashionItemType.ConsignedForSale;
                     individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
-                    
+
                     break;
             }
+
             individualItem.Images = consignSaleDetail.Images
                 .Select(x => new Image()
                 {
@@ -692,11 +804,12 @@ namespace Services.ConsignSales
                     CreatedDate = DateTime.UtcNow,
                     IndividualFashionItemId = individualItem.ItemId
                 }).ToList();
-            
+
             consignSaleDetail.IndividualFashionItem = individualItem;
-            
+
             var listItemInConsign = consignSale.ConsignSaleLineItems
-                .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale && c.IndividualFashionItem != null)
+                .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale &&
+                            c.IndividualFashionItem != null)
                 .Select(c => c.IndividualFashionItem).ToList();
             if (listItemInConsign.Count ==
                 consignSale.ConsignSaleLineItems.Count(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale))
@@ -706,14 +819,15 @@ namespace Services.ConsignSales
                     consignSaleLineItem.Status = ConsignSaleLineItemStatus.OnSale;
                     consignSaleLineItem.IndividualFashionItem.Status = FashionItemStatus.Available;
                 }
-                
+
                 consignSale.Status = ConsignSaleStatus.OnSale;
                 consignSale.StartDate = DateTime.UtcNow;
                 consignSale.EndDate = DateTime.UtcNow.AddDays(60);
                 await _emailService.SendEmailConsignSaleReceived(consignSale);
             }
+
             await _consignSaleRepository.UpdateConsignSale(consignSale);
-            
+
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
             {
                 Data = new ConsignSaleLineItemResponse()
