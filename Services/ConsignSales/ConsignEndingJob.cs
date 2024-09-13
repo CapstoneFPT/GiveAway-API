@@ -53,17 +53,6 @@ public class ConsignEndingJob : IJob
                 }
             }
             
-            /*consignToEnd.Member.Balance += consignToEnd.ConsignorReceivedAmount;
-            
-            var transaction = new Transaction()
-            {
-                ConsignSaleId = consignToEnd.ConsignSaleId,
-                MemberId = consignToEnd.MemberId,
-                CreatedDate = DateTime.UtcNow,
-                Amount = consignToEnd.ConsignorReceivedAmount,
-                Type = TransactionType.Payout,
-            };
-            dbContext.Transactions.Add(transaction);*/
             dbContext.ConsignSales.Update(consignToEnd);
         }
         catch (Exception e)
