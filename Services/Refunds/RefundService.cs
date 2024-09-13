@@ -333,6 +333,7 @@ namespace Services.Refunds
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.RefundProduct,
                 ShopId = shopId,
+                Amount = refund.RefundPercentage.Value * orderLineItem.UnitPrice / 100,
                 PaymentMethod = PaymentMethod.Cash,
                 OrderId = orderLineItem.OrderId
             };
