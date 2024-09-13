@@ -256,11 +256,11 @@ namespace WebApi.Controllers
             order.Status = OrderStatus.Pending;
             order.Member!.Balance -= order.TotalPrice;
 
-            await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
             await _orderService.UpdateOrder(order);
             await _orderService.UpdateFashionItemStatus(order.OrderId);
             await _orderService.UpdateAdminBalance(order);
             await _consignSaleService.UpdateConsignPrice(order.OrderId);
+            await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
             await _emailService.SendEmailOrder(order);
 
             return Ok(new PayWithPointsResponse()

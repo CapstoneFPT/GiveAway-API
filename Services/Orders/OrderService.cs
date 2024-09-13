@@ -353,6 +353,8 @@ public class OrderService : IOrderService
             {
                 OrderId = orderId,
                 ReceiverId = order.MemberId,
+                ReceiverBalance = order.Member.Balance,
+                SenderBalance = admin.Balance,
                 SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
@@ -892,10 +894,13 @@ public class OrderService : IOrderService
             var transaction = new Transaction()
             {
                 OrderId = order.OrderId,
+                ReceiverBalance = order.Member.Balance,
+                SenderBalance = admin.Balance,
                 ReceiverId = order.MemberId,
                 SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
+                PaymentMethod = PaymentMethod.Point,
                 Type = TransactionType.RefundProduct
             };
             await _transactionRepository.CreateTransaction(transaction);

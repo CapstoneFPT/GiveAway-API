@@ -119,13 +119,16 @@ namespace Services.Transactions
         public async Task CreateTransactionFromPoints(Order order, Guid requestMemberId, TransactionType transactionType)
         {
             var admin = await _accountRepository.FindOne(c => c.Role == Roles.Admin);
+            var member = await _accountRepository.FindOne(x => x.AccountId == requestMemberId);
             var transaction = new Transaction
             {
                 OrderId = order.OrderId,
                 CreatedDate = DateTime.UtcNow,
                 Amount = order.TotalPrice,
                 SenderId = requestMemberId,
+                SenderBalance = member.Balance,
                 ReceiverId = admin.AccountId,
+                ReceiverBalance = admin.Balance,
                 Type = transactionType,
                 PaymentMethod = PaymentMethod.Point
             }; 
