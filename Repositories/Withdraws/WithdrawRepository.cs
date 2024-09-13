@@ -56,9 +56,9 @@ public class WithdrawRepository : IWithdrawRepository
         return result;
     }
 
-    public async Task UpdateWithdraw(Withdraw withdraw)
+    public async Task<Withdraw> UpdateWithdraw(Withdraw withdraw)
     {
-        await GenericDao<Withdraw>.Instance.UpdateAsync(withdraw);
+       return await GenericDao<Withdraw>.Instance.UpdateAsync(withdraw);
     }
 
     public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetWithdraws<T>(int? requestPage,

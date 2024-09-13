@@ -8,6 +8,8 @@ public class Transaction
 {
     [Key] public Guid TransactionId { get; set; }
     public decimal Amount { get; set; }
+    public decimal SenderBalance { get; set; }
+    public decimal ReceiverBalance { get; set; }
     public DateTime CreatedDate { get; set; }
     public TransactionType Type { get; set; }
     public Order? Order { get; set; }

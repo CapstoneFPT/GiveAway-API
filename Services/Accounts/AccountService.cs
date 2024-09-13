@@ -27,6 +27,7 @@ using Repositories.BankAccounts;
 using Repositories.Inquiries;
 using Repositories.Transactions;
 using Repositories.Withdraws;
+using Services.Withdraws;
 
 namespace Services.Accounts
 {
@@ -35,6 +36,7 @@ namespace Services.Accounts
         private readonly IAccountRepository _account;
         private readonly IInquiryRepository _inquiryRepository;
         private readonly IWithdrawRepository _withdrawRepository;
+        private readonly IWithdrawService _withdrawService;
         private readonly ITransactionRepository _transactionRepository;
         private readonly IBankAccountRepository _bankAccountRepository;
         private readonly IAuctionRepository _auctionRepository;
@@ -42,7 +44,7 @@ namespace Services.Accounts
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
             IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository,
-            IBankAccountRepository bankAccountRepository, IAuctionRepository auctionRepository)
+            IBankAccountRepository bankAccountRepository, IAuctionRepository auctionRepository, IWithdrawService withdrawService)
         {
             _account = repository;
             _mapper = mapper;
@@ -51,6 +53,7 @@ namespace Services.Accounts
             _transactionRepository = transactionRepository;
             _bankAccountRepository = bankAccountRepository;
             _auctionRepository = auctionRepository;
+            _withdrawService = withdrawService;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> BanAccountById(Guid id)
@@ -227,14 +230,14 @@ namespace Services.Accounts
 
         public async Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request)
         {
-            var account = await _account.GetMemberById(accountId);
+            var member = await _account.GetMemberById(accountId);
 
-            if (account == null)
+            if (member == null)
             {
                 throw new AccountNotFoundException();
             }
 
-            if (account.Balance < request.Amount)
+            if (member.Balance < request.Amount)
             {
                 throw new InsufficientBalanceException();
             }
@@ -257,26 +260,17 @@ namespace Services.Accounts
             };
 
             var result = await _withdrawRepository.CreateWithdraw(newWithdraw);
-            var admin = await _account.FindOne(c => c.Role == Roles.Admin);
-            account.Balance -= request.Amount;
-            await _account.UpdateAccount(account);
 
-            var transaction = new Transaction
-            {
-                Amount = result.Amount,
-                CreatedDate = DateTime.UtcNow,
-                SenderId = result.MemberId,
-                ReceiverId = admin.AccountId,
-                Type = TransactionType.Withdraw,
-                PaymentMethod = PaymentMethod.Banking
-            };
+            member.Balance -= request.Amount;
+            await _account.UpdateAccount(member);
 
-            await _transactionRepository.CreateTransaction(transaction);
+           
+            await _withdrawService.ScheduleWithdrawExpiration(result!);
             return new CreateWithdrawResponse()
             {
                 WithdrawId = result.WithdrawId,
                 Amount = result.Amount,
-                AmountLeft = account.Balance,
+                AmountLeft = member.Balance,
                 Bank = result.Bank,
                 BankAccountName = result.BankAccountName,
                 BankAccountNumber = result.BankAccountNumber,

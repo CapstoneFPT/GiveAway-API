@@ -5,6 +5,7 @@ using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using DotNext;
 using LinqKit;
+using Quartz;
 using Repositories.Accounts;
 using Repositories.Transactions;
 using Repositories.Withdraws;
@@ -16,13 +17,15 @@ public class WithdrawService : IWithdrawService
     private readonly IWithdrawRepository _withdrawRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IAccountRepository _accountRepository;
+    private readonly ISchedulerFactory _schedulerFactory;
 
     public WithdrawService(IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository, ISchedulerFactory schedulerFactory)
     {
         _withdrawRepository = withdrawRepository;
         _transactionRepository = transactionRepository;
         _accountRepository = accountRepository;
+        _schedulerFactory = schedulerFactory;
     }
 
     public async Task<CompleteWithdrawResponse> CompleteWithdrawRequest(Guid withdrawId)
@@ -44,8 +47,27 @@ public class WithdrawService : IWithdrawService
         withdraw.Status = WithdrawStatus.Completed;
         admin.Balance -= withdraw.Amount;
 
-        await _withdrawRepository.UpdateWithdraw(withdraw);
+        var result = await _withdrawRepository.UpdateWithdraw(withdraw);
         await _accountRepository.UpdateAccount(admin);
+        
+        var member = await _accountRepository.GetMemberById(withdraw.MemberId);
+
+        var transaction = new Transaction
+        {
+            Amount = result.Amount,
+            CreatedDate = DateTime.UtcNow,
+            SenderBalance = member.Balance,
+            ReceiverBalance = admin.Balance,
+            SenderId = result.MemberId,
+            ReceiverId = admin.AccountId,
+            Type = TransactionType.Withdraw,
+            PaymentMethod = PaymentMethod.Banking
+        };
+
+        await _transactionRepository.CreateTransaction(transaction);
+
+        var scheduler = await _schedulerFactory.GetScheduler();
+        await scheduler.DeleteJob(new JobKey($"WithdrawExpirationJob-{withdrawId}"));
         
         return new CompleteWithdrawResponse()
         {
@@ -57,7 +79,8 @@ public class WithdrawService : IWithdrawService
         };
     }
 
-    public async Task<Result<PaginationResponse<GetWithdrawsResponse>, ErrorCode>> GetAllPaginationWithdraws(GetWithdrawByAdminRequest request)
+    public async Task<Result<PaginationResponse<GetWithdrawsResponse>, ErrorCode>> GetAllPaginationWithdraws(
+        GetWithdrawByAdminRequest request)
     {
         Expression<Func<Withdraw, GetWithdrawsResponse>> selector = withdraw => new GetWithdrawsResponse()
         {
@@ -86,6 +109,7 @@ public class WithdrawService : IWithdrawService
         {
             predicate = predicate.And(c => c.Status.Equals(request.Status));
         }
+
         Expression<Func<Withdraw, DateTime>> orderBy = withdraw => withdraw.CreatedDate;
         (List<GetWithdrawsResponse> Items, int Page, int PageSize, int TotalCount) data =
             await _withdrawRepository.GetWithdraws(request.Page, request.PageSize, predicate, selector, false, orderBy);
@@ -96,6 +120,27 @@ public class WithdrawService : IWithdrawService
             PageNumber = data.Page,
             TotalCount = data.TotalCount
         };
+    }
+
+    public async Task ScheduleWithdrawExpiration(Withdraw withdraw)
+    {
+        var scheduler = await _schedulerFactory.GetScheduler();
+        var jobDataMap = new JobDataMap()
+        {
+            { "WithdrawId", withdraw.WithdrawId }
+        };
+
+        var job = JobBuilder.Create<WithdrawExpirationJob>()
+            .WithIdentity($"WithdrawExpirationJob-{withdraw.WithdrawId}")
+            .UsingJobData(jobDataMap)
+            .Build();
+
+        var trigger = TriggerBuilder.Create()
+            .WithIdentity($"WithdrawExpirationTrigger-{withdraw.WithdrawId}")
+            .StartAt(DateBuilder.FutureDate(3, IntervalUnit.Minute))
+            .Build();
+
+        await scheduler.ScheduleJob(job, trigger);
     }
 }
 

@@ -52,6 +52,7 @@ namespace Services.Transactions
                         var order = await _orderRepository.GetSingleOrder(x =>
                             x.OrderId == new Guid(vnPayResponse.OrderId));
                         
+                        var memberAcc = await _accountRepository.FindOne(x => x.AccountId == order.MemberId);
                         if (order == null) throw new OrderNotFoundException();
                         
                         transaction = new Transaction()
@@ -61,7 +62,9 @@ namespace Services.Transactions
                             Amount = order.TotalPrice,
                             VnPayTransactionNumber = vnPayResponse.TransactionId,
                             SenderId = order.MemberId,
+                            SenderBalance = memberAcc.Balance,
                             ReceiverId = admin.AccountId,
+                            ReceiverBalance = admin.Balance,
                             Type = transactionType,
                             PaymentMethod = PaymentMethod.Banking
                         };
@@ -71,7 +74,8 @@ namespace Services.Transactions
                             .FirstOrDefaultAsync(x => x.RechargeId == new Guid(vnPayResponse.OrderId));
                         
                         if (recharge == null) throw new RechargeNotFoundException();
-                        
+
+                        var member = await _accountRepository.FindOne(x => x.AccountId == recharge.MemberId);
                         transaction = new Transaction()
                         {
                             RechargeId = new Guid(vnPayResponse.OrderId),
@@ -79,7 +83,9 @@ namespace Services.Transactions
                             Amount = recharge.Amount,
                             VnPayTransactionNumber = vnPayResponse.TransactionId,
                             ReceiverId = recharge.MemberId,
+                            ReceiverBalance = member.Balance,
                             SenderId = admin.AccountId,
+                            SenderBalance = admin.Balance,
                             Type = transactionType,
                             PaymentMethod = PaymentMethod.Banking
                         };

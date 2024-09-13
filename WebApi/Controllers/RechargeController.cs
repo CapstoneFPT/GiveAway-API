@@ -117,9 +117,9 @@ public class RechargeController : ControllerBase
                         $"{redirectUrl}?paymentstatus=warning&message={Uri.EscapeDataString("Recharge already processed")}");
                 }
 
-                await _transactionService.CreateTransactionFromVnPay(response, TransactionType.AddFund);
                 var completeResult = await _rechargeService.CompleteRecharge(recharge.RechargeId, recharge.Amount);
-
+                await _transactionService.CreateTransactionFromVnPay(response, TransactionType.AddFund);
+                
                 if (!completeResult.IsSuccessful)
                 {
                     return Redirect(

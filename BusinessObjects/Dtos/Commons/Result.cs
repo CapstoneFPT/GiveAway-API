@@ -154,6 +154,7 @@ public enum TransactionType
 public enum WithdrawStatus
 {
     Processing,
+    Expired,
     Completed,
 }
 
