@@ -323,21 +323,22 @@ namespace Services.Accounts
             return predicate;
         }
 
-        public async Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId,
+        public async Task<PaginationResponse<AccountTransactionsListResponse>> GetTransactions(Guid accountId,
             GetTransactionsRequest request)
         {
             Expression<Func<Transaction, bool>> predicate = GetPredicate(request);
             predicate = predicate.And(x => x.SenderId == accountId || x.ReceiverId == accountId);
 
             Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
-            Expression<Func<Transaction, GetTransactionsResponse>> selector = transaction =>
-                new GetTransactionsResponse()
+            Expression<Func<Transaction, AccountTransactionsListResponse>> selector = transaction =>
+                new AccountTransactionsListResponse()
                 {
                     TransactionId = transaction.TransactionId,
                     SenderId = transaction.SenderId,
                     ReceiverId = transaction.ReceiverId,
                     Amount = transaction.Amount,
                     Type = transaction.Type,
+                    AccountBalance = transaction.ReceiverId == accountId ? transaction.ReceiverBalance : transaction.SenderBalance,
                     CreatedDate = transaction.CreatedDate,
                     OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
                     ConsignSaleCode = transaction.ConsignSale != null
@@ -350,12 +351,12 @@ namespace Services.Accounts
                     PaymentMethod = transaction.PaymentMethod
                 };
 
-            (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await
-                _transactionRepository.GetTransactionsProjection<GetTransactionsResponse>(request.Page,
+            (List<AccountTransactionsListResponse> Items, int Page, int PageSize, int TotalCount) data = await
+                _transactionRepository.GetTransactionsProjection<AccountTransactionsListResponse>(request.Page,
                     request.PageSize,
                     predicate, orderBy, selector);
 
-            return new PaginationResponse<GetTransactionsResponse>()
+            return new PaginationResponse<AccountTransactionsListResponse>()
             {
                 Items = data.Items,
                 PageSize = data.PageSize,

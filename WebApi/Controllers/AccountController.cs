@@ -470,7 +470,7 @@ public class AccountController : ControllerBase
 
 
     [HttpGet("{accountId}/transactions")]
-    [ProducesResponseType<PaginationResponse<GetTransactionsResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<PaginationResponse<AccountTransactionsListResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetTransactions([FromRoute] Guid accountId,
         [FromQuery] GetTransactionsRequest request)
     {

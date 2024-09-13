@@ -2,7 +2,7 @@
 
 namespace BusinessObjects.Dtos.Transactions;
 
-public class GetTransactionsResponse
+public class AccountTransactionsListResponse
 {
     public Guid TransactionId { get; set; }
     public string TransactionCode { get; set; } = default!;
@@ -16,4 +16,5 @@ public class GetTransactionsResponse
     public Guid? ReceiverId { get; set; }
     public string? DepositCode { get; set; }
     public PaymentMethod? PaymentMethod { get; set; }
+    public decimal AccountBalance { get; set; }
 }
