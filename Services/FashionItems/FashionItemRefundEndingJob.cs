@@ -60,6 +60,8 @@ public class FashionItemRefundEndingJob : IJob
                 var transaction = new Transaction() 
                 {
                     SenderId = admin.AccountId,
+                    SenderBalance = admin.Balance,
+                    ReceiverBalance = refundItemToEnd.ConsignSaleLineItem.ConsignSale.Member.Balance,
                     ReceiverId = refundItemToEnd.ConsignSaleLineItem.ConsignSale.MemberId,
                     Amount = refundItemToEnd.SellingPrice!.Value,
                     CreatedDate = DateTime.UtcNow,

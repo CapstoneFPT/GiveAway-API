@@ -301,7 +301,9 @@ namespace Services.Refunds
                 Type = TransactionType.RefundProduct,
                 RefundId = refundId,
                 ReceiverId = order.MemberId,
+                ReceiverBalance = member.Balance,
                 SenderId = admin.AccountId,
+                SenderBalance = admin.Balance,
                 PaymentMethod = PaymentMethod.Point
             };
             await _transactionRepository.CreateTransaction(refundTransaction);

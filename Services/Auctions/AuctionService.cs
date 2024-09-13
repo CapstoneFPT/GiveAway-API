@@ -202,7 +202,7 @@ namespace Services.Auctions
         {
             var query = _auctionRepository.GetQueryable();
             var result = await query
-                .Where(x=>x.AuctionId == id)
+                .Where(x => x.AuctionId == id)
                 .Select(x => x.IndividualAuctionFashionItem)
                 .Select(x => new AuctionItemDetailResponse()
                 {
@@ -346,7 +346,7 @@ namespace Services.Auctions
                     AuctionCode = x.AuctionCode,
                     DepositFee = x.DepositFee,
                     StepIncrement = x.StepIncrement,
-                    Won = x.Bids.Where(bid=>bid.MemberId == memberId).Any(bid => bid.IsWinning == true),
+                    Won = x.Bids.Where(bid => bid.MemberId == memberId).Any(bid => bid.IsWinning == true),
                 })
                 .FirstOrDefaultAsync();
 
@@ -389,13 +389,18 @@ namespace Services.Auctions
             await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
             admin.Balance -= auction.DepositFee;
             await _accountRepository.UpdateAccount(admin);
+
+            var member = await _accountRepository.FindOne(account => account.AccountId == request.MemberId);
             var transaction = new Transaction()
             {
                 Amount = auction.DepositFee,
                 Type = TransactionType.AuctionDeposit,
                 SenderId = request.MemberId,
+                SenderBalance = member.Balance,
                 ReceiverId = admin.AccountId,
+                ReceiverBalance = admin.Balance,
                 CreatedDate = DateTime.UtcNow,
+                PaymentMethod = PaymentMethod.Point,
                 VnPayTransactionNumber = "N/A"
             };
             var transactionResult = await _transactionRepository.CreateTransaction(transaction);

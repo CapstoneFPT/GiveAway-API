@@ -138,10 +138,13 @@ public class AuctionEndingJob : IJob
                             var refundDepositTransaction = new Transaction()
                             {
                                 SenderId = admin.AccountId,
+                                SenderBalance = admin.Balance,
                                 ReceiverId = member.AccountId,
+                                ReceiverBalance = member.Balance,
                                 CreatedDate = DateTime.UtcNow,
                                 Amount = auctionToEnd.DepositFee,
                                 Type = TransactionType.RefundAuctionDeposit,
+                                PaymentMethod = PaymentMethod.Point,
                                 TransactionCode = await _transactionRepository.GenerateUniqueString()
                             };
                             dbContext.Transactions.Add(refundDepositTransaction);
