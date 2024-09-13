@@ -448,7 +448,7 @@ namespace Services.Auctions
             var scheduler = await _schedulerFactory.GetScheduler();
             var jobDataMap = new JobDataMap()
             {
-                { "AuctionId", auction.AuctionId }
+                { "AuctionStartId", auction.AuctionId }
             };
 
             var startJob = JobBuilder.Create<AuctionStartingJob>()
@@ -468,7 +468,7 @@ namespace Services.Auctions
             var scheduler = await _schedulerFactory.GetScheduler();
             var jobDataMap = new JobDataMap()
             {
-                { "AuctionId", auction.AuctionId }
+                { "AuctionEndId", auction.AuctionId }
             };
 
             var endJob = JobBuilder.Create<AuctionEndingJob>()

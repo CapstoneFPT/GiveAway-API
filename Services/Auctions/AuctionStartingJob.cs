@@ -23,7 +23,7 @@ public class AuctionStartingJob : IJob
 
 
         var dataMap = context.JobDetail.JobDataMap;
-        var auctionId = dataMap.GetGuid("AuctionId");
+        var auctionId = dataMap.GetGuid("AuctionStartId");
 
         try
         {

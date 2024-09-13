@@ -29,7 +29,7 @@ public class AuctionEndingJob : IJob
     {
         await using var scope = _serviceProvider.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
-        var auctionId = context.JobDetail.JobDataMap.GetGuid("AuctionId");
+        var auctionId = context.JobDetail.JobDataMap.GetGuid("AuctionEndId");
 
         var auctionToEnd = await dbContext.Auctions
             .Include(x => x.IndividualAuctionFashionItem)
