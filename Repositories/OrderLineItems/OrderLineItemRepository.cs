@@ -203,6 +203,11 @@ namespace Repositories.OrderLineItems
             await GenericDao<OrderLineItem>.Instance.UpdateRange(orderLineItems);
         }
 
+        public async Task UpdateOrderLine(OrderLineItem orderLineItem)
+        {
+            await GenericDao<OrderLineItem>.Instance.UpdateAsync(orderLineItem);
+        }
+
 
         public IQueryable<OrderLineItem> GetQueryable()
         {
