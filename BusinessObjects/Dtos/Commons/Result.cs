@@ -135,7 +135,8 @@ public enum AuctionStatus
     Rejected,
     Approved,
     OnGoing,
-    Finished
+    Finished,
+    Cancelled
 }
 
 public enum TransactionType

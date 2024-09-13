@@ -590,7 +590,7 @@ namespace Services.Emails
         {
             try
             {
-                var auction = await _auctionRepository.GetAuction(auctionId);
+                var auction = await _auctionRepository.GetAuction(auctionId, true);
                 if (auction is null)
                 {
                     return false;
