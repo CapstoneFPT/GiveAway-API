@@ -44,8 +44,8 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType<PaginationResponse<OrderListResponse>>((int) HttpStatusCode.OK)]
-        [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+        [ProducesResponseType<PaginationResponse<OrderListResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetOrders(
             [FromQuery] OrderRequest orderRequest)
         {
@@ -65,12 +65,12 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{orderId}/orderlineitems")]
-        [ProducesResponseType<PaginationResponse<OrderLineItemListResponse>>((int) HttpStatusCode.OK)]
-        [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+        [ProducesResponseType<PaginationResponse<OrderLineItemListResponse>>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult>
             GetOrderLineItemByOrderId([FromRoute] Guid orderId, [FromQuery] OrderLineItemRequest request)
         {
-            var result = await _orderService.GetOrderLineItemByOrderId(orderId,request);
+            var result = await _orderService.GetOrderLineItemByOrderId(orderId, request);
 
             if (!result.IsSuccessful)
             {
@@ -85,7 +85,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{orderId}")]
-        [ProducesResponseType<OrderDetailedResponse>((int) HttpStatusCode.OK)]
+        [ProducesResponseType<OrderDetailedResponse>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
         public async Task<IActionResult> GetOrderById([FromRoute] Guid orderId)
@@ -96,7 +96,8 @@ namespace WebApi.Controllers
             {
                 return result.Error switch
                 {
-                    ErrorCode.NotFound => NotFound(new ErrorResponse("Order not found", ErrorType.ApiError, HttpStatusCode.NotFound, result.Error)),
+                    ErrorCode.NotFound => NotFound(new ErrorResponse("Order not found", ErrorType.ApiError,
+                        HttpStatusCode.NotFound, result.Error)),
                     _ => StatusCode(500,
                         new ErrorResponse("Error fetching order", ErrorType.ApiError,
                             HttpStatusCode.InternalServerError, result.Error))
@@ -106,7 +107,6 @@ namespace WebApi.Controllers
             return Ok(result.Value);
         }
 
-        
 
         [HttpPut("{OrderId}/cancel")]
         public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid OrderId)
@@ -119,7 +119,6 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        
 
         [HttpPost("{orderId}/pay/vnpay")]
         public async Task<ActionResult<VnPayPurchaseResponse>> PurchaseOrder([FromRoute] Guid orderId,
@@ -249,10 +248,12 @@ namespace WebApi.Controllers
             {
                 throw new BalanceIsNotEnoughException(ErrorCode.PaymentFailed);
             }
+
             foreach (var orderDetail in order.OrderLineItems)
             {
                 orderDetail.PaymentDate = DateTime.UtcNow;
             }
+
             order.Status = OrderStatus.Pending;
             order.Member!.Balance -= order.TotalPrice;
 
@@ -267,7 +268,6 @@ namespace WebApi.Controllers
                 { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
         }
 
-      
 
         [HttpPut("{orderId}/cancelbyadmin")]
         public async Task<ActionResult<Result<string>>> CancelOrderByAdmin([FromRoute] Guid orderId)
@@ -279,6 +279,29 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+
+        // [HttpPatch("{orderId}/update-address")]
+        // [ProducesResponseType<OrderDetailedResponse>((int)HttpStatusCode.OK)]
+        // public async Task<IActionResult> UpdateAddress([FromRoute] Guid orderId,
+        //     [FromBody] UpdateOrderAddressRequest request)
+        // {
+        //     DotNext.Result<OrderDetailedResponse, ErrorCode> result =
+        //         await _orderService.CheckoutAuctionOrder(orderId, request);
+        //
+        //     if (!result.IsSuccessful)
+        //     {
+        //         return result.Error switch
+        //         {
+        //             ErrorCode.UnsupportedShipping => StatusCode(400,
+        //                 new ErrorResponse("Shipping is not supported for this address", ErrorType.ShippingError,
+        //                     HttpStatusCode.BadRequest, ErrorCode.UnsupportedShipping)),
+        //             _ => StatusCode(500, new ErrorResponse("Unexpected error from server", ErrorType.ApiError,
+        //                 HttpStatusCode.InternalServerError, ErrorCode.ServerError))
+        //         };
+        //     }
+        //
+        //     return Ok(result.Value);
+        // }
 
         [HttpGet("calculate-shipping-fee")]
         [ProducesResponseType<ShippingFeeResult>((int)HttpStatusCode.OK)]
@@ -295,7 +318,9 @@ namespace WebApi.Controllers
                     ErrorCode.ExternalServiceError => StatusCode(500,
                         new ErrorResponse("External Service Error", ErrorType.ApiError,
                             HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError)),
-                    ErrorCode.UnsupportedShipping => StatusCode(400, new ErrorResponse("Shipping is not supported for this address",ErrorType.ShippingError,HttpStatusCode.BadRequest,ErrorCode.UnsupportedShipping)),
+                    ErrorCode.UnsupportedShipping => StatusCode(400,
+                        new ErrorResponse("Shipping is not supported for this address", ErrorType.ShippingError,
+                            HttpStatusCode.BadRequest, ErrorCode.UnsupportedShipping)),
                     _ => StatusCode(500,
                         new ErrorResponse("Unexpected error from server", ErrorType.ApiError,
                             HttpStatusCode.InternalServerError, ErrorCode.ServerError))

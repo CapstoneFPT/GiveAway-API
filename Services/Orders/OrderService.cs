@@ -170,6 +170,60 @@ public class OrderService : IOrderService
         }
     }
 
+    public async Task<Result<OrderDetailedResponse, ErrorCode>> CheckoutAuctionOrder(Guid orderId,
+        UpdateOrderAddressRequest request)
+    {
+        var toBeUpdated = await _orderRepository.GetQueryable()
+            .Include(x=>x.Member)
+            .Include(x=>x.Bid)
+            .ThenInclude(bid=>bid.Auction)
+            .Include(x=>x.OrderLineItems).FirstOrDefaultAsync(x => x.OrderId == orderId);
+
+        if (toBeUpdated == null)
+        {
+            return new Result<OrderDetailedResponse, ErrorCode>(ErrorCode.ServerError);
+        }
+
+        toBeUpdated.Address = request.Address;
+        toBeUpdated.GhnDistrictId = request.GhnDistrictId;
+        toBeUpdated.GhnWardCode = request.GhnWardCode;
+        toBeUpdated.GhnProvinceId = request.GhnProvinceId;
+        toBeUpdated.AddressType = request.AddressType;
+        toBeUpdated.Phone = request.Phone;
+        toBeUpdated.ShippingFee = request.ShippingFee;
+        toBeUpdated.RecipientName = request.RecipientName;
+        toBeUpdated.Status = OrderStatus.Pending;
+        toBeUpdated.OrderLineItems.First().PaymentDate = DateTime.UtcNow;
+        var result = await _orderRepository.UpdateOrder(toBeUpdated);
+        return new Result<OrderDetailedResponse, ErrorCode>(new OrderDetailedResponse()
+        {
+            Address = toBeUpdated.Address,
+            AddressType = toBeUpdated.AddressType ?? 0,
+            CompletedDate = toBeUpdated.CompletedDate ?? DateTime.MinValue,
+            Discount = toBeUpdated.Discount,
+            CreatedDate = toBeUpdated.CreatedDate,
+            Quantity = 1,
+            Email = toBeUpdated.Email ?? "N/A",
+            Phone = toBeUpdated.Phone ?? "N/A",
+            Status = toBeUpdated.Status,
+            MemberId = toBeUpdated.MemberId ?? Guid.Empty,
+            OrderCode = toBeUpdated.OrderCode,
+            PaymentMethod = toBeUpdated.PaymentMethod,
+            PurchaseType = toBeUpdated.PurchaseType,
+            ShippingFee = toBeUpdated.ShippingFee,
+            PaymentDate = toBeUpdated.OrderLineItems.First().PaymentDate ?? DateTime.MinValue,
+            TotalPrice = toBeUpdated.TotalPrice,
+            Subtotal = toBeUpdated.OrderLineItems.Sum(x=>x.UnitPrice),
+            AuctionTitle = toBeUpdated.Bid.Auction.Title ?? "N/A",
+            CustomerName = toBeUpdated.Member.Fullname ?? "N/A",
+            BidId = toBeUpdated.BidId ?? Guid.Empty,
+            OrderId = toBeUpdated.OrderId,
+            BidAmount = toBeUpdated.Bid.Amount,
+            ReciepientName = toBeUpdated.RecipientName ?? "N/A",
+            BidCreatedDate = toBeUpdated.Bid.CreatedDate
+        });
+    }
+
     public async Task<List<Order>> GetOrdersToCancel()
     {
         var oneDayAgo = DateTime.UtcNow.AddDays(-1);
@@ -254,7 +308,7 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateOrder(order);
     }
 
-    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>,ErrorCode>> GetOrdersByAccountId(
+    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrdersByAccountId(
         Guid accountId,
         OrderRequest request)
     {
@@ -278,10 +332,11 @@ public class OrderService : IOrderService
             Quantity = order.OrderLineItems.Count,
             AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
             ShippingFee = order.ShippingFee,
-            Discount = order.Discount
+            Discount = order.Discount,
+            IsAuctionOrder = order.BidId != null
         };
 
-        
+
         if (request.Status != null)
         {
             predicate = predicate.And(order => order.Status == request.Status);
@@ -655,6 +710,7 @@ public class OrderService : IOrderService
             ];
             return response;
         }
+
         var listItem = await _fashionItemRepository.GetIndividualQueryable()
             .Where(c => request.ItemIds.Contains(c.ItemId)).ToListAsync();
         var isMember = await _accountRepository.FindUserByPhone(request.Phone);
@@ -685,11 +741,12 @@ public class OrderService : IOrderService
             orderLineItem.PaymentDate = DateTime.UtcNow;
             orderLineItem.IndividualFashionItemId = item.ItemId;
             listOrderLineItem.Add(orderLineItem);
-            
+
             item.Status = FashionItemStatus.Refundable;
             await _fashionItemRepository.UpdateFashionItem(item);
             await _orderLineItemRepository.CreateOrderLineItem(orderLineItem);
         }
+
         var orderTransaction = new Transaction()
         {
             OrderId = order.OrderId,
@@ -747,14 +804,14 @@ public class OrderService : IOrderService
         order.Status = OrderStatus.Completed;
         order.CompletedDate = DateTime.UtcNow;
 
-        var orderLineItems = order.OrderLineItems; 
+        var orderLineItems = order.OrderLineItems;
         foreach (var item in orderLineItems)
         {
             item.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
             item.PaymentDate = DateTime.UtcNow;
             item.IndividualFashionItem.Status = FashionItemStatus.Refundable;
         }
-        
+
         await _orderRepository.UpdateOrder(order);
 
         var shop = await _shopRepository.GetSingleShop(x => x.ShopId == shopId);
@@ -783,7 +840,7 @@ public class OrderService : IOrderService
             CreatedDate = order.CreatedDate,
             Address = order.Address ?? "N/A",
             TotalPrice = order.TotalPrice,
-            CompletedDate = order.CompletedDate ,
+            CompletedDate = order.CompletedDate,
             Phone = order.Phone ?? "N/A",
             ReciepientName = order.RecipientName ?? "N/A",
             PurchaseType = order.PurchaseType,
@@ -791,7 +848,7 @@ public class OrderService : IOrderService
             Discount = order.Discount,
             ShippingFee = order.ShippingFee,
             PaymentDate = order.CreatedDate,
-            Subtotal = order.OrderLineItems.Sum(x=>x.UnitPrice * x.Quantity),
+            Subtotal = order.OrderLineItems.Sum(x => x.UnitPrice * x.Quantity),
         };
         return response;
     }
@@ -850,21 +907,21 @@ public class OrderService : IOrderService
         orderDetail.IndividualFashionItem.Status = itemStatus.ItemStatus;
         if (order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
-            foreach (var detail in order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
+            foreach (var detail in order.OrderLineItems.Where(c =>
+                         c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
             {
                 detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
                 await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId);
                 // gui mail thong bao 
             }
-
-            
         }
 
-        if (order.OrderLineItems.All(it => it.IndividualFashionItem.Status != FashionItemStatus.PendingForOrder) && 
+        if (order.OrderLineItems.All(it => it.IndividualFashionItem.Status != FashionItemStatus.PendingForOrder) &&
             order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
             order.Status = OrderStatus.Cancelled;
         }
+
         if (order.PaymentMethod == PaymentMethod.COD)
         {
             await _emailService.SendEmailOrder(order);
@@ -877,10 +934,10 @@ public class OrderService : IOrderService
                 orderLineItem.IndividualFashionItem.Status = FashionItemStatus.OnDelivery;
             }
         }
+
         if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
-            
         }
 
         if (order.Status.Equals(OrderStatus.Cancelled) && !order.PaymentMethod.Equals(PaymentMethod.COD))

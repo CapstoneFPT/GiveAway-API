@@ -167,7 +167,7 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/orders")]
-    [ProducesResponseType<PaginationResponse<OrderResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<PaginationResponse<OrderListResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> GetOrdersByAccountId(
         [FromRoute] Guid accountId, [FromQuery] OrderRequest request)

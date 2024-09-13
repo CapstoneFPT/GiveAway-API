@@ -43,5 +43,6 @@ namespace Services.Orders
 
         Task<Result<OrderDetailedResponse,ErrorCode>> GetDetailedOrder(Guid orderId);
         Task<DotNext.Result<PaginationResponse<OrderLineItemListResponse>,ErrorCode>> GetOrderLineItemByOrderId(Guid orderId,OrderLineItemRequest request);
+        Task<Result<OrderDetailedResponse,ErrorCode>> CheckoutAuctionOrder(Guid orderId, UpdateOrderAddressRequest request);
     }
 }

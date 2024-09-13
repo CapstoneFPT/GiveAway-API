@@ -59,5 +59,6 @@ namespace BusinessObjects.Dtos.Orders
         public PurchaseType PurchaseType { get; set; }
         public OrderStatus Status { get; set; }
         public string AuctionTitle { get; set; }
+        public bool IsAuctionOrder { get; set; }
     }
 }
