@@ -518,9 +518,9 @@ namespace Services.Auctions
 
             var items = await query
                 .Where(predicate)
+                .OrderByDescending(bid => bid.CreatedDate)
                 .Skip(PaginationUtils.GetSkip(request.PageNumber, request.PageSize))
                 .Take(PaginationUtils.GetTake(request.PageSize))
-                .OrderByDescending(bid => bid.CreatedDate)
                 .Select(bid => new BidListResponse()
                 {
                     AuctionId = bid.AuctionId,
