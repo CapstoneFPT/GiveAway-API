@@ -111,6 +111,7 @@ namespace Services.Auctions
 
             var result = await _auctionRepository.CreateAuction(auction);
             await _auctionItemRepository.UpdateAuctionItemStatus(auctionItem.ItemId, FashionItemStatus.PendingAuction);
+            await ScheduleAuctionStart(result);
             return result;
         }
 
@@ -438,11 +439,11 @@ namespace Services.Auctions
                 throw new AuctionNotFoundException();
             }
 
-            await ScheduleAuctionStartAndEnd(result);
+            await ScheduleAuctionEnd(result);
             return result;
         }
 
-        private async Task ScheduleAuctionStartAndEnd(AuctionDetailResponse auction)
+        private async Task ScheduleAuctionStart(AuctionDetailResponse auction)
         {
             var scheduler = await _schedulerFactory.GetScheduler();
             var jobDataMap = new JobDataMap()
@@ -461,6 +462,14 @@ namespace Services.Auctions
                 .Build();
 
             await scheduler.ScheduleJob(startJob, startTrigger);
+        }
+        private async Task ScheduleAuctionEnd(AuctionDetailResponse auction)
+        {
+            var scheduler = await _schedulerFactory.GetScheduler();
+            var jobDataMap = new JobDataMap()
+            {
+                { "AuctionId", auction.AuctionId }
+            };
 
             var endJob = JobBuilder.Create<AuctionEndingJob>()
                 .WithIdentity($"EndAuction_{auction.AuctionId}")
