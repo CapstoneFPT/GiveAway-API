@@ -36,6 +36,11 @@ public class ConsignSaleLineItemRepository : IConsignSaleLineItemRepository
        return GenericDao<ConsignSaleLineItem>.Instance.GetQueryable(); 
     }
 
+    public async Task AddConsignSaleLineItem(ConsignSaleLineItem consignSaleLineItem)
+    {
+        await GenericDao<ConsignSaleLineItem>.Instance.AddAsync(consignSaleLineItem);
+    }
+
     public async Task<ConsignSaleLineItem?> GetSingleConsignSaleLineItem(Expression<Func<ConsignSaleLineItem, bool>> predicate)
     {
         var result = await GenericDao<ConsignSaleLineItem>.Instance

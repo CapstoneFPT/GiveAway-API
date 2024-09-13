@@ -264,93 +264,10 @@ namespace Repositories.ConsignSales
             return _mapper.Map<ConsignSaleDetailedResponse>(consign);
         }
 
-        public async Task<ConsignSaleDetailedResponse> CreateConsignSaleByShop(Guid shopId,
-            CreateConsignSaleByShopRequest request)
+        public async Task<ConsignSale> CreateConsignSaleByShop(
+            ConsignSale consignSale)
         {
-            //tao moi 1 consign
-            var memberId = await GenericDao<Account>.Instance.GetQueryable()
-                .Where(c => c.Phone.Equals(request.Phone)).Select(x => x.AccountId)
-                .FirstOrDefaultAsync();
-            ConsignSale newConsign = new ConsignSale()
-            {
-                Type = request.Type,
-                CreatedDate = DateTime.UtcNow,
-                
-                ShopId = shopId,
-                Status = ConsignSaleStatus.Processing,
-                ConsignSaleMethod = ConsignSaleMethod.Offline,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddMinutes(5),
-                TotalPrice = request.fashionItemForConsigns.Sum(c => c.ConfirmedPrice),
-                SoldPrice = 0,
-                ConsignorReceivedAmount = 0,
-                ConsignSaleCode = await GenerateUniqueString(),
-            };
-            if (memberId != Guid.Empty)
-            {
-                newConsign.MemberId = memberId;
-            }
-            else
-            {
-                newConsign.ConsignorName = request.Consigner;
-                newConsign.Address = request.Address;
-                newConsign.Phone = request.Phone;
-                newConsign.Email = request.Email;
-            }
-
-            await GenericDao<ConsignSale>.Instance.AddAsync(newConsign);
-
-            foreach (var item in request.fashionItemForConsigns)
-            {
-                var fashionItem = new IndividualFashionItem()
-                {
-                    SellingPrice = item.ConfirmedPrice,
-                    Note = item.Note,
-                    // ShopId = shopId,
-                    Status = FashionItemStatus.Unavailable,
-                };
-                switch (request.Type)
-                {
-                    case ConsignSaleType.ConsignedForSale:
-                        fashionItem.Type = FashionItemType.ConsignedForSale;
-                        break;
-                    case ConsignSaleType.ConsignedForAuction:
-                        fashionItem.Type = FashionItemType.ConsignedForAuction;
-                        break;
-                    default:
-                        fashionItem.Type = FashionItemType.ItemBase;
-                        break;
-                }
-
-                await GenericDao<IndividualFashionItem>.Instance.AddAsync(fashionItem);
-
-                //them image tuong ung voi moi mon do
-                for (int i = 0; i < item.Images.Length; i++)
-                {
-                    Image img = new Image()
-                    {
-                        IndividualFashionItemId = fashionItem.ItemId,
-                        Url = item.Images[i]
-                    };
-                    await GenericDao<Image>.Instance.AddAsync(img);
-                }
-
-
-                //tao moi consigndetail tuong ung voi mon do
-                ConsignSaleLineItem consignLineItem = new ConsignSaleLineItem()
-                {
-                    ConfirmedPrice = item.ConfirmedPrice,
-                    DealPrice = 0,
-                    ConsignSaleId = newConsign.ConsignSaleId
-                };
-                await GenericDao<ConsignSaleLineItem>.Instance.AddAsync(consignLineItem);
-            }
-
-
-            var consignResponse = await GenericDao<ConsignSale>.Instance.GetQueryable()
-                .ProjectTo<ConsignSaleDetailedResponse>(_mapper.ConfigurationProvider)
-                .Where(c => c.ConsignSaleId == newConsign.ConsignSaleId)
-                .FirstOrDefaultAsync();
+            var consignResponse = await GenericDao<ConsignSale>.Instance.AddAsync(consignSale);
             return consignResponse;
         }
 

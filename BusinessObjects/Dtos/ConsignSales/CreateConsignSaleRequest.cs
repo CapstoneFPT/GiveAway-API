@@ -35,10 +35,13 @@ namespace BusinessObjects.Dtos.ConsignSales
     public class CreateConsignSaleByShopRequest
     {
         public ConsignSaleType Type { get; set; }
-        public string? Consigner { get; set; }
+        public string? ConsignorName { get; set; }
         public required string Phone { get; set; }
         public string? Address { get; set; }
         [EmailAddress] public string? Email { get; set; }
-        public List<AddFashionItemForConsignByShop> fashionItemForConsigns { get; set; } = new List<AddFashionItemForConsignByShop>();
+        [Required]
+        [MinLength(1, ErrorMessage = "You must add at least 1 fashion item")]
+        public List<CreateConsignDetailOfflineRequest> ConsignDetailRequests { get; set; } =
+            new List<CreateConsignDetailOfflineRequest>();
     }
 }

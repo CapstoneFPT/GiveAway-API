@@ -21,7 +21,7 @@ namespace Repositories.ConsignSales
         Task<ConsignSaleDetailedResponse> ApprovalConsignSale(Guid consignId, ApproveConsignSaleRequest request);
         Task<List<ConsignSale>> GetAllConsignPendingByAccountId(Guid accountId, bool isTracking = false);
         Task<ConsignSaleDetailedResponse> ConfirmReceivedFromShop(Guid consignId);
-        Task<ConsignSaleDetailedResponse> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
+        Task<ConsignSale> CreateConsignSaleByShop(ConsignSale consignSale);
 
         Task<PaginationResponse<ConsignSaleDetailedResponse>> GetAllConsignSaleByShopId(
             ConsignSaleRequestForShop request);
@@ -36,5 +36,6 @@ namespace Repositories.ConsignSales
             int? requestPage, int? requestPageSize);
 
         IQueryable<ConsignSale> GetQueryable();
+        Task<string> GenerateUniqueString();
     }
 }
