@@ -132,9 +132,9 @@ namespace WebApi.Controllers
                 throw new OrderNotFoundException();
             }
 
-            if (order.PaymentMethod != PaymentMethod.QRCode)
+            if (order.PaymentMethod != PaymentMethod.Banking)
             {
-                throw new WrongPaymentMethodException("Order is not paid by QRCode");
+                throw new WrongPaymentMethodException("Order is not paid by Banking");
             }
 
             if (order.Status != OrderStatus.AwaitingPayment)
@@ -200,7 +200,7 @@ namespace WebApi.Controllers
 
                         await _orderService.UpdateOrder(order);
                         await _orderService.UpdateFashionItemStatus(order.OrderId);
-                        await _orderService.UpdateAdminBalance(order);
+                        // await _orderService.UpdateAdminBalance(order);
                         await _emailService.SendEmailOrder(order);
 
                         return Redirect("https://giveawayproject.jettonetto.org");
@@ -245,6 +245,10 @@ namespace WebApi.Controllers
                 throw new NotAuthorizedToPayOrderException();
             }
 
+            if (order.Member!.Balance < order.TotalPrice)
+            {
+                throw new BalanceIsNotEnoughException(ErrorCode.PaymentFailed);
+            }
             foreach (var orderDetail in order.OrderLineItems)
             {
                 orderDetail.PaymentDate = DateTime.UtcNow;

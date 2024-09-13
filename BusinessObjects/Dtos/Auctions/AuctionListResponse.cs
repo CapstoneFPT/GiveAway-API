@@ -10,8 +10,12 @@ public class AuctionListResponse
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public decimal DepositFee { get; set; }
+    public string AuctionCode { get; set; }
+    public string ItemCode { get; set; }
+    public decimal? SucessfulBidAmount { get; set; }
     public AuctionStatus Status { get; set; }
     public string ImageUrl { get; set; }
     public Guid ShopId { get; set; }
     public Guid AuctionItemId { get; set; }
+    public bool? IsWon { get; set; }
 }

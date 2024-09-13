@@ -14,7 +14,40 @@ namespace Repositories.Bids
 {
     public class BidRepository : IBidRepository
     {
-     
+        private const string Prefix = "BID";
+        private static Random _random = new();
+        private readonly GiveAwayDbContext _giveAwayDbContext;
+
+        public BidRepository(GiveAwayDbContext giveAwayDbContext)
+        {
+            _giveAwayDbContext = giveAwayDbContext;
+        }
+
+        public async Task<string> GenerateUniqueString()
+        {
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                string code = GenerateCode();
+                bool isCodeExisted = await _giveAwayDbContext.Recharges.AnyAsync(r => r.RechargeCode == code);
+
+                if (!isCodeExisted)
+                {
+                    return code;
+                }
+
+                await Task.Delay(100 * (int)Math.Pow(2, attempt));
+            }
+
+            throw new Exception("Failed to generate unique code after multiple attempts");
+        }
+
+        private static string GenerateCode()
+        {
+            string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            string randomString = _random.Next(1000, 9999).ToString();
+            return $"{Prefix}-{timestamp}-{randomString}";
+        }
+
         public async Task<BidDetailResponse?> CreateBid(Guid id, CreateBidRequest request)
         {
             var auction = await GenericDao<Auction>.Instance.GetQueryable().Include(x => x.IndividualAuctionFashionItem)
@@ -67,6 +100,7 @@ namespace Repositories.Bids
                 MemberId = request.MemberId,
                 AuctionId = id,
                 IsWinning = true,
+                BidCode = await GenerateUniqueString(),
                 CreatedDate = DateTime.UtcNow
             };
 
@@ -104,7 +138,8 @@ namespace Repositories.Bids
                     Id = x.BidId,
                     MemberId = x.MemberId,
                     CreatedDate = x.CreatedDate,
-                    IsWinning = x.IsWinning
+                    IsWinning = x.IsWinning,
+                    BidCode = x.BidCode
                 })
                 .ToListAsync();
 
@@ -140,5 +175,11 @@ namespace Repositories.Bids
 
             return result;
         }
+
+        public IQueryable<Bid> GetQueryable()
+        {
+            return _giveAwayDbContext.Bids.AsQueryable();
+        }
+    
     }
 }

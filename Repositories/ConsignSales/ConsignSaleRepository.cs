@@ -110,8 +110,8 @@ namespace Repositories.ConsignSales
             var count = await query.CountAsync();
             query = query
                 .OrderByDescending(c => c.CreatedDate)
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
+                .Skip(((request.PageNumber ?? 1) - 1) * request.PageSize ?? 0)
+                .Take(request.PageSize ?? int.MaxValue);
 
             var items = await query
                 .ProjectTo<ConsignSaleDetailedResponse>(_mapper.ConfigurationProvider)
@@ -120,10 +120,10 @@ namespace Repositories.ConsignSales
             var result = new PaginationResponse<ConsignSaleDetailedResponse>
             {
                 Items = items,
-                PageSize = request.PageSize,
+                PageSize = request.PageSize ?? -1,
                 TotalCount = count,
                 SearchTerm = request.ConsignSaleCode,
-                PageNumber = request.PageNumber,
+                PageNumber = request.PageNumber ?? -1,
             };
             return result;
         }
@@ -459,6 +459,11 @@ namespace Repositories.ConsignSales
             }
 
             return (items, page, pageSize, count);
+        }
+
+        public IQueryable<ConsignSale> GetQueryable()
+        {
+            return _giveAwayDbContext.ConsignSales.AsQueryable();
         }
 
         /*public async Task<bool> UpdateConsignSaleToOnSale(Guid fashionItemId)

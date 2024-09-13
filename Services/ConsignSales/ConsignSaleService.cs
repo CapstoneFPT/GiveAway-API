@@ -22,6 +22,7 @@ using Repositories.FashionItems;
 using Repositories.Images;
 using Repositories.Orders;
 using Repositories.Schedules;
+using Repositories.Utils;
 using Services.Emails;
 
 namespace Services.ConsignSales
@@ -103,7 +104,7 @@ namespace Services.ConsignSales
 
             var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
             // await ScheduleConsignEnding(result);
-            await _emailService.SendEmailConsignSaleReceived(consignId);
+            // await _emailService.SendEmailConsignSaleReceived(consignId);
             response.Data = result;
             response.Messages = ["Confirm received successfully"];
             response.ResultStatus = ResultStatus.Success;
@@ -191,23 +192,73 @@ namespace Services.ConsignSales
             return response;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleDetailedResponse>>>
+        private Expression<Func<ConsignSale, bool>> GetPredicate(ConsignSaleRequest request)
+        {
+            Expression<Func<ConsignSale, bool>> predicate = x => true;
+            if (request.Status != null)
+                predicate = predicate.And(sale => sale.Status == request.Status);
+
+            if (request.Type != null)
+                predicate = predicate.And(sale => sale.Type == request.Type);
+
+            if (request.StartDate != null)
+                predicate = predicate.And(sale => sale.StartDate >= request.StartDate);
+
+            if (request.EndDate != null)
+                predicate = predicate.And(sale => sale.EndDate <= request.EndDate);
+            
+            if(request.ConsignSaleCode != null)
+                predicate = predicate.And(sale => EF.Functions.ILike(sale.ConsignSaleCode, $"%{ request.ConsignSaleCode}%"));
+            
+
+            return predicate;
+        }
+
+        public async Task<DotNext.Result<PaginationResponse<ConsignSaleListResponse>,ErrorCode>>
             GetAllConsignSales(Guid accountId,
                 ConsignSaleRequest request)
         {
-            var response = new BusinessObjects.Dtos.Commons.Result<PaginationResponse<ConsignSaleDetailedResponse>>();
-            var listConsign = await _consignSaleRepository.GetAllConsignSale(accountId, request);
-            if (listConsign == null)
-            {
-                response.Messages = ["You don't have any consignment"];
-                response.ResultStatus = ResultStatus.Success;
-                return response;
-            }
+            var query = _consignSaleRepository.GetQueryable();
+            Expression<Func<ConsignSale, bool>> predicate = sale => sale.MemberId == accountId;
+            predicate = predicate.And(GetPredicate(request));
 
-            response.Data = listConsign;
-            response.Messages = ["There are " + listConsign.TotalCount + " consignment"];
-            response.ResultStatus = ResultStatus.Success;
-            return response;
+            var count = await query.Where(predicate).CountAsync();
+
+            var result = await
+                query.Where(predicate
+                    ).OrderByDescending(x => x.CreatedDate)
+                    .Skip(PaginationUtils.GetSkip(request.PageNumber,request.PageSize))
+                    .Take(PaginationUtils.GetTake(request.PageSize))
+                    .Select(x => new ConsignSaleListResponse()
+                    {
+                        CreatedDate = x.CreatedDate,
+                        ConsignSaleCode = x.ConsignSaleCode,
+                        MemberId = x.MemberId,
+                        EndDate = x.EndDate,
+                        ShopId = x.ShopId,
+                        ConsignSaleMethod = x.ConsignSaleMethod,
+                        MemberReceivedAmount = x.ConsignorReceivedAmount,
+                        Address = x.Address,
+                        Type = x.Type,
+                        StartDate = x.StartDate,
+                        TotalPrice = x.TotalPrice,
+                        ConsignSaleId = x.ConsignSaleId,
+                        Status = x.Status,
+                        SoldPrice = x.SoldPrice,
+                        Email = x.Email,
+                        Phone = x.Phone,
+                        Consginor = x.ConsignorName
+                    })
+                    .ToListAsync();
+
+            return new DotNext.Result<PaginationResponse<ConsignSaleListResponse>,ErrorCode>(
+                new PaginationResponse<ConsignSaleListResponse>()
+                {
+                    PageNumber = request.PageNumber ?? -1,
+                    PageSize = request.PageSize ?? -1,
+                    TotalCount = count,
+                    Items = result
+                });
         }
 
         public async Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(
@@ -395,7 +446,8 @@ namespace Services.ConsignSales
             var consignSaleLineItem =
                 await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(c =>
                     c.ConsignSaleLineItemId == consignLineItemId);
-            if (consignSaleLineItem is null || !consignSaleLineItem.Status.Equals(ConsignSaleLineItemStatus.Received))
+            if (consignSaleLineItem is null ||
+                !consignSaleLineItem.Status.Equals(ConsignSaleLineItemStatus.ReadyForConsignSale))
             {
                 throw new ConsignSaleLineItemNotFoundException();
             }
@@ -554,9 +606,15 @@ namespace Services.ConsignSales
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
             CreateIndividualAfterNegotiation(Guid consignLineItemId, CreateIndividualAfterNegotiationRequest request)
         {
-            Expression<Func<ConsignSaleLineItem, bool>> predicate = consignsaledetail =>
-                consignsaledetail.ConsignSaleLineItemId == consignLineItemId;
-            var consignSaleDetail = await _consignSaleLineItemRepository.GetSingleConsignSaleLineItem(predicate);
+            Expression<Func<ConsignSale, bool>> predicate = consignsale =>
+                consignsale.ConsignSaleLineItems.Any(c => c.ConsignSaleLineItemId == consignLineItemId);
+            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+            if (consignSale is null)
+            {
+                throw new ConsignSaleNotFoundException();
+            }
+            var consignSaleDetail =
+                consignSale.ConsignSaleLineItems.FirstOrDefault(c => c.ConsignSaleLineItemId == consignLineItemId);
             if (consignSaleDetail == null)
             {
                 throw new ConsignSaleLineItemNotFoundException();
@@ -580,8 +638,7 @@ namespace Services.ConsignSales
                 throw new MasterItemNotAvailableException("You can not choose master in stock");
             }
 
-            itemMaster.StockCount += 1;
-            await _fashionItemRepository.UpdateMasterItem(itemMaster);
+            
             var individualItem = new IndividualFashionItem()
             {
                 Note = consignSaleDetail.Note,
@@ -595,11 +652,13 @@ namespace Services.ConsignSales
                 Color = consignSaleDetail.Color,
                 Size = consignSaleDetail.Size
             };
+            
             switch (consignSaleDetail.ConsignSale.Type)
             {
                 case ConsignSaleType.ForSale:
                     individualItem.Type = FashionItemType.ItemBase;
                     individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
+                    
                     break;
                 case ConsignSaleType.ConsignedForAuction:
                     individualItem = new IndividualAuctionFashionItem()
@@ -612,17 +671,20 @@ namespace Services.ConsignSales
                         Status = FashionItemStatus.PendingForConsignSale,
                         ConsignSaleLineItemId = consignLineItemId,
                         Type = FashionItemType.ConsignedForAuction,
+                        Condition = consignSaleDetail.Condition,
+                        Color = consignSaleDetail.Color,
+                        Size = consignSaleDetail.Size,
                         InitialPrice = consignSaleDetail.ConfirmedPrice,
                         SellingPrice = 0,
                     };
+                    
                     break;
                 case ConsignSaleType.ConsignedForSale:
                     individualItem.Type = FashionItemType.ConsignedForSale;
                     individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
+                    
                     break;
             }
-
-            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
             individualItem.Images = consignSaleDetail.Images
                 .Select(x => new Image()
                 {
@@ -630,9 +692,28 @@ namespace Services.ConsignSales
                     CreatedDate = DateTime.UtcNow,
                     IndividualFashionItemId = individualItem.ItemId
                 }).ToList();
-            await _fashionItemRepository.AddInvidualFashionItem(individualItem);
-
-
+            
+            consignSaleDetail.IndividualFashionItem = individualItem;
+            
+            var listItemInConsign = consignSale.ConsignSaleLineItems
+                .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale && c.IndividualFashionItem != null)
+                .Select(c => c.IndividualFashionItem).ToList();
+            if (listItemInConsign.Count ==
+                consignSale.ConsignSaleLineItems.Count(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale))
+            {
+                foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
+                {
+                    consignSaleLineItem.Status = ConsignSaleLineItemStatus.OnSale;
+                    consignSaleLineItem.IndividualFashionItem.Status = FashionItemStatus.Available;
+                }
+                
+                consignSale.Status = ConsignSaleStatus.OnSale;
+                consignSale.StartDate = DateTime.UtcNow;
+                consignSale.EndDate = DateTime.UtcNow.AddDays(60);
+                await _emailService.SendEmailConsignSaleReceived(consignSale);
+            }
+            await _consignSaleRepository.UpdateConsignSale(consignSale);
+            
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
             {
                 Data = new ConsignSaleLineItemResponse()
@@ -997,6 +1078,7 @@ namespace Services.ConsignSales
             {
                 consignSale.Status = ConsignSaleStatus.ReadyToSale;
             }
+
             await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
 
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()

@@ -13,7 +13,7 @@ public enum ResultStatus
     NotFound,
     Duplicated,
     Error,
-    
+
 }
 
 public enum Roles
@@ -31,11 +31,20 @@ public enum AccountStatus
     NotVerified
 }
 
+public enum RechargeStatus
+{
+    Pending,
+    Completed,
+    Failed,
+    Cancelled
+}
+
 public enum FashionItemStatus
 {
     Available,
     Unavailable,
     OnDelivery,
+    ReadyForDelivery,
     Sold,
     UnSold,
     Reserved,
@@ -46,6 +55,7 @@ public enum FashionItemStatus
     PendingForRefund,
     PendingForOrder,
     AwaitingAuction,
+    AwaitingReturn,
     Bidding,
     Rejected,
     Returned,
@@ -125,18 +135,21 @@ public enum AuctionStatus
     Rejected,
     Approved,
     OnGoing,
-    Finished
+    Finished,
+    Cancelled
 }
 
 public enum TransactionType
 {
-    AuctionDeposit,
-    Withdraw,
+    
     Purchase,
-    Refund,
-    Recharge,
-    Payout,
-    Sale
+    CustomerSale,
+    AddFund,
+    Withdraw,
+    RefundProduct,
+    AuctionDeposit,
+    ConsignPayout,
+    RefundAuctionDeposit
 }
 
 public enum WithdrawStatus
@@ -195,7 +208,7 @@ public enum PaymentMethod
 {
     COD,
     Point,
-    QRCode,
+    Banking,
     Cash
 }
 

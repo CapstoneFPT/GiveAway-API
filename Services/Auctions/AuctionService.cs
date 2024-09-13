@@ -11,10 +11,12 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
+using Repositories.Accounts;
 using Repositories.AuctionDeposits;
 using Repositories.AuctionItems;
 using Repositories.Auctions;
@@ -22,7 +24,9 @@ using Repositories.Bids;
 using Repositories.OrderLineItems;
 using Repositories.Orders;
 using Repositories.Transactions;
+using Repositories.Utils;
 using Services.Accounts;
+using Services.Emails;
 using Services.Orders;
 using Services.Transactions;
 
@@ -39,13 +43,15 @@ namespace Services.Auctions
         private readonly ITransactionRepository _transactionRepository;
         private readonly IOrderRepository _orderRepository;
         private readonly ISchedulerFactory _schedulerFactory;
+        private readonly IEmailService _emailService;
+        private readonly IAccountRepository _accountRepository;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
             IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
             IAuctionItemRepository auctionItemRepository,
             IAccountService accountService,
             ITransactionRepository transactionRepository, IOrderRepository orderRepository,
-            ISchedulerFactory schedulerFactory)
+            ISchedulerFactory schedulerFactory, IEmailService emailService, IAccountRepository accountRepository)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
@@ -56,20 +62,65 @@ namespace Services.Auctions
             _transactionRepository = transactionRepository;
             _orderRepository = orderRepository;
             _schedulerFactory = schedulerFactory;
+            _emailService = emailService;
+            _accountRepository = accountRepository;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
         {
-            var result = await _auctionRepository.CreateAuction(request);
+            var auctionItemQuery = _auctionItemRepository.GetQueryable();
+
+            var auctionItem = await
+                auctionItemQuery
+                    .Where(x => x.ItemId == request.AuctionItemId)
+                    .FirstOrDefaultAsync();
+
+            if (auctionItem == null)
+            {
+                throw new AuctionItemNotFoundException();
+            }
+
+            if (auctionItem.Status != FashionItemStatus.Available)
+            {
+                throw new AuctionItemNotAvailableForAuctioningException();
+            }
+
+            if (await AuctionRepository.IsDateTimeOverlapped(request.StartTime, request.EndTime))
+            {
+                throw new ScheduledTimeOverlappedException();
+            }
+
+            if (auctionItem.InitialPrice == null)
+            {
+                throw new InvalidInitialPriceException("This item doesn't have an initial price");
+            }
+
+
+            var auction = new Auction()
+            {
+                EndDate = request.EndTime,
+                StartDate = request.StartTime,
+                Title = request.Title,
+                Status = AuctionStatus.Pending,
+                DepositFee = request.DepositFee,
+                IndividualAuctionFashionItemId = request.AuctionItemId,
+                ShopId = request.ShopId,
+                CreatedDate = DateTime.UtcNow,
+                StepIncrement = auctionItem.InitialPrice.Value * (request.StepIncrementPercentage / 100)
+            };
+
+            var result = await _auctionRepository.CreateAuction(auction);
+            await _auctionItemRepository.UpdateAuctionItemStatus(auctionItem.ItemId, FashionItemStatus.PendingAuction);
+            await ScheduleAuctionStart(result);
             return result;
         }
 
-        public async Task<Result<OrderResponse>> EndAuction(Guid id)
+        public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> EndAuction(Guid id)
         {
             var auction = await _auctionRepository.GetAuction(id);
             if (auction is null)
             {
-                return new Result<OrderResponse>()
+                return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.NotFound,
                     Messages = new[] { "Auction Not Found" }
@@ -78,7 +129,7 @@ namespace Services.Auctions
 
             if (auction.Status != AuctionStatus.OnGoing)
             {
-                return new Result<OrderResponse>()
+                return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.Error,
                     Messages = new[] { "Auction is not on going" }
@@ -89,7 +140,7 @@ namespace Services.Auctions
             if (winningBid is null)
             {
                 await _auctionRepository.UpdateAuctionStatus(auctionId: id, auctionStatus: AuctionStatus.Finished);
-                return new Result<OrderResponse>()
+                return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.Success, Messages = new[] { "No Bids" }
                 };
@@ -113,7 +164,7 @@ namespace Services.Auctions
 
             if (orderResult.ResultStatus != ResultStatus.Success)
             {
-                return new Result<OrderResponse>()
+                return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
                 {
                     ResultStatus = ResultStatus.Error,
                     Messages = new[] { "Failed to create order" }
@@ -122,7 +173,7 @@ namespace Services.Auctions
 
             await _auctionRepository.UpdateAuctionStatus(auctionId: id, auctionStatus: AuctionStatus.Finished);
 
-            return new Result<OrderResponse>()
+            return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
             {
                 ResultStatus = ResultStatus.Success,
                 Messages = new[] { "Auction Ended Successfully and Order Created" }, Data = orderResult.Data
@@ -148,25 +199,105 @@ namespace Services.Auctions
             return result;
         }
 
+        public async Task<Result<AuctionItemDetailResponse, ErrorCode>> GetAuctionItem(Guid id)
+        {
+            var query = _auctionRepository.GetQueryable();
+            var result = await query
+                .Where(x=>x.AuctionId == id)
+                .Select(x => x.IndividualAuctionFashionItem)
+                .Select(x => new AuctionItemDetailResponse()
+                {
+                    AuctionId = id,
+                    Brand = x.MasterItem.Brand,
+                    Status = x.Status,
+                    Images = x.Images.Select(image => image.Url).ToList(),
+                    CategoryName = x.MasterItem.Category.Name,
+                    Color = x.Color,
+                    Condition = x.Condition,
+                    Description = x.MasterItem.Description ?? "N/A",
+                    Gender = x.MasterItem.Gender,
+                    Name = x.MasterItem.Name,
+                    Note = x.Note ?? "N/A",
+                    ItemCode = x.ItemCode,
+                    ShopAddress = x.MasterItem.Shop.Address,
+                    InitialPrice = x.InitialPrice,
+                    Size = x.Size,
+                    ItemId = x.ItemId,
+                    SellingPrice = x.SellingPrice ?? 0,
+                    FashionItemType = x.Type
+                }).FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return new Result<AuctionItemDetailResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            return new Result<AuctionItemDetailResponse, ErrorCode>(result);
+        }
+
+        public async Task<Result<AuctionLeaderboardResponse, ErrorCode>> GetAuctionLeaderboard(Guid id,
+            AuctionLeaderboardRequest request)
+        {
+            var auctionQuery
+                = _auctionRepository.GetQueryable();
+            var bidQuery = _bidRepository.GetQueryable();
+
+            var leaderBoardQuery = bidQuery
+                .Where(x => x.AuctionId == id)
+                .GroupBy(x => new { x.MemberId, x.Member.Phone })
+                .Select(grouping => new LeaderboardItemListResponse()
+                {
+                    MemberId = grouping.Key.MemberId,
+                    Phone = grouping.Key.Phone,
+                    HighestBid = grouping.Max(b => b.Amount), IsWon = grouping.Any(bid => bid.IsWinning)
+                }).OrderByDescending(x => x.HighestBid);
+            var count = await leaderBoardQuery.CountAsync();
+
+            var data = await leaderBoardQuery
+                .Skip(PaginationUtils.GetSkip(request.Page, request.PageSize))
+                .Take(PaginationUtils.GetTake(request.PageSize))
+                .ToListAsync();
+            var paginationResponse = new PaginationResponse<LeaderboardItemListResponse>()
+            {
+                PageSize = request.PageSize ?? -1,
+                PageNumber = request.Page ?? -1,
+                TotalCount = count,
+                Items = data
+            };
+
+            return new Result<AuctionLeaderboardResponse, ErrorCode>(
+                new AuctionLeaderboardResponse()
+                {
+                    AuctionId = id,
+                    Leaderboard = paginationResponse
+                });
+        }
+
         public async Task<PaginationResponse<AuctionListResponse>> GetAuctionList(GetAuctionsRequest request)
         {
             Expression<Func<Auction, bool>> predicate = auction => true;
 
             if (!request.GetExpiredAuctions)
             {
-                predicate = auction => auction.EndDate >= DateTime.UtcNow;
+                predicate = predicate.And(auction => auction.EndDate >= DateTime.UtcNow);
             }
 
-            if (request.SearchTerm is not null)
+            if (!string.IsNullOrEmpty(request.Title))
             {
-                predicate = predicate.And(auction => EF.Functions.ILike(auction.Title, $"%{request.SearchTerm}%"));
+                predicate = predicate.And(auction => EF.Functions.ILike(auction.Title, $"%{request.Title}%"));
             }
 
-            if (request.Status.Length > 0)
+            if (!string.IsNullOrEmpty(request.AuctionCode))
             {
-                predicate = predicate.And(auction => request.Status.Contains(auction.Status));
+                predicate = predicate.And(
+                    auction => EF.Functions.ILike(auction.AuctionCode, $"%{request.AuctionCode}%"));
             }
-            
+
+            if (request.Statuses.Length > 0)
+            {
+                predicate = predicate.And(auction => request.Statuses.Contains(auction.Status));
+            }
+
             Expression<Func<Auction, AuctionListResponse>> selector = auction => new AuctionListResponse()
             {
                 AuctionId = auction.AuctionId,
@@ -175,7 +306,10 @@ namespace Services.Auctions
                 EndDate = auction.EndDate,
                 Status = auction.Status,
                 DepositFee = auction.DepositFee,
-                ImageUrl = auction.IndividualAuctionFashionItem.Images.FirstOrDefault().Url,
+                ImageUrl = auction.IndividualAuctionFashionItem.Images.FirstOrDefault() != null
+                    ? auction.IndividualAuctionFashionItem.Images.FirstOrDefault().Url
+                    : null,
+                AuctionCode = auction.AuctionCode,
                 AuctionItemId = auction.IndividualAuctionFashionItemId,
                 ShopId = auction.ShopId
             };
@@ -192,57 +326,37 @@ namespace Services.Auctions
             };
         }
 
-        public async Task<AuctionDetailResponse?> GetAuction(Guid id)
+        public async Task<AuctionDetailResponse?> GetAuction(Guid id, Guid? memberId)
         {
-            var result = await _auctionRepository.GetAuction(id, true);
+            var queryable = _auctionRepository.GetQueryable();
+
+            var result = await queryable
+                .Include(x => x.IndividualAuctionFashionItem)
+                .Include(x => x.Shop)
+                .Where(x => x.AuctionId == id)
+                .Select(x => new AuctionDetailResponse()
+                {
+                    AuctionId = x.AuctionId,
+                    Title = x.Title,
+                    StartDate = x.StartDate,
+                    EndDate = x.EndDate,
+                    Status = x.Status,
+                    CreatedDate = x.CreatedDate,
+                    IndividualItemCode = x.IndividualAuctionFashionItem.ItemCode,
+                    ShopAddress = x.Shop.Address,
+                    AuctionCode = x.AuctionCode,
+                    DepositFee = x.DepositFee,
+                    StepIncrement = x.StepIncrement,
+                    Won = x.Bids.Where(bid=>bid.MemberId == memberId).Any(bid => bid.IsWinning == true),
+                })
+                .FirstOrDefaultAsync();
 
             if (result == null)
             {
                 throw new AuctionNotFoundException();
             }
 
-            return new AuctionDetailResponse()
-            {
-                AuctionId = result.AuctionId,
-                Title = result.Title,
-                StartDate = result.StartDate,
-                EndDate = result.EndDate,
-                Status = result.Status,
-                DepositFee = result.DepositFee,
-                StepIncrement = result.StepIncrement,
-                AuctionItem = new AuctionItemDetailResponse()
-                {
-                    ItemId = result.IndividualAuctionFashionItemId,
-                    Name = result.IndividualAuctionFashionItem.MasterItem.Name,
-                    FashionItemType = result.IndividualAuctionFashionItem.Type,
-                    SellingPrice = result.IndividualAuctionFashionItem.SellingPrice ?? 0,
-                    InitialPrice = result.IndividualAuctionFashionItem.InitialPrice,
-                    Size = result.IndividualAuctionFashionItem.Size,
-                    Color = result.IndividualAuctionFashionItem.Color,
-                    Gender = result.IndividualAuctionFashionItem.MasterItem.Gender,
-                    Description = result.IndividualAuctionFashionItem.MasterItem.Description,
-                    Brand = result.IndividualAuctionFashionItem.MasterItem.Brand ?? "N/A",
-                    Condition = result.IndividualAuctionFashionItem.Condition ?? "N/A",
-                    Note = result.IndividualAuctionFashionItem.Note,
-                    Category = new AuctionItemCategory()
-                    {
-                        CategoryId = result.IndividualAuctionFashionItem.MasterItem.CategoryId,
-                        CategoryName = result.IndividualAuctionFashionItem.MasterItem.Category.Name,
-                        Level = result.IndividualAuctionFashionItem.MasterItem.Category.Level
-                    },
-                    Shop = new ShopAuctionDetailResponse()
-                    {
-                        ShopId = result.Shop.ShopId,
-                        Address = result.Shop.Address,
-                    },
-                    Images = result.IndividualAuctionFashionItem.Images.Count > 0 ? result.IndividualAuctionFashionItem.Images.Select(
-                        img => new FashionItemImage()
-                        {
-                            ImageId = img.ImageId,
-                            ImageUrl = img.Url
-                        }).ToList() : []
-                }
-            };
+            return result;
         }
 
         public Task<AuctionDetailResponse?> DeleteAuction(Guid id)
@@ -261,25 +375,41 @@ namespace Services.Auctions
             CreateAuctionDepositRequest request)
         {
             var auction = await _auctionRepository.GetAuction(auctionId);
+            var admin = await _accountRepository.FindOne(account => account.Role == Roles.Admin);
 
             if (auction is null)
             {
                 throw new AuctionNotFoundException();
             }
 
+            if (admin == null)
+            {
+                throw new AccountNotFoundException();
+            }
+
             await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
+            admin.Balance -= auction.DepositFee;
+            await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 Amount = auction.DepositFee,
                 Type = TransactionType.AuctionDeposit,
-                MemberId = request.MemberId,
+                SenderId = request.MemberId,
+                ReceiverId = admin.AccountId,
                 CreatedDate = DateTime.UtcNow,
                 VnPayTransactionNumber = "N/A"
             };
             var transactionResult = await _transactionRepository.CreateTransaction(transaction);
 
-            var result = await _auctionDepositRepository.CreateDeposit(auctionId, request,transactionResult.TransactionId);
-            return result;
+            if (transactionResult != null)
+            {
+                var result =
+                    await _auctionDepositRepository.CreateDeposit(auctionId, request, transactionResult.TransactionId);
+                await _emailService.SendEmailAuctionIsComing(auctionId, request.MemberId);
+                return result;
+            }
+
+            throw new TransactionFailedException();
         }
 
         public async Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
@@ -309,16 +439,16 @@ namespace Services.Auctions
                 throw new AuctionNotFoundException();
             }
 
-            await ScheduleAuctionStartAndEnd(result);
+            await ScheduleAuctionEnd(result);
             return result;
         }
 
-        private async Task ScheduleAuctionStartAndEnd(AuctionDetailResponse auction)
+        private async Task ScheduleAuctionStart(AuctionDetailResponse auction)
         {
             var scheduler = await _schedulerFactory.GetScheduler();
             var jobDataMap = new JobDataMap()
             {
-                { "AuctionId", auction.AuctionId }
+                { "AuctionStartId", auction.AuctionId }
             };
 
             var startJob = JobBuilder.Create<AuctionStartingJob>()
@@ -332,6 +462,14 @@ namespace Services.Auctions
                 .Build();
 
             await scheduler.ScheduleJob(startJob, startTrigger);
+        }
+        private async Task ScheduleAuctionEnd(AuctionDetailResponse auction)
+        {
+            var scheduler = await _schedulerFactory.GetScheduler();
+            var jobDataMap = new JobDataMap()
+            {
+                { "AuctionEndId", auction.AuctionId }
+            };
 
             var endJob = JobBuilder.Create<AuctionEndingJob>()
                 .WithIdentity($"EndAuction_{auction.AuctionId}")

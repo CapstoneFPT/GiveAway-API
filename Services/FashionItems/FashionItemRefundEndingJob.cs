@@ -51,7 +51,7 @@ public class FashionItemRefundEndingJob : IJob
                 var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
                 if (admin == null)
                     throw new AccountNotFoundException();
-                admin.Balance -= amountConsignorReceive;
+                admin.Balance += amountConsignorReceive;
                 await _accountRepository.UpdateAccount(admin);
 
                 refundItemToEnd.ConsignSaleLineItem.ConsignSale.SoldPrice += refundItemToEnd.SellingPrice!.Value;
@@ -59,11 +59,13 @@ public class FashionItemRefundEndingJob : IJob
                 
                 var transaction = new Transaction() 
                 {
-                    MemberId = refundItemToEnd.ConsignSaleLineItem.ConsignSale.MemberId,
+                    SenderId = admin.AccountId,
+                    ReceiverId = refundItemToEnd.ConsignSaleLineItem.ConsignSale.MemberId,
                     Amount = refundItemToEnd.SellingPrice!.Value,
                     CreatedDate = DateTime.UtcNow,
-                    Type = TransactionType.Payout,
-                    ConsignSaleId = refundItemToEnd.ConsignSaleLineItem.ConsignSaleId
+                    Type = TransactionType.ConsignPayout,
+                    ConsignSaleId = refundItemToEnd.ConsignSaleLineItem.ConsignSaleId,
+                    PaymentMethod = PaymentMethod.Point
                 };
                 await _transactionRepository.CreateTransaction(transaction);
             }

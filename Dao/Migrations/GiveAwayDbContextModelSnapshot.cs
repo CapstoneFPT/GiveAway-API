@@ -150,6 +150,10 @@ namespace Dao.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AuctionCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -202,6 +206,10 @@ namespace Dao.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamptz");
+
+                    b.Property<string>("DepositCode")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("MemberId")
                         .HasColumnType("uuid");
@@ -266,6 +274,10 @@ namespace Dao.Migrations
 
                     b.Property<Guid>("AuctionId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("BidCode")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
@@ -673,9 +685,6 @@ namespace Dao.Migrations
                     b.Property<Guid>("ShopId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("StockCount")
-                        .HasColumnType("integer");
-
                     b.HasKey("MasterItemId");
 
                     b.HasIndex("CategoryId");
@@ -792,9 +801,6 @@ namespace Dao.Migrations
                     b.Property<DateTime?>("PaymentDate")
                         .HasColumnType("timestamptz");
 
-                    b.Property<Guid?>("PointPackageId")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
@@ -810,34 +816,43 @@ namespace Dao.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.HasIndex("PointPackageId");
-
                     b.ToTable("OrderLineItem", (string)null);
                 });
 
-            modelBuilder.Entity("BusinessObjects.Entities.PointPackage", b =>
+            modelBuilder.Entity("BusinessObjects.Entities.Recharge", b =>
                 {
-                    b.Property<Guid>("PointPackageId")
+                    b.Property<Guid>("RechargeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Points")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("Price")
-                        .HasColumnType("integer");
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar");
+
+                    b.Property<string>("RechargeCode")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar");
 
-                    b.HasKey("PointPackageId");
+                    b.HasKey("RechargeId");
 
-                    b.ToTable("PointPackage", (string)null);
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("Recharge", (string)null);
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Refund", b =>
@@ -938,17 +953,32 @@ namespace Dao.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamptz");
 
-                    b.Property<Guid?>("MemberId")
+                    b.Property<Guid?>("OrderId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("OrderId")
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar");
+
+                    b.Property<Guid?>("ReceiverId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("RechargeId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("RefundId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("SenderId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("ShopId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("TransactionCode")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -966,12 +996,17 @@ namespace Dao.Migrations
                     b.HasIndex("ConsignSaleId")
                         .IsUnique();
 
-                    b.HasIndex("MemberId");
-
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("RechargeId")
+                        .IsUnique();
 
                     b.HasIndex("RefundId")
                         .IsUnique();
+
+                    b.HasIndex("SenderId");
 
                     b.HasIndex("ShopId");
 
@@ -1012,6 +1047,10 @@ namespace Dao.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar");
+
+                    b.Property<string>("WithdrawCode")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("WithdrawId");
 
@@ -1091,7 +1130,7 @@ namespace Dao.Migrations
             modelBuilder.Entity("BusinessObjects.Entities.AuctionDeposit", b =>
                 {
                     b.HasOne("BusinessObjects.Entities.Auction", "Auction")
-                        .WithMany()
+                        .WithMany("AuctionDeposits")
                         .HasForeignKey("AuctionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1295,15 +1334,20 @@ namespace Dao.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BusinessObjects.Entities.PointPackage", "PointPackage")
-                        .WithMany("OrderLineItems")
-                        .HasForeignKey("PointPackageId");
-
                     b.Navigation("IndividualFashionItem");
 
                     b.Navigation("Order");
+                });
 
-                    b.Navigation("PointPackage");
+            modelBuilder.Entity("BusinessObjects.Entities.Recharge", b =>
+                {
+                    b.HasOne("BusinessObjects.Entities.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Refund", b =>
@@ -1334,18 +1378,26 @@ namespace Dao.Migrations
                         .WithOne("Transaction")
                         .HasForeignKey("BusinessObjects.Entities.Transaction", "ConsignSaleId");
 
-                    b.HasOne("BusinessObjects.Entities.Member", "Member")
-                        .WithMany("Transactions")
-                        .HasForeignKey("MemberId");
-
                     b.HasOne("BusinessObjects.Entities.Order", "Order")
                         .WithMany("Transaction")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("BusinessObjects.Entities.Account", "Receiver")
+                        .WithMany("ReceivedTransactions")
+                        .HasForeignKey("ReceiverId");
+
+                    b.HasOne("BusinessObjects.Entities.Recharge", "Recharge")
+                        .WithOne("Transaction")
+                        .HasForeignKey("BusinessObjects.Entities.Transaction", "RechargeId");
+
                     b.HasOne("BusinessObjects.Entities.Refund", "Refund")
                         .WithOne("Transaction")
                         .HasForeignKey("BusinessObjects.Entities.Transaction", "RefundId");
+
+                    b.HasOne("BusinessObjects.Entities.Account", "Sender")
+                        .WithMany("SentTransactions")
+                        .HasForeignKey("SenderId");
 
                     b.HasOne("BusinessObjects.Entities.Shop", "Shop")
                         .WithMany("Transactions")
@@ -1357,11 +1409,15 @@ namespace Dao.Migrations
 
                     b.Navigation("ConsignSale");
 
-                    b.Navigation("Member");
-
                     b.Navigation("Order");
 
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Recharge");
+
                     b.Navigation("Refund");
+
+                    b.Navigation("Sender");
 
                     b.Navigation("Shop");
 
@@ -1379,8 +1435,17 @@ namespace Dao.Migrations
                     b.Navigation("Member");
                 });
 
+            modelBuilder.Entity("BusinessObjects.Entities.Account", b =>
+                {
+                    b.Navigation("ReceivedTransactions");
+
+                    b.Navigation("SentTransactions");
+                });
+
             modelBuilder.Entity("BusinessObjects.Entities.Auction", b =>
                 {
+                    b.Navigation("AuctionDeposits");
+
                     b.Navigation("Bids");
                 });
 
@@ -1436,9 +1501,9 @@ namespace Dao.Migrations
                     b.Navigation("Refund");
                 });
 
-            modelBuilder.Entity("BusinessObjects.Entities.PointPackage", b =>
+            modelBuilder.Entity("BusinessObjects.Entities.Recharge", b =>
                 {
-                    b.Navigation("OrderLineItems");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Refund", b =>
@@ -1476,8 +1541,6 @@ namespace Dao.Migrations
                     b.Navigation("BankAccounts");
 
                     b.Navigation("Bids");
-
-                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("BusinessObjects.Entities.Staff", b =>

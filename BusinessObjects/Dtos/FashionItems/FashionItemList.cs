@@ -22,5 +22,6 @@ public class FashionItemList
     public FashionItemStatus Status { get; set; }
     public FashionItemType Type { get; set; }
     public Guid CategoryId { get; set; }
+    public decimal InitialPrice { get; set; }
     public bool IsOrderedYet { get; set; }
 }

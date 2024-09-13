@@ -11,9 +11,33 @@ namespace Repositories.AuctionDeposits
 {
     public class AuctionDepositRepository : IAuctionDepositRepository
     {
-     
+        private const string Prefix = "DEP";
+        private static Random _random = new();
+        public async Task<string> GenerateUniqueString()
+        {
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                string code = GenerateCode();
+                bool isCodeExisted = await GenericDao<AuctionDeposit>.Instance.GetQueryable().AnyAsync(r => r.DepositCode == code);
 
-    
+                if (!isCodeExisted)
+                {
+                    return code;
+                }
+
+                await Task.Delay(100 * (int)Math.Pow(2, attempt));
+            }
+
+            throw new Exception("Failed to generate unique code after multiple attempts");
+        }
+
+        private static string GenerateCode()
+        {
+            string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            string randomString = _random.Next(1000, 9999).ToString();
+            return $"{Prefix}-{timestamp}-{randomString}";
+        }
+
         public async Task<AuctionDepositDetailResponse> CreateDeposit(Guid auctionId,
             CreateAuctionDepositRequest request, Guid transactionId)
         {
@@ -45,6 +69,7 @@ namespace Repositories.AuctionDeposits
                 MemberId = request.MemberId,
                 AuctionId = auctionId,
                 TransactionId = transactionId,
+                DepositCode = await GenerateUniqueString(),
                 CreatedDate = DateTime.UtcNow
             };
 
@@ -54,6 +79,7 @@ namespace Repositories.AuctionDeposits
                 Id = result.AuctionDepositId,
                 TransactionId = transactionId,
                 AuctionId = auctionId,
+                DepositCode = deposit.DepositCode,
                 Amount = auction.DepositFee,
                 MemberId = request.MemberId,
             };
@@ -91,8 +117,8 @@ namespace Repositories.AuctionDeposits
             }
 
             query = query.Include(x => x.Auction);
-            
-            if(selector != null)
+
+            if (selector != null)
             {
                 return query
                     .Select(selector)

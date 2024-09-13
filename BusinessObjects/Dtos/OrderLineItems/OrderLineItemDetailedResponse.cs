@@ -9,6 +9,7 @@ public class OrderLineItemDetailedResponse
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; }
     public DateTime? RefundExpirationDate { get; set; }
+    public string? ItemId { get; set; }
     public string? ItemName { get; set; }
     public FashionItemType? ItemType { get; set; }
     public string? ItemCode { get; set; }
@@ -23,7 +24,6 @@ public class OrderLineItemDetailedResponse
     public FashionItemStatus? ItemStatus { get; set; }
     public string? ShopAddress { get; set; }
     public Guid? ShopId { get; set; }
-    public Guid? PointPackageId { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime? PaymentDate { get; set; }
 }

@@ -14,7 +14,7 @@ namespace Repositories.Auctions
 {
     public interface IAuctionRepository
     {
-        Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request);
+        Task<AuctionDetailResponse> CreateAuction(Auction request);
         Task<Auction?> GetAuction(Guid id, bool includeRelations = false);
         Task<AuctionDetailResponse?> DeleteAuction(Guid id);
         Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request);
@@ -25,5 +25,7 @@ namespace Repositories.Auctions
         Task<List<Guid>> GetAuctionStartingNow();
         Task<(List<T> Items, int Page, int PageSize, int Total)> GetAuctionProjections<T>(int? requestPageNumber,
             int? requestPageSize, Expression<Func<Auction, bool>> predicate, Expression<Func<Auction, T>> selector);
+
+         IQueryable<Auction> GetQueryable();
     }
 }

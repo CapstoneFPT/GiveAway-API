@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Cors;
+﻿using System.Net;
+using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Withdraws;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Withdraws;
 
@@ -20,5 +23,24 @@ public class WithdrawController : ControllerBase
     {
         var result = await _withdrawService.CompleteWithdrawRequest(withdrawId);
         return Ok(result);
+    }
+
+    [HttpGet]
+    [ProducesResponseType<PaginationResponse<GetWithdrawsResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetAllPaginationWithdraws([FromQuery] GetWithdrawByAdminRequest request)
+    {
+        var result = await _withdrawService.GetAllPaginationWithdraws(request);
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500,
+                    new ErrorResponse("Error fetching orders", ErrorType.ApiError,
+                        HttpStatusCode.InternalServerError, result.Error))
+            };
+        }
+
+        return Ok(result.Value);
     }
 }

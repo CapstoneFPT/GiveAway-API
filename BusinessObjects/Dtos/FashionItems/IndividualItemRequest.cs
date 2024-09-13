@@ -12,4 +12,5 @@ public class    IndividualItemRequest
     public decimal? MaxSellingPrice { get; set; }
     public FashionItemStatus[]? Status { get; set; }
     public FashionItemType[]? Types { get; set; }
+    public bool IsForSale { get; set; } = true;
 }

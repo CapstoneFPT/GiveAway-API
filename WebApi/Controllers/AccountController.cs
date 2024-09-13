@@ -2,11 +2,13 @@
 using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Deliveries;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Orders;
+using BusinessObjects.Dtos.Recharges;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
 using Microsoft.AspNetCore.Authorization;
@@ -17,6 +19,7 @@ using Services.ConsignSales;
 using Services.Deliveries;
 using Services.OrderLineItems;
 using Services.Orders;
+using Services.Recharges;
 
 namespace WebApi.Controllers;
 
@@ -29,10 +32,11 @@ public class AccountController : ControllerBase
     private readonly IDeliveryService _deliveryService;
     private readonly IOrderLineItemService _orderLineItemService;
     private readonly IOrderService _orderService;
+    private readonly IRechargeService _rechargeService;
     private readonly IHttpContextAccessor _contextAccessor;
     public AccountController(IAccountService accountService, IDeliveryService deliveryService,
         IOrderService orderService, IConsignSaleService consignSaleService, IOrderLineItemService orderLineItemService,
-        IHttpContextAccessor contextAccessor)
+        IHttpContextAccessor contextAccessor,IRechargeService rechargeService)
     {
         _accountService = accountService;
         _deliveryService = deliveryService;
@@ -40,6 +44,7 @@ public class AccountController : ControllerBase
         _consignSaleService = consignSaleService;
         _orderLineItemService = orderLineItemService;
         _contextAccessor = contextAccessor;
+        _rechargeService = rechargeService;
     }
 
     [HttpGet]
@@ -162,16 +167,21 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/orders")]
-    [ProducesResponseType<Result<PaginationResponse<OrderResponse>>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<PaginationResponse<OrderResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> GetOrdersByAccountId(
         [FromRoute] Guid accountId, [FromQuery] OrderRequest request)
     {
         var result = await _orderService.GetOrdersByAccountId(accountId, request);
-
-        if (result.ResultStatus != ResultStatus.Success)
-            return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-        return Ok(result);
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500, new ErrorResponse("Error getting orders", ErrorType.ApiError,
+                    HttpStatusCode.InternalServerError, result.Error)),
+            };
+        }
+        return Ok(result.Value);
     }
 
     [HttpPost("{accountId}/orders")]
@@ -188,16 +198,24 @@ public class AccountController : ControllerBase
     }
 
     [HttpGet("{accountId}/consignsales")]
-    [ProducesResponseType<Result<PaginationResponse<ConsignSaleDetailedResponse>>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<PaginationResponse<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> GetAllConsignSale(
         [FromRoute] Guid accountId, [FromQuery] ConsignSaleRequest request)
     {
         var result = await _consignSaleService.GetAllConsignSales(accountId, request);
 
-        if (result.ResultStatus != ResultStatus.Success)
-            return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-        return Ok(result);
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500, new ErrorResponse("Error getting consign sales", ErrorType.ApiError,
+                    HttpStatusCode.InternalServerError, result.Error)),
+            };
+        }
+        
+        return Ok(result.Value);
+     
     }
 
     [HttpPost("{accountId}/consignsales")]
@@ -230,6 +248,58 @@ public class AccountController : ControllerBase
         var result = await _accountService.RequestWithdraw(accountId, request);
         return Ok(result);
     }
+    
+    [HttpGet("{accountId}/recharges")]
+    [ProducesResponseType<PaginationResponse<RechargeListResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetRecharges(
+        [FromRoute] Guid accountId,
+        [FromQuery] GetAccountRechargesRequest request)
+    {
+        var result = await _rechargeService.GetRecharges(new GetRechargesRequest()
+        {
+            PageSize = request.PageSize,
+            MemberId = accountId,
+            Page = request.Page,
+            RechargeStatus = request.RechargeStatus,
+            RechargeCode = request.RechargeCode
+        });
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.ServerError))
+            };
+        }
+        
+        return Ok(result.Value);
+    }
+    
+    [HttpGet("{accountId}/auctions")]
+    [ProducesResponseType<PaginationResponse<AuctionListResponse>>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetAuctions([FromRoute] Guid accountId,
+        [FromQuery] GetAccountAuctionsRequest request)
+    {
+        DotNext.Result<PaginationResponse<AuctionListResponse>> result =
+            await _accountService.GetAuctions(accountId, request);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.ServerError))
+            };
+        }
+
+        return Ok(result.Value);
+    }
+        
 
     [HttpGet("{accountId}/withdraws")]
     [ProducesResponseType<PaginationResponse<GetWithdrawsResponse>>((int)HttpStatusCode.OK)]

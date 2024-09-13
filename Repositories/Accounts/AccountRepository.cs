@@ -12,11 +12,19 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace Repositories.Accounts
 {
     public class AccountRepository : IAccountRepository
     {
+        private readonly ILogger<AccountRepository> _logger;
+
+        public AccountRepository(ILogger<AccountRepository> logger)
+        {
+            _logger = logger;
+        }
+
         public async Task<List<Account?>> FindMany(
             Expression<Func<Account?, bool>> predicate,
             int page,
@@ -48,7 +56,8 @@ namespace Repositories.Accounts
 
         public async Task<Account> FindUserByPasswordResetToken(string token)
         {
-            var user = await GenericDao<Account>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.PasswordResetToken == token);
+            var user = await GenericDao<Account>.Instance.GetQueryable()
+                .FirstOrDefaultAsync(c => c.PasswordResetToken == token);
             return user;
         }
 
@@ -108,7 +117,11 @@ namespace Repositories.Accounts
 
         public async Task<Account?> UpdateAccount(Account? account)
         {
+            _logger.LogInformation("UpdateAccount: {AccountId} with balance {Balance}", account.AccountId,
+                account.Balance);
             await GenericDao<Account>.Instance.UpdateAsync(account);
+            _logger.LogInformation("After update: {AccountId} with balance {Balance}", account.AccountId,
+                account.Balance);
             return await Task.FromResult<Account>(account);
         }
 

@@ -17,7 +17,7 @@ using Repositories.Inquiries;
 using Repositories.FashionItems;
 using Repositories.OrderLineItems;
 using Repositories.Orders;
-using Repositories.PointPackages;
+using Repositories.Recharges;
 using Repositories.Refunds;
 using Repositories.Revenues;
 using Repositories.Schedules;
@@ -44,7 +44,7 @@ using Services.Images;
 using Services.Inquiries;
 using Services.OrderLineItems;
 using Services.Orders;
-using Services.PointPackages;
+using Services.Recharges;
 using Services.Refunds;
 using Services.Revenue;
 using Services.Schedules;
@@ -76,7 +76,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IFashionItemService, FashionItemService>();
         serviceCollection.AddScoped<IOrderLineItemService, OrderLineItemService>();
         serviceCollection.AddScoped<IOrderService, OrderService>();
-        serviceCollection.AddScoped<IPointPackageService, PointPackageService>();
+        serviceCollection.AddScoped<IRechargeService, RechargeService>();
         serviceCollection.AddScoped<IConsignSaleService, ConsignSaleService>();
         serviceCollection.AddScoped<IScheduleService, ScheduleService>();
         serviceCollection.AddScoped<IShopService, ShopService>();
@@ -106,7 +106,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IFashionItemRepository, FashionItemRepository>();
         serviceCollection.AddScoped<IOrderLineItemRepository, OrderLineItemRepository>();
         serviceCollection.AddScoped<IOrderRepository, OrderRepository>();
-        serviceCollection.AddScoped<IPointPackageRepository, PointPackageRepository>();
+        serviceCollection.AddScoped<IRechargeRepository, RechargeRepository>();
         serviceCollection.AddScoped<IConsignSaleRepository, ConsignSaleRepository>();
         serviceCollection.AddScoped<IScheduleRepository, ScheduleRepository>();
         serviceCollection.AddScoped<IShopRepository, ShopRepository>();
@@ -123,7 +123,6 @@ public static class DependencyInjectionExtensions
     {
         serviceCollection.AddScoped<GenericDao<Account>>();
         serviceCollection.AddScoped<GenericDao<MasterFashionItem>>();
-        // serviceCollection.AddScoped<GenericDao<FashionItemVariation>>();
         serviceCollection.AddScoped<GenericDao<IndividualFashionItem>>();
         serviceCollection.AddScoped<GenericDao<IndividualAuctionFashionItem>>();
         serviceCollection.AddScoped<GenericDao<Auction>>();
@@ -135,7 +134,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<Inquiry>>();
         serviceCollection.AddScoped<GenericDao<OrderLineItem>>();
         serviceCollection.AddScoped<GenericDao<Order>>();
-        serviceCollection.AddScoped<GenericDao<PointPackage>>();
+        serviceCollection.AddScoped<GenericDao<Recharge>>();
         serviceCollection.AddScoped<GenericDao<ConsignSale>>();
         serviceCollection.AddScoped<GenericDao<ConsignSaleLineItem>>();
         serviceCollection.AddScoped<GenericDao<Shop>>();

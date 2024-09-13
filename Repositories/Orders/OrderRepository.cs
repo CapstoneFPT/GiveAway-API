@@ -54,22 +54,26 @@ namespace Repositories.Orders
                 .FirstOrDefaultAsync(c => c.AccountId == accountId);
 
             
-            Order order = new Order();
-            order.MemberId = accountId;
+            Order order = new Order
+            {
+                MemberId = accountId,
+                PaymentMethod = cart.PaymentMethod,
+                Address = cart.Address,
+                GhnDistrictId = cart.GhnDistrictId,
+                GhnWardCode = cart.GhnWardCode,
+                GhnProvinceId = cart.GhnProvinceId,
+                AddressType = cart.AddressType,
+                PurchaseType = PurchaseType.Online,
+                RecipientName = cart.RecipientName,
+                ShippingFee = cart.ShippingFee,
+                Discount = cart.Discount,
+                Phone = cart.Phone,
+                Email = memberAccount.Email
+            };
 
-            order.PaymentMethod = cart.PaymentMethod;
-            order.Address = cart.Address;
-            order.GhnDistrictId = cart.GhnDistrictId;
-            order.GhnWardCode = cart.GhnWardCode;
-            order.GhnProvinceId = cart.GhnProvinceId;
-            order.AddressType = cart.AddressType;
-            order.PurchaseType = PurchaseType.Online;
-            order.RecipientName = cart.RecipientName;
             
-            order.ShippingFee = cart.ShippingFee;
-            order.Discount = cart.Discount;
-            order.Phone = cart.Phone;
-            order.Email = memberAccount.Email;
+            
+            
             if (cart.PaymentMethod.Equals(PaymentMethod.COD))
             {
                 order.Status = OrderStatus.Pending;
@@ -172,7 +176,6 @@ namespace Repositories.Orders
         {
             var query = _giveAwayDbContext.Orders.AsQueryable();
             query = query.Include(c => c.Member)
-                .Where(c => c.MemberId == accountId && c.OrderLineItems.Any(c => c.PointPackageId == null))
                 .OrderByDescending(c => c.CreatedDate);
 
             if (request.Status != null)
@@ -312,7 +315,7 @@ namespace Repositories.Orders
             {
                 var item = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
                     .FirstOrDefaultAsync(c => c.ItemId == itemId);
-                if (item is null || !item.Status.Equals(FashionItemStatus.Available))
+                if (item is null || (item.Status != FashionItemStatus.Available && item.Status != FashionItemStatus.Reserved))
                 {
                     listItemNotAvailable.Add(itemId);
                 }
@@ -516,7 +519,8 @@ namespace Repositories.Orders
                 CreatedDate = DateTime.UtcNow,
                 Type = TransactionType.Purchase,
                 Amount = order.TotalPrice,
-                ShopId = shopId
+                ShopId = shopId,
+                PaymentMethod = PaymentMethod.Cash,
             };
             await GenericDao<Transaction>.Instance.AddAsync(orderTransaction);
             var orderResponse = new OrderResponse()

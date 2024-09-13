@@ -15,6 +15,27 @@ services:
       - ASPNETCORE_Kestrel__Endpoints__Http__Url=http://0.0.0.0:80
       - ASPNETCORE_HOSTNAME=giveawayproject.jettonetto.org
       - ASPNETCORE_GiaoHangNhanh__ApiToken=${GHN_API_TOKEN}
+      - ASPNETCORE_Jwt__JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ASPNETCORE_Jwt__JWT_ISSUER=giveawayapi.com
+      - ASPNETCORE_Jwt__JWT_AUDIENCE=giveaway.com
+      - ASPNETCORE_Jwt__JWT_TOKEN_EXPIRE_TIME_IN_MINUTES=43200
+      - ASPNETCORE_Google__ClientId=${GOOGLE_CLIENT_ID}
+      - ASPNETCORE_Google__ClientSecret=${GOOGLE_CLIENT_SECRET}
+      - ASPNETCORE_ConnectionStrings__DefaultDB=${DEFAULT_DB_CONNECTION_STRING}
+      - ASPNETCORE_MailSettings__Mail=${MAIL_SETTINGS_MAIL}
+      - ASPNETCORE_MailSettings__DisplayName=GIVEAWAY
+      - ASPNETCORE_MailSettings__Password=${MAIL_SETTINGS_PASSWORD}
+      - ASPNETCORE_MailSettings__Host=smtp.gmail.com
+      - ASPNETCORE_MailSettings__Port=587
+      - ASPNETCORE_MailSettings__AppDomain=https://giveawayproject.jettonetto.org:8443/api/auth/
+      - ASPNETCORE_MailSettings__EmailConfirmation=confirm-email?id={0}&token={1}
+      - ASPNETCORE_VNPay__TmnCode=${VNPAY_TMNCODE}
+      - ASPNETCORE_VNPay__HashSecret=${VNPAY_HASHSECRET}
+      - ASPNETCORE_VNPay__PaymentUrl=${VNPAY_PAYMENTURL}
+      - ASPNETCORE_AdminAccount__Email=admin@gmail.com
+      - ASPNETCORE_AdminAccount__Password=admin
+      - ASPNETCORE_EmailTemplateDirectory=Services/MailTemplate/
+      - ASPNETCORE_RedirectDirectory=https://giveawayproject.jettonetto.org/
     ports:
       - "8443:443"
       - "8080:8080"
@@ -43,4 +64,3 @@ services:
 #      - ./grafana:/var/lib/grafana
 #    depends_on:
 #      - prometheus
-  

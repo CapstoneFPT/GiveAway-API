@@ -66,12 +66,54 @@ public class AuctionController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id}/leaderboard")]
+    [ProducesResponseType<AuctionLeaderboardResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetAuctionLeaderboard([FromRoute] Guid id, [FromQuery] AuctionLeaderboardRequest request)
+    {
+        DotNext.Result<AuctionLeaderboardResponse,ErrorCode> result = await _auctionService.GetAuctionLeaderboard(id,request);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500,
+                    new ErrorResponse("Something went wrong!", ErrorType.AuctionError,
+                        HttpStatusCode.InternalServerError, result.Error))
+            };
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id}/auction-item")]
+    [ProducesResponseType<AuctionItemDetailResponse>((int)HttpStatusCode.OK)]
+    [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+    public async Task<IActionResult> GetAuctionItem([FromRoute] Guid id)
+    {
+        DotNext.Result<AuctionItemDetailResponse,ErrorCode> result = await _auctionService.GetAuctionItem(id);
+
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                ErrorCode.NotFound => NotFound(new ErrorResponse("Not found", ErrorType.AuctionError, HttpStatusCode.NotFound
+                    , result.Error)),
+                _ => StatusCode(500,
+                    new ErrorResponse("Something went wrong!", ErrorType.AuctionError,
+                        HttpStatusCode.InternalServerError, result.Error)),
+            };
+        }
+        
+        return Ok(result.Value);
+    }
+
     [HttpGet("{id}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
     [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAuction([FromRoute] Guid id)
+    public async Task<IActionResult> GetAuction([FromRoute] Guid id, [FromQuery] Guid? memberId)
     {
-        var result = await _auctionService.GetAuction(id);
+        var result = await _auctionService.GetAuction(id,memberId);
         if (result == null)
         {
             return NotFound();
@@ -214,12 +256,17 @@ public class AuctionController : ControllerBase
 
 
     [HttpGet("current-time")]
+    [ProducesResponseType<CurrentTimeResponse>((int)HttpStatusCode.OK)]
     public IActionResult GetCurrentTime()
     {
-        return Ok(new { currentTime = DateTime.UtcNow });
+        return Ok(new CurrentTimeResponse() { CurrentTime = DateTime.UtcNow });
     }
 }
 
+public class CurrentTimeResponse
+{
+    public DateTime CurrentTime { get; set; }
+}
 public class CheckDepositRequest
 {
     public Guid MemberId { get; set; }

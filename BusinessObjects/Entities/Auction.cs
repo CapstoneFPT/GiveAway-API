@@ -11,6 +11,7 @@ public class Auction
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public decimal DepositFee { get; set; }
+    public string AuctionCode { get; set; }
     public Shop Shop { get; set; }
     public Guid ShopId { get; set; }
     public decimal StepIncrement { get; set; }

@@ -79,14 +79,11 @@ namespace Services.Shops
         }
 
 
-        public async Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(Guid shopId,
+        /*public async Task<PaginationResponse<TransactionResponse>> GetOfflineTransactionsByShopId(
             TransactionRequest transactionRequest)
         {
             Expression<Func<Transaction, bool>> predicate = transaction =>
-                // transaction.Order!.PurchaseType == PurchaseType.Offline &&
-                // transaction.Order!.OrderDetails.FirstOrDefault()!.IndividualFashionItem!.ShopId == shopId;
-                true;
-
+                transaction.ShopId == transactionRequest.ShopId!.Value;
             Expression<Func<Transaction, TransactionResponse>> selector = transaction => new TransactionResponse()
             {
                 TransactionId = transaction.TransactionId,
@@ -108,7 +105,7 @@ namespace Services.Shops
                 PageSize = result.PageSize,
                 TotalCount = result.Total
             };
-        }
+        }*/
 
         public async Task<DotNext.Result<CreateShopResponse, ErrorCode>> CreateShop(CreateShopRequest request)
         {

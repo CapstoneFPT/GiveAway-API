@@ -4,10 +4,15 @@ namespace BusinessObjects.Dtos.Auctions;
 
 public class CreateAuctionRequest : IValidatableObject
 {
+    [Required]
     public string Title { get; set; }
+    [Required]
     public Guid ShopId { get; set; }
+    [Required]
     public Guid AuctionItemId { get; set; }
+    [Required]
     public DateTime StartTime { get; set; }
+    [Required]
     public DateTime EndTime { get; set; }
     
     [Range(1,100,ErrorMessage = "Value must be between 1 and 100")]

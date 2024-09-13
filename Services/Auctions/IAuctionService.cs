@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
+using DotNext;
 
 namespace Services.Auctions
 {
@@ -15,7 +16,7 @@ namespace Services.Auctions
     {
         Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request);
         Task<PaginationResponse<AuctionListResponse>> GetAuctionList(GetAuctionsRequest request);
-        Task<AuctionDetailResponse?> GetAuction(Guid id);
+        Task<AuctionDetailResponse?> GetAuction(Guid id,Guid? memberId);
         Task<AuctionDetailResponse?> DeleteAuction(Guid id);
         Task<AuctionDetailResponse> UpdateAuction(Guid id, UpdateAuctionRequest request);
         Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId, CreateAuctionDepositRequest request);
@@ -25,8 +26,11 @@ namespace Services.Auctions
         Task<BidDetailResponse?> PlaceBid(Guid id, CreateBidRequest request);
         Task<PaginationResponse<BidListResponse>?> GetBids(Guid id, GetBidsRequest request);
         Task<BidDetailResponse?> GetLargestBid(Guid auctionId);
-        Task<Result<OrderResponse>> EndAuction(Guid id);
+        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> EndAuction(Guid id);
         Task StartAuction(Guid auctionId);
         Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request);
+        Task<Result<AuctionItemDetailResponse,ErrorCode>> GetAuctionItem(Guid id);
+        Task<Result<AuctionLeaderboardResponse, ErrorCode>> GetAuctionLeaderboard(Guid id,
+            AuctionLeaderboardRequest request);
     }
 }

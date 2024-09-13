@@ -17,14 +17,14 @@ namespace Services.Orders
 {
     public interface IOrderService
     {
-        Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(Guid accountId, OrderRequest request);
+        Task<Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrdersByAccountId(Guid accountId,
+            OrderRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrder(Guid accountId, CartRequest cart);
         Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrder(Guid orderId);
         Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrderByAdmin(Guid orderId);
         Task<Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrders(OrderRequest orderRequest);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> ConfirmOrderDeliveried(Guid shopId ,Guid orderId);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderFromBid(CreateOrderFromBidRequest orderRequest);
-        Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreatePointPackageOrder(PointPackageOrder order);
         Task<Order?> GetOrderById(Guid orderId);
         Task UpdateOrder(Order? order);
         Task<List<Order?>> GetOrdersToCancel();

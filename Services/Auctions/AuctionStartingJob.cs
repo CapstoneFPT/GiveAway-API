@@ -23,7 +23,7 @@ public class AuctionStartingJob : IJob
 
 
         var dataMap = context.JobDetail.JobDataMap;
-        var auctionId = dataMap.GetGuid("AuctionId");
+        var auctionId = dataMap.GetGuid("AuctionStartId");
 
         try
         {
@@ -36,10 +36,17 @@ public class AuctionStartingJob : IJob
                 return;
             }
 
-            auctionToStart.Status = AuctionStatus.OnGoing;
-            auctionToStart.IndividualAuctionFashionItem.Status = FashionItemStatus.Bidding;
-
-
+            if (auctionToStart.Status == AuctionStatus.Pending)
+            {
+                Console.WriteLine("Auction is not approved");
+                auctionToStart.Status = AuctionStatus.Cancelled;
+                auctionToStart.IndividualAuctionFashionItem.Status = FashionItemStatus.Available;
+            }
+            else
+            {
+                auctionToStart.Status = AuctionStatus.OnGoing;
+                auctionToStart.IndividualAuctionFashionItem.Status = FashionItemStatus.Bidding;
+            }
             dbContext.Auctions.Update(auctionToStart);
             await dbContext.SaveChangesAsync();
 

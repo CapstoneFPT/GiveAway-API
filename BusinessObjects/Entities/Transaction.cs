@@ -13,6 +13,8 @@ public class Transaction
     public Order? Order { get; set; }
     public Guid? OrderId { get; set; }
     public Refund? Refund { get; set; }
+    public Guid? RechargeId { get; set; }
+    public Recharge? Recharge { get; set; }
     public Guid? ShopId { get; set; }
     public Shop? Shop { get; set; }
     public Guid? RefundId { get; set; }
@@ -20,8 +22,12 @@ public class Transaction
     public ConsignSale? ConsignSale { get; set; }
     public Guid? WithdrawId { get; set; }
     public Withdraw? Withdraw { get; set; }
-    public Guid? MemberId { get; set; }
-    public Member? Member { get; set; }
+    public Guid? SenderId { get; set; }
+    public Account? Sender { get; set; }
+    public Guid? ReceiverId { get; set; }
+    public Account? Receiver { get; set; }
     public string? VnPayTransactionNumber { get; set; }
     public AuctionDeposit? AuctionDeposit { get; set; }
+    public string TransactionCode { get; set; }
+    public PaymentMethod PaymentMethod { get; set; }
 }

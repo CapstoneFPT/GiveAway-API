@@ -17,7 +17,7 @@ namespace BusinessObjects.Dtos.Orders
         public string? RecipientName { get; set; }
         
         [Phone]
-        public string? Phone {  get; set; }
+        public string Phone {  get; set; }
         [EmailAddress] public string? Email { get; set; }
         public decimal Discount { get; set; } = 0;
         public List<Guid> ItemIds { get; set; } = [];

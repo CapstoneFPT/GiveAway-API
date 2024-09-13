@@ -11,7 +11,11 @@ using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using LinqKit;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Repositories.Accounts;
 using Repositories.Orders;
+using Repositories.Recharges;
 using Repositories.Transactions;
 using Transaction = BusinessObjects.Entities.Transaction;
 
@@ -21,11 +25,17 @@ namespace Services.Transactions
     {
         private readonly ITransactionRepository _transactionRepository;
         private readonly IOrderRepository _orderRepository;
-
-        public TransactionService(ITransactionRepository transactionRepository, IOrderRepository orderRepository)
+        private readonly IRechargeRepository _rechargeRepository;
+        private readonly ILogger<TransactionService> _logger;
+        private readonly IAccountRepository _accountRepository;
+        public TransactionService(ITransactionRepository transactionRepository, IOrderRepository orderRepository,
+            IRechargeRepository rechargeRepository , ILogger<TransactionService> logger, IAccountRepository accountRepository)
         {
             _transactionRepository = transactionRepository;
             _orderRepository = orderRepository;
+            _rechargeRepository = rechargeRepository;
+            _logger = logger;
+            _accountRepository = accountRepository;
         }
 
         public async Task<Result<TransactionDetailResponse>> CreateTransactionFromVnPay(VnPaymentResponse vnPayResponse,
@@ -33,18 +43,51 @@ namespace Services.Transactions
         {
             try
             {
-                var order = await _orderRepository.GetSingleOrder(x => x.OrderId == new Guid(vnPayResponse.OrderId));
-
-                if (order == null) throw new OrderNotFoundException();
-                var transaction = new Transaction()
+                var admin = await _accountRepository.FindOne(c => c.Role == Roles.Admin);
+                Transaction transaction = null!;
+                switch (transactionType)
                 {
-                    OrderId = new Guid(vnPayResponse.OrderId),
-                    CreatedDate = DateTime.UtcNow,
-                    Amount = order.TotalPrice,
-                    VnPayTransactionNumber = vnPayResponse.TransactionId,
-                    MemberId = order.MemberId,
-                    Type = transactionType 
-                };
+                    case TransactionType.Purchase:
+
+                        var order = await _orderRepository.GetSingleOrder(x =>
+                            x.OrderId == new Guid(vnPayResponse.OrderId));
+                        
+                        if (order == null) throw new OrderNotFoundException();
+                        
+                        transaction = new Transaction()
+                        {
+                            OrderId = new Guid(vnPayResponse.OrderId),
+                            CreatedDate = DateTime.UtcNow,
+                            Amount = order.TotalPrice,
+                            VnPayTransactionNumber = vnPayResponse.TransactionId,
+                            SenderId = order.MemberId,
+                            ReceiverId = admin.AccountId,
+                            Type = transactionType,
+                            PaymentMethod = PaymentMethod.Banking
+                        };
+                        break;
+                    case TransactionType.AddFund:
+                        var recharge = await _rechargeRepository.GetQueryable()
+                            .FirstOrDefaultAsync(x => x.RechargeId == new Guid(vnPayResponse.OrderId));
+                        
+                        if (recharge == null) throw new RechargeNotFoundException();
+                        
+                        transaction = new Transaction()
+                        {
+                            RechargeId = new Guid(vnPayResponse.OrderId),
+                            CreatedDate = DateTime.UtcNow,
+                            Amount = recharge.Amount,
+                            VnPayTransactionNumber = vnPayResponse.TransactionId,
+                            ReceiverId = recharge.MemberId,
+                            SenderId = admin.AccountId,
+                            Type = transactionType,
+                            PaymentMethod = PaymentMethod.Banking
+                        };
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(transactionType), transactionType, null);
+                }
+
 
                 var createTransactionResult = await _transactionRepository.CreateTransaction(transaction);
 
@@ -59,39 +102,46 @@ namespace Services.Transactions
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                _logger.LogError(e, "Error creating transaction {TransactionId}", vnPayResponse.TransactionId);
+                return new Result<TransactionDetailResponse>()
+                {
+                    ResultStatus = ResultStatus.Error
+                };
             }
         }
 
-        public Task CreateTransactionFromPoints(Order order, Guid requestMemberId, TransactionType transactionType)
+        public async Task CreateTransactionFromPoints(Order order, Guid requestMemberId, TransactionType transactionType)
         {
+            var admin = await _accountRepository.FindOne(c => c.Role == Roles.Admin);
             var transaction = new Transaction
             {
                 OrderId = order.OrderId,
                 CreatedDate = DateTime.UtcNow,
                 Amount = order.TotalPrice,
-                MemberId = requestMemberId,
-                Type = transactionType
-            };
-            return _transactionRepository.CreateTransaction(transaction);
+                SenderId = requestMemberId,
+                ReceiverId = admin.AccountId,
+                Type = transactionType,
+                PaymentMethod = PaymentMethod.Point
+            }; 
+            await _transactionRepository.CreateTransaction(transaction);
         }
 
-        public async Task<Result<PaginationResponse<TransactionResponse>>> GetAllTransaction(TransactionRequest transactionRequest)
+        public async Task<Result<PaginationResponse<TransactionResponse>>> GetAllTransaction(
+            TransactionRequest transactionRequest)
         {
             try
             {
-                Expression<Func<Transaction, bool>> predicate = transaction => true ;
+                Expression<Func<Transaction, bool>> predicate = transaction => true;
                 if (transactionRequest.ShopId.HasValue)
                 {
-                    predicate = transaction => transaction.Order!.PurchaseType.Equals(PurchaseType.Offline);
-                    // && transaction.Order!.OrderDetails.FirstOrDefault()!.IndividualFashionItem!.ShopId == transactionRequest.ShopId;
+                    predicate = predicate.And(transaction => transaction.Order!.PurchaseType.Equals(PurchaseType.Offline) && transaction.ShopId == transactionRequest.ShopId);
                 }
 
                 if (transactionRequest.TransactionType.HasValue)
                 {
                     predicate = predicate.And(c => c.Type.Equals(transactionRequest.TransactionType));
                 }
+
                 Expression<Func<Transaction, TransactionResponse>> selector = transaction => new TransactionResponse()
                 {
                     TransactionId = transaction.TransactionId,
@@ -102,14 +152,19 @@ namespace Services.Transactions
                     ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null,
                     Amount = transaction.Amount,
                     CreatedDate = transaction.CreatedDate,
-                    CustomerName = transaction.Order!.RecipientName != null ? transaction.Order!.RecipientName : transaction.ConsignSale!.ConsignorName,
-                    CustomerPhone = transaction.Order!.Phone != null ? transaction.Order!.Phone : transaction.ConsignSale!.Phone
+                    CustomerName = transaction.Order!.RecipientName != null
+                        ? transaction.Order!.RecipientName
+                        : transaction.ConsignSale!.ConsignorName,
+                    CustomerPhone = transaction.Order!.Phone != null
+                        ? transaction.Order!.Phone
+                        : transaction.ConsignSale!.Phone,
+                    ShopId = transaction.ShopId
                 };
                 Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
                 (List<TransactionResponse> Items, int Page, int PageSize, int Total) result =
                     await _transactionRepository.GetTransactionsProjection<TransactionResponse>(transactionRequest.Page,
-                        transactionRequest.PageSize, predicate,orderBy, selector);
-                return new  Result<PaginationResponse<TransactionResponse>>()
+                        transactionRequest.PageSize, predicate, orderBy, selector);
+                return new Result<PaginationResponse<TransactionResponse>>()
                 {
                     Data = new PaginationResponse<TransactionResponse>()
                     {
@@ -118,7 +173,7 @@ namespace Services.Transactions
                         PageSize = result.PageSize,
                         TotalCount = result.Total
                     },
-                    Messages = new []{"Result with " + result.Total + " transaction"},
+                    Messages = new[] { "Result with " + result.Total + " transaction" },
                     ResultStatus = ResultStatus.Success
                 };
             }
@@ -130,5 +185,7 @@ namespace Services.Transactions
         }
     }
 
-    
+    public class RechargeNotFoundException : Exception
+    {
+    }
 }

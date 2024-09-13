@@ -29,6 +29,7 @@ namespace BusinessObjects.Dtos.FashionItems
         public string? Brand { get; set; }
         public bool IsConsignment { get; set; }
         public bool IsOrderedYet {get;set;}
+        public bool IsItemConsigned { get; set; }
         public GenderType Gender { get; set; }
         public List<string> Images { get; set; }
     }

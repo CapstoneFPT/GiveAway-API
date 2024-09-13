@@ -12,6 +12,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Account;
+using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Dtos.Withdraws;
@@ -21,6 +22,7 @@ using DotNext;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Repositories.Auctions;
 using Repositories.BankAccounts;
 using Repositories.Inquiries;
 using Repositories.Transactions;
@@ -35,11 +37,12 @@ namespace Services.Accounts
         private readonly IWithdrawRepository _withdrawRepository;
         private readonly ITransactionRepository _transactionRepository;
         private readonly IBankAccountRepository _bankAccountRepository;
+        private readonly IAuctionRepository _auctionRepository;
         private readonly IMapper _mapper;
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
             IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository,
-            IBankAccountRepository bankAccountRepository)
+            IBankAccountRepository bankAccountRepository, IAuctionRepository auctionRepository)
         {
             _account = repository;
             _mapper = mapper;
@@ -47,6 +50,7 @@ namespace Services.Accounts
             _withdrawRepository = withdrawRepository;
             _transactionRepository = transactionRepository;
             _bankAccountRepository = bankAccountRepository;
+            _auctionRepository = auctionRepository;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> BanAccountById(Guid id)
@@ -149,14 +153,14 @@ namespace Services.Accounts
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
             {
-                predicate = account => EF.Functions.ILike(account.Fullname, $"%{
+                predicate = predicate.And(account => EF.Functions.ILike(account.Fullname, $"%{
                     request.SearchTerm
-                }%");
+                }%"));
             }
 
             if (!string.IsNullOrWhiteSpace(request.Phone))
             {
-                predicate = account => EF.Functions.ILike(account.Phone, $"%{request.Phone}%");
+                predicate = predicate.And(account => EF.Functions.ILike(account.Phone, $"%{request.Phone}%"));
             }
 
             if (request.Status != null && request.Status.Length != 0)
@@ -253,7 +257,7 @@ namespace Services.Accounts
             };
 
             var result = await _withdrawRepository.CreateWithdraw(newWithdraw);
-
+            var admin = await _account.FindOne(c => c.Role == Roles.Admin);
             account.Balance -= request.Amount;
             await _account.UpdateAccount(account);
 
@@ -261,8 +265,10 @@ namespace Services.Accounts
             {
                 Amount = result.Amount,
                 CreatedDate = DateTime.UtcNow,
-                MemberId = result.MemberId,
+                SenderId = result.MemberId,
+                ReceiverId = admin.AccountId,
                 Type = TransactionType.Withdraw,
+                PaymentMethod = PaymentMethod.Banking
             };
 
             await _transactionRepository.CreateTransaction(transaction);
@@ -280,27 +286,74 @@ namespace Services.Accounts
             };
         }
 
-        public async Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId,
-            GetTransactionsRequest request)
+        private Expression<Func<Transaction, bool>> GetPredicate(GetTransactionsRequest request)
         {
-            Expression<Func<Transaction, bool>> predicate = transaction => transaction.MemberId == accountId;
+            Expression<Func<Transaction, bool>> predicate = transaction => true;
 
             if (request.Types.Length != 0)
             {
                 predicate = predicate.And(x => request.Types.Contains(x.Type));
             }
 
+            if (!string.IsNullOrWhiteSpace(request.OrderCode))
+            {
+                predicate = predicate.And(x =>
+                    x.Order != null && EF.Functions.ILike(x.Order.OrderCode, $"%{request.OrderCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.ConsignSaleCode))
+            {
+                predicate = predicate.And(x =>
+                    x.ConsignSale != null &&
+                    EF.Functions.ILike(x.ConsignSale.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.RechargeCode))
+            {
+                predicate = predicate.And(x =>
+                    x.Recharge != null && EF.Functions.ILike(x.Recharge.RechargeCode, $"%{request.RechargeCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.DepositCode))
+            {
+                predicate = predicate.And(x =>
+                    x.AuctionDeposit != null &&
+                    EF.Functions.ILike(x.AuctionDeposit.DepositCode, $"%{request.DepositCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.TransactionCode))
+            {
+                predicate = predicate.And(x => EF.Functions.ILike(x.TransactionCode, $"%{request.TransactionCode}%"));
+            }
+
+            return predicate;
+        }
+
+        public async Task<PaginationResponse<GetTransactionsResponse>> GetTransactions(Guid accountId,
+            GetTransactionsRequest request)
+        {
+            Expression<Func<Transaction, bool>> predicate = GetPredicate(request);
+            predicate = predicate.And(x => x.SenderId == accountId || x.ReceiverId == accountId);
+
             Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;
             Expression<Func<Transaction, GetTransactionsResponse>> selector = transaction =>
                 new GetTransactionsResponse()
                 {
                     TransactionId = transaction.TransactionId,
-                    MemberId = transaction.MemberId,
+                    SenderId = transaction.SenderId,
+                    ReceiverId = transaction.ReceiverId,
                     Amount = transaction.Amount,
                     Type = transaction.Type,
                     CreatedDate = transaction.CreatedDate,
                     OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
-                    ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null
+                    ConsignSaleCode = transaction.ConsignSale != null
+                        ? transaction.ConsignSale.ConsignSaleCode
+                        : null,
+                    RechargeCode = transaction.Recharge != null ? transaction.Recharge.RechargeCode : null,
+                    DepositCode =
+                        transaction.AuctionDeposit != null ? transaction.AuctionDeposit.DepositCode : null,
+                    TransactionCode = transaction.TransactionCode,
+                    PaymentMethod = transaction.PaymentMethod
                 };
 
             (List<GetTransactionsResponse> Items, int Page, int PageSize, int TotalCount) data = await
@@ -328,6 +381,12 @@ namespace Services.Accounts
             }
 
 
+            if (!string.IsNullOrWhiteSpace(request.WithdrawCode))
+            {
+                predicate = predicate.And(x => EF.Functions.ILike(x.WithdrawCode, $"%{request.WithdrawCode}%"));
+            }
+
+
             Expression<Func<Withdraw, GetWithdrawsResponse>> selector = withdraw => new GetWithdrawsResponse()
             {
                 WithdrawId = withdraw.WithdrawId,
@@ -337,6 +396,7 @@ namespace Services.Accounts
                 Bank = withdraw.Bank,
                 BankAccountName = withdraw.BankAccountName,
                 BankAccountNumber = withdraw.BankAccountNumber,
+                WithdrawCode = withdraw.WithdrawCode,
                 CreatedDate = withdraw.CreatedDate
             };
 
@@ -440,15 +500,10 @@ namespace Services.Accounts
                 return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.Unauthorized);
             }
 
-            // if (request is { BankName: not null, BankAccountName: not null, BankAccountNumber: not null } &&
-            //     await CheckBankAccountExisted(request.BankName, request.BankAccountName, request.BankAccountNumber))
-            // {
-            //     return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.DuplicateBankAccount);
-            // }
-
             existedBankAccount.Bank = request.BankName ?? existedBankAccount.Bank;
             existedBankAccount.BankAccountName = request.BankAccountName ?? existedBankAccount.BankAccountName;
-            existedBankAccount.BankAccountNumber = request.BankAccountNumber ?? existedBankAccount.BankAccountNumber;
+            existedBankAccount.BankAccountNumber =
+                request.BankAccountNumber ?? existedBankAccount.BankAccountNumber;
             existedBankAccount.BankLogo = request.BankLogo ?? existedBankAccount.BankLogo;
             existedBankAccount.IsDefault = request.IsDefault ?? existedBankAccount.IsDefault;
 
@@ -596,6 +651,70 @@ namespace Services.Accounts
             {
                 return new Result<UpdateBankAccountResponse, ErrorCode>(ErrorCode.ServerError);
             }
+        }
+
+        private Expression<Func<Auction, bool>> GetAuctionPredicate(GetAccountAuctionsRequest request)
+        {
+            Expression<Func<Auction, bool>> predicate = auction => true;
+
+            if (!string.IsNullOrEmpty(request.AuctionCode))
+            {
+                predicate = predicate.And(
+                    auction => EF.Functions.ILike(auction.AuctionCode, $"%{request.AuctionCode}%"));
+            }
+
+            if (request.Statuses.Length > 0)
+            {
+                predicate = predicate.And(auction => request.Statuses.Contains(auction.Status));
+            }
+
+            if (!string.IsNullOrEmpty(request.Title))
+            {
+                predicate = predicate.And(auction => EF.Functions.ILike(auction.Title, $"%{request.Title}%"));
+            }
+
+            return predicate;
+        }
+
+        public async Task<DotNext.Result<PaginationResponse<AuctionListResponse>>> GetAuctions(Guid accountId,
+            GetAccountAuctionsRequest request)
+        {
+            var query = _auctionRepository.GetQueryable()
+                .Where(GetAuctionPredicate(request))
+                .Where(auction => auction.AuctionDeposits.Any(deposit => deposit.MemberId == accountId));
+
+            var count = await query.CountAsync();
+
+            var data = await query
+                .OrderByDescending(x => x.StartDate)
+                .Skip(((request.Page ?? 1) - 1) * (request.PageSize ?? int.MaxValue))
+                .Take(request.PageSize ?? int.MaxValue)
+                .Select(auction => new AuctionListResponse
+                {
+                    Status = auction.Status,
+                    Title = auction.Title,
+                    AuctionCode = auction.AuctionCode,
+                    AuctionId = auction.AuctionId,
+                    DepositFee = auction.DepositFee,
+                    EndDate = auction.EndDate,
+                    ImageUrl = auction.IndividualAuctionFashionItem.Images.First().Url,
+                    IsWon = auction.Bids.Any(x => x.IsWinning == true),
+                    SucessfulBidAmount = auction.Bids.Where(x => x.IsWinning == true).Sum(x => x.Amount),
+                    ShopId = auction.ShopId,
+                    StartDate = auction.StartDate,
+                    AuctionItemId = auction.IndividualAuctionFashionItemId,
+                    ItemCode = auction.IndividualAuctionFashionItem.ItemCode
+                })
+                .ToListAsync();
+
+            return new DotNext.Result<PaginationResponse<AuctionListResponse>>(
+                new PaginationResponse<AuctionListResponse>
+                {
+                    PageSize = request.PageSize ?? -1,
+                    PageNumber = request.Page ?? -1,
+                    TotalCount = count,
+                    Items = data,
+                });
         }
 
         private Task<bool> CheckBankAccountExisted(string bank, string accountName, string accountNumber)

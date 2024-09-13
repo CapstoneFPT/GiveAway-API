@@ -40,6 +40,7 @@ namespace Repositories.OrderLineItems
                         CreatedDate = order.CreatedDate,
                         OrderCode = order.Order.OrderCode,
                         ItemCode = order.IndividualFashionItem.ItemCode,
+                        ItemId = order.IndividualFashionItemId,
                         ItemColor = order.IndividualFashionItem.Color,
                         Condition = order.IndividualFashionItem.Condition,
                         CategoryName = order.IndividualFashionItem.MasterItem.Category.Name,
@@ -56,11 +57,10 @@ namespace Repositories.OrderLineItems
                         ItemSize = order.IndividualFashionItem.Size,
                         PaymentDate = order.PaymentDate,
                         ShopAddress = order.IndividualFashionItem.MasterItem.Shop.Address,
-                        PointPackageId = order.PointPackageId,
                         RefundExpirationDate = order.RefundExpirationDate
                     };
 
-                query = query.Include(c => c.PointPackage)
+                query = query
                     .Include(c => c.IndividualFashionItem)
                     .ThenInclude(c => c.MasterItem)
                     .ThenInclude(c => c.Shop)

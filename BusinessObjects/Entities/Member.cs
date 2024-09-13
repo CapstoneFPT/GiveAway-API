@@ -10,8 +10,8 @@ public class Member : Account
     public ICollection<Bid> Bids = new List<Bid>();
     public ICollection<AuctionDeposit> AuctionDeposits = new List<AuctionDeposit>();
     public ICollection<BankAccount> BankAccounts = new List<BankAccount>();
-    
     public ICollection<Feedback> Feedbacks = new List<Feedback>();
-    public ICollection<Transaction> Transactions = new List<Transaction>();
+    
+    public ICollection<Recharge> Recharges = new List<Recharge>();
     public ICollection<Address> Addresses = new List<Address>();
 }

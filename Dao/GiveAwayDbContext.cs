@@ -27,6 +27,7 @@ public class GiveAwayDbContext : DbContext
     public DbSet<Member> Members { get; set; }
     public DbSet<Staff> Staffs { get; set; }
     public DbSet<Admin> Admins { get; set; }
+    public DbSet<Recharge> Recharges { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
@@ -55,6 +56,13 @@ public class GiveAwayDbContext : DbContext
 
     private static string? GetConnectionString()
     {
+        var envConnectionString = Environment.GetEnvironmentVariable("ASPNETCORE_ConnectionStrings__DefaultDB");
+
+        if(!string.IsNullOrEmpty(envConnectionString))
+        {
+            return envConnectionString;
+        }
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
@@ -112,7 +120,14 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Account>().Property(e => e.Phone).HasColumnType("varchar").HasMaxLength(10);
         modelBuilder.Entity<Account>().HasIndex(x => x.Email).IsUnique();
         modelBuilder.Entity<Account>().HasIndex(x => x.Phone).IsUnique();
-
+        modelBuilder.Entity<Account>()
+            .HasMany(x => x.SentTransactions)
+            .WithOne(x => x.Sender)
+            .HasForeignKey(x => x.SenderId);
+        modelBuilder.Entity<Account>()
+            .HasMany(x => x.ReceivedTransactions)
+            .WithOne(x => x.Receiver)
+            .HasForeignKey(x => x.ReceiverId);
         #endregion
 
         #region Withdraw
@@ -137,10 +152,7 @@ public class GiveAwayDbContext : DbContext
             .HasForeignKey(x => x.MemberId);
 
 
-        modelBuilder.Entity<Member>()
-            .HasMany(x => x.Transactions)
-            .WithOne(x => x.Member)
-            .HasForeignKey(x => x.MemberId);
+        
 
 
         modelBuilder.Entity<Member>()
@@ -182,6 +194,10 @@ public class GiveAwayDbContext : DbContext
             .HasMany(x => x.Bids)
             .WithOne(x => x.Auction)
             .HasForeignKey(x => x.AuctionId);
+        modelBuilder.Entity<Auction>()
+            .HasMany(x=>x.AuctionDeposits)
+            .WithOne(x=>x.Auction)
+            .HasForeignKey(x=>x.AuctionId);
 
         #endregion
 
@@ -517,7 +533,10 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<Transaction>().HasOne(x => x.AuctionDeposit).WithOne(x => x.Transaction)
             .HasForeignKey<AuctionDeposit>(x => x.TransactionId).OnDelete(DeleteBehavior.Cascade);
-
+        modelBuilder.Entity<Transaction>()
+            .Property(x => x.PaymentMethod)
+            .HasConversion(prop => prop.ToString(), s => (PaymentMethod)Enum.Parse(typeof(PaymentMethod), s))
+            .HasColumnType("varchar").HasMaxLength(30);
         #endregion
 
         #region Shop
@@ -535,15 +554,27 @@ public class GiveAwayDbContext : DbContext
             .HasForeignKey(x => x.ShopId);
         #endregion
 
-        #region PointPackage
+        #region Recharge
 
-        modelBuilder.Entity<PointPackage>().ToTable("PointPackage").HasKey(e => e.PointPackageId);
+        modelBuilder.Entity<Recharge>().ToTable("Recharge").HasKey(e => e.RechargeId);
 
-        modelBuilder.Entity<PointPackage>().Property(e => e.Status)
+        modelBuilder.Entity<Recharge>().Property(e => e.Status)
             .HasConversion(prop => prop.ToString(),
-                s => (PointPackageStatus)Enum.Parse(typeof(PointPackageStatus), s)
+                s => (RechargeStatus)Enum.Parse(typeof(RechargeStatus), s)
             ).HasColumnType("varchar")
             .HasMaxLength(20);
+        
+        modelBuilder.Entity<Recharge>()
+            .Property(x=>x.PaymentMethod)
+            .HasConversion(prop => prop.ToString(),
+                s => (PaymentMethod)Enum.Parse(typeof(PaymentMethod), s)
+            ).HasColumnType("varchar")
+            .HasMaxLength(20);
+
+        modelBuilder.Entity<Recharge>()
+            .HasOne<Transaction>(x => x.Transaction)
+            .WithOne(x => x.Recharge)
+            .HasForeignKey<Transaction>(x => x.RechargeId);
 
         #endregion
 

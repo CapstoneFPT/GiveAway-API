@@ -13,6 +13,17 @@ public class WithdrawNotFoundException : Exception
 {
 }
 
+public class TransactionFailedException : Exception
+{
+}
+
+public class InvalidInitialPriceException : Exception
+{
+    public InvalidInitialPriceException(string message) : base(message)
+    {
+    }
+}
+
 public class UnableToCalculateRefundAmountException : Exception
 {
     public UnableToCalculateRefundAmountException(string orderOrOrderlineitemNotFound) : base(
@@ -152,3 +163,4 @@ public class ItemUnableToDeleteException(string message) : Exception(message)
 public class DeleteFashionItemsFailedException(string message, ErrorCode errorCode) : Exception(message)
 {
 }
+public class BalanceIsNotEnoughException(ErrorCode errorCode) : Exception{}

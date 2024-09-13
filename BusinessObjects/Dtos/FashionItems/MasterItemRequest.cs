@@ -13,5 +13,6 @@ public class MasterItemRequest
     public Guid? ShopId { get; set; }
     public GenderType? GenderType { get; set; }
     public bool? IsConsignment { get; set; }
-    public bool IsLeftInStock { get; set; } = true;
+    public bool? IsLeftInStock { get; set; }
+    public bool IsForSale { get; set; } = true;
 }

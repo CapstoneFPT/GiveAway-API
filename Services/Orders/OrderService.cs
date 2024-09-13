@@ -12,7 +12,7 @@ using BusinessObjects.Dtos.OrderLineItems;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Repositories.Accounts;
 using Repositories.AuctionItems;
-using Repositories.PointPackages;
+using Repositories.Recharges;
 using Repositories.Shops;
 using Repositories.Transactions;
 using BusinessObjects.Dtos.Email;
@@ -40,7 +40,7 @@ public class OrderService : IOrderService
     private readonly IAuctionItemRepository _auctionItemRepository;
     private readonly IMapper _mapper;
     private readonly IAccountRepository _accountRepository;
-    private readonly IPointPackageRepository _pointPackageRepository;
+    private readonly IRechargeRepository _rechargeRepository;
     private readonly IShopRepository _shopRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IConfiguration _configuration;
@@ -52,7 +52,7 @@ public class OrderService : IOrderService
 
     public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
         IMapper mapper, IOrderLineItemRepository orderLineItemRepository, IAuctionItemRepository auctionItemRepository,
-        IAccountRepository accountRepository, IPointPackageRepository pointPackageRepository,
+        IAccountRepository accountRepository, IRechargeRepository rechargeRepository,
         IShopRepository shopRepository, ITransactionRepository transactionRepository,
         IConfiguration configuration, IEmailService emailService, IRefundRepository refundRepository,
         IGiaoHangNhanhService giaoHangNhanhService, ILogger<OrderService> logger, ISchedulerFactory schedulerFactory)
@@ -62,7 +62,7 @@ public class OrderService : IOrderService
         _mapper = mapper;
         _orderLineItemRepository = orderLineItemRepository;
         _auctionItemRepository = auctionItemRepository;
-        _pointPackageRepository = pointPackageRepository;
+        _rechargeRepository = rechargeRepository;
         _accountRepository = accountRepository;
         _shopRepository = shopRepository;
         _transactionRepository = transactionRepository;
@@ -243,53 +243,6 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateOrder(order);
     }
 
-
-    public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreatePointPackageOrder(
-        PointPackageOrder order)
-    {
-        var orderResult = await _orderRepository.CreateOrder(new Order()
-        {
-            OrderCode = _orderRepository.GenerateUniqueString(),
-            CreatedDate = DateTime.UtcNow,
-            MemberId = order.MemberId,
-            TotalPrice = order.TotalPrice,
-            PaymentMethod = order.PaymentMethod,
-            Status = OrderStatus.AwaitingPayment,
-        });
-
-        var orderDetailResult = await _orderLineItemRepository.CreateOrderLineItem(new OrderLineItem()
-        {
-            OrderId = orderResult.OrderId,
-            UnitPrice = order.TotalPrice,
-            CreatedDate = DateTime.UtcNow,
-            PointPackageId = order.PointPackageId,
-        });
-
-        return new BusinessObjects.Dtos.Commons.Result<OrderResponse>()
-        {
-            Data = new OrderResponse()
-            {
-                OrderId = orderResult.OrderId,
-                OrderCode = orderResult.OrderCode,
-                TotalPrice = orderResult.TotalPrice,
-                OrderLineItems = new List<OrderLineItemDetailedResponse>()
-                {
-                    new OrderLineItemDetailedResponse()
-                    {
-                        OrderLineItemId = orderDetailResult.OrderLineItemId,
-                        UnitPrice = orderDetailResult.UnitPrice,
-                        RefundExpirationDate = null,
-                        PointPackageId = orderDetailResult.PointPackageId
-                    }
-                },
-                CreatedDate = orderResult.CreatedDate,
-                // PaymentDate = orderResult.PaymentDate,
-            },
-            ResultStatus = ResultStatus.Success
-        };
-    }
-
-
     public async Task<Order?> GetOrderById(Guid orderId)
     {
         var result = await _orderRepository.GetSingleOrder(x => x.OrderId == orderId);
@@ -301,7 +254,7 @@ public class OrderService : IOrderService
         await _orderRepository.UpdateOrder(order);
     }
 
-    public async Task<BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>> GetOrdersByAccountId(
+    public async Task<DotNext.Result<PaginationResponse<OrderListResponse>,ErrorCode>> GetOrdersByAccountId(
         Guid accountId,
         OrderRequest request)
     {
@@ -313,7 +266,6 @@ public class OrderService : IOrderService
             TotalPrice = order.TotalPrice,
             Status = order.Status,
             CreatedDate = order.CreatedDate,
-            // PaymentDate = order.PaymentDate,
             MemberId = order.MemberId,
             CompletedDate = order.CompletedDate,
             ContactNumber = order.Phone,
@@ -329,9 +281,10 @@ public class OrderService : IOrderService
             Discount = order.Discount
         };
 
+        
         if (request.Status != null)
         {
-            predicate = order => order.Status == request.Status;
+            predicate = predicate.And(order => order.Status == request.Status);
         }
 
         if (!string.IsNullOrEmpty(request.OrderCode))
@@ -361,37 +314,17 @@ public class OrderService : IOrderService
             predicate = predicate.And(ord => ord.BidId == null);
         }
 
-        if (request.IsPointPackage == true)
-        {
-            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId != null));
-        }
-
-        if (request.IsPointPackage == false)
-        {
-            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId == null));
-        }
-
-        if (request.IsFromAuction == true)
-        {
-            predicate = predicate.And(ord => ord.BidId != null);
-        }
-
         (List<OrderListResponse> Items, int Page, int PageSize, int TotalCount) =
             await _orderRepository.GetOrdersProjection<OrderListResponse>(request.PageNumber,
                 request.PageSize, predicate, selector);
 
-        return new BusinessObjects.Dtos.Commons.Result<PaginationResponse<OrderListResponse>>()
+        return new Result<PaginationResponse<OrderListResponse>, ErrorCode>(new PaginationResponse<OrderListResponse>()
         {
-            Data = new PaginationResponse<OrderListResponse>()
-            {
-                Items = Items,
-                PageNumber = Page,
-                PageSize = PageSize,
-                TotalCount = TotalCount,
-                SearchTerm = request.OrderCode
-            },
-            ResultStatus = ResultStatus.Success
-        };
+            Items = Items,
+            PageNumber = request.PageNumber ?? -1,
+            PageSize = request.PageSize ?? -1,
+            TotalCount = TotalCount
+        });
     }
 
     public async Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrder(Guid orderId)
@@ -414,15 +347,17 @@ public class OrderService : IOrderService
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= order.TotalPrice;
+            admin.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 OrderId = orderId,
-                MemberId = order.MemberId,
+                ReceiverId = order.MemberId,
+                SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
-                Type = TransactionType.Refund
+                Type = TransactionType.RefundProduct,
+                PaymentMethod = PaymentMethod.Point
             };
             await _transactionRepository.CreateTransaction(transaction);
         }
@@ -460,15 +395,16 @@ public class OrderService : IOrderService
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= order.TotalPrice;
+            admin.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 OrderId = orderId,
-                MemberId = order.MemberId,
+                ReceiverId = order.MemberId,
+                SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
-                Type = TransactionType.Refund
+                Type = TransactionType.RefundProduct
             };
             await _transactionRepository.CreateTransaction(transaction);
         }
@@ -495,7 +431,7 @@ public class OrderService : IOrderService
         Expression<Func<Order, bool>> predicate = order => true;
         if (orderRequest.Status != null)
         {
-            predicate = order => order.Status == orderRequest.Status;
+            predicate = predicate.And(order => order.Status == orderRequest.Status);
         }
 
         if (!string.IsNullOrEmpty(orderRequest.OrderCode))
@@ -528,16 +464,6 @@ public class OrderService : IOrderService
         if (orderRequest.IsFromAuction == false)
         {
             predicate = predicate.And(ord => ord.BidId == null);
-        }
-
-        if (orderRequest.IsPointPackage == true)
-        {
-            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId != null));
-        }
-
-        if (orderRequest.IsPointPackage == false)
-        {
-            predicate = predicate.And(or => or.OrderLineItems.All(c => c.PointPackageId == null));
         }
 
         if (orderRequest.Email != null)
@@ -727,8 +653,76 @@ public class OrderService : IOrderService
             ];
             return response;
         }
-
-        response.Data = await _orderRepository.CreateOrderByShop(shopId, request);
+        var listItem = await _fashionItemRepository.GetIndividualQueryable()
+            .Where(c => request.ItemIds.Contains(c.ItemId)).ToListAsync();
+        var isMember = await _accountRepository.FindUserByPhone(request.Phone);
+        Order order = new Order()
+        {
+            PurchaseType = PurchaseType.Offline,
+            PaymentMethod = PaymentMethod.Cash,
+            Address = request.Address,
+            RecipientName = request.RecipientName,
+            Phone = request.Phone,
+            Email = request.Email,
+            Status = OrderStatus.Completed,
+            Discount = request.Discount,
+            CreatedDate = DateTime.UtcNow,
+            TotalPrice = listItem.Sum(c => c.SellingPrice!.Value),
+            OrderCode = _orderRepository.GenerateUniqueString(),
+            MemberId = isMember?.AccountId
+        };
+        await _orderRepository.CreateOrder(order);
+        var listOrderLineItem = new List<OrderLineItem>();
+        foreach (var item in listItem)
+        {
+            OrderLineItem orderLineItem = new OrderLineItem();
+            orderLineItem.OrderId = order.OrderId;
+            orderLineItem.UnitPrice = item.SellingPrice!.Value;
+            orderLineItem.CreatedDate = DateTime.UtcNow;
+            orderLineItem.Quantity = 1;
+            orderLineItem.PaymentDate = DateTime.UtcNow;
+            orderLineItem.IndividualFashionItemId = item.ItemId;
+            listOrderLineItem.Add(orderLineItem);
+            
+            item.Status = FashionItemStatus.Refundable;
+            await _fashionItemRepository.UpdateFashionItem(item);
+            await _orderLineItemRepository.CreateOrderLineItem(orderLineItem);
+        }
+        var orderTransaction = new Transaction()
+        {
+            OrderId = order.OrderId,
+            CreatedDate = DateTime.UtcNow,
+            Type = TransactionType.Purchase,
+            Amount = order.TotalPrice,
+            ShopId = shopId,
+            SenderId = isMember?.AccountId,
+            PaymentMethod = PaymentMethod.Cash,
+        };
+        await _transactionRepository.CreateTransaction(orderTransaction);
+        response.Data = new OrderResponse()
+        {
+            OrderId = order.OrderId,
+            Quantity = listOrderLineItem.Count,
+            TotalPrice = order.TotalPrice,
+            CreatedDate = order.CreatedDate,
+            Address = order.Address,
+            ContactNumber = order.Phone,
+            RecipientName = order.RecipientName,
+            Email = order.Email,
+            PaymentMethod = order.PaymentMethod,
+            PurchaseType = order.PurchaseType,
+            Discount = order.Discount,
+            OrderCode = order.OrderCode,
+            Status = order.Status,
+            OrderLineItems = listOrderLineItem.Select(c => new OrderLineItemDetailedResponse()
+            {
+                OrderLineItemId = c.OrderLineItemId,
+                UnitPrice = c.UnitPrice,
+                CreatedDate = c.CreatedDate,
+                Quantity = c.Quantity,
+                PaymentDate = c.PaymentDate,
+            }).ToList()
+        };
         response.Messages = ["Create Successfully"];
         response.ResultStatus = ResultStatus.Success;
         return response;
@@ -771,7 +765,7 @@ public class OrderService : IOrderService
             OrderId = orderId,
             CreatedDate = DateTime.UtcNow,
             ShopId = shopId,
-            Type = TransactionType.Sale,
+            Type = TransactionType.CustomerSale,
             Amount = order.TotalPrice,
         };
 
@@ -811,7 +805,9 @@ public class OrderService : IOrderService
             throw new AccountNotFoundException();
         }
 
-        account!.Balance += order.TotalPrice;
+        _logger.LogInformation("Update Admin Balance: {Balance} + {TotalPrice}", account.Balance, order.TotalPrice);
+        account!.Balance -= order.TotalPrice;
+        _logger.LogInformation("Update Admin Balance After: {Balance}", account.Balance);
         await _accountRepository.UpdateAccount(account);
     }
 
@@ -830,7 +826,7 @@ public class OrderService : IOrderService
             throw new StatusNotAvailableWithMessageException("This order is not Pending");
         }
 
-        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.OnDelivery) &&
+        if (!itemStatus.ItemStatus.Equals(FashionItemStatus.ReadyForDelivery) &&
             !itemStatus.ItemStatus.Equals(FashionItemStatus.Unavailable))
         {
             throw new StatusNotAvailableWithMessageException("You can only set OnDelivery or Unavailable");
@@ -852,21 +848,33 @@ public class OrderService : IOrderService
         orderDetail.IndividualFashionItem.Status = itemStatus.ItemStatus;
         if (order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
-            foreach (var detail in order.OrderLineItems)
+            foreach (var detail in order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
             {
                 detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
                 await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId);
                 // gui mail thong bao 
             }
 
-            order.Status = OrderStatus.Cancelled;
+            
         }
 
+        if (order.OrderLineItems.All(it => it.IndividualFashionItem.Status != FashionItemStatus.PendingForOrder) && 
+            order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
+        {
+            order.Status = OrderStatus.Cancelled;
+        }
         if (order.PaymentMethod == PaymentMethod.COD)
         {
             await _emailService.SendEmailOrder(order);
         }
 
+        if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
+        {
+            foreach (var orderLineItem in order.OrderLineItems)
+            {
+                orderLineItem.IndividualFashionItem.Status = FashionItemStatus.OnDelivery;
+            }
+        }
         if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.OnDelivery))
         {
             order.Status = OrderStatus.OnDelivery;
@@ -879,15 +887,16 @@ public class OrderService : IOrderService
             var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
             if (admin == null)
                 throw new AccountNotFoundException();
-            admin.Balance -= order.TotalPrice;
+            admin.Balance += order.TotalPrice;
             await _accountRepository.UpdateAccount(admin);
             var transaction = new Transaction()
             {
                 OrderId = order.OrderId,
-                MemberId = order.MemberId,
+                ReceiverId = order.MemberId,
+                SenderId = admin.AccountId,
                 Amount = order.TotalPrice,
                 CreatedDate = DateTime.UtcNow,
-                Type = TransactionType.Refund
+                Type = TransactionType.RefundProduct
             };
             await _transactionRepository.CreateTransaction(transaction);
         }
@@ -926,7 +935,7 @@ public class OrderService : IOrderService
             .Build();
         var endTrigger = TriggerBuilder.Create()
             .WithIdentity($"EndReservedItemTrigger_{itemId}")
-            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(15)))
+            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(30)))
             .Build();
         await schedule.ScheduleJob(endJob, endTrigger);
     }
