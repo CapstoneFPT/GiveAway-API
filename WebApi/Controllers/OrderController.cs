@@ -279,6 +279,25 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+        [HttpGet("{orderId}/invoice")]
+        [ProducesResponseType(typeof(FileContentResult), (int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GenerateInvoice([FromRoute] Guid orderId, [FromQuery] Guid shopId)
+        {
+            var result = await _orderService.GenerateInvoice(orderId,shopId);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => NotFound(new ErrorResponse("Order not found", ErrorType.ApiError, HttpStatusCode.NotFound, result.Error)),
+                    _ => StatusCode(500, new ErrorResponse("Error generating invoice", ErrorType.ApiError, HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
+
+            return File(result.Value.Content, "application/pdf", $"Invoice_{orderId}.pdf");
+        }
 
         // [HttpPatch("{orderId}/update-address")]
         // [ProducesResponseType<OrderDetailedResponse>((int)HttpStatusCode.OK)]
