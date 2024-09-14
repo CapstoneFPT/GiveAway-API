@@ -92,8 +92,13 @@ public class OrderService : IOrderService
             var orderLineItems = await _orderLineItemRepository.GetQueryable()
                 .Include(x=>x.IndividualFashionItem)
                 .ThenInclude(x=>x.MasterItem)
-                .AsSplitQuery()
-                .Where(x=>x.Order.OrderId == orderId).ToListAsync();
+                .Where(x=>x.Order.OrderId == orderId)
+                .Select(x=>new OrderLineItemListResponse()
+                {
+                    ItemName = x.IndividualFashionItem.MasterItem.Name,
+                    UnitPrice = x.UnitPrice,
+                })
+                .ToListAsync();
 
             var invoiceHtml = await GenerateInvoiceHtml(order,orderLineItems,shop);
             var renderer = new ChromePdfRenderer()
@@ -122,7 +127,7 @@ public class OrderService : IOrderService
         }
     }
 
-    private async Task<string> GenerateInvoiceHtml(Order order, List<OrderLineItem> orderLineItems,
+    private async Task<string> GenerateInvoiceHtml(Order order, List<OrderLineItemListResponse> orderLineItems,
         ShopDetailResponse shop)
     {
         var templatePath = Path.Combine("InvoiceTemplate", "only-invoice.html");
@@ -146,7 +151,7 @@ public class OrderService : IOrderService
         {
             itemsHtml.Append($@"
             <tr class='border-bottom border-bottom-dashed'>
-                <td class='pe-7'>{item.IndividualFashionItem?.MasterItem?.Name ?? "N/A"}</td>
+                <td class='pe-7'>{item.ItemName ?? "N/A"}</td>
                 <td class='text-end'>{item.Quantity}</td>
                 <td class='text-end'>{item.UnitPrice} VND</td>
                 <td class='text-end'>{item.UnitPrice}</td>
