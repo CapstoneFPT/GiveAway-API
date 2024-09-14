@@ -422,7 +422,8 @@ public class GiveAwayDbContext : DbContext
             .HasOne<Refund>(x => x.Refund)
             .WithOne(x => x.OrderLineItem)
             .HasForeignKey<Refund>(x => x.OrderLineItemId);
-        
+        modelBuilder.Entity<OrderLineItem>().Property(e => e.ReservedExpirationDate).HasColumnType("timestamptz")
+            .IsRequired(false);
 
         #endregion
 

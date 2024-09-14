@@ -92,7 +92,9 @@ namespace Repositories.AuctionDeposits
                 .Where(x => x.AuctionId == auctionId)
                 .Select(x => new AuctionDepositListResponse()
                 {
-                    MemberId = x.MemberId,
+                    CustomerName = x.Member.Fullname,
+                    CustomerEmail = x.Member.Email,
+                    CustomerPhone = x.Member.Phone,
                     AuctionId = x.AuctionId,
                     DepositDate = x.CreatedDate,
                     Id = x.AuctionDepositId
