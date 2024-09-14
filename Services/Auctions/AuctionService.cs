@@ -306,6 +306,7 @@ namespace Services.Auctions
                 EndDate = auction.EndDate,
                 Status = auction.Status,
                 DepositFee = auction.DepositFee,
+                InitialPrice = auction.IndividualAuctionFashionItem.InitialPrice,
                 ImageUrl = auction.IndividualAuctionFashionItem.Images.FirstOrDefault() != null
                     ? auction.IndividualAuctionFashionItem.Images.FirstOrDefault().Url
                     : null,

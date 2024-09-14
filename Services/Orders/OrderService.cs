@@ -1007,7 +1007,8 @@ public class OrderService : IOrderService
                          c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
             {
                 detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
-                await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId);
+                detail.ReservedExpirationDate = DateTime.UtcNow.AddMinutes(15);
+                await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId, detail.ReservedExpirationDate.Value);
                 // gui mail thong bao 
             }
         }
@@ -1080,7 +1081,7 @@ public class OrderService : IOrderService
         return response;
     }
 
-    private async Task ScheduleReservedItemEnding(Guid itemId)
+    private async Task ScheduleReservedItemEnding(Guid itemId, DateTime reservedExpiration)
     {
         var schedule = await _schedulerFactory.GetScheduler();
         var jobDataMap = new JobDataMap()
@@ -1093,7 +1094,7 @@ public class OrderService : IOrderService
             .Build();
         var endTrigger = TriggerBuilder.Create()
             .WithIdentity($"EndReservedItemTrigger_{itemId}")
-            .StartAt(new DateTimeOffset(DateTime.UtcNow.AddMinutes(30)))
+            .StartAt(new DateTimeOffset(reservedExpiration))
             .Build();
         await schedule.ScheduleJob(endJob, endTrigger);
     }
