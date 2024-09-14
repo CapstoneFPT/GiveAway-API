@@ -691,7 +691,6 @@ namespace Services.Accounts
                     AuctionCode = auction.AuctionCode,
                     AuctionId = auction.AuctionId,
                     DepositFee = auction.DepositFee,
-                    InitialPrice = auction.IndividualAuctionFashionItem.InitialPrice,
                     EndDate = auction.EndDate,
                     ImageUrl = auction.IndividualAuctionFashionItem.Images.First().Url,
                     IsWon = auction.Bids.Any(x => x.IsWinning == true),

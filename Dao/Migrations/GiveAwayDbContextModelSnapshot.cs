@@ -807,9 +807,6 @@ namespace Dao.Migrations
                     b.Property<DateTime?>("RefundExpirationDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ReservedExpirationDate")
-                        .HasColumnType("timestamptz");
-
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric");
 

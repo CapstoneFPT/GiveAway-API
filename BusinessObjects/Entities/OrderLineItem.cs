@@ -15,7 +15,7 @@ public class OrderLineItem
     public DateTime? RefundExpirationDate { get; set; }
     public IndividualFashionItem IndividualFashionItem { get; set; }
     public Guid? IndividualFashionItemId { get; set; }
-    public DateTime? ReservedExpirationDate { get; set; }
+    
     public DateTime CreatedDate { get; set; }
     public DateTime? PaymentDate { get; set; }
     
