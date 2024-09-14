@@ -38,10 +38,14 @@
 
     <ItemGroup>
       <None Include="appsettings.Development.json" />
+      <None Update="InvoiceTemplate\only-invoice.html">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Hubs\" />
+      <Folder Include="InvoiceTemplate\" />
       <Folder Include="Utils\VNPay\" />
     </ItemGroup>
 

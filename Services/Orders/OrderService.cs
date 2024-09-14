@@ -29,6 +29,9 @@ using Repositories.Refunds;
 using Services.ConsignSales;
 using Services.FashionItems;
 using Services.GiaoHangNhanh;
+using System.Text;
+using BusinessObjects.Dtos.Shops;
+using IronPdf.Rendering;
 
 namespace Services.Orders;
 
@@ -72,6 +75,92 @@ public class OrderService : IOrderService
         _giaoHangNhanhService = giaoHangNhanhService;
         _logger = logger;
         _schedulerFactory = schedulerFactory;
+    }
+
+    public async Task<Result<InvoiceResponse, ErrorCode>> GenerateInvoice(Guid orderId, Guid shopId)
+    {
+        try
+        {
+            var order = await _orderRepository.GetOrderById(orderId);
+            if (order == null)
+            {
+                return new Result<InvoiceResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+            
+            var shop = await _shopRepository.GetShopById(shopId);
+            
+            var orderLineItems = await _orderLineItemRepository.GetQueryable()
+                .Include(x=>x.IndividualFashionItem)
+                .ThenInclude(x=>x.MasterItem)
+                .AsSplitQuery()
+                .Where(x=>x.Order.OrderId == orderId).ToListAsync();
+
+            var invoiceHtml = await GenerateInvoiceHtml(order,orderLineItems,shop);
+            var renderer = new ChromePdfRenderer()
+            {
+                RenderingOptions = new ChromePdfRenderOptions()
+                {
+                    CssMediaType = PdfCssMediaType.Print,
+                    CustomCssUrl = "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+                }
+            };
+            var pdf = await renderer.RenderHtmlAsPdfAsync(invoiceHtml);
+
+            var fileName = $"Invoice_{order.OrderCode}.pdf";
+            var filePath = Path.Combine(Path.GetTempPath(), fileName);
+            pdf.SaveAs(filePath);
+
+            return new Result<InvoiceResponse, ErrorCode>(new InvoiceResponse
+            {
+                Content = pdf.BinaryData,
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating invoice for order {OrderId}", orderId);
+            return new Result<InvoiceResponse, ErrorCode>(ErrorCode.ServerError);
+        }
+    }
+
+    private async Task<string> GenerateInvoiceHtml(Order order, List<OrderLineItem> orderLineItems,
+        ShopDetailResponse shop)
+    {
+        var templatePath = Path.Combine("InvoiceTemplate", "only-invoice.html");
+        var template = await File.ReadAllTextAsync(templatePath);
+
+        _logger.LogInformation("Generating invoice for order {OrderId}", order.OrderId);
+        _logger.LogInformation("Template path: {TemplatePath}", templatePath);
+        _logger.LogInformation("Template: {Template}", template);
+
+        template = template.Replace("{{InvoiceNumber}}", order.OrderCode)
+            .Replace("{{IssueDate}}", order.CreatedDate.ToString("MMMM dd, yyyy"))
+            .Replace("{{DueDate}}", order.CreatedDate.AddDays(14).ToString("MMMM dd, yyyy"))
+            .Replace("{{CustomerName}}", order.Member?.Fullname ?? "N/A")
+            .Replace("{{CustomerAddress}}", order.Address ?? "N/A")
+            .Replace("{{CustomerPhone}}", order.Phone ?? "N/A")
+            .Replace("{{CustomerEmail}}", order.Email ?? "N/A")
+            .Replace("{{ShopAddress}}", shop.Address ?? "N/A");
+
+        var itemsHtml = new StringBuilder();
+        foreach (var item in orderLineItems)
+        {
+            itemsHtml.Append($@"
+            <tr class='border-bottom border-bottom-dashed'>
+                <td class='pe-7'>{item.IndividualFashionItem?.MasterItem?.Name ?? "N/A"}</td>
+                <td class='text-end'>{item.Quantity}</td>
+                <td class='text-end'>{item.UnitPrice} VND</td>
+                <td class='text-end'>{item.UnitPrice}</td>
+            </tr>");
+        }
+
+        template = template.Replace("{{OrderItems}}", itemsHtml.ToString());
+
+        // Replace totals
+        template = template.Replace("{{Subtotal}}", $"{order.TotalPrice - order.ShippingFee}")
+            .Replace("{{ShippingFee}}", $"{order.ShippingFee}")
+            .Replace("{{Total}}", $"{order.TotalPrice}");
+
+        return template;
     }
 
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrder(Guid accountId,
@@ -174,10 +263,10 @@ public class OrderService : IOrderService
         UpdateOrderAddressRequest request)
     {
         var toBeUpdated = await _orderRepository.GetQueryable()
-            .Include(x=>x.Member)
-            .Include(x=>x.Bid)
-            .ThenInclude(bid=>bid.Auction)
-            .Include(x=>x.OrderLineItems).FirstOrDefaultAsync(x => x.OrderId == orderId);
+            .Include(x => x.Member)
+            .Include(x => x.Bid)
+            .ThenInclude(bid => bid.Auction)
+            .Include(x => x.OrderLineItems).FirstOrDefaultAsync(x => x.OrderId == orderId);
 
         if (toBeUpdated == null)
         {
@@ -213,7 +302,7 @@ public class OrderService : IOrderService
             ShippingFee = toBeUpdated.ShippingFee,
             PaymentDate = toBeUpdated.OrderLineItems.First().PaymentDate ?? DateTime.MinValue,
             TotalPrice = toBeUpdated.TotalPrice,
-            Subtotal = toBeUpdated.OrderLineItems.Sum(x=>x.UnitPrice),
+            Subtotal = toBeUpdated.OrderLineItems.Sum(x => x.UnitPrice),
             AuctionTitle = toBeUpdated.Bid.Auction.Title ?? "N/A",
             CustomerName = toBeUpdated.Member.Fullname ?? "N/A",
             BidId = toBeUpdated.BidId ?? Guid.Empty,
@@ -619,7 +708,7 @@ public class OrderService : IOrderService
             if (fashionItem is { Status: FashionItemStatus.OnDelivery })
             {
                 fashionItem.Status = FashionItemStatus.Refundable;
-                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(15);
+                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(2);
                 if (order.PaymentMethod.Equals(PaymentMethod.COD))
                     orderDetail.PaymentDate = DateTime.UtcNow;
                 await ScheduleRefundableItemEnding(fashionItem.ItemId, orderDetail.RefundExpirationDate.Value);
@@ -725,6 +814,7 @@ public class OrderService : IOrderService
             Status = OrderStatus.Completed,
             Discount = request.Discount,
             CreatedDate = DateTime.UtcNow,
+            CompletedDate = DateTime.UtcNow,
             TotalPrice = listItem.Sum(c => c.SellingPrice!.Value),
             OrderCode = _orderRepository.GenerateUniqueString(),
             MemberId = isMember?.AccountId
@@ -770,6 +860,7 @@ public class OrderService : IOrderService
             Email = order.Email,
             PaymentMethod = order.PaymentMethod,
             PurchaseType = order.PurchaseType,
+            CompletedDate = order.CompletedDate,
             Discount = order.Discount,
             OrderCode = order.OrderCode,
             Status = order.Status,

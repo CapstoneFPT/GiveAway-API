@@ -252,7 +252,7 @@ namespace Services.Refunds
             return refundAmount;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ConfirmReceivedAndRefund(Guid refundId, ConfirmReceivedRequest request)
         {
             var response = new BusinessObjects.Dtos.Commons.Result<RefundResponse>();
             Expression<Func<Refund, bool>> predicate = refund => refund.RefundId == refundId;
@@ -261,53 +261,75 @@ namespace Services.Refunds
             {
                 throw new RefundNotFoundException();
             }
-
-            var order = await _orderRepository.GetSingleOrder(c =>
-                c.OrderLineItems.Select(orderLineItem => orderLineItem.OrderLineItemId).Contains(refund.OrderLineItemId));
-            if (order == null)
-            {
-                throw new OrderNotFoundException();
-            }
-
+            
             if (!refund.RefundStatus.Equals(RefundStatus.Approved))
             {
                 response.ResultStatus = ResultStatus.Error;
                 response.Messages = new[] { "This refund is not available to confirm" };
                 return response;
             }
-
-            var refundResponse = await _refundRepository.ConfirmReceivedAndRefund(refundId);
-
-            var member = await _accountRepository.GetAccountById(order.MemberId!.Value);
-            if (member == null)
+            var refundAmount = await CalculateRefundAmount(refund.OrderLineItem.OrderId, refund.OrderLineItemId, refund.RefundPercentage!.Value);
+            switch (request.Status)
             {
-                throw new AccountNotFoundException();
+                case RefundStatus.Rejected:
+                    refund.RefundStatus = RefundStatus.Rejected;
+                    refund.ResponseFromShop = request.ResponseFromShop;
+                    refund.RefundPercentage = 0;
+                    refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Sold;
+                    break;
+                case RefundStatus.Completed:
+                {
+                    refund.RefundStatus = RefundStatus.Completed;
+                    refund.RefundPercentage = request.RefundPercentage;
+                    refund.ResponseFromShop = request.ResponseFromShop;
+                    refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
+                    var member = await _accountRepository.GetAccountById(refund.OrderLineItem.Order.MemberId!.Value);
+                    if (member == null)
+                    {
+                        throw new AccountNotFoundException();
+                    }
+                    member.Balance += refundAmount;
+                    await _accountRepository.UpdateAccount(member);
+
+                    var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
+                    if (admin == null)
+                        throw new AccountNotFoundException();
+                    admin.Balance += refundAmount;
+                    await _accountRepository.UpdateAccount(admin);
+
+                    var refundTransaction = new Transaction()
+                    {
+                        Amount = refundAmount,
+                        CreatedDate = DateTime.UtcNow,
+                        Type = TransactionType.RefundProduct,
+                        RefundId = refundId,
+                        ReceiverId = refund.OrderLineItem.Order.MemberId,
+                        ReceiverBalance = member.Balance,
+                        SenderId = admin.AccountId,
+                        SenderBalance = admin.Balance,
+                        PaymentMethod = PaymentMethod.Point
+                    };
+                    await _transactionRepository.CreateTransaction(refundTransaction);
+                    break;
+                }
+                default:
+                {
+                    throw new StatusNotAvailableWithMessageException("Only allow Completed or Rejected");
+                }
             }
 
-            var refundAmount = await CalculateRefundAmount(order.OrderId, refund.OrderLineItemId, refund.RefundPercentage!.Value);
-            member.Balance += refundAmount;
-            await _accountRepository.UpdateAccount(member);
-
-            var admin = await _accountRepository.FindOne(c => c.Role.Equals(Roles.Admin));
-            if (admin == null)
-                throw new AccountNotFoundException();
-            admin.Balance += refundAmount;
-            await _accountRepository.UpdateAccount(admin);
-
-            Transaction refundTransaction = new Transaction()
+            await _refundRepository.UpdateRefund(refund);
+            response.Data = new RefundResponse()
             {
-                Amount = refundAmount,
-                CreatedDate = DateTime.UtcNow,
-                Type = TransactionType.RefundProduct,
-                RefundId = refundId,
-                ReceiverId = order.MemberId,
-                ReceiverBalance = member.Balance,
-                SenderId = admin.AccountId,
-                SenderBalance = admin.Balance,
-                PaymentMethod = PaymentMethod.Point
+                RefundId = refund.RefundId,
+                Description = refund.Description,
+                CreatedDate = refund.CreatedDate,
+                RefundPercentage = refund.RefundPercentage,
+                RefundAmount = refundAmount,
+                RefundStatus = refund.RefundStatus,
+                OrderLineItemId = refund.OrderLineItemId,
+                ResponseFromShop = refund.ResponseFromShop
             };
-            await _transactionRepository.CreateTransaction(refundTransaction);
-            response.Data = refundResponse;
             response.ResultStatus = ResultStatus.Success;
             response.Messages = new[] { "Confirm item is received and refund to customer successfully" };
             return response;

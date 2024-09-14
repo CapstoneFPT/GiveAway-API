@@ -27,6 +27,7 @@ jobs:
         VNPAY_TMNCODE: ${{ secrets.VNPAY_TMNCODE }}
         VNPAY_HASHSECRET: ${{ secrets.VNPAY_HASHSECRET }}
         VNPAY_PAYMENTURL: ${{ secrets.VNPAY_PAYMENTURL }}
+        IRON_PDF: ${{ secrets.IRON_PDF }}
       run: |
         docker compose down
         docker compose build --no-cache

@@ -13,6 +13,7 @@ services:
       - ASPNETCORE_Kestrel__Endpoints__Https__Certificate__KeyPath=/etc/letsencrypt/archive/giveawayproject.jettonetto.org/privkey1.pem
       - ASPNETCORE_Kestrel__Endpoints__Https__Url=https://0.0.0.0:443
       - ASPNETCORE_Kestrel__Endpoints__Http__Url=http://0.0.0.0:80
+      - ASPNETCORE_IronPDF=${IRON_PDF}
       - ASPNETCORE_HOSTNAME=giveawayproject.jettonetto.org
       - ASPNETCORE_GiaoHangNhanh__ApiToken=${GHN_API_TOKEN}
       - ASPNETCORE_Jwt__JWT_SECRET_KEY=${JWT_SECRET_KEY}

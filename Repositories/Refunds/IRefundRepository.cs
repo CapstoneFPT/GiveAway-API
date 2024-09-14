@@ -17,7 +17,7 @@ namespace Repositories.Refunds
             int? pageSize, Expression<Func<Refund, bool>>? predicate, Expression<Func<Refund, T>>? selector);
         Task<Refund?> GetSingleRefund(Expression<Func<Refund, bool>> predicate);
         Task<RefundResponse> ApprovalRefundFromShop(Guid refundId, ApprovalRefundRequest request);
-        Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId);
+        Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId, ConfirmReceivedRequest request);
         Task CreateRefund(Refund refund);
         IQueryable<Refund> GetQueryable();
         Task UpdateRefund(Refund refund);

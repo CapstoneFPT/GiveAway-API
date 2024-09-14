@@ -41,15 +41,14 @@ namespace Repositories.Refunds
             if (request.Status.Equals(RefundStatus.Approved))
             {
                 refund.RefundStatus = RefundStatus.Approved;
-                refund.RefundPercentage = request.RefundPercentage;
-                refund.ResponseFromShop = request.Description;
+                
                 refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.AwaitingReturn;
             }
             else if (request.Status.Equals(RefundStatus.Rejected))
             {
                 refund.RefundStatus = RefundStatus.Rejected;
-                refund.RefundPercentage = 0;
-                refund.ResponseFromShop = request.Description;
+                
+                refund.ResponseFromShop = request.ResponseFromShop;
                 refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Sold;
             }
             else
@@ -117,7 +116,7 @@ namespace Repositories.Refunds
         }
 
 
-        public async Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId)
+        public async Task<RefundResponse> ConfirmReceivedAndRefund(Guid refundId, ConfirmReceivedRequest request)
         {
             var refund = await _giveAwayDbContext.Refunds.AsQueryable().Include(c => c.OrderLineItem)
                 .ThenInclude(c => c.IndividualFashionItem).Where(c => c.RefundId == refundId).FirstOrDefaultAsync();

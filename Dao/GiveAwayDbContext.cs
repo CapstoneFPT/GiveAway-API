@@ -69,7 +69,7 @@ public class GiveAwayDbContext : DbContext
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        return configuration.GetConnectionString("DefaultDB");
+        return configuration.GetConnectionString("SeverDB");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -408,6 +408,10 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Order>().Property(e => e.AddressType).HasConversion(prop => prop.ToString(),
                 s => (AddressType)Enum.Parse(typeof(AddressType), s))
             .HasColumnType("varchar").HasMaxLength(30);
+        modelBuilder.Entity<Order>()
+            .HasOne<Feedback>(x => x.Feedback)
+            .WithOne(x => x.Order)
+            .HasForeignKey<Feedback>(x => x.OrderId);
         #endregion
 
         #region OrderDetail
@@ -418,10 +422,7 @@ public class GiveAwayDbContext : DbContext
             .HasOne<Refund>(x => x.Refund)
             .WithOne(x => x.OrderLineItem)
             .HasForeignKey<Refund>(x => x.OrderLineItemId);
-        modelBuilder.Entity<OrderLineItem>()
-            .HasOne<Feedback>(x => x.Feedback)
-            .WithOne(x => x.OrderLineItem)
-            .HasForeignKey<Feedback>(x => x.OrderLineItemId);
+        
 
         #endregion
 

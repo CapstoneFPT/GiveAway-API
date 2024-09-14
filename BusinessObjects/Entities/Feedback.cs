@@ -6,6 +6,6 @@ public class Feedback
 
     public string Content { get; set; }
     public DateTime CreatedDate { get; set; }
-    public Guid OrderLineItemId { get; set; }
-    public OrderLineItem OrderLineItem { get; set; }
+    public Guid OrderId { get; set; }
+    public Order Order { get; set; }
 }

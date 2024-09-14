@@ -159,13 +159,7 @@ namespace WebApi.Controllers
         }
 
 
-        /*[HttpGet("{shopId}/offline-transactions")]
-        public async Task<ActionResult<PaginationResponse<TransactionResponse>>> GetTransactionsByShopId(
-            [FromQuery] TransactionRequest transactionRequest)
-        {
-            var result = await _shopService.GetOfflineTransactionsByShopId(transactionRequest);
-            return Ok(result);
-        }*/
+        
 
         [HttpPost("{shopId}/feedbacks")]
         public async Task<ActionResult<FeedbackResponse>> CreateFeedbackByShop([FromRoute] Guid shopId,

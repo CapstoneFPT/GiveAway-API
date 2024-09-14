@@ -15,6 +15,7 @@ using Repositories.Deliveries;
 using Repositories.Images;
 using Repositories.Inquiries;
 using Repositories.FashionItems;
+using Repositories.Feedbacks;
 using Repositories.OrderLineItems;
 using Repositories.Orders;
 using Repositories.Recharges;
@@ -39,6 +40,7 @@ using Services.ConsignSales;
 using Services.Deliveries;
 using Services.Emails;
 using Services.FashionItems;
+using Services.Feedbacks;
 using Services.GiaoHangNhanh;
 using Services.Images;
 using Services.Inquiries;
@@ -87,6 +89,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IWithdrawService, WithdrawService>();
         serviceCollection.AddScoped<IGiaoHangNhanhService, GiaoHangNhanhService>();
         serviceCollection.AddScoped<IConsignLineItemService, ConsignLineItemService>();
+        serviceCollection.AddScoped<IFeedbackService, FeedbackService>();
         serviceCollection.AddAutoMapper(typeof(MappingProfile).Assembly);
         return serviceCollection;
     }
@@ -116,6 +119,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<IWithdrawRepository, WithdrawRepository>();
         serviceCollection.AddScoped<IConsignSaleLineItemRepository, ConsignSaleLineItemRepository>();
         serviceCollection.AddScoped<IBankAccountRepository, BankAccountRepository>();
+        serviceCollection.AddScoped<IFeedbackRepository, FeedbackRepository>();
         return serviceCollection;
     }
     
@@ -142,6 +146,7 @@ public static class DependencyInjectionExtensions
         serviceCollection.AddScoped<GenericDao<Refund>>();
         serviceCollection.AddScoped<GenericDao<Withdraw>>();
         serviceCollection.AddScoped<GenericDao<BankAccount>>();
+        serviceCollection.AddScoped<GenericDao<Feedback>>();
         serviceCollection.AddScoped<GenericDao<BusinessObjects.Entities.Member>>();
         return serviceCollection;
     }

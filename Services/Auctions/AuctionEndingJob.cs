@@ -109,6 +109,7 @@ public class AuctionEndingJob : IJob
                         OrderId = newOrder.OrderId,
                         IndividualFashionItemId = orderRequest.AuctionFashionItemId,
                         UnitPrice = orderRequest.TotalPrice,
+                        Quantity = 1,
                         CreatedDate = DateTime.UtcNow,
                     };
 

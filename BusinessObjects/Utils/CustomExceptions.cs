@@ -95,7 +95,7 @@ public class InsufficientBalanceException : Exception
 public class OrderNotFoundException : Exception
 {
 }
-
+public class OrderNotAvailableToFeedback(string message) : Exception(message){}
 public class WrongPaymentMethodException(string message) : Exception(message);
 
 public class RefundExpiredException(string message) : Exception(message);
