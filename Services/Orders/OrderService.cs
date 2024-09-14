@@ -100,6 +100,7 @@ public class OrderService : IOrderService
                 {
                     ItemName = x.IndividualFashionItem.MasterItem.Name,
                     UnitPrice = x.UnitPrice,
+                    ItemCode = x.IndividualFashionItem.ItemCode,
                 })
                 .ToListAsync();
 
@@ -131,14 +132,10 @@ public class OrderService : IOrderService
     }
 
     private async Task<string> GenerateInvoiceHtml(Order order, List<OrderLineItemListResponse> orderLineItems,
-        ShopDetailResponse shop)
+      ShopDetailResponse shop)
     {
         var templatePath = Path.Combine("InvoiceTemplate", "only-invoice.html");
         var template = await File.ReadAllTextAsync(templatePath);
-
-        _logger.LogInformation("Generating invoice for order {OrderId}", order.OrderId);
-        _logger.LogInformation("Template path: {TemplatePath}", templatePath);
-        _logger.LogInformation("Template: {Template}", template);
 
         template = template.Replace("{{InvoiceNumber}}", order.OrderCode)
             .Replace("{{IssueDate}}", order.CreatedDate.ToString("MMMM dd, yyyy"))
@@ -153,20 +150,21 @@ public class OrderService : IOrderService
         foreach (var item in orderLineItems)
         {
             itemsHtml.Append($@"
-            <tr class='border-bottom border-bottom-dashed'>
-                <td class='pe-7'>{item.ItemName ?? "N/A"}</td>
-                <td class='text-end'>{item.Quantity}</td>
-                <td class='text-end'>{item.UnitPrice} VND</td>
-                <td class='text-end'>{item.UnitPrice}</td>
-            </tr>");
+        <tr>
+            <td>{item.ItemCode ?? "N/A"}</td>
+            <td>{item.ItemName ?? "N/A"}</td>
+            <td class='text-end'>1</td>
+            <td class='text-end'>{item.UnitPrice:N0} VND</td>
+            <td class='text-end'>{item.UnitPrice:N0} VND</td>
+        </tr>");
         }
 
         template = template.Replace("{{OrderItems}}", itemsHtml.ToString());
 
         // Replace totals
-        template = template.Replace("{{Subtotal}}", $"{order.TotalPrice - order.ShippingFee}")
-            .Replace("{{ShippingFee}}", $"{order.ShippingFee}")
-            .Replace("{{Total}}", $"{order.TotalPrice}");
+        template = template.Replace("{{Subtotal}}", $"{orderLineItems.Sum(x => x.UnitPrice):N0}")
+            .Replace("{{ShippingFee}}", $"{order.ShippingFee:N0}")
+            .Replace("{{Total}}", $"{order.TotalPrice:N0}");
 
         return template;
     }
@@ -808,7 +806,8 @@ public class OrderService : IOrderService
             Items = Items,
             PageNumber = Page,
             PageSize = PageSize,
-            TotalCount = TotalCount, SearchTerm = orderRequest.OrderCode,
+            TotalCount = TotalCount,
+            SearchTerm = orderRequest.OrderCode,
         };
 
         return new Result<PaginationResponse<OrderListResponse>, ErrorCode>(response);
