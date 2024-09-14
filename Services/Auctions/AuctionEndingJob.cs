@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 using Repositories.Orders;
 using Repositories.Transactions;
+using Services.Emails;
 
 namespace Services.Auctions;
 
@@ -17,12 +18,13 @@ public class AuctionEndingJob : IJob
     private readonly IServiceProvider _serviceProvider;
     private readonly IHubContext<AuctionHub> _hubContext;
     private readonly ITransactionRepository _transactionRepository;
-
-    public AuctionEndingJob(IServiceProvider serviceProvider, IHubContext<AuctionHub> hubContext, ITransactionRepository transactionRepository)
+    private readonly IEmailService _emailService;
+    public AuctionEndingJob(IServiceProvider serviceProvider, IHubContext<AuctionHub> hubContext, ITransactionRepository transactionRepository, IEmailService emailService)
     {
         _serviceProvider = serviceProvider;
         _hubContext = hubContext;
         _transactionRepository = transactionRepository;
+        _emailService = emailService;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -114,6 +116,7 @@ public class AuctionEndingJob : IJob
                     };
 
                     dbContext.OrderLineItems.Add(orderDetail);
+                    await _emailService.SendEmailAuctionWon(auctionId, winningBid);
                     foreach (var auctionDeposit in auctionToEnd.AuctionDeposits)
                     {
                         if (await dbContext.Bids.AnyAsync(c => c.MemberId == auctionDeposit.MemberId))
