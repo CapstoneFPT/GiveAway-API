@@ -725,6 +725,7 @@ public class OrderService : IOrderService
             Status = OrderStatus.Completed,
             Discount = request.Discount,
             CreatedDate = DateTime.UtcNow,
+            CompletedDate = DateTime.UtcNow,
             TotalPrice = listItem.Sum(c => c.SellingPrice!.Value),
             OrderCode = _orderRepository.GenerateUniqueString(),
             MemberId = isMember?.AccountId
@@ -770,6 +771,7 @@ public class OrderService : IOrderService
             Email = order.Email,
             PaymentMethod = order.PaymentMethod,
             PurchaseType = order.PurchaseType,
+            CompletedDate = order.CompletedDate,
             Discount = order.Discount,
             OrderCode = order.OrderCode,
             Status = order.Status,

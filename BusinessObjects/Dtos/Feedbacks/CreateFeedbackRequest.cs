@@ -4,7 +4,7 @@ namespace BusinessObjects.Dtos.Feedbacks;
 
 public class CreateFeedbackRequest
 {
-    public Guid MemberId { get; set; }
+    public required Guid OrderId { get; set; }
     [Required]
     public string Content { get; set; }
 }

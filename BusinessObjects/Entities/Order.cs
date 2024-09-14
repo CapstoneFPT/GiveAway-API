@@ -29,6 +29,7 @@ public class Order
     public AddressType? AddressType { get; set; }
     public decimal ShippingFee { get; set; } = 0;
     public decimal Discount { get; set; } = 0;
+    public Feedback? Feedback { get; set; }
 
     public ICollection<OrderLineItem> OrderLineItems = new List<OrderLineItem>();
 }
