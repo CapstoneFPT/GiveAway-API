@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Drawing;
+using System.Linq.Expressions;
 using AutoMapper;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
@@ -32,6 +33,8 @@ using Services.GiaoHangNhanh;
 using System.Text;
 using BusinessObjects.Dtos.Shops;
 using IronPdf.Rendering;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace Services.Orders;
 
@@ -86,21 +89,21 @@ public class OrderService : IOrderService
             {
                 return new Result<InvoiceResponse, ErrorCode>(ErrorCode.NotFound);
             }
-            
+
             var shop = await _shopRepository.GetShopById(shopId);
-            
+
             var orderLineItems = await _orderLineItemRepository.GetQueryable()
-                .Include(x=>x.IndividualFashionItem)
-                .ThenInclude(x=>x.MasterItem)
-                .Where(x=>x.Order.OrderId == orderId)
-                .Select(x=>new OrderLineItemListResponse()
+                .Include(x => x.IndividualFashionItem)
+                .ThenInclude(x => x.MasterItem)
+                .Where(x => x.Order.OrderId == orderId)
+                .Select(x => new OrderLineItemListResponse()
                 {
                     ItemName = x.IndividualFashionItem.MasterItem.Name,
                     UnitPrice = x.UnitPrice,
                 })
                 .ToListAsync();
 
-            var invoiceHtml = await GenerateInvoiceHtml(order,orderLineItems,shop);
+            var invoiceHtml = await GenerateInvoiceHtml(order, orderLineItems, shop);
             var renderer = new ChromePdfRenderer()
             {
                 RenderingOptions = new ChromePdfRenderOptions()
@@ -214,6 +217,129 @@ public class OrderService : IOrderService
         response.Messages = ["Create Successfully"];
         response.ResultStatus = ResultStatus.Success;
         return response;
+    }
+
+    public async Task<Result<ExcelResponse, ErrorCode>> ExportOrdersToExcel(DateTime startDate, DateTime endDate)
+    {
+        try
+        {
+            var orders = await _orderRepository.GetQueryable()
+                .Include(o => o.Member)
+                .Include(o => o.OrderLineItems)
+                .ThenInclude(oli => oli.IndividualFashionItem)
+                .ThenInclude(ifi => ifi.MasterItem)
+                .Where(o => o.CreatedDate >= startDate && o.CreatedDate <= endDate)
+                .Select(o => new
+                {
+                    o.OrderId,
+                    o.OrderCode,
+                    CustomerName = o.Member.Fullname ?? "N/A",
+                    o.CreatedDate,
+                    o.TotalPrice,
+                    o.Status,
+                    Items = o.OrderLineItems.Select(oli => oli.IndividualFashionItem.MasterItem.Name).ToList(),
+                    o.ShippingFee,
+                    o.Discount
+                })
+                .ToListAsync();
+
+            if (!orders.Any())
+            {
+                return new Result<ExcelResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Orders");
+
+                // Styling
+                using (var range = worksheet.Cells["A1:I1"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
+                    range.Style.Font.Color.SetColor(Color.White);
+                }
+
+                // Headers
+                worksheet.Cells[1, 1].Value = "Order ID";
+                worksheet.Cells[1, 2].Value = "Order Code";
+                worksheet.Cells[1, 3].Value = "Customer Name";
+                worksheet.Cells[1, 4].Value = "Order Date";
+                worksheet.Cells[1, 5].Value = "Total Price";
+                worksheet.Cells[1, 6].Value = "Status";
+                worksheet.Cells[1, 7].Value = "Items";
+                worksheet.Cells[1, 8].Value = "Shipping Fee";
+                worksheet.Cells[1, 9].Value = "Discount";
+
+                int row = 2;
+                foreach (var order in orders)
+                {
+                    worksheet.Cells[row, 1].Value = order.OrderId;
+                    worksheet.Cells[row, 2].Value = order.OrderCode;
+                    worksheet.Cells[row, 3].Value = order.CustomerName ?? "N/A";
+                    worksheet.Cells[row, 4].Value = order.CreatedDate;
+                    worksheet.Cells[row, 5].Value = order.TotalPrice;
+                    worksheet.Cells[row, 6].Value = order.Status.ToString();
+                    worksheet.Cells[row, 7].Value = string.Join(", ", order.Items);
+                    worksheet.Cells[row, 8].Value = order.ShippingFee;
+                    worksheet.Cells[row, 9].Value = order.Discount;
+
+                    // Alternate row colors
+                    if (row % 2 == 0)
+                    {
+                        worksheet.Cells[row, 1, row, 9].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[row, 1, row, 9].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    }
+
+                    row++;
+                }
+
+                // Formatting
+                worksheet.Cells[2, 4, row - 1, 4].Style.Numberformat.Format = "yyyy-mm-dd hh:mm:ss";
+                worksheet.Cells[2, 5, row - 1, 5].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells[2, 8, row - 1, 9].Style.Numberformat.Format = "#,##0.00";
+
+                // Auto-fit columns
+                worksheet.Cells[1, 1, row - 1, 9].AutoFitColumns();
+
+                // Add borders
+                var borderStyle = worksheet.Cells[1, 1, row - 1, 9].Style.Border;
+                borderStyle.Top.Style = borderStyle.Left.Style =
+                    borderStyle.Right.Style = borderStyle.Bottom.Style = ExcelBorderStyle.Thin;
+
+                // Add title
+                worksheet.InsertRow(1, 2);
+                worksheet.Cells["A1:I1"].Merge = true;
+                worksheet.Cells["A1"].Value = $"Order Report ({startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})";
+                worksheet.Cells["A1"].Style.Font.Size = 16;
+                worksheet.Cells["A1"].Style.Font.Bold = true;
+                worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                // Add summary
+                var summaryRow = row + 2;
+                worksheet.Cells[summaryRow, 1].Value = "Total Orders:";
+                worksheet.Cells[summaryRow, 2].Value = orders.Count;
+                worksheet.Cells[summaryRow + 1, 1].Value = "Total Revenue:";
+                worksheet.Cells[summaryRow + 1, 2].Formula = $"SUM(E2:E{row - 1})";
+                worksheet.Cells[summaryRow + 1, 2].Style.Numberformat.Format = "#,##0.00";
+
+                worksheet.Cells[summaryRow, 1, summaryRow + 1, 1].Style.Font.Bold = true;
+
+                var content = await package.GetAsByteArrayAsync();
+
+                return new Result<ExcelResponse, ErrorCode>(new ExcelResponse
+                {
+                    Content = content,
+                    FileName = $"Orders_{startDate:yyyyMMdd}_{endDate:yyyyMMdd}.xlsx"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting orders to Excel");
+            return new Result<ExcelResponse, ErrorCode>(ErrorCode.ServerError);
+        }
     }
 
     public async Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrderFromBid(
@@ -1008,7 +1134,8 @@ public class OrderService : IOrderService
             {
                 detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
                 detail.ReservedExpirationDate = DateTime.UtcNow.AddMinutes(15);
-                await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId, detail.ReservedExpirationDate.Value);
+                await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId,
+                    detail.ReservedExpirationDate.Value);
                 // gui mail thong bao 
             }
         }

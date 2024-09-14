@@ -19,6 +19,7 @@ namespace Services.Orders
     {
         Task<Result<PaginationResponse<OrderListResponse>, ErrorCode>> GetOrdersByAccountId(Guid accountId,
             OrderRequest request);
+            Task<Result<ExcelResponse, ErrorCode>> ExportOrdersToExcel(DateTime startDate, DateTime endDate);
         Task<Result<InvoiceResponse, ErrorCode>> GenerateInvoice(Guid orderId, Guid shopId);
         Task<BusinessObjects.Dtos.Commons.Result<OrderResponse>> CreateOrder(Guid accountId, CartRequest cart);
         Task<BusinessObjects.Dtos.Commons.Result<string>> CancelOrder(Guid orderId);
