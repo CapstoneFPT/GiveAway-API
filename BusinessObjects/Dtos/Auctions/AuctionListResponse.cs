@@ -10,6 +10,7 @@ public class AuctionListResponse
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public decimal DepositFee { get; set; }
+    public decimal? InitialPrice { get; set; }
     public string AuctionCode { get; set; }
     public string ItemCode { get; set; }
     public decimal? SucessfulBidAmount { get; set; }
