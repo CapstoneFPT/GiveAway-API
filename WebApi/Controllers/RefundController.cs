@@ -59,9 +59,9 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{refundId}/confirm-received-and-refund")]
-        public async Task<ActionResult<Result<RefundResponse>>> ConfirmReceivedAndRefund([FromRoute] Guid refundId)
+        public async Task<ActionResult<Result<RefundResponse>>> ConfirmReceivedAndRefund([FromRoute] Guid refundId, [FromBody] ConfirmReceivedRequest request)
         {
-            var result = await _refundService.ConfirmReceivedAndRefund(refundId);
+            var result = await _refundService.ConfirmReceivedAndRefund(refundId, request);
             if (result.ResultStatus != ResultStatus.Success)
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             return Ok(result);
