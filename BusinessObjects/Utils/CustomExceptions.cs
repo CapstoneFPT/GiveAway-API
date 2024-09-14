@@ -164,3 +164,4 @@ public class DeleteFashionItemsFailedException(string message, ErrorCode errorCo
 {
 }
 public class BalanceIsNotEnoughException(ErrorCode errorCode) : Exception{}
+public class NotAllowToPlaceDeposit(string message) : Exception(message){}

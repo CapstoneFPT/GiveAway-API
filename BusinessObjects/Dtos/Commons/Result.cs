@@ -103,7 +103,9 @@ public enum ConsignSaleLineItemStatus
     Returned,
     Rejected,
     ReadyForConsignSale,
-    OnSale
+    OnSale,
+    Sold,
+    UnSold
 }
 public enum OrderStatus
 {

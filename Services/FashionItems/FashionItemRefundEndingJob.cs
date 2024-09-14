@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Repositories.Accounts;
+using Repositories.ConsignSales;
 using Repositories.Transactions;
+using Services.Emails;
 
 namespace Services.FashionItems;
 
@@ -15,12 +17,16 @@ public class FashionItemRefundEndingJob : IJob
     private readonly IServiceProvider _serviceProvider;
     private readonly IAccountRepository _accountRepository;
     private readonly ITransactionRepository _transactionRepository;
-
-    public FashionItemRefundEndingJob(IServiceProvider serviceProvider, IAccountRepository accountRepository, ITransactionRepository transactionRepository)
+    private readonly IEmailService _emailService;
+    private readonly IConsignSaleRepository _consignSaleRepository;
+    public FashionItemRefundEndingJob(IServiceProvider serviceProvider, IAccountRepository accountRepository, 
+        ITransactionRepository transactionRepository, IEmailService emailService, IConsignSaleRepository consignSaleRepository)
     {
         _serviceProvider = serviceProvider;
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
+        _emailService = emailService;
+        _consignSaleRepository = consignSaleRepository;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -53,7 +59,7 @@ public class FashionItemRefundEndingJob : IJob
                     throw new AccountNotFoundException();
                 admin.Balance += amountConsignorReceive;
                 await _accountRepository.UpdateAccount(admin);
-
+                refundItemToEnd.ConsignSaleLineItem.Status = ConsignSaleLineItemStatus.Sold;
                 refundItemToEnd.ConsignSaleLineItem.ConsignSale.SoldPrice += refundItemToEnd.SellingPrice!.Value;
                 refundItemToEnd.ConsignSaleLineItem.ConsignSale.ConsignorReceivedAmount += amountConsignorReceive;
                 
@@ -63,18 +69,28 @@ public class FashionItemRefundEndingJob : IJob
                     SenderBalance = admin.Balance,
                     ReceiverBalance = refundItemToEnd.ConsignSaleLineItem.ConsignSale.Member.Balance,
                     ReceiverId = refundItemToEnd.ConsignSaleLineItem.ConsignSale.MemberId,
-                    Amount = refundItemToEnd.SellingPrice!.Value,
+                    Amount = amountConsignorReceive,
                     CreatedDate = DateTime.UtcNow,
                     Type = TransactionType.ConsignPayout,
                     ConsignSaleId = refundItemToEnd.ConsignSaleLineItem.ConsignSaleId,
                     PaymentMethod = PaymentMethod.Point
                 };
                 await _transactionRepository.CreateTransaction(transaction);
+                await _emailService.SendMailSoldItemConsign(refundItemToEnd.ConsignSaleLineItem.ConsignSaleLineItemId, amountConsignorReceive);
+                
             }
             
             dbContext.IndividualFashionItems.Update(refundItemToEnd);
+            var consign = await _consignSaleRepository.GetQueryable()
+                .Include(c => c.ConsignSaleLineItems)
+                .Where(c => c.ConsignSaleId == refundItemToEnd.ConsignSaleLineItem!.ConsignSaleId).FirstOrDefaultAsync();
+            if (consign.ConsignSaleLineItems.All(c => c.Status == ConsignSaleLineItemStatus.Sold))
+            {
+                consign.Status = ConsignSaleStatus.Completed;
+                await _consignSaleRepository.UpdateConsignSale(consign);
+            }
             await dbContext.SaveChangesAsync();
-            //await _emailService.SendMailSoldItemConsign();
+            
         }
         catch (Exception e)
         {

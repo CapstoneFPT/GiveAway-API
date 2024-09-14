@@ -206,7 +206,9 @@ namespace Repositories.Auctions
                     .ThenInclude(x => x.Images)
                     .Include(x => x.IndividualAuctionFashionItem)
                     .ThenInclude(x => x.MasterItem)
-                    .Include(x => x.AuctionDeposits).ThenInclude(deposit => deposit.Member);
+                    .Include(x => x.AuctionDeposits).ThenInclude(deposit => deposit.Member)
+                    .Include(x => x.IndividualAuctionFashionItem)
+                    .ThenInclude(c => c.ConsignSaleLineItem).ThenInclude(c => c.ConsignSale);
                 // .Include(x => x.Shop);
             }
 

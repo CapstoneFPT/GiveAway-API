@@ -375,7 +375,7 @@ namespace Services.Auctions
         public async Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId,
             CreateAuctionDepositRequest request)
         {
-            var auction = await _auctionRepository.GetAuction(auctionId);
+            var auction = await _auctionRepository.GetAuction(auctionId, true);
             var admin = await _accountRepository.FindOne(account => account.Role == Roles.Admin);
 
             if (auction is null)
@@ -387,12 +387,22 @@ namespace Services.Auctions
             {
                 throw new AccountNotFoundException();
             }
+            var member = await _accountRepository.FindOne(account => account.AccountId == request.MemberId);
+            if (member is null)
+            {
+                throw new AccountNotFoundException();
+            }
 
+            if (auction.IndividualAuctionFashionItem.ConsignSaleLineItem!.ConsignSale.MemberId == request.MemberId)
+            {
+                throw new NotAllowToPlaceDeposit(
+                    "This product is your consign product so you are not allowed to participate auction");
+            }
             await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
             admin.Balance -= auction.DepositFee;
             await _accountRepository.UpdateAccount(admin);
 
-            var member = await _accountRepository.FindOne(account => account.AccountId == request.MemberId);
+            
             var transaction = new Transaction()
             {
                 Amount = auction.DepositFee,
