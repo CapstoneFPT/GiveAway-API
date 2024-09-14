@@ -268,7 +268,7 @@ namespace Services.Refunds
                 response.Messages = new[] { "This refund is not available to confirm" };
                 return response;
             }
-            var refundAmount = await CalculateRefundAmount(refund.OrderLineItem.OrderId, refund.OrderLineItemId, refund.RefundPercentage!.Value);
+            var refundAmount = await CalculateRefundAmount(refund.OrderLineItem.OrderId, refund.OrderLineItemId, request.RefundPercentage);
             switch (request.Status)
             {
                 case RefundStatus.Rejected:

@@ -639,8 +639,17 @@ namespace Services.FashionItems
             (List<MasterItemListResponse> Items, int Page, int PageSize, int TotalCount) result;
             if (request.IsLeftInStock != null)
             {
-                predicate = predicate.And(it =>
-                    it.IndividualFashionItems.Any(c => c.Status == FashionItemStatus.Available));
+                if (request.IsLeftInStock == true)
+                {
+                    predicate = predicate.And(it =>
+                        it.IndividualFashionItems.Any(c => c.Status == FashionItemStatus.Available));
+                }
+            }
+
+            if (request.IsForSale)
+            {
+                predicate = predicate.And(item =>
+                    item.IndividualFashionItems.Any(x => x.Type != FashionItemType.ConsignedForAuction));
             }
             
             if (!string.IsNullOrEmpty(request.SearchTerm))
