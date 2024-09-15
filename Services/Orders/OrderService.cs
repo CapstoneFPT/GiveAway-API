@@ -138,13 +138,14 @@ public class OrderService : IOrderService
         var template = await File.ReadAllTextAsync(templatePath);
 
         template = template.Replace("{{InvoiceNumber}}", order.OrderCode)
-            .Replace("{{IssueDate}}", order.CreatedDate.ToString("MMMM dd, yyyy"))
-            .Replace("{{DueDate}}", order.CreatedDate.AddDays(14).ToString("MMMM dd, yyyy"))
+            .Replace("{{IssueDate}}", order.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss"))
+            .Replace("{{PaymentMethod}}", order.PaymentMethod.ToString())
             .Replace("{{CustomerName}}", order.Member?.Fullname ?? "N/A")
             .Replace("{{CustomerAddress}}", order.Address ?? "N/A")
             .Replace("{{CustomerPhone}}", order.Phone ?? "N/A")
             .Replace("{{CustomerEmail}}", order.Email ?? "N/A")
-            .Replace("{{ShopAddress}}", shop.Address ?? "N/A");
+            .Replace("{{ShopAddress}}", shop.Address ?? "N/A")
+            .Replace("{{ShopPhone}}", shop.Phone ?? "N/A");
 
         var itemsHtml = new StringBuilder();
         foreach (var item in orderLineItems)
@@ -164,6 +165,7 @@ public class OrderService : IOrderService
         // Replace totals
         template = template.Replace("{{Subtotal}}", $"{orderLineItems.Sum(x => x.UnitPrice):N0}")
             .Replace("{{ShippingFee}}", $"{order.ShippingFee:N0}")
+            .Replace("{{Discount}}", $"{order.Discount:N0}")
             .Replace("{{Total}}", $"{order.TotalPrice:N0}");
 
         return template;

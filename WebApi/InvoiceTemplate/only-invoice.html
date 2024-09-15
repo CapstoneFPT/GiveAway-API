@@ -24,6 +24,7 @@
                     </div>
                     <div class="col-6 text-end">
                         <p class="mb-1">Issue Date: {{IssueDate}}</p>
+                        <p class="mb-1">Payment Method: <span class="badge bg-primary">{{PaymentMethod}}</span></p>
                     </div>
                 </div>
                 
@@ -38,6 +39,7 @@
                     <div class="col-6 text-end">
                         <h5 class="mb-2">Issued By:</h5>
                         <p>{{ShopAddress}}</p>
+                        <p><strong>{{ShopPhone}}</strong></p>
                     </div>
                 </div>
                 
@@ -63,6 +65,10 @@
                             <tr>
                                 <td colspan="4" class="text-end">Shipping Fee:</td>
                                 <td class="text-end">{{ShippingFee}} VND</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="text-end">Discount:</td>
+                                <td class="text-end"><strong>-{{Discount}} VND</strong></td>
                             </tr>
                             <tr class="total-row">
                                 <td colspan="4" class="text-end">Total:</td>
