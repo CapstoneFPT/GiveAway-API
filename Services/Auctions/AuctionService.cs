@@ -311,6 +311,9 @@ namespace Services.Auctions
                     ? auction.IndividualAuctionFashionItem.Images.FirstOrDefault().Url
                     : null,
                 AuctionCode = auction.AuctionCode,
+                SucessfulBidAmount = auction.Bids.Where(c => c.IsWinning == true).Sum(c => c.Amount),
+                IsWon = auction.Bids.Any(),
+                ItemCode = auction.IndividualAuctionFashionItem.ItemCode,
                 AuctionItemId = auction.IndividualAuctionFashionItemId,
                 ShopId = auction.ShopId
             };
