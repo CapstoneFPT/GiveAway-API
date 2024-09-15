@@ -347,6 +347,65 @@ namespace WebApi.Controllers
         //     return Ok(result.Value);
         // }
 
+        [HttpPatch("{orderId}/checkout-auction")]
+        public async Task<IActionResult> CheckoutAuction([FromRoute] Guid orderId,
+            [FromBody] CheckoutAuctionRequest request)
+        {
+            var order = await _orderService.GetOrderById(orderId);
+
+            if (order == null)
+            {
+                throw new OrderNotFoundException();
+            }
+
+            if (order.PaymentMethod != PaymentMethod.Point)
+            {
+                throw new WrongPaymentMethodException("Order is not paid by Point");
+            }
+
+            if (order.Status != OrderStatus.AwaitingPayment)
+            {
+                throw new InvalidOperationException("Order is not awaiting payment");
+            }
+
+            if (order.MemberId != request.MemberId)
+            {
+                throw new NotAuthorizedToPayOrderException();
+            }
+
+            if (order.Member!.Balance < order.TotalPrice)
+            {
+                throw new BalanceIsNotEnoughException(ErrorCode.PaymentFailed);
+            }
+
+            foreach (var orderDetail in order.OrderLineItems)
+            {
+                orderDetail.PaymentDate = DateTime.UtcNow;
+            }
+
+            order.GhnDistrictId = request.GhnDistrictId;
+            order.GhnWardCode = request.GhnWardCode;
+            order.GhnProvinceId = request.GhnProvinceId;
+            order.Address = request.Address;
+            order.RecipientName = request.RecipientName;
+            order.Phone = request.Phone;
+            order.ShippingFee = request.ShippingFee;
+            order.Discount = request.Discount;
+            order.Status = OrderStatus.Pending;
+            order.TotalPrice = order.TotalPrice + request.ShippingFee;
+            order.Member!.Balance -= order.TotalPrice + request.ShippingFee;
+
+            await _orderService.UpdateOrder(order);
+            await _orderService.UpdateFashionItemStatus(order.OrderId);
+            await _orderService.UpdateAdminBalance(order);
+            await _consignSaleService.UpdateConsignPrice(order.OrderId);
+            await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
+            await _emailService.SendEmailOrder(order);
+
+            return Ok(new PayWithPointsResponse()
+                { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
+        }
+
         [HttpGet("calculate-shipping-fee")]
         [ProducesResponseType<ShippingFeeResult>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
