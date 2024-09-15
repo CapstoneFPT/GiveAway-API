@@ -1145,12 +1145,13 @@ public class OrderService : IOrderService
             order.OrderLineItems.Any(it => it.IndividualFashionItem.Status.Equals(FashionItemStatus.Unavailable)))
         {
             order.Status = OrderStatus.Cancelled;
+            await _emailService.SendEmailCancelOrderAndReservedItems(order);
         }
 
-        if (order.PaymentMethod == PaymentMethod.COD)
+        /*if (order.PaymentMethod == PaymentMethod.COD)
         {
             await _emailService.SendEmailOrder(order);
-        }
+        }*/
 
         if (order.OrderLineItems.All(c => c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
         {
