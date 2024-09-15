@@ -22,6 +22,8 @@ namespace Repositories.Refunds
       
         private readonly IMapper _mapper;
         private readonly GiveAwayDbContext _giveAwayDbContext;
+        private const string Prefix = "REF";
+        private static Random _random = new();
 
         public RefundRepository(IMapper mapper, GiveAwayDbContext giveAwayDbContext)
         {
@@ -65,6 +67,30 @@ namespace Repositories.Refunds
                 ResponseFromShop = refund.ResponseFromShop,
                 ItemCode = refund.OrderLineItem.IndividualFashionItem.ItemCode
             };
+        }
+        public async Task<string> GenerateUniqueString()
+        {
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                string code = GenerateCode();
+                bool isCodeExisted = await _giveAwayDbContext.Recharges.AnyAsync(r => r.RechargeCode == code);
+
+                if (!isCodeExisted)
+                {
+                    return code;
+                }
+
+                await Task.Delay(100 * (int)Math.Pow(2, attempt));
+            }
+
+            throw new Exception("Failed to generate unique code after multiple attempts");
+        }
+
+        private static string GenerateCode()
+        {
+            string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            string randomString = _random.Next(1000, 9999).ToString();
+            return $"{Prefix}-{timestamp}-{randomString}";
         }
 
         public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetRefundProjections<T>(int? page, int? pageSize, Expression<Func<Refund, bool>>? predicate, Expression<Func<Refund, T>>? selector)
@@ -136,6 +162,7 @@ namespace Repositories.Refunds
 
         public async Task CreateRefund(Refund refund)
         {
+            refund.RefundCode = await GenerateUniqueString();
             await GenericDao<Refund>.Instance.AddAsync(refund);
         }
 

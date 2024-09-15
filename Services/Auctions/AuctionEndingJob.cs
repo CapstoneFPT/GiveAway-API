@@ -126,6 +126,7 @@ public class AuctionEndingJob : IJob
                             if (member is not { Status: AccountStatus.Active }) continue;
                             var admin = await dbContext.Admins.FirstOrDefaultAsync();
                             if (admin is not { Status: AccountStatus.Active }) continue;
+                            var deposit = await dbContext.AuctionDeposits.FirstOrDefaultAsync(x=>x.AuctionId == auctionId && x.MemberId == auctionDeposit.MemberId);
                             member.Balance += auctionToEnd.DepositFee;
                             admin.Balance += auctionToEnd.DepositFee;
                             dbContext.Members.Update(member);
@@ -137,6 +138,7 @@ public class AuctionEndingJob : IJob
                                 ReceiverId = member.AccountId,
                                 ReceiverBalance = member.Balance,
                                 CreatedDate = DateTime.UtcNow,
+                                AuctionDepositId = deposit!.AuctionDepositId,
                                 Amount = auctionToEnd.DepositFee,
                                 Type = TransactionType.RefundAuctionDeposit,
                                 PaymentMethod = PaymentMethod.Point,

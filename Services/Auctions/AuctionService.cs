@@ -11,6 +11,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using Dao;
 using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
@@ -45,13 +46,15 @@ namespace Services.Auctions
         private readonly ISchedulerFactory _schedulerFactory;
         private readonly IEmailService _emailService;
         private readonly IAccountRepository _accountRepository;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
         public AuctionService(IAuctionRepository auctionRepository, IBidRepository bidRepository,
             IAuctionDepositRepository auctionDepositRepository, IServiceProvider serviceProvider,
             IAuctionItemRepository auctionItemRepository,
             IAccountService accountService,
             ITransactionRepository transactionRepository, IOrderRepository orderRepository,
-            ISchedulerFactory schedulerFactory, IEmailService emailService, IAccountRepository accountRepository)
+            ISchedulerFactory schedulerFactory, IEmailService emailService, IAccountRepository accountRepository,
+            IServiceScopeFactory serviceScopeFactory)
         {
             _auctionRepository = auctionRepository;
             _bidRepository = bidRepository;
@@ -64,6 +67,7 @@ namespace Services.Auctions
             _schedulerFactory = schedulerFactory;
             _emailService = emailService;
             _accountRepository = accountRepository;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         public async Task<AuctionDetailResponse> CreateAuction(CreateAuctionRequest request)
@@ -378,57 +382,97 @@ namespace Services.Auctions
         public async Task<AuctionDepositDetailResponse> PlaceDeposit(Guid auctionId,
             CreateAuctionDepositRequest request)
         {
-            var auction = await _auctionRepository.GetAuction(auctionId, true);
-            var admin = await _accountRepository.FindOne(account => account.Role == Roles.Admin);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<GiveAwayDbContext>();
 
-            if (auction is null)
+            using var dbContextTransaction = await dbContext.Database.BeginTransactionAsync();
+
+            try
             {
-                throw new AuctionNotFoundException();
+                var auction = await _auctionRepository.GetAuction(auctionId, true);
+                var admin = await _accountRepository.FindOne(account => account.Role == Roles.Admin);
+                var existingDeposit =
+                    await _auctionDepositRepository.GetSingleDeposit<AuctionDeposit>(
+                        x => x.AuctionId == auctionId && x.MemberId == request.MemberId, null);
+
+                if (existingDeposit != null)
+                {
+                    throw new InvalidOperationException("Member has already placed a deposit");
+                }
+
+                if (auction is null)
+                {
+                    throw new AuctionNotFoundException();
+                }
+
+                if (admin == null)
+                {
+                    throw new AccountNotFoundException();
+                }
+
+                var member = await _accountRepository.FindOne(account => account.AccountId == request.MemberId);
+                if (member is null)
+                {
+                    throw new AccountNotFoundException();
+                }
+
+                if (auction.IndividualAuctionFashionItem.ConsignSaleLineItem!.ConsignSale.MemberId == request.MemberId)
+                {
+                    throw new NotAllowToPlaceDeposit(
+                        "This product is your consign product so you are not allowed to participate auction");
+                }
+
+                var deposit = new AuctionDeposit()
+                {
+                    AuctionId = auctionId,
+                    MemberId = request.MemberId,
+                    CreatedDate = DateTime.UtcNow,
+                };
+
+                var createDepositResult = await _auctionDepositRepository.CreateAuctionDeposit(deposit);
+
+
+                await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
+                admin.Balance -= auction.DepositFee;
+                await _accountRepository.UpdateAccount(admin);
+
+
+                var transaction = new Transaction()
+                {
+                    Amount = auction.DepositFee,
+                    Type = TransactionType.AuctionDeposit,
+                    SenderId = request.MemberId,
+                    SenderBalance = member.Balance,
+                    ReceiverId = admin.AccountId,
+                    ReceiverBalance = admin.Balance,
+                    AuctionDepositId = createDepositResult.AuctionDepositId,
+                    CreatedDate = DateTime.UtcNow,
+                    PaymentMethod = PaymentMethod.Point,
+                    VnPayTransactionNumber = "N/A"
+                };
+                var transactionResult = await _transactionRepository.CreateTransaction(transaction);
+
+                if (transactionResult != null)
+                {
+                    await _emailService.SendEmailAuctionIsComing(auctionId, request.MemberId);
+                    return new AuctionDepositDetailResponse()
+                    {
+                        Amount = auction.DepositFee,
+                        CreatedDate = transaction.CreatedDate,
+                        AuctionId = auctionId,
+                        DepositCode = createDepositResult.DepositCode,
+                        MemberId = request.MemberId,
+                        Id = createDepositResult.AuctionDepositId,
+                    };
+                }
+
+                throw new TransactionFailedException();
             }
-
-            if (admin == null)
+            catch (Exception e)
             {
-                throw new AccountNotFoundException();
+                await dbContextTransaction.RollbackAsync();
+                throw new TransactionFailedException();
             }
-            var member = await _accountRepository.FindOne(account => account.AccountId == request.MemberId);
-            if (member is null)
-            {
-                throw new AccountNotFoundException();
-            }
-
-            if (auction.IndividualAuctionFashionItem.ConsignSaleLineItem!.ConsignSale.MemberId == request.MemberId)
-            {
-                throw new NotAllowToPlaceDeposit(
-                    "This product is your consign product so you are not allowed to participate auction");
-            }
-            await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
-            admin.Balance -= auction.DepositFee;
-            await _accountRepository.UpdateAccount(admin);
-
-            
-            var transaction = new Transaction()
-            {
-                Amount = auction.DepositFee,
-                Type = TransactionType.AuctionDeposit,
-                SenderId = request.MemberId,
-                SenderBalance = member.Balance,
-                ReceiverId = admin.AccountId,
-                ReceiverBalance = admin.Balance,
-                CreatedDate = DateTime.UtcNow,
-                PaymentMethod = PaymentMethod.Point,
-                VnPayTransactionNumber = "N/A"
-            };
-            var transactionResult = await _transactionRepository.CreateTransaction(transaction);
-
-            if (transactionResult != null)
-            {
-                var result =
-                    await _auctionDepositRepository.CreateDeposit(auctionId, request, transactionResult.TransactionId);
-                await _emailService.SendEmailAuctionIsComing(auctionId, request.MemberId);
-                return result;
-            }
-
-            throw new TransactionFailedException();
         }
 
         public async Task<AuctionDepositDetailResponse?> GetDeposit(Guid id, Guid depositId)
@@ -442,7 +486,6 @@ namespace Services.Auctions
                     MemberId = deposit.MemberId,
                     Amount = deposit.Auction.DepositFee,
                     CreatedDate = deposit.CreatedDate,
-                    TransactionId = deposit.TransactionId,
                 };
             var result =
                 await _auctionDepositRepository.GetSingleDeposit<AuctionDepositDetailResponse>(predicate, selector);

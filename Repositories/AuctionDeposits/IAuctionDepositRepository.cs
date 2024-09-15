@@ -16,5 +16,7 @@ namespace Repositories.AuctionDeposits
         Task<PaginationResponse<AuctionDepositListResponse>> GetAuctionDeposits(Guid auctionId, GetDepositsRequest request);
         Task<T?> GetSingleDeposit<T>(Expression<Func<AuctionDeposit, bool>>? predicate,
             Expression<Func<AuctionDeposit, T>>? selector);
+
+        Task<AuctionDeposit> CreateAuctionDeposit(AuctionDeposit deposit);
     }
 }

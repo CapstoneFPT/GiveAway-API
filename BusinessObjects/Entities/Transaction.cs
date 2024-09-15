@@ -21,6 +21,7 @@ public class Transaction
     public Shop? Shop { get; set; }
     public Guid? RefundId { get; set; }
     public Guid? ConsignSaleId { get; set; }
+    
     public ConsignSale? ConsignSale { get; set; }
     public Guid? WithdrawId { get; set; }
     public Withdraw? Withdraw { get; set; }
@@ -29,6 +30,7 @@ public class Transaction
     public Guid? ReceiverId { get; set; }
     public Account? Receiver { get; set; }
     public string? VnPayTransactionNumber { get; set; }
+    public Guid? AuctionDepositId { get; set; }
     public AuctionDeposit? AuctionDeposit { get; set; }
     public string TransactionCode { get; set; }
     public PaymentMethod PaymentMethod { get; set; }

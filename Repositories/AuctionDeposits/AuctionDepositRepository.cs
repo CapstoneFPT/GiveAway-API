@@ -38,6 +38,12 @@ namespace Repositories.AuctionDeposits
             return $"{Prefix}-{timestamp}-{randomString}";
         }
 
+        public async Task<AuctionDeposit> CreateAuctionDeposit(AuctionDeposit deposit)
+        {
+            deposit.DepositCode = await GenerateUniqueString();
+            return await GenericDao<AuctionDeposit>.Instance.AddAsync(deposit);
+        }
+
         public async Task<AuctionDepositDetailResponse> CreateDeposit(Guid auctionId,
             CreateAuctionDepositRequest request, Guid transactionId)
         {
@@ -68,7 +74,6 @@ namespace Repositories.AuctionDeposits
             {
                 MemberId = request.MemberId,
                 AuctionId = auctionId,
-                TransactionId = transactionId,
                 DepositCode = await GenerateUniqueString(),
                 CreatedDate = DateTime.UtcNow
             };

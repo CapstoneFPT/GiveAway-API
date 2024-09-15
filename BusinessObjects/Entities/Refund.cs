@@ -19,6 +19,6 @@ public class Refund
     public RefundStatus RefundStatus { get; set; }
     public Transaction Transaction { get; set; }
     public ICollection<Image> Images { get; set; } = new List<Image>();
-
+    public string RefundCode { get; set; }
 }
 

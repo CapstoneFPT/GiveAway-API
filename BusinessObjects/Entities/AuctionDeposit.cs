@@ -11,7 +11,6 @@ public class AuctionDeposit
     public Guid MemberId { get; set; }
     public Auction Auction { get; set; }
     public Guid AuctionId { get; set; }
-    public Transaction Transaction { get; set; }
-    public Guid TransactionId { get; set; }
+    public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     public string DepositCode { get; set; }
 }

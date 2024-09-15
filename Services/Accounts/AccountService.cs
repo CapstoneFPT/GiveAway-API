@@ -338,7 +338,9 @@ namespace Services.Accounts
                     ReceiverId = transaction.ReceiverId,
                     Amount = transaction.Amount,
                     Type = transaction.Type,
-                    AccountBalance = transaction.ReceiverId == accountId ? transaction.ReceiverBalance : transaction.SenderBalance,
+                    AccountBalance = transaction.ReceiverId == accountId
+                        ? transaction.ReceiverBalance
+                        : transaction.SenderBalance,
                     CreatedDate = transaction.CreatedDate,
                     OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
                     ConsignSaleCode = transaction.ConsignSale != null
@@ -347,6 +349,8 @@ namespace Services.Accounts
                     RechargeCode = transaction.Recharge != null ? transaction.Recharge.RechargeCode : null,
                     DepositCode =
                         transaction.AuctionDeposit != null ? transaction.AuctionDeposit.DepositCode : null,
+                    WithdrawCode = transaction.Withdraw != null ? transaction.Withdraw.WithdrawCode : null,
+                    RefundCode = transaction.Refund != null ? transaction.Refund.RefundCode : null,
                     TransactionCode = transaction.TransactionCode,
                     PaymentMethod = transaction.PaymentMethod
                 };

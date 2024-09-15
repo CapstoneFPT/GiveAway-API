@@ -206,6 +206,11 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<AuctionDeposit>()
             .ToTable("AuctionDeposit")
             .HasKey(x => x.AuctionDepositId);
+        
+        modelBuilder.Entity<AuctionDeposit>()
+            .HasMany(x=>x.Transactions)
+            .WithOne(x=>x.AuctionDeposit)
+            .HasForeignKey(x=>x.AuctionDepositId);
 
         modelBuilder.Entity<AuctionDeposit>().Property(e => e.CreatedDate).HasColumnType("timestamptz")
             .ValueGeneratedOnAdd();
@@ -532,9 +537,6 @@ public class GiveAwayDbContext : DbContext
         modelBuilder.Entity<Transaction>().Property(e => e.Type)
             .HasConversion(prop => prop.ToString(),
                 s => (TransactionType)Enum.Parse(typeof(TransactionType), s)).HasColumnType("varchar").HasMaxLength(20);
-
-        modelBuilder.Entity<Transaction>().HasOne(x => x.AuctionDeposit).WithOne(x => x.Transaction)
-            .HasForeignKey<AuctionDeposit>(x => x.TransactionId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Transaction>()
             .Property(x => x.PaymentMethod)
             .HasConversion(prop => prop.ToString(), s => (PaymentMethod)Enum.Parse(typeof(PaymentMethod), s))
