@@ -44,7 +44,8 @@ namespace Services.Accounts
 
         public AccountService(IAccountRepository repository, IMapper mapper, IInquiryRepository inquiryRepository,
             IWithdrawRepository withdrawRepository, ITransactionRepository transactionRepository,
-            IBankAccountRepository bankAccountRepository, IAuctionRepository auctionRepository, IWithdrawService withdrawService)
+            IBankAccountRepository bankAccountRepository, IAuctionRepository auctionRepository,
+            IWithdrawService withdrawService)
         {
             _account = repository;
             _mapper = mapper;
@@ -231,6 +232,7 @@ namespace Services.Accounts
         public async Task<CreateWithdrawResponse> RequestWithdraw(Guid accountId, CreateWithdrawRequest request)
         {
             var member = await _account.GetMemberById(accountId);
+            var admin = await _account.FindOne(x => x.Role == Roles.Admin);
 
             if (member == null)
             {
@@ -262,10 +264,24 @@ namespace Services.Accounts
             var result = await _withdrawRepository.CreateWithdraw(newWithdraw);
 
             member.Balance -= request.Amount;
+            admin.Balance -= request.Amount;
             await _account.UpdateAccount(member);
+            await _account.UpdateAccount(admin);
 
-           
-            await _withdrawService.ScheduleWithdrawExpiration(result!);
+            var transaction = new Transaction
+            {
+                Amount = result.Amount,
+                CreatedDate = DateTime.UtcNow,
+                SenderBalance = member.Balance,
+                ReceiverBalance = admin.Balance,
+                SenderId = result.MemberId,
+                ReceiverId = admin.AccountId,
+                Type = TransactionType.Withdraw,
+                PaymentMethod = PaymentMethod.Banking
+            };
+
+            await _transactionRepository.CreateTransaction(transaction);
+
             return new CreateWithdrawResponse()
             {
                 WithdrawId = result.WithdrawId,

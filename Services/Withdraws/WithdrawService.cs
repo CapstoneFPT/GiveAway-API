@@ -31,7 +31,6 @@ public class WithdrawService : IWithdrawService
     public async Task<CompleteWithdrawResponse> CompleteWithdrawRequest(Guid withdrawId)
     {
         Expression<Func<Withdraw, bool>> predicate = x => x.WithdrawId == withdrawId;
-        var admin = await _accountRepository.FindOne(x => x.Role == Roles.Admin);
         var withdraw = await _withdrawRepository.GetSingleWithdraw(predicate);
 
         if (withdraw == null)
@@ -45,29 +44,8 @@ public class WithdrawService : IWithdrawService
         }
 
         withdraw.Status = WithdrawStatus.Completed;
-        admin.Balance -= withdraw.Amount;
 
-        var result = await _withdrawRepository.UpdateWithdraw(withdraw);
-        await _accountRepository.UpdateAccount(admin);
-        
-        var member = await _accountRepository.GetMemberById(withdraw.MemberId);
-
-        var transaction = new Transaction
-        {
-            Amount = result.Amount,
-            CreatedDate = DateTime.UtcNow,
-            SenderBalance = member.Balance,
-            ReceiverBalance = admin.Balance,
-            SenderId = result.MemberId,
-            ReceiverId = admin.AccountId,
-            Type = TransactionType.Withdraw,
-            PaymentMethod = PaymentMethod.Banking
-        };
-
-        await _transactionRepository.CreateTransaction(transaction);
-
-        var scheduler = await _schedulerFactory.GetScheduler();
-        await scheduler.DeleteJob(new JobKey($"WithdrawExpirationJob-{withdrawId}"));
+        await _withdrawRepository.UpdateWithdraw(withdraw);
         
         return new CompleteWithdrawResponse()
         {
