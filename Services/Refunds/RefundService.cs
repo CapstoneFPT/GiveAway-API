@@ -307,7 +307,7 @@ namespace Services.Refunds
                         ReceiverBalance = member.Balance,
                         SenderId = admin.AccountId,
                         SenderBalance = admin.Balance,
-                        PaymentMethod = PaymentMethod.Point
+                        PaymentMethod = PaymentMethod.Point,
                     };
                     await _transactionRepository.CreateTransaction(refundTransaction);
                     break;
