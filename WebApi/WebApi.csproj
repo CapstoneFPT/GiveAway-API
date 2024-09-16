@@ -45,7 +45,6 @@
 
     <ItemGroup>
       <Folder Include="Hubs\" />
-      <Folder Include="InvoiceTemplate\" />
       <Folder Include="Utils\VNPay\" />
     </ItemGroup>
 

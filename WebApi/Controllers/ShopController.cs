@@ -273,7 +273,7 @@ namespace WebApi.Controllers
             [ProducesResponseType<ConsignSaleDetailedResponse>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> CreateConsignSaleForCustomerSale([FromRoute] Guid shopId,
-            CreateConsignSaleByShopRequest request)
+            CreateConsignForSaleByShopRequest request)
         {
             var result = await _consignSaleService.CreateConsignSaleForCustomerSale(shopId, request);
 

@@ -221,5 +221,29 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+
+        [HttpGet("{consignsaleId}/invoice")]
+        [ProducesResponseType(typeof(FileContentResult), (int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GenerateConsignOfflineInvoice([FromRoute] Guid consignsaleId,
+            [FromQuery] Guid shopId)
+        {
+            var result = await _consignSaleService.GenerateConsignOfflineInvoice(consignsaleId, shopId);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.NotFound => NotFound(new ErrorResponse("Order not found", ErrorType.ApiError,
+                        HttpStatusCode.NotFound, result.Error)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error generating invoice", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
+            }
+
+            return File(result.Value.Content, "application/pdf", $"Invoice_{result.Value.ConsignSaleCode}.pdf");
+        }
     }
 }

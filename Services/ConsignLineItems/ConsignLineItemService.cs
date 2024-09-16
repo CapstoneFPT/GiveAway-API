@@ -52,7 +52,8 @@ public class ConsignLineItemService : IConsignLineItemService
                     IsApproved = item.IsApproved,
                     ShopResponse = item.ResponseFromShop,
                     FashionItemStatus = item.IndividualFashionItem.Status,
-                    IndividualItemId = item.IndividualFashionItem.ItemId
+                    IndividualItemId = item.IndividualFashionItem.ItemId,
+                    ItemCode = item.IndividualFashionItem.ItemCode
                 };
 
             var result = await query

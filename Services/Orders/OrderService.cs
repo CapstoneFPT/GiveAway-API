@@ -138,7 +138,7 @@ public class OrderService : IOrderService
         var template = await File.ReadAllTextAsync(templatePath);
 
         template = template.Replace("{{InvoiceNumber}}", order.OrderCode)
-            .Replace("{{IssueDate}}", order.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss"))
+            .Replace("{{IssueDate}}", order.CreatedDate.AddHours(7).ToString("dd/MM/yyyy HH:mm:ss"))
             .Replace("{{PaymentMethod}}", order.PaymentMethod.ToString())
             .Replace("{{CustomerName}}", order.Member?.Fullname ?? "N/A")
             .Replace("{{CustomerAddress}}", order.Address ?? "N/A")

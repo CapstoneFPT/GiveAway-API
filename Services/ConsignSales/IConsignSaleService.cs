@@ -41,6 +41,7 @@ namespace Services.ConsignSales
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> NegotiatingConsignSale(Guid consignSaleId);
         // Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ReadyToSaleConsignSale(Guid consignSaleId);
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> ContinueConsignSale(Guid consignsaleId);
-        Task<DotNext.Result<ConsignSaleDetailedResponse, ErrorCode>> CreateConsignSaleForCustomerSale(Guid shopId, CreateConsignSaleByShopRequest request);
+        Task<DotNext.Result<ConsignSaleDetailedResponse, ErrorCode>> CreateConsignSaleForCustomerSale(Guid shopId, CreateConsignForSaleByShopRequest request);
+        Task<Result<InvoiceConsignResponse, ErrorCode>> GenerateConsignOfflineInvoice(Guid consignsaleId, Guid shopId);
     }
 }

@@ -47,6 +47,7 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         public string? ShopResponse { get; set; }
         public bool? IsApproved { get; set; }
         public Guid? IndividualItemId { get; set; }
+        public string? ItemCode { get; set; }
     }
 
     public class ConsignSaleDetailResponse2

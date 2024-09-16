@@ -1,13 +1,17 @@
 ﻿using System.Linq.Expressions;
+using System.Text;
 using AutoMapper;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Dtos.OrderLineItems;
+using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using DotNext;
+using IronPdf.Rendering;
 using LinqKit;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +26,7 @@ using Repositories.FashionItems;
 using Repositories.Images;
 using Repositories.Orders;
 using Repositories.Schedules;
+using Repositories.Shops;
 using Repositories.Transactions;
 using Repositories.Utils;
 using Services.Emails;
@@ -41,12 +46,13 @@ namespace Services.ConsignSales
         private readonly IImageRepository _imageRepository;
         private readonly ILogger<ConsignSaleService> _logger;
         private readonly ITransactionRepository _transactionRepository;
+        private readonly IShopRepository _shopRepository;
 
         public ConsignSaleService(IConsignSaleRepository consignSaleRepository, IAccountRepository accountRepository,
             IConsignSaleLineItemRepository consignSaleLineItemRepository
             , IOrderRepository orderRepository, IEmailService emailService, IMapper mapper,
             ISchedulerFactory schedulerFactory, IFashionItemRepository fashionItemRepository,
-            IImageRepository imageRepository, ILogger<ConsignSaleService> logger, ITransactionRepository transactionRepository)
+            IImageRepository imageRepository, ILogger<ConsignSaleService> logger, ITransactionRepository transactionRepository, IShopRepository shopRepository)
         {
             _consignSaleRepository = consignSaleRepository;
             _accountRepository = accountRepository;
@@ -59,6 +65,7 @@ namespace Services.ConsignSales
             _imageRepository = imageRepository;
             _logger = logger;
             _transactionRepository = transactionRepository;
+            _shopRepository = shopRepository;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ApprovalConsignSale(
@@ -1168,7 +1175,7 @@ namespace Services.ConsignSales
             }
         }
 
-        public async Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CreateConsignSaleForCustomerSale(Guid shopId, CreateConsignSaleByShopRequest request)
+        public async Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CreateConsignSaleForCustomerSale(Guid shopId, CreateConsignForSaleByShopRequest request)
         {
             if (request.Type != ConsignSaleType.ForSale)
             {
@@ -1205,10 +1212,10 @@ namespace Services.ConsignSales
             
             foreach (var consignSaleLineRequest in request.ConsignDetailRequests)
             {
-                var masterItemCode = await _fashionItemRepository.GetMasterQueryable()
+                var masterItem = await _fashionItemRepository.GetMasterQueryable()
                     .Where(c => c.MasterItemId == consignSaleLineRequest.MasterItemId)
-                    .Select(c => c.MasterItemCode).FirstOrDefaultAsync();
-                if (masterItemCode is null)
+                    .FirstOrDefaultAsync();
+                if (masterItem is null)
                 {
                     throw new MasterItemNotAvailableException("Can not found master item with id" + consignSaleLineRequest.MasterItemId);
                 }
@@ -1217,12 +1224,12 @@ namespace Services.ConsignSales
                     ConsignSaleId = consign.ConsignSaleId,
                     Status = ConsignSaleLineItemStatus.Sold,
                     Condition = consignSaleLineRequest.Condition,
-                    Brand = consignSaleLineRequest.Brand,
+                    Brand = masterItem.Brand,
                     IsApproved = true,
                     ExpectedPrice = consignSaleLineRequest.ExpectedPrice,
                     Color = consignSaleLineRequest.Color,
                     Size = consignSaleLineRequest.Size,
-                    Gender = consignSaleLineRequest.Gender,
+                    Gender = masterItem.Gender,
                     ProductName = consignSaleLineRequest.ProductName,
                     Note = consignSaleLineRequest.Note,
                     CreatedDate = DateTime.UtcNow,
@@ -1238,7 +1245,7 @@ namespace Services.ConsignSales
                 consignSaleLineItem.IndividualFashionItem = new IndividualFashionItem()
                 {
                     MasterItemId = consignSaleLineRequest.MasterItemId,
-                    ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(masterItemCode),
+                    ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(masterItem.MasterItemCode),
                     Condition = consignSaleLineRequest.Condition,
                     SellingPrice = consignSaleLineRequest.ExpectedPrice,
                     Color = consignSaleLineRequest.Color,
@@ -1287,6 +1294,96 @@ namespace Services.ConsignSales
                     IndividualItemId = consignLine.IndividualFashionItem.ItemId
                 }).ToList()
             };
+        }
+
+        public async Task<Result<InvoiceConsignResponse, ErrorCode>> GenerateConsignOfflineInvoice(Guid consignsaleId, Guid shopId)
+        {
+            try
+            {
+                var consignSale = await _consignSaleRepository.GetQueryable()
+                    .FirstOrDefaultAsync(c => c.ConsignSaleId == consignsaleId);
+                if (consignSale == null)
+                {
+                    return new Result<InvoiceConsignResponse, ErrorCode>(ErrorCode.NotFound);
+                }
+
+                var shop = await _shopRepository.GetShopById(shopId);
+
+                var consignLineItem = await _consignSaleLineItemRepository.GetQueryable()
+                    .Include(x => x.IndividualFashionItem)
+                    .ThenInclude(x => x.MasterItem)
+                    .Where(x => x.ConsignSale.ConsignSaleId == consignsaleId)
+                    .Select(x => new ConsignSaleLineItemDetailedResponse()
+                    {
+                        ProductName = x.IndividualFashionItem.MasterItem.Name,
+                        ConfirmedPrice = x.ConfirmedPrice,
+                        ItemCode = x.IndividualFashionItem.ItemCode,
+                    })
+                    .ToListAsync();
+
+                var invoiceHtml = await GenerateInvoiceHtml(consignSale, consignLineItem, shop);
+                var renderer = new ChromePdfRenderer()
+                {
+                    RenderingOptions = new ChromePdfRenderOptions()
+                    {
+                        CssMediaType = PdfCssMediaType.Print,
+                        CustomCssUrl = "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+                    }
+                };
+                var pdf = await renderer.RenderHtmlAsPdfAsync(invoiceHtml);
+
+                var fileName = $"Invoice_{consignSale.ConsignSaleCode}.pdf";
+                var filePath = Path.Combine(Path.GetTempPath(), fileName);
+                pdf.SaveAs(filePath);
+
+                return new Result<InvoiceConsignResponse, ErrorCode>(new InvoiceConsignResponse
+                {
+                    Content = pdf.BinaryData,
+                    ConsignSaleCode = consignSale.ConsignSaleCode
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating invoice for consign {ConsignSaleId}", consignsaleId);
+                return new Result<InvoiceConsignResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+        private async Task<string> GenerateInvoiceHtml(ConsignSale consignSale, List<ConsignSaleLineItemDetailedResponse> consignLineItems,
+            ShopDetailResponse shop)
+        {
+            var templatePath = Path.Combine("InvoiceTemplate", "consign-invoice.html");
+            var template = await File.ReadAllTextAsync(templatePath);
+
+            template = template.Replace("{{InvoiceNumber}}", consignSale.ConsignSaleCode)
+                .Replace("{{IssueDate}}", consignSale.CreatedDate.AddHours(7).ToString("dd/MM/yyyy HH:mm:ss"))
+                .Replace("{{PaymentMethod}}", PaymentMethod.Cash.ToString())
+                .Replace("{{CustomerName}}", consignSale.Member?.Fullname ?? "N/A")
+                .Replace("{{CustomerAddress}}", consignSale.Address ?? "N/A")
+                .Replace("{{CustomerPhone}}", consignSale.Phone ?? "N/A")
+                .Replace("{{CustomerEmail}}", consignSale.Email ?? "N/A")
+                .Replace("{{ShopAddress}}", shop.Address ?? "N/A")
+                .Replace("{{ShopPhone}}", shop.Phone ?? "N/A");
+
+            var itemsHtml = new StringBuilder();
+            foreach (var item in consignLineItems)
+            {
+                itemsHtml.Append($@"
+        <tr>
+            <td>{item.ItemCode ?? "N/A"}</td>
+            <td>{item.ProductName ?? "N/A"}</td>
+            <td class='text-end'>1</td>
+            <td class='text-end'>{item.ConfirmedPrice:N0} VND</td>
+            <td class='text-end'>{item.ConfirmedPrice:N0} VND</td>
+        </tr>");
+            }
+
+            template = template.Replace("{{ConsignLineItems}}", itemsHtml.ToString());
+
+            // Replace totals
+            template = template.Replace("{{Subtotal}}", $"{consignLineItems.Sum(x => x.ConfirmedPrice):N0}")
+                .Replace("{{Total}}", $"{consignSale.TotalPrice:N0}");
+
+            return template;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
