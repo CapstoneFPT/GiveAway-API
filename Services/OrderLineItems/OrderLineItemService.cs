@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories.FashionItems;
 using Repositories.Orders;
+using Repositories.Refunds;
 
 namespace Services.OrderLineItems
 {
@@ -27,13 +28,16 @@ namespace Services.OrderLineItems
         private readonly IOrderLineItemRepository _orderLineItemRepository;
         private readonly IFashionItemRepository _fashionItemRepository;
         private readonly ILogger<OrderLineItemService> _logger;
+        private readonly IRefundRepository _refundRepository;
 
         public OrderLineItemService(IOrderLineItemRepository orderLineItemRepository,
-            IFashionItemRepository fashionItemRepository, ILogger<OrderLineItemService> logger)
+            IFashionItemRepository fashionItemRepository, ILogger<OrderLineItemService> logger,
+            IRefundRepository refundRepository)
         {
             _orderLineItemRepository = orderLineItemRepository;
             _fashionItemRepository = fashionItemRepository;
             _logger = logger;
+            _refundRepository = refundRepository;
         }
 
         public async Task<DotNext.Result<OrderLineItemDetailedResponse, ErrorCode>> GetOrderLineItemById(Guid orderId)
@@ -177,29 +181,44 @@ namespace Services.OrderLineItems
             var response = new BusinessObjects.Dtos.Commons.Result<RefundResponse>();
 
             var orderDetail =
-                await _orderLineItemRepository.GetOrderLineItems(
-                    c => c.OrderLineItemId == refundRequest.OrderLineItemId);
+                await _orderLineItemRepository.GetOrderLineItemById(refundRequest.OrderLineItemId);
             if (orderDetail is null)
             {
                 throw new OrderNotFoundException();
             }
 
 
-            if (orderDetail.Any(c => c.RefundExpirationDate < DateTime.UtcNow))
+            if (orderDetail.RefundExpirationDate < DateTime.UtcNow)
             {
                 throw new RefundExpiredException("There are items that ran out refund expiration");
             }
 
-            var fashionitemIds = orderDetail.Select(c => c.IndividualFashionItemId).ToList();
-            var fashionitems = await _fashionItemRepository.GetFashionItems(c => fashionitemIds.Contains(c.ItemId));
-            if (!fashionitems.Any(c => c.Status.Equals(FashionItemStatus.Refundable)))
+            
+            if (orderDetail.IndividualFashionItem.Status != FashionItemStatus.Refundable)
             {
-                response.Messages = ["This item is not allowed to refund"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
+                throw new StatusNotAvailableWithMessageException("This item is not available to refund");
             }
-
-            response.Data = await _orderLineItemRepository.CreateRefundToShop(refundRequest);
+    
+            orderDetail.IndividualFashionItem.Status = FashionItemStatus.PendingForRefund;
+            await _orderLineItemRepository.UpdateOrderLine(orderDetail);
+            var refund = new Refund()
+            {
+                OrderLineItemId = refundRequest.OrderLineItemId,
+                Description = refundRequest.Description,
+                CreatedDate = DateTime.UtcNow,
+                RefundStatus = RefundStatus.Pending,
+                Images = refundRequest.Images.Select(x => new Image()
+                {
+                    CreatedDate = DateTime.UtcNow,
+                    Url = x
+                }).ToList(),
+            };
+            await _refundRepository.CreateRefund(refund);
+            response.Data = new RefundResponse()
+            {
+                RefundId = refund.RefundId,
+                
+            };
             response.Messages = new[] { "Send refund request successfully" };
             response.ResultStatus = ResultStatus.Success;
             return response;
