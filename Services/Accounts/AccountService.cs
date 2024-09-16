@@ -19,6 +19,7 @@ using BusinessObjects.Dtos.Withdraws;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using DotNext;
+using DotNext.Threading;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -275,6 +276,7 @@ namespace Services.Accounts
                 SenderBalance = member.Balance,
                 ReceiverBalance = admin.Balance,
                 SenderId = result.MemberId,
+                WithdrawId = result.WithdrawId,
                 ReceiverId = admin.AccountId,
                 Type = TransactionType.Withdraw,
                 PaymentMethod = PaymentMethod.Banking
@@ -334,6 +336,17 @@ namespace Services.Accounts
             if (!string.IsNullOrWhiteSpace(request.TransactionCode))
             {
                 predicate = predicate.And(x => EF.Functions.ILike(x.TransactionCode, $"%{request.TransactionCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.WithdrawCode))
+            {
+                predicate = predicate.And(x =>
+                    x.Withdraw != null && EF.Functions.ILike(x.Withdraw.WithdrawCode, $"%{request.WithdrawCode}%"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.RefundCode))
+            {
+                predicate = predicate.And(x=> x.Refund != null && EF.Functions.ILike(x.Refund.RefundCode, $"%{request.RefundCode}%"));
             }
 
             return predicate;
