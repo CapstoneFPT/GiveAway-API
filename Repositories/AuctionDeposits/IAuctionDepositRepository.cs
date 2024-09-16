@@ -18,5 +18,6 @@ namespace Repositories.AuctionDeposits
             Expression<Func<AuctionDeposit, T>>? selector);
 
         Task<AuctionDeposit> CreateAuctionDeposit(AuctionDeposit deposit);
+        IQueryable<AuctionDeposit> GetQueryable();
     }
 }

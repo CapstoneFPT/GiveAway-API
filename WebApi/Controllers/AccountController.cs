@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.Account;
 using BusinessObjects.Dtos.Account.Request;
 using BusinessObjects.Dtos.Account.Response;
+using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSales;
@@ -465,6 +466,25 @@ public class AccountController : ControllerBase
             };
         }
 
+        return Ok(result.Value);
+    }
+    
+    [HttpGet("{accountId}/deposits")]
+    [ProducesResponseType<PaginationResponse<AccountDepositsListResponse>>((int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetDeposits([FromRoute] Guid accountId,
+        [FromQuery] GetDepositsRequest request)
+    {
+        DotNext.Result<PaginationResponse<AccountDepositsListResponse>,ErrorCode> result = await _accountService.GetDeposits(accountId, request);
+        if (!result.IsSuccessful)
+        {
+            return result.Error switch
+            {
+                _ => StatusCode(500,
+                    new ErrorResponse("Network error", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                        ErrorCode.ServerError))
+            };
+        }
+        
         return Ok(result.Value);
     }
 
