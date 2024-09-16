@@ -612,6 +612,45 @@ namespace Services.FashionItems
             };
         }
 
+        public async Task<Result<MasterItemResponse, ErrorCode>> CreateMasterItemForOfflineConsign(Guid shopId, CreateMasterOfflineConsignRequest request)
+        {
+            var masterItem = new MasterFashionItem()
+            {
+                ShopId = shopId,
+                Description = request.Description,
+                MasterItemCode = await _fashionitemRepository.GenerateMasterItemCode(request.MasterItemCode),
+                Brand = request.Brand,
+                CategoryId = request.CategoryId,
+                IsConsignment = true,
+                CreatedDate = DateTime.UtcNow,
+                Name = request.Name,
+                Gender = request.Gender,
+                
+            };
+            masterItem.Images = request.Images.Select(url => new Image()
+            {
+                Url = url,
+                CreatedDate = DateTime.UtcNow,
+                MasterFashionItemId = masterItem.MasterItemId
+            }).ToList();
+            await _fashionitemRepository.AddSingleMasterFashionItem(masterItem);
+            return new MasterItemResponse()
+            {
+                MasterItemId = masterItem.MasterItemId,
+                CreatedDate = masterItem.CreatedDate,
+                StockCount = 0,
+                MasterItemCode = masterItem.MasterItemCode,
+                Brand = masterItem.Brand,
+                Gender = masterItem.Gender,
+                Description = masterItem.Description,
+                Images = masterItem.Images.Select(c => c.Url).ToList(),
+                CategoryId = masterItem.CategoryId,
+                IsConsignment = masterItem.IsConsignment,
+                ShopId = masterItem.ShopId,
+                Name = masterItem.Name
+            };
+        }
+
         public async Task<PaginationResponse<MasterItemListResponse>> GetAllMasterItemPagination(
             MasterItemRequest request)
         {

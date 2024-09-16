@@ -38,5 +38,6 @@ namespace Services.FashionItems
         Task<DotNext.Result<MasterItemDetailResponse,ErrorCode>> FindMasterItem(FindMasterItemRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<string?>> DeleteDraftItem(List<DeleteDraftItemRequest> deleteDraftItemRequests);
         Task<Result<FashionItemDetailResponse, ErrorCode>> AddReturnedItemToShop(Guid itemId);
+        Task<DotNext.Result<MasterItemResponse, ErrorCode>> CreateMasterItemForOfflineConsign(Guid shopId, CreateMasterOfflineConsignRequest request);
     }
 }
