@@ -12,4 +12,6 @@ public class GetTransactionsRequest
     public string? ConsignSaleCode { get; set; }
     public string? RechargeCode { get; set; }
     public string? DepositCode { get; set; }
+    public string? WithdrawCode { get; set; }
+    public string? RefundCode { get; set; }
 }
