@@ -247,5 +247,26 @@ namespace WebApi.Controllers
                     ErrorCode.ExternalServiceError))
             };
         }
+
+        [HttpPost("{shopId}/create-master-for-offline-consign")]
+        [ProducesResponseType<MasterItemResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CreateMasterOfflineConsign([FromRoute] Guid shopId,
+            CreateMasterOfflineConsignRequest request)
+        {
+            var result = await _fashionItemService.CreateMasterItemForOfflineConsign(shopId, request);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error creating refund", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                            result.Error))
+                };
+            }
+
+            return Ok(result.Value);
+        }
     }
 }
