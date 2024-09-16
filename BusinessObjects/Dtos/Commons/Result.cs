@@ -78,7 +78,8 @@ public enum FashionItemType
 {
     ItemBase,
     ConsignedForSale,
-    ConsignedForAuction
+    ConsignedForAuction,
+    CustomerSale
 }
 
 public enum ConsignSaleStatus

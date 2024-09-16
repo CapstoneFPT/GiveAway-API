@@ -58,5 +58,6 @@ namespace BusinessObjects.Dtos.ConsignSaleLineItems
         public decimal ConfirmedPrice { get; set; }
         public string Note { get; set; }
         public ConsignSaleLineItemStatus Status { get; set; }
+        public Guid? IndividualItemId { get; set; }
     }
 }

@@ -268,5 +268,26 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+
+        [HttpPost("{shopId}/customer-sale")]
+            [ProducesResponseType<ConsignSaleDetailedResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> CreateConsignSaleForCustomerSale([FromRoute] Guid shopId,
+            CreateConsignSaleByShopRequest request)
+        {
+            var result = await _consignSaleService.CreateConsignSaleForCustomerSale(shopId, request);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error creating refund", ErrorType.ApiError, HttpStatusCode.InternalServerError,
+                            result.Error))
+                };
+            }
+
+            return Ok(result.Value);
+        }
     }
 }
