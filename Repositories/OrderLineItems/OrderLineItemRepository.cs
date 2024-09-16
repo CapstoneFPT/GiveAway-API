@@ -34,7 +34,7 @@ namespace Repositories.OrderLineItems
             {
                 var query = GenericDao<OrderLineItem>.Instance.GetQueryable();
                 Expression<Func<OrderLineItem, OrderLineItemListResponse>> selector = order =>
-                    new()
+                    new OrderLineItemListResponse
                     {
                         OrderLineItemId = order.OrderLineItemId,
                         CreatedDate = order.CreatedDate,
@@ -57,7 +57,8 @@ namespace Repositories.OrderLineItems
                         ItemSize = order.IndividualFashionItem.Size,
                         PaymentDate = order.PaymentDate,
                         ShopAddress = order.IndividualFashionItem.MasterItem.Shop.Address,
-                        RefundExpirationDate = order.RefundExpirationDate
+                        RefundExpirationDate = order.RefundExpirationDate,
+                        ReservedExpirationDate = order.ReservedExpirationDate
                     };
 
                 query = query
