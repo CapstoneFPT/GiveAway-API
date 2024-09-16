@@ -44,6 +44,11 @@ namespace Repositories.AuctionDeposits
             return await GenericDao<AuctionDeposit>.Instance.AddAsync(deposit);
         }
 
+        public IQueryable<AuctionDeposit> GetQueryable()
+        {
+            return GenericDao<AuctionDeposit>.Instance.GetQueryable();
+        }
+
         public async Task<AuctionDepositDetailResponse> CreateDeposit(Guid auctionId,
             CreateAuctionDepositRequest request, Guid transactionId)
         {
