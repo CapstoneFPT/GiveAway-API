@@ -137,6 +137,8 @@ namespace Repositories.Refunds
                 .Include(c => c.OrderLineItem)
                 .ThenInclude(c => c.IndividualFashionItem)
                 .ThenInclude(ind => ind.Images)
+                .Include(c => c.OrderLineItem)
+                .ThenInclude(c => c.IndividualFashionItem).ThenInclude(c => c.ConsignSaleLineItem)
                 .Where(predicate)
                 .FirstOrDefaultAsync();
         }

@@ -22,7 +22,7 @@ namespace Repositories.FashionItems
         // Task<List<MasterFashionItemShop>> AddRangeMasterFashionItemShop(List<MasterFashionItemShop> request);
         // Task<FashionItemVariation> AddSingleFashionItemVariation(FashionItemVariation request);
         Task<IndividualFashionItem> UpdateFashionItem(IndividualFashionItem fashionItem);
-        // Task<FashionItemVariation> UpdateFashionItemVariation(FashionItemVariation fashionItemVariation);
+        Task<bool?> IsConsignEnded(Guid? itemId);
         Task<PaginationResponse<FashionItemDetailResponse>> GetItemByCategoryHierarchy(Guid id,
             AuctionFashionItemRequest request);
 

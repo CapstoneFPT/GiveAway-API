@@ -626,6 +626,10 @@ namespace Services.ConsignSales
                 throw new ConfirmPriceIsNullException("Please set a deal price for this item");
             }
 
+            if (request.DealPrice == consignSaleDetail.ExpectedPrice)
+            {
+                throw new DealPriceIsNotAvailableException("This deal price is equal expected price");
+            }
             if (request.ResponseFromShop is null)
             {
                 throw new MissingFeatureException("You should give a reason to negotiate this item");
@@ -960,15 +964,16 @@ namespace Services.ConsignSales
                 return new Result<ConsignSaleDetailedResponse, ErrorCode>(ErrorCode.NotFound);
             }
 
+            if (consignSale.Status != ConsignSaleStatus.Pending && consignSale.Status != ConsignSaleStatus.AwaitDelivery && consignSale.Status != ConsignSaleStatus.Negotiating)
+            {
+                throw new StatusNotAvailableWithMessageException("Only able to cancel when consign is pending, awaitdelivery or negotiating");
+            }
             consignSale.Status = ConsignSaleStatus.Cancelled;
 
             foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
             {
-                if (consignSaleLineItem.IndividualFashionItem != null)
-                {
-                    consignSaleLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
-                }
 
+                
                 consignSaleLineItem.Status = ConsignSaleLineItemStatus.Returned;
             }
 

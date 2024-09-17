@@ -64,37 +64,19 @@ namespace Repositories.FashionItems
             return (items, pageNum, pageSizeNum, count);
         }
 
-        /*public async Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetFashionItemVariationProjections<T>(int? page, int? pageSize, Expression<Func<FashionItemVariation, bool>>? predicate, Expression<Func<FashionItemVariation, T>>? selector)
+        public async Task<bool?> IsConsignEnded(Guid? itemId)
         {
-            var query = _giveAwayDbContext.FashionItemVariations.AsQueryable();
-
-            if (predicate != null)
+            var individualItem = await GenericDao<IndividualFashionItem>.Instance.GetQueryable()
+                .Include(ind => ind.ConsignSaleLineItem)
+                .ThenInclude(conline => conline!.ConsignSale)
+                .FirstOrDefaultAsync(c => c.ItemId == itemId);
+            if (individualItem?.ConsignSaleLineItem is null)
             {
-                query = query.Where(predicate);
+                return null;
             }
 
-            var count = await query.CountAsync();
-
-            var pageNum = page ?? -1;
-            var pageSizeNum = pageSize ?? -1;
-
-            if (pageNum > 0 && pageSizeNum > 0)
-            {
-                query = query.Skip((pageNum - 1) * pageSizeNum).Take(pageSizeNum);
-            }
-
-            List<T> items = [];
-            if (selector != null)
-            {
-                items = await query.Select(selector).ToListAsync();
-            }
-            else
-            {
-                items = await query.Cast<T>().ToListAsync();
-            }
-
-            return (items, pageNum, pageSizeNum, count);
-        }*/
+            return individualItem.ConsignSaleLineItem.ConsignSale.EndDate > DateTime.UtcNow;
+        }
 
         public async Task<MasterFashionItem?> GetSingleMasterItem(Expression<Func<MasterFashionItem, bool>> predicate)
         {

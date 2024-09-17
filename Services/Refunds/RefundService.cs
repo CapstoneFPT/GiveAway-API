@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Repositories.Accounts;
+using Repositories.FashionItems;
 using Repositories.Images;
 using Repositories.OrderLineItems;
 using Repositories.Orders;
@@ -37,10 +38,12 @@ namespace Services.Refunds
         private readonly IOrderLineItemRepository _orderLineItemRepository;
         private readonly ILogger<RefundService> _logger;
         private readonly IImageRepository _imageRepository;
+        private readonly IFashionItemRepository _fashionItemRepository;
 
         public RefundService(IRefundRepository refundRepository, IOrderRepository orderRepository,
             ITransactionRepository transactionRepository, IAccountRepository accountRepository,
-            IEmailService emailService, IOrderLineItemRepository orderLineItemRepository, ILogger<RefundService> logger, IImageRepository imageRepository)
+            IEmailService emailService, IOrderLineItemRepository orderLineItemRepository, ILogger<RefundService> logger, IImageRepository imageRepository,
+            IFashionItemRepository fashionItemRepository)
         {
             _refundRepository = refundRepository;
             _orderRepository = orderRepository;
@@ -50,6 +53,7 @@ namespace Services.Refunds
             _orderLineItemRepository = orderLineItemRepository;
             _logger = logger;
             _imageRepository = imageRepository;
+            _fashionItemRepository = fashionItemRepository;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<RefundResponse>> ApprovalRefundRequestFromShop(Guid refundId,
@@ -282,7 +286,18 @@ namespace Services.Refunds
                     refund.RefundStatus = RefundStatus.Completed;
                     refund.RefundPercentage = request.RefundPercentage;
                     refund.ResponseFromShop = request.ResponseFromShop;
-                    refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
+                    var isConsignEnded = await _fashionItemRepository.IsConsignEnded(refund.OrderLineItem.IndividualFashionItemId!.Value);
+                    if (isConsignEnded is null or false)
+                    {
+                        refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.Returned;
+                    }
+                    else
+                    {
+                        refund.OrderLineItem.IndividualFashionItem.ConsignSaleLineItem!.Status =
+                            ConsignSaleLineItemStatus.UnSold;
+                        refund.OrderLineItem.IndividualFashionItem.Status = FashionItemStatus.UnSold;
+                    }
+                    
                     var member = await _accountRepository.GetAccountById(refund.OrderLineItem.Order.MemberId!.Value);
                     if (member == null)
                     {

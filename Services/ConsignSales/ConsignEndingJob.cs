@@ -46,9 +46,9 @@ public class ConsignEndingJob : IJob
             consignToEnd.Status = ConsignSaleStatus.Completed;
             foreach (var detail in consignToEnd.ConsignSaleLineItems)
             {
-                if (!detail.IndividualFashionItem.Status.Equals(FashionItemStatus.Sold) &&
-                    !detail.IndividualFashionItem.Status.Equals(FashionItemStatus.Refundable))
+                if (detail.IndividualFashionItem.Status is FashionItemStatus.Available or FashionItemStatus.Unavailable)
                 {
+                    detail.Status = ConsignSaleLineItemStatus.UnSold;
                     detail.IndividualFashionItem.Status = FashionItemStatus.UnSold;
                 }
             }
