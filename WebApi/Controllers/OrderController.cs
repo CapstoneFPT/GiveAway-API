@@ -23,24 +23,11 @@ namespace WebApi.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
-        private readonly IOrderLineItemService _orderLineItemService;
-        private readonly IVnPayService _vnPayService;
-        private readonly ITransactionService _transactionService;
-        private readonly ILogger<OrderController> _logger;
-        private readonly IEmailService _emailService;
-        private readonly IConsignSaleService _consignSaleService;
+        
 
-        public OrderController(IOrderService orderService, IOrderLineItemService orderLineItemService, IVnPayService
-                vnPayService, ITransactionService transactionService, ILogger<OrderController> logger,
-            IEmailService emailService, IConsignSaleService consignSaleService)
+        public OrderController(IOrderService orderService)
         {
             _orderService = orderService;
-            _orderLineItemService = orderLineItemService;
-            _vnPayService = vnPayService;
-            _transactionService = transactionService;
-            _emailService = emailService;
-            _logger = logger;
-            _consignSaleService = consignSaleService;
         }
 
         [HttpGet]
@@ -107,167 +94,48 @@ namespace WebApi.Controllers
             return Ok(result.Value);
         }
 
-
-        [HttpPut("{OrderId}/cancel")]
-        public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid OrderId)
-        {
-            var result = await _orderService.CancelOrder(OrderId);
-
-            if (result.ResultStatus != ResultStatus.Success)
-                return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-            return Ok(result);
-        }
-
-
         [HttpPost("{orderId}/pay/vnpay")]
-        public async Task<ActionResult<VnPayPurchaseResponse>> PurchaseOrder([FromRoute] Guid orderId,
+        [ProducesResponseType<VnPayPurchaseResponse>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> PurchaseOrder([FromRoute] Guid orderId,
             [FromBody] PurchaseOrderRequest request)
         {
-            var order = await _orderService.GetOrderById(orderId);
-
-            if (order == null)
-            {
-                throw new OrderNotFoundException();
-            }
-
-            if (order.PaymentMethod != PaymentMethod.Banking)
-            {
-                throw new WrongPaymentMethodException("Order is not paid by Banking");
-            }
-
-            if (order.Status != OrderStatus.AwaitingPayment)
-            {
-                throw new InvalidOperationException("Order is not awaiting payment");
-            }
-
-            if (order.MemberId != request.MemberId)
-            {
-                throw new NotAuthorizedToPayOrderException();
-            }
-
-            //check
-
-            var paymentUrl = _vnPayService.CreatePaymentUrl(
-                order.OrderId,
-                order.TotalPrice,
-                $"{orderId}", "orders");
-
-            return Ok(new VnPayPurchaseResponse { PaymentUrl = paymentUrl });
+            var result = await _orderService.PurchaseOrder(orderId, request);
+            return Ok(result.Value);
         }
 
         [HttpGet("payment-return")]
         public async Task<IActionResult> PaymentReturn()
         {
             var requestParams = Request.Query;
-            //check
-            var response = _vnPayService.ProcessPayment(requestParams);
-            var order = await _orderService.GetOrderById(new Guid(response.OrderId));
-
-            if (order.Status != OrderStatus.AwaitingPayment)
-            {
-                throw new InvalidOperationException("Order is not awaiting payment");
-            }
-
-            if (response.Success)
-            {
-                try
-                {
-                    if (order == null)
-                    {
-                        _logger.LogWarning("Order not found for OrderCode: {OrderId}", response.OrderId);
-                        return BadRequest(new { success = false, message = "Order not found" });
-                    }
-
-                    if (order.Status != OrderStatus.AwaitingPayment)
-                    {
-                        _logger.LogWarning("Order already processed: {OrderId}", response.OrderId);
-                        return Ok(new
-                            { success = true, message = "Order already processed", orderCode = response.OrderId });
-                    }
-
-                    var transaction =
-                        await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Purchase);
-
-                    if (transaction.ResultStatus == ResultStatus.Success)
-                    {
-                        order.Status = OrderStatus.Pending;
-                        foreach (var orderDetail in order.OrderLineItems)
-                        {
-                            orderDetail.PaymentDate = DateTime.UtcNow;
-                        }
-
-                        await _orderService.UpdateOrder(order);
-                        await _orderService.UpdateFashionItemStatus(order.OrderId);
-                        // await _orderService.UpdateAdminBalance(order);
-                        await _emailService.SendEmailOrder(order);
-
-                        return Redirect("https://giveawayproject.jettonetto.org");
-                    }
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, e.Message);
-                    return StatusCode(500, new { success = false, message = "Payment failed" });
-                }
-            }
-
-            _logger.LogWarning(
-                "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
-                response.VnPayResponseCode);
-            return Ok(new { success = false, message = "Payment failed", orderCode = response.OrderId });
+            var result = await _orderService.PaymentReturn(requestParams);
+            return Redirect(result.Value);
         }
 
         [HttpPost("{orderId}/pay/points")]
-        public async Task<ActionResult<PayWithPointsResponse>> PurchaseOrderWithPoints([FromRoute] Guid orderId,
+        [ProducesResponseType<PayWithPointsResponse>((int)HttpStatusCode.Created)]
+        public async Task<IActionResult> PurchaseOrderWithPoints([FromRoute] Guid orderId,
             [FromBody] PurchaseOrderRequest request)
         {
-            var order = await _orderService.GetOrderById(orderId);
+            var result = await _orderService.PurchaseOrderWithPoints(orderId, request);
 
-            if (order == null)
+            if (!result.IsSuccessful)
             {
-                throw new OrderNotFoundException();
+                return result.Error switch
+                {
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error purchasing order", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, result.Error))
+                };
             }
-
-            if (order.PaymentMethod != PaymentMethod.Point)
-            {
-                throw new WrongPaymentMethodException("Order is not paid by Point");
-            }
-
-            if (order.Status != OrderStatus.AwaitingPayment)
-            {
-                throw new InvalidOperationException("Order is not awaiting payment");
-            }
-
-            if (order.MemberId != request.MemberId)
-            {
-                throw new NotAuthorizedToPayOrderException();
-            }
-
-            if (order.Member!.Balance < order.TotalPrice)
-            {
-                throw new BalanceIsNotEnoughException(ErrorCode.PaymentFailed);
-            }
-
-            foreach (var orderDetail in order.OrderLineItems)
-            {
-                orderDetail.PaymentDate = DateTime.UtcNow;
-            }
-
-            order.Status = OrderStatus.Pending;
-            order.Member!.Balance -= order.TotalPrice;
-
-            await _orderService.UpdateOrder(order);
-            await _orderService.UpdateFashionItemStatus(order.OrderId);
-            await _orderService.UpdateAdminBalance(order);
-            await _consignSaleService.UpdateConsignPrice(order.OrderId);
-            await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
-            await _emailService.SendEmailOrder(order);
-
-            return Ok(new PayWithPointsResponse()
-                { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
+            
+            return Ok(result.Value);
         }
 
+        [HttpPut("{OrderId}/cancel")]
+        public async Task<ActionResult<Result<string>>> CancelOrder([FromRoute] Guid OrderId)
+        {
+            return await _orderService.CancelOrder(OrderId);
+        }
 
         [HttpPut("{orderId}/cancelbyadmin")]
         public async Task<ActionResult<Result<string>>> CancelOrderByAdmin([FromRoute] Guid orderId)
@@ -324,88 +192,6 @@ namespace WebApi.Controllers
                 $"Orders_{request.StartDate:yyyyMMdd}_{request.EndDate:yyyyMMdd}.xlsx");
         }
 
-        // [HttpPatch("{orderId}/update-address")]
-        // [ProducesResponseType<OrderDetailedResponse>((int)HttpStatusCode.OK)]
-        // public async Task<IActionResult> UpdateAddress([FromRoute] Guid orderId,
-        //     [FromBody] UpdateOrderAddressRequest request)
-        // {
-        //     DotNext.Result<OrderDetailedResponse, ErrorCode> result =
-        //         await _orderService.CheckoutAuctionOrder(orderId, request);
-        //
-        //     if (!result.IsSuccessful)
-        //     {
-        //         return result.Error switch
-        //         {
-        //             ErrorCode.UnsupportedShipping => StatusCode(400,
-        //                 new ErrorResponse("Shipping is not supported for this address", ErrorType.ShippingError,
-        //                     HttpStatusCode.BadRequest, ErrorCode.UnsupportedShipping)),
-        //             _ => StatusCode(500, new ErrorResponse("Unexpected error from server", ErrorType.ApiError,
-        //                 HttpStatusCode.InternalServerError, ErrorCode.ServerError))
-        //         };
-        //     }
-        //
-        //     return Ok(result.Value);
-        // }
-
-        [HttpPatch("{orderId}/checkout-auction")]
-        public async Task<IActionResult> CheckoutAuction([FromRoute] Guid orderId,
-            [FromBody] CheckoutAuctionRequest request)
-        {
-            var order = await _orderService.GetOrderById(orderId);
-
-            if (order == null)
-            {
-                throw new OrderNotFoundException();
-            }
-
-            if (order.PaymentMethod != PaymentMethod.Point)
-            {
-                throw new WrongPaymentMethodException("Order is not paid by Point");
-            }
-
-            if (order.Status != OrderStatus.AwaitingPayment)
-            {
-                throw new InvalidOperationException("Order is not awaiting payment");
-            }
-
-            if (order.MemberId != request.MemberId)
-            {
-                throw new NotAuthorizedToPayOrderException();
-            }
-
-            if (order.Member!.Balance < order.TotalPrice)
-            {
-                throw new BalanceIsNotEnoughException(ErrorCode.PaymentFailed);
-            }
-
-            foreach (var orderDetail in order.OrderLineItems)
-            {
-                orderDetail.PaymentDate = DateTime.UtcNow;
-            }
-
-            order.GhnDistrictId = request.GhnDistrictId;
-            order.GhnWardCode = request.GhnWardCode;
-            order.GhnProvinceId = request.GhnProvinceId;
-            order.Address = request.Address;
-            order.RecipientName = request.RecipientName;
-            order.Phone = request.Phone;
-            order.ShippingFee = request.ShippingFee;
-            order.Discount = request.Discount;
-            order.Status = OrderStatus.Pending;
-            order.TotalPrice = order.TotalPrice + request.ShippingFee;
-            order.Member!.Balance -= order.TotalPrice + request.ShippingFee;
-
-            await _orderService.UpdateOrder(order);
-            await _orderService.UpdateFashionItemStatus(order.OrderId);
-            await _orderService.UpdateAdminBalance(order);
-            await _consignSaleService.UpdateConsignPrice(order.OrderId);
-            await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
-            await _emailService.SendEmailOrder(order);
-
-            return Ok(new PayWithPointsResponse()
-                { Sucess = true, Message = "Payment success", OrderId = order.OrderId });
-        }
-
         [HttpGet("calculate-shipping-fee")]
         [ProducesResponseType<ShippingFeeResult>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -432,24 +218,31 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-    }
 
+        [HttpPatch("{orderId}/checkout-auction")]
+        [ProducesResponseType<PayWithPointsResponse>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> CheckoutAuction([FromRoute] Guid orderId,
+            [FromBody] CheckoutAuctionRequest request)
+        {
+            var result = await _orderService.CheckoutAuction(orderId, request);
 
-    public class VnPayPurchaseResponse
-    {
-        public string PaymentUrl { get; set; }
-    }
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.ExternalServiceError => StatusCode(500,
+                        new ErrorResponse("External Service Error", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ExternalServiceError)),
+                    ErrorCode.UnsupportedShipping => StatusCode(400,
+                        new ErrorResponse("Shipping is not supported for this address", ErrorType.ShippingError,
+                            HttpStatusCode.BadRequest, ErrorCode.UnsupportedShipping)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Unexpected error from server", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ServerError))
+                };
+            }
 
-    public class PayWithPointsResponse
-    {
-        public bool Sucess { get; set; }
-        public string Message { get; set; }
-        public Guid OrderId { get; set; }
-    }
-
-
-    public class PurchaseOrderRequest
-    {
-        public Guid MemberId { get; set; }
+            return Ok(result.Value);
+        }
     }
 }

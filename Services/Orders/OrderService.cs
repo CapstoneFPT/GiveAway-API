@@ -33,8 +33,11 @@ using Services.GiaoHangNhanh;
 using System.Text;
 using BusinessObjects.Dtos.Shops;
 using IronPdf.Rendering;
+using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using Services.Transactions;
+using Services.VnPayService;
 
 namespace Services.Orders;
 
@@ -55,13 +58,18 @@ public class OrderService : IOrderService
     private readonly IGiaoHangNhanhService _giaoHangNhanhService;
     private readonly ILogger<OrderService> _logger;
     private readonly ISchedulerFactory _schedulerFactory;
+    private readonly IConsignSaleService _consignSaleService;
+    private readonly ITransactionService _transactionService;
+    private readonly IVnPayService _vnPayService;
 
     public OrderService(IOrderRepository orderRepository, IFashionItemRepository fashionItemRepository,
         IMapper mapper, IOrderLineItemRepository orderLineItemRepository, IAuctionItemRepository auctionItemRepository,
         IAccountRepository accountRepository, IRechargeRepository rechargeRepository,
         IShopRepository shopRepository, ITransactionRepository transactionRepository,
         IConfiguration configuration, IEmailService emailService, IRefundRepository refundRepository,
-        IGiaoHangNhanhService giaoHangNhanhService, ILogger<OrderService> logger, ISchedulerFactory schedulerFactory)
+        IGiaoHangNhanhService giaoHangNhanhService, ILogger<OrderService> logger, ISchedulerFactory schedulerFactory,
+        IConsignSaleService consignSaleService, ITransactionService transactionService,
+        IVnPayService vnPayService)
     {
         _orderRepository = orderRepository;
         _fashionItemRepository = fashionItemRepository;
@@ -78,6 +86,9 @@ public class OrderService : IOrderService
         _giaoHangNhanhService = giaoHangNhanhService;
         _logger = logger;
         _schedulerFactory = schedulerFactory;
+        _consignSaleService = consignSaleService;
+        _transactionService = transactionService;
+        _vnPayService = vnPayService;
     }
 
     public async Task<Result<InvoiceResponse, ErrorCode>> GenerateInvoice(Guid orderId, Guid shopId)
@@ -132,7 +143,7 @@ public class OrderService : IOrderService
     }
 
     private async Task<string> GenerateInvoiceHtml(Order order, List<OrderLineItemListResponse> orderLineItems,
-      ShopDetailResponse shop)
+        ShopDetailResponse shop)
     {
         var templatePath = Path.Combine("InvoiceTemplate", "only-invoice.html");
         var template = await File.ReadAllTextAsync(templatePath);
@@ -1338,5 +1349,204 @@ public class OrderService : IOrderService
             _logger.LogError(e, "GetDetailedOrder error");
             return new Result<OrderDetailedResponse, ErrorCode>(ErrorCode.ServerError);
         }
+    }
+
+    public async Task<DotNext.Result<VnPayPurchaseResponse, ErrorCode>> PurchaseOrder(Guid orderId,
+        PurchaseOrderRequest request)
+    {
+        var order = await GetOrderById(orderId);
+
+        if (order == null)
+        {
+            throw new OrderNotFoundException();
+        }
+
+        if (order.PaymentMethod != PaymentMethod.Banking)
+        {
+            throw new WrongPaymentMethodException("Order is not paid by Banking");
+        }
+
+        if (order.Status != OrderStatus.AwaitingPayment)
+        {
+            throw new InvalidOperationException("Order is not awaiting payment");
+        }
+
+        if (order.MemberId != request.MemberId)
+        {
+            throw new NotAuthorizedToPayOrderException();
+        }
+
+        var paymentUrl = _vnPayService.CreatePaymentUrl(
+            order.OrderId,
+            order.TotalPrice,
+            $"{orderId}", "orders");
+
+        return new VnPayPurchaseResponse { PaymentUrl = paymentUrl };
+    }
+
+    public async Task<DotNext.Result<string, ErrorCode>> PaymentReturn(IQueryCollection requestParams)
+    {
+        var response = _vnPayService.ProcessPayment(requestParams);
+        var order = await GetOrderById(new Guid(response.OrderId));
+
+        if (order.Status != OrderStatus.AwaitingPayment)
+        {
+            throw new InvalidOperationException("Order is not awaiting payment");
+        }
+
+        if (response.Success)
+        {
+            try
+            {
+                if (order == null)
+                {
+                    _logger.LogWarning("Order not found for OrderCode: {OrderId}", response.OrderId);
+                    return new Result<string, ErrorCode>(ErrorCode.NotFound);
+                }
+
+                if (order.Status != OrderStatus.AwaitingPayment)
+                {
+                    _logger.LogWarning("Order already processed: {OrderId}", response.OrderId);
+                    return new Result<string, ErrorCode>(ErrorCode.OrderAlreadyProcessed);
+                }
+
+                var transaction =
+                    await _transactionService.CreateTransactionFromVnPay(response, TransactionType.Purchase);
+
+                if (transaction.ResultStatus == ResultStatus.Success)
+                {
+                    order.Status = OrderStatus.Pending;
+                    foreach (var orderDetail in order.OrderLineItems)
+                    {
+                        orderDetail.PaymentDate = DateTime.UtcNow;
+                    }
+
+                    await UpdateOrder(order);
+                    await UpdateFashionItemStatus(order.OrderId);
+                    await _emailService.SendEmailOrder(order);
+
+                    return new Result<string, ErrorCode>("https://giveawayproject.jettonetto.org");
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, e.Message);
+                return new Result<string, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
+
+        _logger.LogWarning(
+            "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
+            response.VnPayResponseCode);
+
+        return new Result<string, ErrorCode>(ErrorCode.PaymentFailed);
+    }
+
+    public async Task<DotNext.Result<PayWithPointsResponse, ErrorCode>> PurchaseOrderWithPoints(Guid orderId,
+        PurchaseOrderRequest request)
+    {
+        var order = await GetOrderById(orderId);
+
+        if (order == null)
+        {
+            throw new OrderNotFoundException();
+        }
+
+        if (order.PaymentMethod != PaymentMethod.Point)
+        {
+            throw new WrongPaymentMethodException("Order is not paid by Point");
+        }
+
+        if (order.Status != OrderStatus.AwaitingPayment)
+        {
+            throw new InvalidOperationException("Order is not awaiting payment");
+        }
+
+        if (order.MemberId != request.MemberId)
+        {
+            throw new NotAuthorizedToPayOrderException();
+        }
+
+        if (order.Member!.Balance < order.TotalPrice)
+        {
+            throw new BalanceIsNotEnoughException(ErrorCode.PaymentFailed);
+        }
+
+        foreach (var orderDetail in order.OrderLineItems)
+        {
+            orderDetail.PaymentDate = DateTime.UtcNow;
+        }
+
+        order.Status = OrderStatus.Pending;
+        order.Member!.Balance -= order.TotalPrice;
+
+        await UpdateOrder(order);
+        await UpdateFashionItemStatus(order.OrderId);
+        await UpdateAdminBalance(order);
+        await _consignSaleService.UpdateConsignPrice(order.OrderId);
+        await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
+        await _emailService.SendEmailOrder(order);
+
+        return new PayWithPointsResponse()
+            { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
+    }
+
+
+    public async Task<DotNext.Result<PayWithPointsResponse, ErrorCode>> CheckoutAuction(Guid orderId,
+        CheckoutAuctionRequest request)
+    {
+        var order = await GetOrderById(orderId);
+
+        if (order == null)
+        {
+            throw new OrderNotFoundException();
+        }
+
+        if (order.PaymentMethod != PaymentMethod.Point)
+        {
+            throw new WrongPaymentMethodException("Order is not paid by Point");
+        }
+
+        if (order.Status != OrderStatus.AwaitingPayment)
+        {
+            throw new InvalidOperationException("Order is not awaiting payment");
+        }
+
+        if (order.MemberId != request.MemberId)
+        {
+            throw new NotAuthorizedToPayOrderException();
+        }
+
+        if (order.Member!.Balance < order.TotalPrice)
+        {
+            throw new BalanceIsNotEnoughException(ErrorCode.PaymentFailed);
+        }
+
+        foreach (var orderDetail in order.OrderLineItems)
+        {
+            orderDetail.PaymentDate = DateTime.UtcNow;
+        }
+
+        order.GhnDistrictId = request.GhnDistrictId;
+        order.GhnWardCode = request.GhnWardCode;
+        order.GhnProvinceId = request.GhnProvinceId;
+        order.Address = request.Address;
+        order.RecipientName = request.RecipientName;
+        order.Phone = request.Phone;
+        order.ShippingFee = request.ShippingFee;
+        order.Discount = request.Discount;
+        order.Status = OrderStatus.Pending;
+        order.TotalPrice = order.TotalPrice + request.ShippingFee;
+        order.Member!.Balance -= order.TotalPrice + request.ShippingFee;
+
+        await UpdateOrder(order);
+        await UpdateFashionItemStatus(order.OrderId);
+        await UpdateAdminBalance(order);
+        await _consignSaleService.UpdateConsignPrice(order.OrderId);
+        await _transactionService.CreateTransactionFromPoints(order, request.MemberId, TransactionType.Purchase);
+        await _emailService.SendEmailOrder(order);
+
+        return new PayWithPointsResponse()
+            { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
     }
 }

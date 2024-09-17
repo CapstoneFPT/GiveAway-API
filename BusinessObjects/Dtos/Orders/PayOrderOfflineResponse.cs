@@ -26,3 +26,21 @@ public class PayOrderOfflineResponse
     public OrderStatus Status { get; set; } 
     public DateTime CreatedDate { get; set; } 
 }
+
+public class VnPayPurchaseResponse
+{
+    public string PaymentUrl { get; set; }
+}
+
+public class PayWithPointsResponse
+{
+    public bool Sucess { get; set; }
+    public string Message { get; set; }
+    public Guid OrderId { get; set; }
+}
+
+
+public class PurchaseOrderRequest
+{
+    public Guid MemberId { get; set; }
+}

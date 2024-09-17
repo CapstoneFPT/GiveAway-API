@@ -45,7 +45,8 @@ public enum ErrorCode
     RefundStatusNotAvailable,
     MissingFeature,
     InvalidOperation,
-    PaymentFailed
+    PaymentFailed,
+    OrderAlreadyProcessed
 }
 
 public enum ErrorType
