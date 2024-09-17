@@ -115,7 +115,6 @@ namespace Services.Auctions
 
             var result = await _auctionRepository.CreateAuction(auction);
             await _auctionItemRepository.UpdateAuctionItemStatus(auctionItem.ItemId, FashionItemStatus.PendingAuction);
-            await ScheduleAuctionStart(result);
             return result;
         }
 
@@ -501,6 +500,7 @@ namespace Services.Auctions
                 throw new AuctionNotFoundException();
             }
 
+            await ScheduleAuctionStart(result);
             await ScheduleAuctionEnd(result);
             return result;
         }
