@@ -14,18 +14,12 @@ namespace WebApi.Controllers;
 [Route("api/recharges")]
 public class RechargeController : ControllerBase
 {
-    private readonly ILogger<RechargeController> _logger;
     private readonly IRechargeService _rechargeService;
-    private readonly IVnPayService _vnPayService;
-    private readonly ITransactionService _transactionService;
 
-    public RechargeController(ILogger<RechargeController> logger, IRechargeService rechargeService,
-        IVnPayService vnPayService, ITransactionService transactionService)
+    public RechargeController(IRechargeService rechargeService
+    )
     {
-        _logger = logger;
         _rechargeService = rechargeService;
-        _vnPayService = vnPayService;
-        _transactionService = transactionService;
     }
 
     [HttpGet]
@@ -53,124 +47,31 @@ public class RechargeController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> InitiateRecharge([FromBody] InitiateRechargeRequest request)
     {
-        var recharge = new Recharge
-        {
-            MemberId = request.MemberId,
-            Amount = request.Amount,
-            Status = RechargeStatus.Pending,
-            CreatedDate = DateTime.UtcNow,
-            PaymentMethod = PaymentMethod.Banking
-        };
+        var result = await _rechargeService.InitiateRecharge(request);
 
-        var rechargeResult = await _rechargeService.CreateRecharge(recharge);
-
-        if (!rechargeResult.IsSuccessful)
+        if (!result.IsSuccessful)
         {
             return StatusCode(500,
                 new ErrorResponse("Error creating recharge", ErrorType.ApiError,
-                    System.Net.HttpStatusCode.InternalServerError, rechargeResult.Error));
+                    System.Net.HttpStatusCode.InternalServerError, result.Error));
         }
 
-        var paymentUrl = _vnPayService.CreatePaymentUrl(
-            rechargeResult.Value.RechargeId,
-            rechargeResult.Value.Amount,
-            $"Recharge account: {rechargeResult.Value.Amount} VND",
-            "recharges");
-
-        _logger.LogInformation(
-            "Recharge initiated. RechargeId: {RechargeId}, MemberId: {MemberId}, Amount: {Amount} VND",
-            rechargeResult.Value.RechargeId, request.MemberId, request.Amount);
-
-        return Ok(new RechargePurchaseResponse
-        {
-            PaymentUrl = paymentUrl,
-            RechargeId = rechargeResult.Value.RechargeId
-        });
+        return Ok(result.Value);
     }
 
     [HttpGet("payment-return")]
     public async Task<IActionResult> PaymentReturn()
     {
         var requestParams = Request.Query;
-        var response = _vnPayService.ProcessPayment(requestParams);
-        var redirectUrl = "https://giveawayproject.jettonetto.org/process-payment";
+        var result = await _rechargeService.ProcessPaymentReturn(requestParams);
 
-        if (response.Success)
+        if (!result.IsSuccessful)
         {
-            try
-            {
-                var rechargeId = new Guid(response.OrderId);
-                var rechargeResult = await _rechargeService.GetRechargeById(rechargeId);
-
-                if (!rechargeResult.IsSuccessful)
-                {
-                    return Redirect(
-                        $"{redirectUrl}?paymentstatus=error&message={Uri.EscapeDataString(rechargeResult.Error.ToString())}");
-                }
-
-                var recharge = rechargeResult.Value;
-
-                if (recharge.Status != RechargeStatus.Pending)
-                {
-                    _logger.LogWarning("Recharge already processed: {RechargeId}", response.OrderId);
-                    return Redirect(
-                        $"{redirectUrl}?paymentstatus=warning&message={Uri.EscapeDataString("Recharge already processed")}");
-                }
-
-                var completeResult = await _rechargeService.CompleteRecharge(recharge.RechargeId, recharge.Amount);
-                await _transactionService.CreateTransactionFromVnPay(response, TransactionType.AddFund);
-                
-                if (!completeResult.IsSuccessful)
-                {
-                    return Redirect(
-                        $"{redirectUrl}?paymentstatus=error&message={Uri.EscapeDataString("Error completing recharge")}");
-                }
-
-                _logger.LogInformation(
-                    "Recharge successful. RechargeId: {RechargeId}, Amount: {Amount}", response.OrderId,
-                    recharge.Amount);
-
-                return Redirect($"{redirectUrl}?paymentstatus=success&message={Uri.EscapeDataString("Recharge successful")}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing successful payment");
-                return Redirect(
-                    $"{redirectUrl}?paymentstatus=error&message={Uri.EscapeDataString("An error occurred while processing your payment")}");
-            }
+            return StatusCode(500,
+                new ErrorResponse("Error processing payment return", ErrorType.ApiError,
+                    System.Net.HttpStatusCode.InternalServerError, result.Error));
         }
-        else
-        {
-            try
-            {
-                var failResult = await _rechargeService.FailRecharge(new Guid(response.OrderId));
-                if (!failResult.IsSuccessful)
-                {
-                    _logger.LogError("Failed to mark recharge as failed. RechargeId: {RechargeId}", response.OrderId);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error marking recharge as failed. RechargeId: {RechargeId}", response.OrderId);
-            }
 
-            _logger.LogWarning(
-                "Payment failed. RechargeId: {RechargeId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
-                response.VnPayResponseCode);
-            return Redirect($"{redirectUrl}?paymentstatus=error&message={Uri.EscapeDataString("Payment failed")}");
-        }
+        return Redirect(result.Value);
     }
-}
-
-public class RechargePurchaseResponse
-{
-    public required string PaymentUrl { get; set; }
-    public Guid RechargeId { get; set; }
-}
-
-public class InitiateRechargeRequest
-{
-    public Guid MemberId { get; set; }
-    [Range(1000, 250000000, ErrorMessage = "Amount must be between 1000 VND and 250000000 VND")]
-    public decimal Amount { get; set; }
 }

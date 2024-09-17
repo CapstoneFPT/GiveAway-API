@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 using Repositories.Accounts;
 using Repositories.Recharges;
+using Microsoft.AspNetCore.Http;
+using Services.VnPayService;
+using Services.Transactions;
 
 namespace Services.Recharges;
 
@@ -20,15 +23,19 @@ public class RechargeService : IRechargeService
     private readonly ILogger<RechargeService> _logger;
     private readonly ISchedulerFactory _schedulerFactory;
     private readonly IAccountRepository _accountRepository;
+    private readonly IVnPayService _vnPayService;
+    private readonly ITransactionService _transactionService;
 
     public RechargeService(IRechargeRepository rechargeRepository, ILogger<RechargeService> logger,
-        ISchedulerFactory schedulerFactory, IAccountRepository accountRepository)
+        ISchedulerFactory schedulerFactory, IAccountRepository accountRepository, IVnPayService vnPayService, ITransactionService transactionService)
 
     {
         _rechargeRepository = rechargeRepository;
         _logger = logger;
         _schedulerFactory = schedulerFactory;
         _accountRepository = accountRepository;
+        _vnPayService = vnPayService;
+        _transactionService = transactionService;
     }
 
     private Expression<Func<Recharge, bool>> GetPredicate(GetRechargesRequest request)
@@ -220,6 +227,108 @@ public class RechargeService : IRechargeService
         {
             _logger.LogError(e, "Error failing recharge {RechargeId}", rechargeId);
             return new Result<bool, ErrorCode>(ErrorCode.ServerError);
+        }
+    }
+
+    public async Task<Result<RechargePurchaseResponse, ErrorCode>> InitiateRecharge(InitiateRechargeRequest request)
+    {
+        var recharge = new Recharge
+        {
+            MemberId = request.MemberId,
+            Amount = request.Amount,
+            Status = RechargeStatus.Pending,
+            CreatedDate = DateTime.UtcNow,
+            PaymentMethod = PaymentMethod.Banking
+        };
+
+        var rechargeResult = await CreateRecharge(recharge);
+
+        if (!rechargeResult.IsSuccessful)
+        {
+            return new Result<RechargePurchaseResponse, ErrorCode>(rechargeResult.Error);
+        }
+
+        var paymentUrl = _vnPayService.CreatePaymentUrl(
+            rechargeResult.Value.RechargeId,
+            rechargeResult.Value.Amount,
+            $"Recharge account: {rechargeResult.Value.Amount} VND",
+            "recharges");
+
+        _logger.LogInformation(
+            "Recharge initiated. RechargeId: {RechargeId}, MemberId: {MemberId}, Amount: {Amount} VND",
+            rechargeResult.Value.RechargeId, request.MemberId, request.Amount);
+
+        return new Result<RechargePurchaseResponse, ErrorCode>(new RechargePurchaseResponse
+        {
+            PaymentUrl = paymentUrl,
+            RechargeId = rechargeResult.Value.RechargeId
+        });
+    }
+
+    public async Task<Result<string, ErrorCode>> ProcessPaymentReturn(IQueryCollection requestParams)
+    {
+        var response = _vnPayService.ProcessPayment(requestParams);
+        var redirectUrl = "https://giveawayproject.jettonetto.org/process-payment";
+
+        if (response.Success)
+        {
+            try
+            {
+                var rechargeId = new Guid(response.OrderId);
+                var rechargeResult = await GetRechargeById(rechargeId);
+
+                if (!rechargeResult.IsSuccessful)
+                {
+                    return new Result<string, ErrorCode>($"{redirectUrl}?paymentstatus=error&message={Uri.EscapeDataString(rechargeResult.Error.ToString())}");
+                }
+
+                var recharge = rechargeResult.Value;
+
+                if (recharge.Status != RechargeStatus.Pending)
+                {
+                    _logger.LogWarning("Recharge already processed: {RechargeId}", response.OrderId);
+                    return new Result<string, ErrorCode>($"{redirectUrl}?paymentstatus=warning&message={Uri.EscapeDataString("Recharge already processed")}");
+                }
+
+                var completeResult = await CompleteRecharge(recharge.RechargeId, recharge.Amount);
+                await _transactionService.CreateTransactionFromVnPay(response, TransactionType.AddFund);
+                
+                if (!completeResult.IsSuccessful)
+                {
+                    return new Result<string, ErrorCode>($"{redirectUrl}?paymentstatus=error&message={Uri.EscapeDataString("Error completing recharge")}");
+                }
+
+                _logger.LogInformation(
+                    "Recharge successful. RechargeId: {RechargeId}, Amount: {Amount}", response.OrderId,
+                    recharge.Amount);
+
+                return new Result<string, ErrorCode>($"{redirectUrl}?paymentstatus=success&message={Uri.EscapeDataString("Recharge successful")}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing successful payment");
+                return new Result<string, ErrorCode>($"{redirectUrl}?paymentstatus=error&message={Uri.EscapeDataString("An error occurred while processing your payment")}");
+            }
+        }
+        else
+        {
+            try
+            {
+                var failResult = await FailRecharge(new Guid(response.OrderId));
+                if (!failResult.IsSuccessful)
+                {
+                    _logger.LogError("Failed to mark recharge as failed. RechargeId: {RechargeId}", response.OrderId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking recharge as failed. RechargeId: {RechargeId}", response.OrderId);
+            }
+
+            _logger.LogWarning(
+                "Payment failed. RechargeId: {RechargeId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
+                response.VnPayResponseCode);
+            return new Result<string, ErrorCode>($"{redirectUrl}?paymentstatus=error&message={Uri.EscapeDataString("Payment failed")}");
         }
     }
 }

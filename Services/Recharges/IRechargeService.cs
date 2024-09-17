@@ -1,6 +1,10 @@
 ﻿using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Recharges;
 using BusinessObjects.Entities;
+using DotNext;
+using Microsoft.AspNetCore.Http;
+using Services.VnPayService;
+using Services.Transactions;
 
 namespace Services.Recharges;
 
@@ -14,4 +18,7 @@ public interface IRechargeService
         GetRechargesRequest request);
 
     Task<DotNext.Result<bool, ErrorCode>> FailRecharge(Guid rechargeId);
+
+    Task<Result<RechargePurchaseResponse, ErrorCode>> InitiateRecharge(InitiateRechargeRequest request);
+    Task<Result<string, ErrorCode>> ProcessPaymentReturn(IQueryCollection requestParams);
 }
