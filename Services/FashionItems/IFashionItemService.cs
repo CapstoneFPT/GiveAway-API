@@ -25,8 +25,7 @@ namespace Services.FashionItems
             CreateIndividualItemRequest requests);
 
         Task<PaginationResponse<MasterItemListResponse>> GetAllMasterItemPagination(MasterItemRequest request);
-        /*Task<PaginationResponse<ItemVariationListResponse>> GetAllFashionItemVariationPagination(Guid masterItemId,
-            ItemVariationRequest request);*/
+        
         Task<PaginationResponse<IndividualItemListResponse>> GetIndividualItemPagination(Guid masterItemId,
             IndividualItemRequest request);
 

@@ -73,24 +73,21 @@ namespace Services.Accounts
                 response.ResultStatus = ResultStatus.NotFound;
                 return response;
             }
-            else if (user.Status.Equals(AccountStatus.Inactive))
+            if (user.Status.Equals(AccountStatus.Inactive))
             {
                 user.Status = AccountStatus.Active;
                 await _account.UpdateAccount(user);
                 response.Data = _mapper.Map<AccountResponse>(user);
                 response.Messages = ["This account has been changed to active"];
-                response.ResultStatus = ResultStatus.Error;
-                return response;
-            }
-            else
-            {
-                user.Status = AccountStatus.Inactive;
-                await _account.UpdateAccount(user);
-                response.Data = _mapper.Map<AccountResponse>(user);
-                response.Messages = ["This account has been changed to inactive"];
                 response.ResultStatus = ResultStatus.Success;
                 return response;
             }
+            user.Status = AccountStatus.Inactive;
+            await _account.UpdateAccount(user);
+            response.Data = _mapper.Map<AccountResponse>(user);
+            response.Messages = ["This account has been changed to inactive"];
+            response.ResultStatus = ResultStatus.Success;
+            return response;
         }
 
         public async Task<BusinessObjects.Dtos.Commons.Result<AccountResponse>> GetAccountById(Guid id)
