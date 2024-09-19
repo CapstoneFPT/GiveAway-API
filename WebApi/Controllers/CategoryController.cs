@@ -53,9 +53,9 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("tree")]
-        public async Task<ActionResult<CategoryTreeResult>> GetTree([FromQuery] Guid? shopId, [FromQuery] Guid? rootCategoryId)
+        public async Task<ActionResult<CategoryTreeResult>> GetTree([FromQuery] Guid? shopId, [FromQuery] Guid? rootCategoryId, [FromQuery] bool? isAvailable)
         {
-            var result = await _categoryService.GetTree(shopId, rootCategoryId);
+            var result = await _categoryService.GetTree(shopId, rootCategoryId, isAvailable);
             return Ok(new CategoryTreeResult()
             {
                 ShopId = shopId,

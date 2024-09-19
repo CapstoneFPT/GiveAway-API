@@ -98,7 +98,7 @@ namespace Repositories.Categories
             return await GenericDao<Category>.Instance.AddAsync(category);
         }
 
-        public async Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null, Guid? rootCategoryId = null)
+        public async Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null, Guid? rootCategoryId = null, bool? isAvailable = null)
         {
             IQueryable<Guid> relevantCategoryIds;
             var categoryDao = _giveAwayDbContext.Set<Category>();
@@ -116,6 +116,13 @@ namespace Repositories.Categories
                 relevantCategoryIds = categoryDao.Select(c => c.CategoryId);
             }
 
+            if (isAvailable is true)
+            {
+                relevantCategoryIds = categoryDao.Where(c => c.Status == CategoryStatus.Available).Select(c => c.CategoryId);
+            }else if (isAvailable is false)
+            {
+                relevantCategoryIds = categoryDao.Where(c => c.Status == CategoryStatus.Unavailable).Select(c => c.CategoryId);
+            }
             var allCategories = await categoryDao
                 .Where(c => relevantCategoryIds.Contains(c.CategoryId))
                 .Select(c => new CategoryTreeNode

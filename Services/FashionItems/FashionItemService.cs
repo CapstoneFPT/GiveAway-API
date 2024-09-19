@@ -654,7 +654,7 @@ namespace Services.FashionItems
         public async Task<PaginationResponse<MasterItemListResponse>> GetAllMasterItemPagination(
             MasterItemRequest request)
         {
-            Expression<Func<MasterFashionItem, bool>> predicate = x => x.Category.Status == CategoryStatus.Available;
+            Expression<Func<MasterFashionItem, bool>> predicate = x => true;
             Expression<Func<MasterFashionItem, MasterItemListResponse>> selector = item => new
                 MasterItemListResponse()
                 {
@@ -682,6 +682,10 @@ namespace Services.FashionItems
                     it.IndividualFashionItems.Any(c => c.Status == FashionItemStatus.Available));
             }
 
+            if (request.IsCategoryAvailable is true)
+            {
+                predicate = predicate.And(x => x.Category.Status == CategoryStatus.Available);
+            }
             if (request.IsForSale is true)
             {
                 predicate = predicate.And(item =>

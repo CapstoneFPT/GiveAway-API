@@ -17,7 +17,7 @@ namespace Repositories.Categories
         Task<Category> AddCategory(Category category);
         Task<Category> UpdateCategory(Category category);
         Task<Category> GetParentCategoryById(Guid? id);
-        Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null, Guid? rootCategoryId = null);
+        Task<List<CategoryTreeNode>> GetCategoryTree(Guid? shopId = null, Guid? rootCategoryId = null, bool? isAvailable = null);
         Task<List<Category>> GetCategoryWithCondition(CategoryRequest categoryRequest);
         Task<CategoryLeavesResponse> GetLeaves(Guid? shopId);
         Task<List<Guid>> GetAllChildrenCategoryIds(Guid categoryId);

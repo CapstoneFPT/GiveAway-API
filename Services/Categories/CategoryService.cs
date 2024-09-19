@@ -102,9 +102,9 @@ namespace Services.Categories
             return response;
         }
 
-        public async Task<List<CategoryTreeNode>> GetTree(Guid? shopId = null, Guid? rootCategoryId = null)
+        public async Task<List<CategoryTreeNode>> GetTree(Guid? shopId = null, Guid? rootCategoryId = null, bool? isAvailable = null)
         {
-            var result = await _categoryRepository.GetCategoryTree(shopId,rootCategoryId);
+            var result = await _categoryRepository.GetCategoryTree(shopId,rootCategoryId, isAvailable);
             return result;
         }
 

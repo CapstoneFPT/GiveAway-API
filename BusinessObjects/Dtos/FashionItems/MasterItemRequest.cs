@@ -15,4 +15,5 @@ public class MasterItemRequest
     public bool? IsConsignment { get; set; }
     public bool? IsLeftInStock { get; set; }
     public bool? IsForSale { get; set; }
+    public bool? IsCategoryAvailable { get; set; }
 }
