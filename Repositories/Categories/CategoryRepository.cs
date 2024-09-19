@@ -43,13 +43,16 @@ namespace Repositories.Categories
         public async Task<Category> UpdateStatusCategory(Guid categoryId, CategoryStatus status)
         {
             var category = await GenericDao<Category>.Instance.GetQueryable()
-                .Include(c => c.Children)
+                
                 .FirstOrDefaultAsync(c => c.CategoryId == categoryId);
-            if (category.Level != 4)
+            var listChildrenIds = await GetAllChildrenCategoryIds(categoryId);
+            if (listChildrenIds.Count > 0)
             {
-                foreach (var children in category.Children)
+                foreach (var childrenId in listChildrenIds)
                 {
-                    children.Status = status;
+                    var childrenCategory = await GenericDao<Category>.Instance.GetQueryable().FirstOrDefaultAsync(c => c.CategoryId == childrenId);
+                    childrenCategory.Status = status;
+                    await GenericDao<Category>.Instance.UpdateAsync(childrenCategory);
                 }
             }
 

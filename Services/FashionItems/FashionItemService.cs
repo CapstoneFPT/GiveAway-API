@@ -654,7 +654,7 @@ namespace Services.FashionItems
         public async Task<PaginationResponse<MasterItemListResponse>> GetAllMasterItemPagination(
             MasterItemRequest request)
         {
-            Expression<Func<MasterFashionItem, bool>> predicate = x => true;
+            Expression<Func<MasterFashionItem, bool>> predicate = x => x.Category.Status == CategoryStatus.Available;
             Expression<Func<MasterFashionItem, MasterItemListResponse>> selector = item => new
                 MasterItemListResponse()
                 {
@@ -774,6 +774,7 @@ namespace Services.FashionItems
             }
 
             var groupedQuery = query
+                .Where(c => c.Category.Status == CategoryStatus.Available)
                 .GroupBy(m => new
                 {
                     m.MasterItemCode,
