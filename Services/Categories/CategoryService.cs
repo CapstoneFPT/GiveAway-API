@@ -9,7 +9,10 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessObjects.Dtos.Category;
+using BusinessObjects.Utils;
+using DotNext;
 using LinqKit;
+using Quartz.Util;
 
 namespace Services.Categories
 {
@@ -22,11 +25,11 @@ namespace Services.Categories
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<Result<List<Category>>> GetAllChildrenCategory(Guid categoryId)
+        public async Task<BusinessObjects.Dtos.Commons.Result<List<Category>>> GetAllChildrenCategory(Guid categoryId)
         {
-            var response = new Result<List<Category>>();
+            var response = new BusinessObjects.Dtos.Commons.Result<List<Category>>();
             var cate = await _categoryRepository.GetCategoryById(categoryId);
-            if (cate.Status.Equals("Unavailable"))
+            if (cate.Status == CategoryStatus.Unavailable)
             {
                 response.Messages = new[] { "This is an unavailable category" };
                 response.ResultStatus = ResultStatus.NotFound;
@@ -48,10 +51,10 @@ namespace Services.Categories
             return response;
         }
 
-        public async Task<Result<Category>> CreateCategory(Guid parentId, CreateCategoryRequest request)
+        public async Task<BusinessObjects.Dtos.Commons.Result<Category>> CreateCategory(Guid parentId, CreateCategoryRequest request)
         {
             var newCategory = new Category();
-            var response = new Result<Category>();
+            var response = new BusinessObjects.Dtos.Commons.Result<Category>();
             var parentCate = await _categoryRepository.GetCategoryById(parentId);
             switch (parentCate.Level)
             {
@@ -105,9 +108,9 @@ namespace Services.Categories
             return result;
         }
 
-        public async Task<Result<List<Category>>> GetAllParentCategory()
+        public async Task<BusinessObjects.Dtos.Commons.Result<List<Category>>> GetAllParentCategory()
         {
-            var response = new Result<List<Category>>();
+            var response = new BusinessObjects.Dtos.Commons.Result<List<Category>>();
             var listCate = await _categoryRepository.GetAllParentCategory();
             if (listCate.Count == 0)
             {
@@ -122,9 +125,9 @@ namespace Services.Categories
             return response;
         }
 
-        public async Task<Result<List<Category>>> GetCategoryWithCondition(CategoryRequest categoryRequest)
+        public async Task<BusinessObjects.Dtos.Commons.Result<List<Category>>> GetCategoryWithCondition(CategoryRequest categoryRequest)
         {
-            var response = new Result<List<Category>>();
+            var response = new BusinessObjects.Dtos.Commons.Result<List<Category>>();
             var listCate = await _categoryRepository.GetCategoryWithCondition(categoryRequest);
             if (categoryRequest.Level > 4 || categoryRequest.Level < 1)
             {
@@ -147,6 +150,65 @@ namespace Services.Categories
         public Task<CategoryLeavesResponse> GetLeaves(Guid? shopId)
         {
             return  _categoryRepository.GetLeaves(shopId);
+        }
+
+        public async Task<BusinessObjects.Dtos.Commons.Result<CategoryResponse>> UpdateNameCategory(Guid categoryId, UpdateCategoryRequest request)
+        {
+            var category = await _categoryRepository.GetCategoryById(categoryId);
+            if (category is null)
+            {
+                throw new CategoryNotFound("Can not find category");
+            }
+
+            if (request.Name.IsNullOrWhiteSpace())
+            {
+                throw new MissingFeatureException("Can not replace by whit space");
+            }
+            category.Name = request.Name;
+            await _categoryRepository.UpdateCategory(category);
+            return new BusinessObjects.Dtos.Commons.Result<CategoryResponse>()
+            {
+                Data = new CategoryResponse()
+                {
+                    CategoryId = category.CategoryId,
+                    Level = category.Level,
+                    Name = category.Name,
+                    Status = category.Status
+                },
+                ResultStatus = ResultStatus.Success,
+                Messages = new []{"Update successfully"}
+            };
+        }
+
+        public async Task<BusinessObjects.Dtos.Commons.Result<CategoryResponse>> UpdateStatusCategory(Guid categoryId)
+        {
+            var category = await _categoryRepository.GetCategoryById(categoryId);
+            if (category is null)
+            {
+                throw new CategoryNotFound("Can not find category");
+            }
+
+            if (category.Status == CategoryStatus.Available)
+            {
+                category = await _categoryRepository.UpdateStatusCategory(categoryId, CategoryStatus.Unavailable);
+            }
+            else
+            {
+                category = await _categoryRepository.UpdateStatusCategory(categoryId, CategoryStatus.Available);
+            }
+
+            return new BusinessObjects.Dtos.Commons.Result<CategoryResponse>()
+            {
+                Data = new CategoryResponse()
+                {
+                    CategoryId = category.CategoryId,
+                    Level = category.Level,
+                    Name = category.Name,
+                    Status = category.Status
+                },
+                ResultStatus = ResultStatus.Success,
+                Messages = new []{"Successfully"}
+            };
         }
     }
 }

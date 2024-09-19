@@ -21,5 +21,6 @@ namespace Repositories.Categories
         Task<List<Category>> GetCategoryWithCondition(CategoryRequest categoryRequest);
         Task<CategoryLeavesResponse> GetLeaves(Guid? shopId);
         Task<List<Guid>> GetAllChildrenCategoryIds(Guid categoryId);
+        Task<Category> UpdateStatusCategory(Guid categoryId, CategoryStatus status);
     }
 }

@@ -87,6 +87,7 @@ public class FashionItemRefundEndingJob : IJob
             if (consign.ConsignSaleLineItems.All(c => c.Status == ConsignSaleLineItemStatus.Sold))
             {
                 consign.Status = ConsignSaleStatus.Completed;
+                consign.EndDate = DateTime.UtcNow;
                 await _consignSaleRepository.UpdateConsignSale(consign);
             }
             await dbContext.SaveChangesAsync();

@@ -108,6 +108,24 @@ namespace WebApi.Controllers
             
             return Ok(result);
         }
+
+        [HttpPut("{categoryId}")]
+        [ProducesResponseType<CategoryResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> UpdateNameCategory([FromRoute] Guid categoryId, UpdateCategoryRequest request)
+        {
+            var result = await _categoryService.UpdateNameCategory(categoryId, request);
+            return result.ResultStatus != ResultStatus.Success ? StatusCode((int)HttpStatusCode.InternalServerError, result) : Ok(result);
+        }
+
+        [HttpPut("{categoryId}/status")]
+        [ProducesResponseType<CategoryResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> UpdateStatusCategory([FromRoute] Guid categoryId)
+        {
+            var result = await _categoryService.UpdateStatusCategory(categoryId);
+            return result.ResultStatus != ResultStatus.Success ? StatusCode((int)HttpStatusCode.InternalServerError, result) : Ok(result);
+        }
     }
 
     public class CategoryTreeResult

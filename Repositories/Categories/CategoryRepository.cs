@@ -40,6 +40,24 @@ namespace Repositories.Categories
             return cate;
         }
 
+        public async Task<Category> UpdateStatusCategory(Guid categoryId, CategoryStatus status)
+        {
+            var category = await GenericDao<Category>.Instance.GetQueryable()
+                .Include(c => c.Children)
+                .FirstOrDefaultAsync(c => c.CategoryId == categoryId);
+            if (category.Level != 4)
+            {
+                foreach (var children in category.Children)
+                {
+                    children.Status = status;
+                }
+            }
+
+            category.Status = status;
+            await GenericDao<Category>.Instance.UpdateAsync(category);
+            return category;
+        }
+
         public async Task<List<Category>> GetAllChildrenCategory(Guid id, int level)
         {
             return await GenericDao<Category>.Instance.GetQueryable()

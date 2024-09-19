@@ -205,8 +205,7 @@ public enum AddressType
 public enum CategoryStatus
 {
     Available,
-    Unavailable,
-    Special
+    Unavailable
 }
 
 public enum PaymentMethod
