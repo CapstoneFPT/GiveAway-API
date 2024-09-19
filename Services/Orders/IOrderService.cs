@@ -59,8 +59,6 @@ namespace Services.Orders
         Task<DotNext.Result<PaginationResponse<OrderLineItemListResponse>, ErrorCode>> GetOrderLineItemByOrderId(
             Guid orderId, OrderLineItemRequest request);
 
-        Task<Result<OrderDetailedResponse, ErrorCode>> CheckoutAuctionOrder(Guid orderId,
-            UpdateOrderAddressRequest request);
 
         Task<DotNext.Result<VnPayPurchaseResponse,ErrorCode>> PurchaseOrder(Guid orderId, PurchaseOrderRequest request);
         Task<DotNext.Result<string,ErrorCode>> PaymentReturn(IQueryCollection requestParams);

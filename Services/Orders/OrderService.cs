@@ -401,60 +401,6 @@ public class OrderService : IOrderService
         }
     }
 
-    public async Task<Result<OrderDetailedResponse, ErrorCode>> CheckoutAuctionOrder(Guid orderId,
-        UpdateOrderAddressRequest request)
-    {
-        var toBeUpdated = await _orderRepository.GetQueryable()
-            .Include(x => x.Member)
-            .Include(x => x.Bid)
-            .ThenInclude(bid => bid.Auction)
-            .Include(x => x.OrderLineItems).FirstOrDefaultAsync(x => x.OrderId == orderId);
-
-        if (toBeUpdated == null)
-        {
-            return new Result<OrderDetailedResponse, ErrorCode>(ErrorCode.ServerError);
-        }
-
-        toBeUpdated.Address = request.Address;
-        toBeUpdated.GhnDistrictId = request.GhnDistrictId;
-        toBeUpdated.GhnWardCode = request.GhnWardCode;
-        toBeUpdated.GhnProvinceId = request.GhnProvinceId;
-        toBeUpdated.AddressType = request.AddressType;
-        toBeUpdated.Phone = request.Phone;
-        toBeUpdated.ShippingFee = request.ShippingFee;
-        toBeUpdated.RecipientName = request.RecipientName;
-        toBeUpdated.Status = OrderStatus.Pending;
-        toBeUpdated.OrderLineItems.First().PaymentDate = DateTime.UtcNow;
-        var result = await _orderRepository.UpdateOrder(toBeUpdated);
-        return new Result<OrderDetailedResponse, ErrorCode>(new OrderDetailedResponse()
-        {
-            Address = toBeUpdated.Address,
-            AddressType = toBeUpdated.AddressType ?? 0,
-            CompletedDate = toBeUpdated.CompletedDate ?? DateTime.MinValue,
-            Discount = toBeUpdated.Discount,
-            CreatedDate = toBeUpdated.CreatedDate,
-            Quantity = 1,
-            Email = toBeUpdated.Email ?? "N/A",
-            Phone = toBeUpdated.Phone ?? "N/A",
-            Status = toBeUpdated.Status,
-            MemberId = toBeUpdated.MemberId ?? Guid.Empty,
-            OrderCode = toBeUpdated.OrderCode,
-            PaymentMethod = toBeUpdated.PaymentMethod,
-            PurchaseType = toBeUpdated.PurchaseType,
-            ShippingFee = toBeUpdated.ShippingFee,
-            PaymentDate = toBeUpdated.OrderLineItems.First().PaymentDate ?? DateTime.MinValue,
-            TotalPrice = toBeUpdated.TotalPrice,
-            Subtotal = toBeUpdated.OrderLineItems.Sum(x => x.UnitPrice),
-            AuctionTitle = toBeUpdated.Bid.Auction.Title ?? "N/A",
-            CustomerName = toBeUpdated.Member.Fullname ?? "N/A",
-            BidId = toBeUpdated.BidId ?? Guid.Empty,
-            OrderId = toBeUpdated.OrderId,
-            BidAmount = toBeUpdated.Bid.Amount,
-            ReciepientName = toBeUpdated.RecipientName ?? "N/A",
-            BidCreatedDate = toBeUpdated.Bid.CreatedDate
-        });
-    }
-
     public async Task<List<Order>> GetOrdersToCancel()
     {
         var oneDayAgo = DateTime.UtcNow.AddDays(-1);

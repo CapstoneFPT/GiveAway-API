@@ -41,6 +41,9 @@
       <None Update="InvoiceTemplate\only-invoice.html">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="InvoiceTemplate\consign-invoice.html">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
