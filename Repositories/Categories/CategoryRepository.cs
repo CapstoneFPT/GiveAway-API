@@ -123,7 +123,8 @@ namespace Repositories.Categories
                     CategoryId = c.CategoryId,
                     ParentId = c.ParentId,
                     Level = c.Level,
-                    Name = c.Name
+                    Name = c.Name,
+                    Status = c.Status
                 })
                 .ToListAsync();
 
