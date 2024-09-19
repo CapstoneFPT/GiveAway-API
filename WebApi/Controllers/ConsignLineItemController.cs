@@ -23,7 +23,7 @@ public class ConsignLineItemController : ControllerBase
         _consignLineItemService = consignLineItemService;
     }
 
-    [HttpPut("{consignLineItemId}/ready-for-consign")]
+    /*[HttpPut("{consignLineItemId}/ready-for-consign")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> ConfirmConsignSaleLineReadyToSale([FromRoute] Guid consignLineItemId, [FromBody] ConfirmConsignSaleLineReadyToSaleRequest request)
@@ -34,7 +34,7 @@ public class ConsignLineItemController : ControllerBase
         return result.ResultStatus != ResultStatus.Success
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
-    }
+    }*/
     [HttpPut("{consignLineItemId}/negotiate-item")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]

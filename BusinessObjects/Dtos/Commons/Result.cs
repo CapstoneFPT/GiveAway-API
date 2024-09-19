@@ -187,7 +187,7 @@ public enum ConsignSaleType
 {
     ConsignedForSale,
     ConsignedForAuction,
-    ForSale
+    CustomerSale
 }
 
 public enum ConsignSaleMethod

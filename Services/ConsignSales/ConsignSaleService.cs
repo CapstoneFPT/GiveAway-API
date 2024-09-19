@@ -791,7 +791,7 @@ namespace Services.ConsignSales
 
             switch (consignSaleDetail.ConsignSale.Type)
             {
-                case ConsignSaleType.ForSale:
+                case ConsignSaleType.CustomerSale:
                     individualItem.Type = FashionItemType.ItemBase;
                     individualItem.SellingPrice = consignSaleDetail.ConfirmedPrice;
 
@@ -1182,14 +1182,14 @@ namespace Services.ConsignSales
 
         public async Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CreateConsignSaleForCustomerSale(Guid shopId, CreateConsignForSaleByShopRequest request)
         {
-            if (request.Type != ConsignSaleType.ForSale)
+            if (request.Type != ConsignSaleType.CustomerSale)
             {
-                throw new ConsignTypeNotAvailable("Only use for ForSale type");
+                throw new ConsignTypeNotAvailable("Only use for CustomerSale type");
             }
 
             var consign = new ConsignSale()
             {
-                Type = ConsignSaleType.ForSale,
+                Type = ConsignSaleType.CustomerSale,
                 CreatedDate = DateTime.UtcNow,
                 TotalPrice = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice),
                 SoldPrice = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice),
@@ -1273,7 +1273,7 @@ namespace Services.ConsignSales
             await _consignSaleRepository.CreateConsignSaleByShop(consign);
             return new ConsignSaleDetailedResponse()
             {
-                Type = ConsignSaleType.ForSale,
+                Type = ConsignSaleType.CustomerSale,
                 CreatedDate = DateTime.UtcNow,
                 TotalPrice = consign.TotalPrice,
                 SoldPrice = consign.SoldPrice,
