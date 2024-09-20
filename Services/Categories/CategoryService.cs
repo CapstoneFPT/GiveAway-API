@@ -62,7 +62,7 @@ namespace Services.Categories
                     newCategory.Name = request.Name;
                     newCategory.Level = 2;
                     newCategory.ParentId = parentId;
-                    newCategory.Status = CategoryStatus.Unavailable;
+                    newCategory.Status = parentCate.Status;
                     newCategory.CreatedDate = DateTime.UtcNow;
                     response.Data = await _categoryRepository.AddCategory(newCategory);
                     response.Messages = new[] { "Add successfully! Please continue create until the final" };
@@ -72,7 +72,7 @@ namespace Services.Categories
                     newCategory.Name = request.Name;
                     newCategory.Level = 3;
                     newCategory.ParentId = parentId;
-                    newCategory.Status = CategoryStatus.Unavailable;
+                    newCategory.Status = parentCate.Status;
                     newCategory.CreatedDate = DateTime.UtcNow;
                     response.Data = await _categoryRepository.AddCategory(newCategory);
                     response.Messages = new[] { "Add successfully! Please continue create until the final" };
@@ -82,14 +82,10 @@ namespace Services.Categories
                     newCategory.Name = request.Name;
                     newCategory.Level = 4;
                     newCategory.ParentId = parentId;
-                    newCategory.Status = CategoryStatus.Available;
+                    newCategory.Status = parentCate.Status;
                     newCategory.CreatedDate = DateTime.UtcNow;
-                    parentCate.Status = CategoryStatus.Available;
+                    
                     await _categoryRepository.UpdateCategory(parentCate);
-
-                    var grandCate = await _categoryRepository.GetParentCategoryById(parentCate.ParentId);
-                    grandCate.Status = CategoryStatus.Available;
-                    await _categoryRepository.UpdateCategory(grandCate);
 
                     response.Data = await _categoryRepository.AddCategory(newCategory);
                     response.Messages = new[] { "Add successfully! This is the final one" };
@@ -147,10 +143,7 @@ namespace Services.Categories
             return response;
         }
 
-        public Task<CategoryLeavesResponse> GetLeaves(Guid? shopId)
-        {
-            return  _categoryRepository.GetLeaves(shopId);
-        }
+        
 
         public async Task<BusinessObjects.Dtos.Commons.Result<CategoryResponse>> UpdateNameCategory(Guid categoryId, UpdateCategoryRequest request)
         {
