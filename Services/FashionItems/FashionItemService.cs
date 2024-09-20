@@ -317,13 +317,17 @@ namespace Services.FashionItems
                 throw new FashionItemNotFoundException();
             }
 
-            item.Images.Clear();
-            item.Images = request.imageUrls
-                .Select(x => new Image()
-                {
-                    Url = x,
-                    CreatedDate = DateTime.UtcNow,
-                }).ToList();
+            if (request.imageUrls.Any())
+            {
+                item.Images.Clear();
+                item.Images = request.imageUrls
+                    .Select(x => new Image()
+                    {
+                        Url = x,
+                        CreatedDate = DateTime.UtcNow,
+                    }).ToList();
+            }
+            
             item.SellingPrice = request.SellingPrice ?? item.SellingPrice;
             item.Note = request.Note ?? item.Note;
             item.Color = request.Color ?? item.Color;

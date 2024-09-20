@@ -18,5 +18,6 @@ namespace BusinessObjects.Dtos.Account.Response
         public decimal Balance { get; set; }
         public AccountStatus Status { get; set; }
         public Guid? ShopId { get; set; }
+        public string? ShopCode { get; set; }
     }
 }
