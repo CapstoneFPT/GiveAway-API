@@ -24,7 +24,7 @@ namespace Services.ConsignSales
         /*Task<BusinessObjects.Dtos.Commons.Result<ItemVariationListResponse>> CreateVariationFromConsignSaleLineItem(Guid masteritemId,
             CreateItemVariationRequestForConsign request);*/
 
-        Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> ConfirmConsignSaleLineReadyToSale(Guid consignLineItemId, ConfirmConsignSaleLineReadyToSaleRequest request);
+        // Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>> ConfirmConsignSaleLineReadyToSale(Guid consignLineItemId, ConfirmConsignSaleLineReadyToSaleRequest request);
         Task UpdateConsignPrice(Guid orderId);
 
         Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetConsignSales(
@@ -39,9 +39,9 @@ namespace Services.ConsignSales
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> NotifyDelivery(Guid consignsaleId);
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CancelAllConsignSaleLineItems(Guid consignsaleId);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> NegotiatingConsignSale(Guid consignSaleId);
-        // Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ReadyToSaleConsignSale(Guid consignSaleId);
+
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> ContinueConsignSale(Guid consignsaleId);
-        Task<DotNext.Result<ConsignSaleDetailedResponse, ErrorCode>> CreateConsignSaleForCustomerSale(Guid shopId, CreateConsignForSaleByShopRequest request);
+        
         Task<Result<InvoiceConsignResponse, ErrorCode>> GenerateConsignOfflineInvoice(Guid consignsaleId, Guid shopId);
     }
 }

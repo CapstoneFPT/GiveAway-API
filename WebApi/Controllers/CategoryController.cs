@@ -27,7 +27,7 @@ namespace WebApi.Controllers
             _categoryService = categoryService;
         }
        
-        [HttpGet("{categoryId}/fahsionitems")]
+        /*[HttpGet("{categoryId}/fahsionitems")]
         public async Task<ActionResult<Result<PaginationResponse<FashionItemDetailResponse>>>> GetItemsByCategoryHierarchy([FromRoute] Guid categoryId, [FromQuery] AuctionFashionItemRequest request)
         {
             var result = await _fashionitemService.GetItemByCategoryHierarchy(categoryId, request);
@@ -38,8 +38,8 @@ namespace WebApi.Controllers
             }
             
             return Ok(result);
-        }
-        [HttpGet]
+        }*/
+        /*[HttpGet]
         public async Task<ActionResult<Result<List<Category>>>> GetAllParentCategory()
         {
             var result = await _categoryService.GetAllParentCategory();
@@ -50,7 +50,7 @@ namespace WebApi.Controllers
             }
             
             return Ok(result);
-        }
+        }*/
 
         [HttpGet("tree")]
         public async Task<ActionResult<CategoryTreeResult>> GetTree([FromQuery] Guid? shopId, [FromQuery] Guid? rootCategoryId, [FromQuery] bool? isAvailable)
@@ -63,12 +63,12 @@ namespace WebApi.Controllers
             });
         }
 
-        [HttpGet("leaves")]
+        /*[HttpGet("leaves")]
         public async Task<ActionResult<CategoryLeavesResponse>> GetLeaves([FromQuery] Guid? shopId)
         {
            var result = await _categoryService.GetLeaves(shopId);
            return Ok(result);
-        }
+        }*/
         [HttpGet("{categoryId}")]
         public async Task<ActionResult<Result<List<Category>>>> GetAllChildrenCategory([FromRoute] Guid categoryId)
         {

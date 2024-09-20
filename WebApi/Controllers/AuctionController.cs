@@ -59,7 +59,7 @@ public class AuctionController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType<PaginationResponse<AuctionListResponse>>((int)HttpStatusCode.OK)]
-    public async Task<IActionResult> GetAuctions(
+    public async Task<IActionResult> GetAllAuctionsPagination(
         [FromQuery] GetAuctionsRequest request)
     {
         var result = await _auctionService.GetAuctionList(request);
@@ -173,9 +173,6 @@ public class AuctionController : ControllerBase
         var result = await _auctionService.PlaceBid(id, request);
         return Ok(result);
     }
-
-    #endregion
-
     [HttpGet("{id}/bids/latest")]
     [ProducesResponseType<BidDetailResponse>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetLatestBid([FromRoute] Guid id)
@@ -183,12 +180,15 @@ public class AuctionController : ControllerBase
         var result = await _auctionService.GetLargestBid(auctionId: id);
         return Ok(result);
     }
+    #endregion
+
+    
 
     #region AuctionDeposits
 
     [HttpGet("{auctionId}/deposits")]
     [ProducesResponseType<PaginationResponse<AuctionDepositListResponse>>((int)HttpStatusCode.OK)]
-    public async Task<IActionResult> GetDeposits(
+    public async Task<IActionResult> GetAllDepositsPagination(
         [FromRoute] Guid auctionId, [FromQuery] GetDepositsRequest request)
     {
         var result = await _auctionService.GetAuctionDeposits(auctionId, request);
@@ -207,7 +207,7 @@ public class AuctionController : ControllerBase
         }
 
         var result = await _auctionService.PlaceDeposit(auctionId, request);
-        return CreatedAtAction(nameof(GetDeposit), new { auctionId = result.AuctionId, depositId = result.Id }, result);
+        return CreatedAtAction(nameof(GetDepositById), new { auctionId = result.AuctionId, depositId = result.Id }, result);
     }
 
     [HttpGet("{auctionId}/deposits/has-deposit")]
@@ -245,7 +245,7 @@ public class AuctionController : ControllerBase
 
     [HttpGet("{auctionId}/deposits/{depositId}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDepositDetailResponse))]
-    public async Task<ActionResult<AuctionDepositDetailResponse>> GetDeposit([FromRoute] Guid auctionId,
+    public async Task<ActionResult<AuctionDepositDetailResponse>> GetDepositById([FromRoute] Guid auctionId,
         [FromRoute] Guid depositId)
     {
         var result = await _auctionService.GetDeposit(auctionId, depositId);

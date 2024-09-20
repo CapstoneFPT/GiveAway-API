@@ -618,7 +618,7 @@ namespace Services.FashionItems
             {
                 ShopId = shopId,
                 Description = request.Description,
-                MasterItemCode = await _fashionitemRepository.GenerateMasterItemCode(request.MasterItemCode),
+                MasterItemCode = await _fashionitemRepository.GenerateConsignMasterItemCode(request.MasterItemCode, shopId),
                 Brand = request.Brand,
                 CategoryId = request.CategoryId,
                 IsConsignment = true,

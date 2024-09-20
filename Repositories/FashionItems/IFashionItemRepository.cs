@@ -48,7 +48,7 @@ namespace Repositories.FashionItems
         Task<List<Guid>> GetOrderedItems(List<Guid> itemIds, Guid memberId);
         Task<string> GenerateMasterItemCode(string itemCode);
         Task<string> GenerateIndividualItemCode(string masterItemCode);
-        Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode);
+        Task<string> GenerateConsignMasterItemCode(string itemCode, Guid shopId);
         IQueryable<IndividualFashionItem> GetIndividualQueryable();
         IQueryable<MasterFashionItem> GetMasterQueryable();
         Task<bool> DeleteRangeIndividualItems(List<IndividualFashionItem> fashionItems);

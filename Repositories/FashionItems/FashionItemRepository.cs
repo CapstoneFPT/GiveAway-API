@@ -152,8 +152,9 @@ namespace Repositories.FashionItems
         {
             return random.Next(100, 1000).ToString();
         }
-        public async Task<string> GenerateConsignMasterItemCode(string itemCode, string shopCode)
+        public async Task<string> GenerateConsignMasterItemCode(string itemCode, Guid shopId)
         {
+            var shopCode = await GenericDao<Shop>.Instance.GetQueryable().Where(c => c.ShopId == shopId).Select(c => c.ShopCode).FirstOrDefaultAsync();
             string newString;
             do
             {

@@ -43,7 +43,7 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("login-google")]
+    /*[HttpGet("login-google")]
     public IActionResult GoogleLogin()
     {
         var props = new AuthenticationProperties() { RedirectUri = Url.Action(nameof(GoogleSignin)) };
@@ -75,7 +75,7 @@ public class AuthController : ControllerBase
                 response.Properties.Items
             }
         );
-    }
+    }*/
 
     [HttpGet("forgot-password")]
     public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<string>>> ForgotPassword([FromQuery] ForgetPasswordRequest request)

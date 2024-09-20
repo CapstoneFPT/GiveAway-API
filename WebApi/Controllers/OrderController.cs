@@ -152,7 +152,7 @@ namespace WebApi.Controllers
         [ProducesResponseType(typeof(FileContentResult), (int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> GenerateInvoice([FromRoute] Guid orderId, [FromQuery] Guid shopId)
+        public async Task<IActionResult> GenerateOrderInvoice([FromRoute] Guid orderId, [FromQuery] Guid shopId)
         {
             var result = await _orderService.GenerateInvoice(orderId, shopId);
 

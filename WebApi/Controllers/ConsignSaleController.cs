@@ -226,7 +226,7 @@ namespace WebApi.Controllers
         [ProducesResponseType(typeof(FileContentResult), (int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> GenerateConsignOfflineInvoice([FromRoute] Guid consignsaleId,
+        public async Task<IActionResult> GenerateConsignInvoice([FromRoute] Guid consignsaleId,
             [FromQuery] Guid shopId)
         {
             var result = await _consignSaleService.GenerateConsignOfflineInvoice(consignsaleId, shopId);

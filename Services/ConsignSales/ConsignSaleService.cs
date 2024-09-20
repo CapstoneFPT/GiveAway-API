@@ -178,6 +178,7 @@ namespace Services.ConsignSales
                 throw new MissingFeatureException("You must have at least one product");
             }
 
+            var member = await _accountRepository.FindUserByPhone(request.Phone);
             var listMasterId = request.ConsignDetailRequests.Select(c => c.MasterItemId);
             var listMasterItem = await _fashionItemRepository.GetMasterQueryable()
                 .Where(c => listMasterId.Contains(c.MasterItemId)).ToListAsync();
@@ -202,13 +203,20 @@ namespace Services.ConsignSales
                 ConsignorName = request.ConsignorName,
                 Address = request.Address,
                 Email = request.Email,
-                Phone = request.Phone
+                Phone = request.Phone,
+                MemberId = member?.AccountId,
             };
-
-            await _consignSaleRepository.CreateConsignSaleByShop(newConsign);
+            
+            var newConsignLineItem = new List<ConsignSaleLineItem>();
 
             foreach (var consignDetailRequest in request.ConsignDetailRequests)
             {
+                var masterItem = listMasterItem
+                    .FirstOrDefault(c => c.MasterItemId == consignDetailRequest.MasterItemId);
+                if (masterItem is null)
+                {
+                    throw new MasterItemNotAvailableException("Can not found master item in list master item id" + consignDetailRequest.MasterItemId);
+                }
                 var consignLineItem = new ConsignSaleLineItem()
                 {
                     ConfirmedPrice = consignDetailRequest.ExpectedPrice,
@@ -217,12 +225,12 @@ namespace Services.ConsignSales
                     Note = consignDetailRequest.Note,
                     CreatedDate = DateTime.UtcNow,
                     Size = consignDetailRequest.Size,
-                    Gender = consignDetailRequest.Gender,
-                    ProductName = consignDetailRequest.ProductName,
+                    Gender = masterItem.Gender,
+                    ProductName = masterItem.Name,
                     Condition = consignDetailRequest.Condition,
                     Color = consignDetailRequest.Color,
                     Status = ConsignSaleLineItemStatus.OnSale,
-                    Brand = consignDetailRequest.Brand,
+                    Brand = masterItem.Brand,
                     IsApproved = true,
                     ExpectedPrice = consignDetailRequest.ExpectedPrice
                 };
@@ -232,20 +240,18 @@ namespace Services.ConsignSales
                     Url = url,
                     CreatedDate = DateTime.UtcNow
                 }).ToList();
-                await _consignSaleLineItemRepository.AddConsignSaleLineItem(consignLineItem);
-                var masterItemCode = listMasterItem.Where(c => c.MasterItemId == consignDetailRequest.MasterItemId)
-                    .Select(c => c.MasterItemCode).FirstOrDefault();
+                
                 var individualItem = new IndividualFashionItem()
                 {
                     Note = consignLineItem.Note,
                     CreatedDate = DateTime.UtcNow,
                     MasterItemId = consignDetailRequest.MasterItemId,
-                    ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(masterItemCode!),
-                    Status = FashionItemStatus.Available,
+                    ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(masterItem.MasterItemCode),
+                    Status = FashionItemStatus.Unavailable,
                     ConsignSaleLineItemId = consignLineItem.ConsignSaleLineItemId,
                     Condition = consignLineItem.Condition,
                     Color = consignLineItem.Color,
-                    Size = consignLineItem.Size
+                    Size = consignLineItem.Size,
                 };
 
                 switch (newConsign.Type)
@@ -258,8 +264,8 @@ namespace Services.ConsignSales
                             CreatedDate = DateTime.UtcNow,
                             MasterItemId = consignDetailRequest.MasterItemId,
                             ItemCode =
-                                await _fashionItemRepository.GenerateIndividualItemCode(masterItemCode!),
-                            Status = FashionItemStatus.Available,
+                                await _fashionItemRepository.GenerateIndividualItemCode(masterItem.MasterItemCode!),
+                            Status = FashionItemStatus.Unavailable,
                             ConsignSaleLineItemId = consignLineItem.ConsignSaleLineItemId,
                             Type = FashionItemType.ConsignedForAuction,
                             Condition = consignLineItem.Condition,
@@ -273,6 +279,15 @@ namespace Services.ConsignSales
                         individualItem.Type = FashionItemType.ConsignedForSale;
                         individualItem.SellingPrice = consignDetailRequest.ExpectedPrice;
                         break;
+                    case ConsignSaleType.CustomerSale:
+                        individualItem.Type = FashionItemType.CustomerSale;
+                        individualItem.SellingPrice = consignDetailRequest.ExpectedPrice;
+                        consignLineItem.Status = ConsignSaleLineItemStatus.Sold;
+                        newConsign.Status = ConsignSaleStatus.Completed;
+                        newConsign.ConsignorReceivedAmount = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice); 
+                        newConsign.EndDate = DateTime.UtcNow;
+                        newConsign.SoldPrice = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice);
+                        break;
                 }
 
                 individualItem.Images = consignDetailRequest.ImageUrls
@@ -283,10 +298,38 @@ namespace Services.ConsignSales
                         IndividualFashionItemId = individualItem.ItemId
                     }).ToList();
                 consignLineItem.IndividualFashionItem = individualItem;
-                await _consignSaleLineItemRepository.UpdateConsignLineItem(consignLineItem);
+                newConsignLineItem.Add(consignLineItem);
             }
 
-            await ScheduleConsignEnding(newConsign);
+            newConsign.ConsignSaleLineItems = newConsignLineItem;
+            await _consignSaleRepository.CreateConsignSaleByShop(newConsign);
+            if (request.Type == ConsignSaleType.CustomerSale)
+            {
+                
+                var admin = await _accountRepository.FindOne(c => c.Role == Roles.Admin);
+                if (admin is null)
+                {
+                    throw new AccountNotFoundException();
+                }
+                admin.Balance += newConsign.SoldPrice;
+                var transaction = new Transaction()
+                {
+                    ConsignSaleId = newConsign.ConsignSaleId,
+                    Amount = newConsign.SoldPrice,
+                    CreatedDate = DateTime.UtcNow,
+                    Type = TransactionType.CustomerSale,
+                    PaymentMethod = PaymentMethod.Cash,
+                    ShopId = shopId,
+                    ReceiverId = admin.AccountId,
+                    ReceiverBalance = admin.Balance
+                };
+                await _transactionRepository.CreateTransaction(transaction);
+                await _accountRepository.UpdateAccount(admin);
+            }
+            else
+            {
+                await ScheduleConsignEnding(newConsign);
+            }
             response.Data = new ConsignSaleDetailedResponse()
             {
                 ConsignSaleId = newConsign.ConsignSaleId,
@@ -302,6 +345,16 @@ namespace Services.ConsignSales
                 Phone = newConsign.Phone,
                 Consginer = newConsign.ConsignorName,
                 ShopId = newConsign.ShopId,
+                MemberId = newConsign.MemberId,
+                MemberReceivedAmount = newConsign.ConsignorReceivedAmount,
+                ConsignSaleDetails = newConsign.ConsignSaleLineItems.Select(c => new ConsignSaleDetailResponse2()
+                {
+                    ConsignSaleLineItemId = c.ConsignSaleLineItemId,
+                    Status = c.Status,
+                    ConfirmedPrice = c.ConfirmedPrice!.Value,
+                    ExpectedPrice = c.ExpectedPrice,
+                    DealPrice = c.DealPrice!.Value
+                }).ToList()
             };
             response.ResultStatus = ResultStatus.Success;
             response.Messages = ["Create successfully"];
@@ -580,7 +633,7 @@ namespace Services.ConsignSales
                 CategoryId = detailRequest.CategoryId,
                 MasterItemCode =
                     await _fashionItemRepository.GenerateConsignMasterItemCode(detailRequest.MasterItemCode,
-                        consignSaleLineItem.ConsignSale.Shop.ShopCode),
+                        consignSaleLineItem.ConsignSale.ShopId),
                 CreatedDate = DateTime.UtcNow
             };
 
@@ -1180,126 +1233,7 @@ namespace Services.ConsignSales
             }
         }
 
-        public async Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CreateConsignSaleForCustomerSale(Guid shopId, CreateConsignForSaleByShopRequest request)
-        {
-            if (request.Type != ConsignSaleType.CustomerSale)
-            {
-                throw new ConsignTypeNotAvailable("Only use for CustomerSale type");
-            }
-
-            var consign = new ConsignSale()
-            {
-                Type = ConsignSaleType.CustomerSale,
-                CreatedDate = DateTime.UtcNow,
-                TotalPrice = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice),
-                SoldPrice = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice),
-                ConsignorName = request.ConsignorName,
-                Phone = request.Phone,
-                Email = request.Email,
-                Address = request.Address,
-                Status = ConsignSaleStatus.Completed,
-                ConsignSaleCode = await _consignSaleRepository.GenerateUniqueString(),
-                ConsignSaleMethod = ConsignSaleMethod.Offline,
-                ShopId = shopId,
-                ConsignorReceivedAmount = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice),
-                
-            };
-            consign.Transaction = new Transaction()
-            {
-                Type = TransactionType.CustomerSale,
-                CreatedDate = DateTime.UtcNow,
-                ConsignSaleId = consign.ConsignSaleId,
-                Amount = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice),
-                ShopId = shopId,
-                PaymentMethod = PaymentMethod.Cash,
-                TransactionCode = await _transactionRepository.GenerateUniqueString(),
-            };
-            
-            foreach (var consignSaleLineRequest in request.ConsignDetailRequests)
-            {
-                var masterItem = await _fashionItemRepository.GetMasterQueryable()
-                    .Where(c => c.MasterItemId == consignSaleLineRequest.MasterItemId)
-                    .FirstOrDefaultAsync();
-                if (masterItem is null)
-                {
-                    throw new MasterItemNotAvailableException("Can not found master item with id" + consignSaleLineRequest.MasterItemId);
-                }
-                var consignSaleLineItem = new ConsignSaleLineItem()
-                {
-                    ConsignSaleId = consign.ConsignSaleId,
-                    Status = ConsignSaleLineItemStatus.Sold,
-                    Condition = consignSaleLineRequest.Condition,
-                    Brand = masterItem.Brand,
-                    IsApproved = true,
-                    ExpectedPrice = consignSaleLineRequest.ExpectedPrice,
-                    Color = consignSaleLineRequest.Color,
-                    Size = consignSaleLineRequest.Size,
-                    Gender = masterItem.Gender,
-                    ProductName = consignSaleLineRequest.ProductName,
-                    Note = consignSaleLineRequest.Note,
-                    CreatedDate = DateTime.UtcNow,
-                    ConfirmedPrice = consignSaleLineRequest.ExpectedPrice,
-                    DealPrice = consignSaleLineRequest.ExpectedPrice,
-                };
-                consignSaleLineItem.Images = consignSaleLineRequest.ImageUrls.Select(url => new Image()
-                {
-                    CreatedDate = DateTime.UtcNow,
-                    ConsignLineItemId = consignSaleLineItem.ConsignSaleLineItemId,
-                    Url = url
-                }).ToList();
-                consignSaleLineItem.IndividualFashionItem = new IndividualFashionItem()
-                {
-                    MasterItemId = consignSaleLineRequest.MasterItemId,
-                    ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(masterItem.MasterItemCode),
-                    Condition = consignSaleLineRequest.Condition,
-                    SellingPrice = consignSaleLineRequest.ExpectedPrice,
-                    Color = consignSaleLineRequest.Color,
-                    Size = consignSaleLineRequest.Size,
-                    Note = consignSaleLineRequest.Note,
-                    CreatedDate = DateTime.UtcNow,
-                    Status = FashionItemStatus.Unavailable,
-                    Type = FashionItemType.CustomerSale,
-                    ConsignSaleLineItemId = consignSaleLineItem.ConsignSaleLineItemId,
-                };
-                consignSaleLineItem.IndividualFashionItem.Images = consignSaleLineRequest.ImageUrls.Select(url => new Image()
-                {
-                    CreatedDate = DateTime.UtcNow,
-                    IndividualFashionItemId = consignSaleLineItem.IndividualFashionItem.ItemId,
-                    Url = url
-                }).ToList();
-                consign.ConsignSaleLineItems.Add(consignSaleLineItem);
-            }
-
-            await _consignSaleRepository.CreateConsignSaleByShop(consign);
-            return new ConsignSaleDetailedResponse()
-            {
-                Type = ConsignSaleType.CustomerSale,
-                CreatedDate = DateTime.UtcNow,
-                TotalPrice = consign.TotalPrice,
-                SoldPrice = consign.SoldPrice,
-                Consginer = consign.ConsignorName,
-                Phone = consign.Phone,
-                Email = consign.Email,
-                Address = consign.Address,
-                Status = consign.Status,
-                ConsignSaleCode = consign.ConsignSaleCode,
-                ConsignSaleMethod = consign.ConsignSaleMethod,
-                ShopId = consign.ShopId,
-                MemberReceivedAmount = consign.ConsignorReceivedAmount,
-                ConsignSaleId = consign.ConsignSaleId,
-                ConsignSaleDetails = consign.ConsignSaleLineItems.Select(consignLine => new ConsignSaleDetailResponse2()
-                {
-                    ConsignSaleId = consignLine.ConsignSaleId,
-                    Note = consignLine.Note,
-                    ConsignSaleLineItemId = consignLine.ConsignSaleLineItemId,
-                    ConfirmedPrice = consignLine.ConfirmedPrice!.Value,
-                    DealPrice = consignLine.DealPrice!.Value,
-                    ExpectedPrice = consignLine.ExpectedPrice,
-                    Status = consignLine.Status,
-                    IndividualItemId = consignLine.IndividualFashionItem.ItemId
-                }).ToList()
-            };
-        }
+        
 
         public async Task<Result<InvoiceConsignResponse, ErrorCode>> GenerateConsignOfflineInvoice(Guid consignsaleId, Guid shopId)
         {
@@ -1391,64 +1325,7 @@ namespace Services.ConsignSales
             return template;
         }
 
-        public async Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>
-            ConfirmConsignSaleLineReadyToSale(Guid consignLineItemId,
-                ConfirmConsignSaleLineReadyToSaleRequest request)
-        {
-            Expression<Func<ConsignSale, bool>> predicate = consignsale =>
-                consignsale.ConsignSaleLineItems.Any(c => c.ConsignSaleLineItemId == consignLineItemId);
-            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
-            if (consignSale is null)
-            {
-                throw new ConsignSaleNotFoundException();
-            }
-
-            var consignSaleDetail =
-                consignSale.ConsignSaleLineItems.FirstOrDefault(c => c.ConsignSaleLineItemId == consignLineItemId);
-            if (consignSaleDetail == null)
-            {
-                throw new ConsignSaleLineItemNotFoundException();
-            }
-
-            if (request.DealPrice <= 0)
-            {
-                throw new ConfirmPriceIsNullException("Please set a deal price for this item");
-            }
-
-            if (!consignSaleDetail.ExpectedPrice.Equals(request.DealPrice))
-            {
-                throw new DealPriceIsNotAvailableException("This deal price is not equal expected price");
-            }
-
-            consignSaleDetail.Status = ConsignSaleLineItemStatus.ReadyForConsignSale;
-            consignSaleDetail.DealPrice = request.DealPrice;
-            consignSaleDetail.ConfirmedPrice = request.DealPrice;
-            consignSaleDetail.IsApproved = true;
-            if (consignSale.ConsignSaleLineItems.All(
-                    c => c.Status.Equals(ConsignSaleLineItemStatus.ReadyForConsignSale)))
-            {
-                consignSale.Status = ConsignSaleStatus.ReadyToSale;
-            }
-
-            await _consignSaleLineItemRepository.UpdateConsignLineItem(consignSaleDetail);
-
-            return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
-            {
-                Data = new ConsignSaleLineItemResponse()
-                {
-                    ConsignSaleLineItemId = consignSaleDetail.ConsignSaleLineItemId,
-                    ConsignSaleLineItemStatus = consignSaleDetail.Status,
-                    DealPrice = consignSaleDetail.DealPrice!.Value,
-                    IsApproved = consignSaleDetail.IsApproved,
-                    ResponseFromShop = consignSaleDetail.ResponseFromShop,
-                    ConfirmedPrice = consignSaleDetail.ConfirmedPrice!.Value
-                    /*IndividualItemId = individualItem.ItemId,
-                    FashionItemStatus = individualItem.Status*/
-                },
-                Messages = new[] { "Create individual item successfully" },
-                ResultStatus = ResultStatus.Success
-            };
-        }
+        
 
         public async Task UpdateConsignPrice(Guid orderId)
         {
