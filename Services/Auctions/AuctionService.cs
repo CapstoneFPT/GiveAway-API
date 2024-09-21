@@ -571,6 +571,16 @@ namespace Services.Auctions
                 predicate = predicate.And(bid => bid.MemberId == request.MemberId);
             }
 
+            if (request.Phone != null)
+            {
+                predicate = predicate.And(bid => bid.Member.Phone.Contains(request.Phone));
+            }
+
+            if (request.MemberName != null)
+            {
+                predicate = predicate.And(bid =>
+                    bid != null && EF.Functions.ILike(bid.Member.Fullname, $"%{request.MemberName}%"));
+            }
             var count = await query.Where(predicate).CountAsync();
 
             var items = await query
@@ -584,6 +594,7 @@ namespace Services.Auctions
                     MemberId = bid.MemberId,
                     Amount = bid.Amount,
                     Phone = bid.Member.Phone,
+                    MemberName = bid.Member.Fullname,
                     CreatedDate = bid.CreatedDate,
                     IsWinning = bid.IsWinning,
                     BidCode = bid.BidCode,
