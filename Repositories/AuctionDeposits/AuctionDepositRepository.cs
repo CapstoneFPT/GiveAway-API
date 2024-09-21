@@ -105,6 +105,7 @@ namespace Repositories.AuctionDeposits
                     CustomerName = x.Member.Fullname,
                     CustomerEmail = x.Member.Email,
                     CustomerPhone = x.Member.Phone,
+                    Amount = x.Auction.DepositFee,
                     AuctionId = x.AuctionId,
                     DepositDate = x.CreatedDate,
                     Id = x.AuctionDepositId
