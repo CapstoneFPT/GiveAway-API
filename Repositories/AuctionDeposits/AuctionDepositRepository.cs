@@ -108,7 +108,8 @@ namespace Repositories.AuctionDeposits
                     Amount = x.Auction.DepositFee,
                     AuctionId = x.AuctionId,
                     DepositDate = x.CreatedDate,
-                    Id = x.AuctionDepositId
+                    Id = x.AuctionDepositId,
+                    DepositCode = x.DepositCode
                 })
                 .ToListAsync();
 
