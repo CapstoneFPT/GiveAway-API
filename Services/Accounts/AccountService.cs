@@ -134,6 +134,13 @@ namespace Services.Accounts
                 return response;
             }
 
+            var isPhoneExisted = await _account.FindUserByPhone(request.Phone);
+            if (isPhoneExisted != null)
+            {
+                response.Messages = new[] { "This is already existed" };
+                response.ResultStatus = ResultStatus.Error;
+                return response;
+            }
             var newuser = _mapper.Map(request, user);
             response.Data = _mapper.Map<AccountResponse>(await _account.UpdateAccount(newuser));
             response.Messages = ["Update successfully"];
@@ -189,6 +196,7 @@ namespace Services.Accounts
                 Email = account.Email,
                 Status = account.Status,
                 Role = account.Role,
+                Balance = account.Balance,
                 ShopCode = account is Staff ? ((Staff)account).Shop.ShopCode : null
             };
             (List<AccountResponse> Items, int Page, int PageSize, int TotalCount) data =

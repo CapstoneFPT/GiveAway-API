@@ -253,7 +253,7 @@ public class AccountController : ControllerBase
     [HttpGet("{accountId}/recharges")]
     [ProducesResponseType<PaginationResponse<RechargeListResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
-    public async Task<IActionResult> GetRecharges(
+    public async Task<IActionResult> GetAccountRecharges(
         [FromRoute] Guid accountId,
         [FromQuery] GetAccountRechargesRequest request)
     {

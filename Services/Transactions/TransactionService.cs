@@ -143,7 +143,7 @@ namespace Services.Transactions
                 Expression<Func<Transaction, bool>> predicate = transaction => true;
                 if (transactionRequest.ShopId.HasValue)
                 {
-                    predicate = predicate.And(transaction => transaction.Order!.PurchaseType.Equals(PurchaseType.Offline) && transaction.ShopId == transactionRequest.ShopId);
+                    predicate = predicate.And(transaction =>  transaction.ShopId == transactionRequest.ShopId);
                 }
 
                 if (transactionRequest.TransactionType.HasValue)
