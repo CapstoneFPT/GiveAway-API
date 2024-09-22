@@ -6,11 +6,6 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-  
-    <ItemGroup>
-      <Folder Include="OrderDetails\" />
-    </ItemGroup>
-
     <ItemGroup>
       <PackageReference Include="AutoMapper" Version="13.0.1" />
       <PackageReference Include="MailKit" Version="4.5.0" />
