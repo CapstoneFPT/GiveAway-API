@@ -231,6 +231,5 @@ public enum SizeType
 public enum InquiryStatus
 {
     Processing,
-    Approved,
-    Rejected
+    Completed
 }

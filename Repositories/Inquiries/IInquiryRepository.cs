@@ -13,5 +13,6 @@ namespace Repositories.Inquiries
     {
         Task<Inquiry> CreateInquiry(Inquiry inquiry);
         Task<(List<T> Items, int Page, int PageSize, int TotalCount)> GetInquiries<T>(int inquiryRequestPage, int inquiryRequestPageSize, Expression<Func<Inquiry, bool>>? predicate, Expression<Func<Inquiry, T>>? selector);
+        Task<Inquiry> ConfirmCompleted(Guid id);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace BusinessObjects.Dtos.Inquiries;
+﻿using BusinessObjects.Dtos.Commons;
+
+namespace BusinessObjects.Dtos.Inquiries;
 
 public class InquiryListResponse
 {
@@ -9,4 +11,5 @@ public class InquiryListResponse
     public string Phone { get; set; }
     public string Message { get; set; }
     public DateTime CreatedDate { get; set; }
+    public InquiryStatus Status { get; set; }
 }

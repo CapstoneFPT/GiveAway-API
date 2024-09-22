@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Entities;
+using DotNext;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -44,7 +45,8 @@ namespace Services.Inquiries
                 Email = inquiry.Member.Email,
                 Phone = inquiry.Member.Phone,
                 Message = inquiry.Message,
-                CreatedDate = inquiry.CreatedDate
+                CreatedDate = inquiry.CreatedDate,
+                Status = inquiry.Status
             };
 
             (List<InquiryListResponse> Items, int Page, int PageSize, int TotalCount) result =
@@ -57,6 +59,17 @@ namespace Services.Inquiries
                 PageNumber = result.Page,
                 PageSize = result.PageSize,
                 TotalCount = result.TotalCount
+            };
+        }
+
+        public async Task<Result<InquiryListResponse, ErrorCode>> ConfirmInquiryCompleted(Guid inquiryId)
+        {
+            var inquiry = await _inquiryRepository.ConfirmCompleted(inquiryId);
+            return new InquiryListResponse()
+            {
+                InquiryId = inquiry.InquiryId,
+                Message = inquiry.Message,
+                Status = inquiry.Status
             };
         }
     }

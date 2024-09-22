@@ -11,5 +11,6 @@ namespace Services.Inquiries
     public interface IInquiryService
     {
         Task<PaginationResponse<InquiryListResponse>> GetAllInquiries(InquiryListRequest inquiryRequest);
+        Task<DotNext.Result<InquiryListResponse, ErrorCode>> ConfirmInquiryCompleted(Guid inquiryId);
     }
 }

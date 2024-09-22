@@ -58,7 +58,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<Result<List<ShopDetailResponse>>>> GetAllShop()
         {
@@ -69,7 +69,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-        [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
         [HttpGet("{shopId}")]
         public async Task<ActionResult<Result<ShopDetailResponse>>> GetShopById([FromRoute] Guid shopId)
         {

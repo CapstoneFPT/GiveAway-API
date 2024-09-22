@@ -4,8 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Inquiries;
 using BusinessObjects.Entities;
+using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,6 +52,19 @@ namespace Repositories.Inquiries
             }
 
             return (items, inquiryRequestPage, inquiryRequestPageSize, total);
+        }
+
+        public async Task<Inquiry> ConfirmCompleted(Guid id)
+        {
+            var inquiry = await GenericDao<Inquiry>.Instance.GetQueryable().Where(c => c.InquiryId == id)
+                .FirstOrDefaultAsync();
+            if (inquiry is null)
+            {
+                throw new InquiryNotFound();
+            }
+
+            inquiry.Status = InquiryStatus.Completed;
+            return await GenericDao<Inquiry>.Instance.UpdateAsync(inquiry);
         }
     }
 }

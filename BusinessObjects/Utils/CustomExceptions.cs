@@ -65,6 +65,7 @@ public class AuctionAlreadyRejectedException : Exception
 public class ShopNotFoundException : Exception
 {
 }
+public class InquiryNotFound : Exception{}
 
 public class TimeslotNotFoundException : Exception
 {

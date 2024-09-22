@@ -47,7 +47,7 @@ public class AccountController : ControllerBase
         _contextAccessor = contextAccessor;
         _rechargeService = rechargeService;
     }
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpGet]
     [ProducesResponseType<PaginationResponse<AccountResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAccounts(
@@ -56,7 +56,7 @@ public class AccountController : ControllerBase
         var result = await _accountService.GetAccounts(request);
         return Ok(result);
     }
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpGet("{id}")]
     [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAccountById(Guid id)
