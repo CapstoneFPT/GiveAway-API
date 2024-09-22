@@ -283,7 +283,8 @@ public class GiveAwayDbContext : DbContext
             .HasDiscriminator(x => x.Type)
             .HasValue<IndividualFashionItem>(FashionItemType.ItemBase)
             .HasValue<IndividualAuctionFashionItem>(FashionItemType.ConsignedForAuction)
-            .HasValue<IndividualConsignedForSaleFashionItem>(FashionItemType.ConsignedForSale);
+            .HasValue<IndividualConsignedForSaleFashionItem>(FashionItemType.ConsignedForSale)
+            .HasValue<IndividualConsignedForSaleFashionItem>(FashionItemType.CustomerSale);
 
         modelBuilder.Entity<IndividualFashionItem>()
             .HasIndex(x => x.ItemCode)
