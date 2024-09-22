@@ -1,10 +1,12 @@
 using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Feedbacks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Feedbacks;
 
 namespace WebApi.Controllers;
+[Authorize]
 [Route("api/feedbacks")]
 public class FeedbackController : ControllerBase
 {

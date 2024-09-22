@@ -4,6 +4,7 @@ using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
 using DotNext;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.ConsignLineItems;
 using Services.ConsignSales;
@@ -22,7 +23,7 @@ public class ConsignLineItemController : ControllerBase
         _consignSaleService = consignSaleService;
         _consignLineItemService = consignLineItemService;
     }
-
+    [Authorize(Roles = "Staff")]
     [HttpPut("{consignLineItemId}/ready-for-consign")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -35,6 +36,7 @@ public class ConsignLineItemController : ControllerBase
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
     }
+    [Authorize(Roles = "Staff")]
     [HttpPut("{consignLineItemId}/negotiate-item")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -47,6 +49,7 @@ public class ConsignLineItemController : ControllerBase
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
     }
+    [Authorize(Roles = "Member")]
     [HttpPut("{consignLineItemId}/aprrove-negotiation")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -59,6 +62,7 @@ public class ConsignLineItemController : ControllerBase
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
     }
+    [Authorize(Roles = "Member")]
     [HttpPut("{consignLineItemId}/reject-negotiation")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -71,6 +75,7 @@ public class ConsignLineItemController : ControllerBase
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
     }
+    [Authorize(Roles = "Staff")]
     [HttpPost("{consignLineItemId}/create-individual-after-negotiation")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -83,6 +88,7 @@ public class ConsignLineItemController : ControllerBase
             ? StatusCode((int)HttpStatusCode.InternalServerError, result)
             : Ok(result);
     }
+    [Authorize]
     [HttpGet("{consignLineItemId}")]
     [ProducesResponseType<ConsignSaleLineItemDetailedResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -104,7 +110,7 @@ public class ConsignLineItemController : ControllerBase
 
         return Ok(result.Value);
     }
-
+    [Authorize(Roles = "Staff")]
     [HttpPost("{consignLineItemId}/create-masteritem")]
     [ProducesResponseType<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]

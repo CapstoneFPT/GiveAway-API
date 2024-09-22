@@ -4,6 +4,7 @@ using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -64,7 +65,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-
+        [Authorize(Roles = "Staff,Admin")]
         [HttpPut("{itemid}/check-availability")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> CheckFashionItemAvailability(
             [FromRoute] Guid itemid)
@@ -76,7 +77,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Staff,Admin")]
         [HttpPut("{itemId}")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> UpdateFashionItem([FromRoute] Guid itemId,
             [FromBody] UpdateFashionItemRequest request)
@@ -88,7 +89,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Staff,Admin")]
         [HttpPatch("{itemId}/status")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> UpdateFashionItemStatus(
             [FromRoute] Guid itemId, [FromBody] UpdateFashionItemStatusRequest request)
@@ -100,7 +101,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete]
         public async Task<IActionResult> DeleteDraftItem(
             [FromBody] List<DeleteDraftItemRequest> deleteDraftItemRequests)

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Refunds;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using Services.Refunds;
 
 namespace WebApi.Controllers
 {
+    [Authorize]
     [Route("api/refunds")]
     [ApiController]
     public class RefundController : ControllerBase
@@ -45,7 +47,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-
+        [Authorize(Roles = "Staff")]
         [HttpPut("{refundId}/approval")]
         public async Task<ActionResult<Result<RefundResponse>>> ApprovalRefundRequestFromShop([FromRoute] Guid refundId,
             [FromBody] ApprovalRefundRequest request)
@@ -57,7 +59,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Staff")]
         [HttpPut("{refundId}/confirm-received-and-refund")]
         public async Task<ActionResult<Result<RefundResponse>>> ConfirmReceivedAndRefund([FromRoute] Guid refundId, [FromBody] ConfirmReceivedRequest request)
         {
@@ -66,7 +68,7 @@ namespace WebApi.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, result);
             return Ok(result);
         }
-
+        [Authorize(Roles = "Member")]
         [HttpPost]
         public async Task<ActionResult<Result<RefundResponse>>> RequestRefundItemToShop(
             [FromBody] CreateRefundRequest refundRequest)

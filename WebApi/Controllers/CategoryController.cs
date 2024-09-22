@@ -5,6 +5,7 @@ using BusinessObjects.Dtos.Category;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -103,7 +104,7 @@ namespace WebApi.Controllers
             
             return Ok(result);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPut("{categoryId}")]
         [ProducesResponseType<CategoryResponse>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -112,7 +113,7 @@ namespace WebApi.Controllers
             var result = await _categoryService.UpdateNameCategory(categoryId, request);
             return result.ResultStatus != ResultStatus.Success ? StatusCode((int)HttpStatusCode.InternalServerError, result) : Ok(result);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPut("{categoryId}/status")]
         [ProducesResponseType<CategoryResponse>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]

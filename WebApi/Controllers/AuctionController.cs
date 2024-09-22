@@ -5,13 +5,14 @@ using BusinessObjects.Dtos.Bids;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.AuctionDeposits;
 using Services.Auctions;
 
 namespace WebApi.Controllers;
-
+[Authorize]
 [ApiController]
 [Route("api/auctions")]
 public class AuctionController : ControllerBase
@@ -26,7 +27,7 @@ public class AuctionController : ControllerBase
     }
 
     #region Auctions
-
+    [Authorize(Roles = "Staff")]
     [HttpPost]
     [ProducesResponseType<AuctionDetailResponse>((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateAuction([FromBody] CreateAuctionRequest request)
@@ -40,7 +41,7 @@ public class AuctionController : ControllerBase
 
         return CreatedAtAction(nameof(GetAuction), new { id = result.AuctionId }, result);
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}/approve")]
     [ProducesResponseType<AuctionDetailResponse>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> ApproveAuction([FromRoute] Guid id)
@@ -48,7 +49,7 @@ public class AuctionController : ControllerBase
         var result = await _auctionService.ApproveAuction(id);
         return Ok(result);
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}/reject")]
     [ProducesResponseType<AuctionDetailResponse>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> RejectAuction([FromRoute] Guid id)
@@ -56,7 +57,7 @@ public class AuctionController : ControllerBase
         var result = await _auctionService.RejectAuction(id);
         return Ok(result);
     }
-
+    [AllowAnonymous]
     [HttpGet]
     [ProducesResponseType<PaginationResponse<AuctionListResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAllAuctionsPagination(
@@ -85,7 +86,7 @@ public class AuctionController : ControllerBase
 
         return Ok(result.Value);
     }
-
+    [AllowAnonymous]
     [HttpGet("{id}/auction-item")]
     [ProducesResponseType<AuctionItemDetailResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -107,7 +108,7 @@ public class AuctionController : ControllerBase
         
         return Ok(result.Value);
     }
-
+    [AllowAnonymous]
     [HttpGet("{id}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
     [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
@@ -122,14 +123,14 @@ public class AuctionController : ControllerBase
         return Ok(result);
     }
 
-    [HttpDelete("{id}")]
+    /*[HttpDelete("{id}")]
     [ProducesResponseType(statusCode: StatusCodes.Status204NoContent)]
     [ProducesResponseType(statusCode: StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAuction([FromRoute] Guid id)
     {
         var result = await _auctionService.DeleteAuction(id);
         return NoContent();
-    }
+    }*/
 
     [HttpPut("{id}")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, type: typeof(AuctionDetailResponse))]
@@ -159,7 +160,7 @@ public class AuctionController : ControllerBase
         var result = await _auctionService.GetBids(id, request);
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPost("{id}/bids/place_bid")]
     [ProducesResponseType<BidDetailResponse>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> PlaceBid([FromRoute] Guid id,
@@ -194,7 +195,7 @@ public class AuctionController : ControllerBase
         var result = await _auctionService.GetAuctionDeposits(auctionId, request);
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPost("{auctionId}/deposits/place_deposit")]
     [ProducesResponseType(statusCode: StatusCodes.Status201Created, type: typeof(AuctionDepositDetailResponse))]
     [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest)]
@@ -223,13 +224,13 @@ public class AuctionController : ControllerBase
         });
     }
 
-    [HttpDelete("{auctionId}/deposits/{depositId}")]
+    /*[HttpDelete("{auctionId}/deposits/{depositId}")]
     public async Task<ActionResult> DeleteDeposit([FromRoute] Guid auctionId, [FromRoute] Guid depositId)
     {
         throw new NotImplementedException();
-    }
+    }*/
 
-    [HttpPut("{auctionId}/deposits/{depositId}")]
+    /*[HttpPut("{auctionId}/deposits/{depositId}")]
     public async Task<ActionResult<AuctionDepositDetailResponse>> UpdateDeposit([FromRoute] Guid auctionId,
         [FromRoute] Guid depositId,
         [FromBody] UpdateAuctionDepositRequest request)
@@ -240,7 +241,7 @@ public class AuctionController : ControllerBase
         }
 
         throw new NotImplementedException();
-    }
+    }*/
 
 
     [HttpGet("{auctionId}/deposits/{depositId}")]

@@ -58,7 +58,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<Result<List<ShopDetailResponse>>>> GetAllShop()
         {
@@ -69,7 +69,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet("{shopId}")]
         public async Task<ActionResult<Result<ShopDetailResponse>>> GetShopById([FromRoute] Guid shopId)
         {
@@ -81,7 +81,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-
+        [Authorize(Roles = "Staff")]
         [HttpPost("{shopId}/orders")]
         public async Task<ActionResult<Result<OrderResponse>>> CreateOrderByShop([FromRoute] Guid shopId,
             [FromBody] CreateOrderRequest orderRequest)
@@ -112,7 +112,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-
+        [Authorize(Roles = "Staff")]
         [HttpPut("{shopId}/orders/{OrderId}/confirm-deliveried")]
         public async Task<ActionResult<Result<OrderResponse>>> ConfirmOrderDelivered(
             [FromRoute] Guid shopId, [FromRoute] Guid OrderId)

@@ -47,7 +47,7 @@ public class AccountController : ControllerBase
         _contextAccessor = contextAccessor;
         _rechargeService = rechargeService;
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     [ProducesResponseType<PaginationResponse<AccountResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAccounts(
@@ -56,7 +56,7 @@ public class AccountController : ControllerBase
         var result = await _accountService.GetAccounts(request);
         return Ok(result);
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpGet("{id}")]
     [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAccountById(Guid id)
@@ -90,6 +90,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}/ban")]
     [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> BanAccount([FromRoute] Guid id)
@@ -101,7 +102,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize]
     [HttpPut("{accountId}")]
     [ProducesResponseType<Result<AccountResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateAccount([FromRoute] Guid accountId,
@@ -114,7 +115,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpGet("{accountId}/deliveries")]
     [ProducesResponseType<Result<List<DeliveryListResponse>>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
@@ -128,7 +129,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPost("{accountId}/deliveries")]
     [ProducesResponseType<Result<DeliveryListResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateDelivery([FromRoute] Guid accountId,
@@ -141,7 +142,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPut("{accountId}/deliveries/{deliveryId}")]
     [ProducesResponseType<Result<DeliveryListResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateDelivery([FromRoute] Guid deliveryId,
@@ -154,7 +155,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpDelete("{accountId}/deliveries/{deliveryId}")]
     [ProducesResponseType<Result<string>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> DeleteDelivery([FromRoute] Guid deliveryId)
@@ -184,7 +185,7 @@ public class AccountController : ControllerBase
         }
         return Ok(result.Value);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPost("{accountId}/orders")]
     [ProducesResponseType<Result<OrderResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateOrder([FromRoute] Guid accountId,
@@ -197,7 +198,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpGet("{accountId}/consignsales")]
     [ProducesResponseType<PaginationResponse<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -218,7 +219,7 @@ public class AccountController : ControllerBase
         return Ok(result.Value);
      
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPost("{accountId}/consignsales")]
     [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateConsignSale([FromRoute] Guid accountId,
@@ -231,7 +232,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPost("{accountId}/inquiries")]
     [ProducesResponseType<CreateInquiryResponse>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateInquiry([FromRoute] Guid accountId,
@@ -240,7 +241,7 @@ public class AccountController : ControllerBase
         var result = await _accountService.CreateInquiry(accountId, request);
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPost("{accountId}/withdraws")]
     [ProducesResponseType<CreateWithdrawResponse>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateWithdraw([FromRoute] Guid accountId,
@@ -249,7 +250,7 @@ public class AccountController : ControllerBase
         var result = await _accountService.RequestWithdraw(accountId, request);
         return Ok(result);
     }
-    
+    [Authorize(Roles = "Member")]
     [HttpGet("{accountId}/recharges")]
     [ProducesResponseType<PaginationResponse<RechargeListResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -278,7 +279,7 @@ public class AccountController : ControllerBase
         
         return Ok(result.Value);
     }
-    
+    [Authorize(Roles = "Member")]
     [HttpGet("{accountId}/auctions")]
     [ProducesResponseType<PaginationResponse<AuctionListResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -301,7 +302,7 @@ public class AccountController : ControllerBase
         return Ok(result.Value);
     }
         
-
+    [Authorize(Roles = "Member")]
     [HttpGet("{accountId}/withdraws")]
     [ProducesResponseType<PaginationResponse<GetWithdrawsResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetWithdraws(
@@ -311,7 +312,7 @@ public class AccountController : ControllerBase
         var result = await _accountService.GetWithdraws(accountId, request);
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpGet("{accountId}/bankaccounts")]
     [ProducesResponseType<List<BankAccountsListResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -335,7 +336,7 @@ public class AccountController : ControllerBase
 
         return Ok(result.Value);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPost("{accountId}/bankaccounts")]
     [ProducesResponseType<CreateBankAccountResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -365,7 +366,7 @@ public class AccountController : ControllerBase
 
         return Ok(result.Value);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpPut("{accountId}/bankaccounts/{bankAccountId}")]
     [ProducesResponseType<UpdateBankAccountResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -402,7 +403,7 @@ public class AccountController : ControllerBase
 
         return Ok(result.Value);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpDelete("{accountId}/bankaccounts/{bankAccountId}")]
     [ProducesResponseType<DeleteBankAccountResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -437,7 +438,7 @@ public class AccountController : ControllerBase
 
         return Ok(result.Value);
     }
-    
+    [Authorize(Roles = "Member")]
     [HttpPatch("{accountId}/bankaccounts/{bankAccountId}/set-default")]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> SetDefaultBankAccount([FromRoute] Guid accountId, [FromRoute] Guid bankAccountId)
@@ -468,7 +469,7 @@ public class AccountController : ControllerBase
 
         return Ok(result.Value);
     }
-    
+    [Authorize(Roles = "Member")]
     [HttpGet("{accountId}/deposits")]
     [ProducesResponseType<PaginationResponse<AccountDepositsListResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetDeposits([FromRoute] Guid accountId,

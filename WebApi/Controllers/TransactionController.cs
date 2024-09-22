@@ -1,11 +1,13 @@
 using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Transactions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Transactions;
 
 namespace WebApi.Controllers
 {
+    [Authorize]
     [Route("api/transactions")]
     [ApiController]
     public class TransactionController : ControllerBase

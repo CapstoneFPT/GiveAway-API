@@ -13,6 +13,7 @@ using BusinessObjects.Dtos.Account.Response;
 using Microsoft.AspNetCore.Identity;
 using BusinessObjects.Dtos.Account.Request;
 using DotNext;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 
 namespace WebApi.Controllers;
@@ -115,7 +116,7 @@ public class AuthController : ControllerBase
 
         return result;
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpPost("create-staff-account")]
     public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<AccountResponse>>> CreateStaffAccount(
         [FromBody] CreateStaffAccountRequest registerRequest)
@@ -152,7 +153,7 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize]
     [HttpPut("{accountId}/change-password")]
     public async Task<ActionResult<BusinessObjects.Dtos.Commons.Result<AccountResponse>>> ChangePassword([FromRoute] Guid accountId,
         [FromBody] ChangePasswordRequest request)

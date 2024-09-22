@@ -1,10 +1,12 @@
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Inquiries;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Inquiries;
 
 namespace WebApi.Controllers;
+[Authorize]
 [Route("api/inquiries")]
 [ApiController] 
 public class InquiryController : ControllerBase

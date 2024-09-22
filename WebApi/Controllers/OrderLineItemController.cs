@@ -3,12 +3,13 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.OrderLineItems;
 using Services.Orders;
 
 namespace WebApi.Controllers;
-
+[Authorize]
 [ApiController]
 [Route("api/orderlineitems")]
 public class OrderLineItemController : ControllerBase
@@ -21,7 +22,7 @@ public class OrderLineItemController : ControllerBase
         _orderService = orderService;
         _orderLineItemService = orderLineItemService;
     }
-
+    [Authorize(Roles = "Staff")]
     [HttpPut("{orderLineItemId}/confirm-pending-order")]
     [ProducesResponseType<Result<OrderResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]

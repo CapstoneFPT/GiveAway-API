@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,7 @@ namespace WebApi.Controllers
         {
             _consignSaleService = consignSaleService;
         }
+        [Authorize(Roles = "Staff,Admin")]
         [HttpGet]
         [ProducesResponseType<PaginationResponse<ConsignSaleListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -39,7 +41,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-        
+        [Authorize]
         [HttpGet("{consignSaleId}")]
         [ProducesResponseType<ConsignSaleDetailedResponse>((int) HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
@@ -58,7 +60,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-
+        [Authorize(Roles = "Staff")]
         [HttpPut("{consignSaleId}/approval")]
         [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -74,6 +76,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+        [Authorize(Roles = "Staff,Admin")]
         [HttpPut("{consignSaleId}/post-items-to-sell")]
         [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -88,6 +91,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
+        [Authorize(Roles = "Staff")]
         [HttpPut("{consignSaleId}/negotiating")]
         [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -131,7 +135,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Staff")]
         [HttpPut("{consignsaleId}/notify-delivery")]
         public async Task<IActionResult> NotifyDelivery([FromRoute] Guid consignsaleId)
         {
@@ -150,7 +154,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-        
+        [Authorize]
         [HttpGet("{consignsaleId}/consignlineitems")]
         [ProducesResponseType<List<ConsignSaleLineItemsListResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -175,6 +179,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+        [Authorize(Roles = "Member")]
         [HttpPut("{consignsaleId}/continue-consignsale")]
         [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -198,6 +203,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+        [Authorize]
         [HttpPut("{consignsaleId}/cancel-all-consignsaleline")]
         [ProducesResponseType<Result<ConsignSaleDetailedResponse>>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
@@ -221,7 +227,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-
+        [Authorize(Roles = "Staff,Admin")]
         [HttpGet("{consignsaleId}/invoice")]
         [ProducesResponseType(typeof(FileContentResult), (int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]

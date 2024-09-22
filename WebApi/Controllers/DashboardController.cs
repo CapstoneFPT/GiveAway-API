@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Services.Revenue;
 
 namespace WebApi.Controllers;
-
+[Authorize(Roles = "Staff,Admin")]
 [ApiController]
 [Route("api/dashboard")]
 public class DashboardController : ControllerBase

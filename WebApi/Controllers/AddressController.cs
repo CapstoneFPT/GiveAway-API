@@ -1,6 +1,7 @@
 using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Deliveries;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Services.Deliveries;
@@ -20,7 +21,7 @@ public class AddressController : ControllerBase
         _giaoHangNhanhService = giaoHangNhanhService;
         _deliveryService = deliveryService;
     }
-
+    [Authorize]
     [HttpGet("provinces")]
     [ProducesResponseType<GHNApiResponse<List<GHNProvinceResponse>>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.BadRequest)]
@@ -50,7 +51,7 @@ public class AddressController : ControllerBase
                     ErrorCode.UnknownError))
         };
     }
-
+    [Authorize]
     [HttpGet("districts")]
     [ProducesResponseType<GHNApiResponse<List<GHNDistrictResponse>>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.BadRequest)]
@@ -80,7 +81,7 @@ public class AddressController : ControllerBase
                     ErrorCode.UnknownError))
         };
     }
-    
+    [Authorize]
     [HttpGet("wards")]
     [ProducesResponseType<GHNApiResponse<List<GHNWardResponse>>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.BadRequest)]
@@ -110,7 +111,7 @@ public class AddressController : ControllerBase
                     ErrorCode.UnknownError))
         };
     }
-
+    [Authorize]
     [HttpPatch("{addressId}/set-default")]
     [ProducesResponseType<DeliveryListResponse>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.BadRequest)]

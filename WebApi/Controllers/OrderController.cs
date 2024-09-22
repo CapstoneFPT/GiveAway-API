@@ -5,6 +5,7 @@ using BusinessObjects.Dtos.OrderLineItems;
 using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Accounts;
@@ -18,6 +19,7 @@ using Services.VnPayService;
 
 namespace WebApi.Controllers
 {
+    [Authorize]
     [Route("api/orders")]
     [ApiController]
     public class OrderController : ControllerBase
@@ -93,7 +95,7 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
-
+        [AllowAnonymous]
         [HttpPost("{orderId}/pay/vnpay")]
         [ProducesResponseType<VnPayPurchaseResponse>((int)HttpStatusCode.OK)]
         public async Task<IActionResult> PurchaseOrder([FromRoute] Guid orderId,
@@ -102,7 +104,7 @@ namespace WebApi.Controllers
             var result = await _orderService.PurchaseOrder(orderId, request);
             return Ok(result.Value);
         }
-
+        [AllowAnonymous]
         [HttpGet("payment-return")]
         public async Task<IActionResult> PaymentReturn()
         {
@@ -136,7 +138,7 @@ namespace WebApi.Controllers
         {
             return await _orderService.CancelOrder(OrderId);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPut("{orderId}/cancelbyadmin")]
         public async Task<ActionResult<Result<string>>> CancelOrderByAdmin([FromRoute] Guid orderId)
         {
@@ -147,7 +149,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Staff,Admin")]
         [HttpGet("{orderId}/invoice")]
         [ProducesResponseType(typeof(FileContentResult), (int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.NotFound)]
@@ -170,7 +172,7 @@ namespace WebApi.Controllers
 
             return File(result.Value.Content, "application/pdf", $"Invoice_{orderId}.pdf");
         }
-
+        [Authorize(Roles = "Staff,Admin")]
         [HttpGet("export-csv")]
         public async Task<IActionResult> ExportCsv([FromQuery] ExportOrdersRequest request)
         {

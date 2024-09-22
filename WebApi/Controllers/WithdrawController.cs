@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Withdraws;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Services.Withdraws;
@@ -17,14 +18,14 @@ public class WithdrawController : ControllerBase
     {
         _withdrawService = withdrawService;
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpPut("{withdrawId}/complete-request")]
     public async Task<ActionResult<CompleteWithdrawResponse>> CompleteWithdrawRequest([FromRoute] Guid withdrawId)
     {
         var result = await _withdrawService.CompleteWithdrawRequest(withdrawId);
         return Ok(result);
     }
-
+    [Authorize]
     [HttpGet]
     [ProducesResponseType<PaginationResponse<GetWithdrawsResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]

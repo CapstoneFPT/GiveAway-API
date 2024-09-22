@@ -1,6 +1,7 @@
 using System.Net;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.FashionItems;
 
@@ -83,6 +84,7 @@ public class MasterItemController : ControllerBase
 
         return Ok(result);
     }
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> CreateMasterItem([FromBody] CreateMasterItemRequest request)
@@ -92,6 +94,7 @@ public class MasterItemController : ControllerBase
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
         return Ok(result);
     }
+    [Authorize(Roles = "Admin")]
     [HttpPut("{masteritemId}/update-masteritem")]
     [ProducesResponseType<Result<MasterItemResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateMasterItem([FromRoute] Guid masteritemId,
@@ -102,7 +105,7 @@ public class MasterItemController : ControllerBase
             return StatusCode((int)HttpStatusCode.InternalServerError, result);
         return Ok(result);
     }
-
+    [Authorize(Roles = "Admin")]
     [HttpPost("{masterItemId}/individual-items")]
     [ProducesResponseType<Result<List<IndividualItemListResponse>>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]

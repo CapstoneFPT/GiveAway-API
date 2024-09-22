@@ -7,9 +7,10 @@ using Services.VnPayService;
 using Services.Transactions;
 using System.Net;
 using BusinessObjects.Dtos.Recharges;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApi.Controllers;
-
+[Authorize]
 [ApiController]
 [Route("api/recharges")]
 public class RechargeController : ControllerBase
@@ -40,7 +41,7 @@ public class RechargeController : ControllerBase
         return Ok(result.Value);
     }
 
-
+    [Authorize(Roles = "Member")]
     [HttpPost("initiate")]
     [ProducesResponseType(typeof(RechargePurchaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -58,7 +59,7 @@ public class RechargeController : ControllerBase
 
         return Ok(result.Value);
     }
-
+    [AllowAnonymous]
     [HttpGet("payment-return")]
     public async Task<IActionResult> PaymentReturn()
     {
