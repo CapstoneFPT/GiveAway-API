@@ -1088,7 +1088,7 @@ namespace Services.ConsignSales
 
             consignSale.Status = ConsignSaleStatus.Negotiating;
             await _consignSaleRepository.UpdateConsignSale(consignSale);
-            // await _emailService.SnedMailNegotiating(consignSale);
+            await _emailService.SendEmailConsignNegotiatePrice(consignSale);
             var response = new ConsignSaleDetailedResponse()
             {
                 ConsignSaleId = consignSale.ConsignSaleId,

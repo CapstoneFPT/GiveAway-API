@@ -24,5 +24,6 @@ namespace Services.Emails
         Task<bool> SendEmailAuctionWon(Guid auctionId, Bid bid);
         Task<bool> SendMailSoldItemConsign(Guid consignLineId, decimal amountConsignorReceive);
         Task<bool> SendEmailCancelOrderAndReservedItems(Order order);
+        Task<bool> SendEmailConsignNegotiatePrice(ConsignSale consignSale);
     }
 }
