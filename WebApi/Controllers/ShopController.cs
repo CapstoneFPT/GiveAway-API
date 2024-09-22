@@ -10,6 +10,7 @@ using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Refunds;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Dtos.Transactions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -123,7 +124,7 @@ namespace WebApi.Controllers
 
             return Ok(result);
         }
-
+        [Authorize(Roles = "Staff")]
         [HttpPost("{shopId}/consignsales")]
         public async Task<ActionResult<Result<ConsignSaleDetailedResponse>>> CreateConsignSaleByShop(
             [FromRoute] Guid shopId,

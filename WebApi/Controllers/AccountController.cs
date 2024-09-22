@@ -166,7 +166,7 @@ public class AccountController : ControllerBase
 
         return Ok(result);
     }
-
+    [Authorize(Roles = "Member")]
     [HttpGet("{accountId}/orders")]
     [ProducesResponseType<PaginationResponse<OrderListResponse>>((int)HttpStatusCode.OK)]
     [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
