@@ -43,7 +43,10 @@ public class IndividualFashionItem
     public ICollection<Image> Images { get; set; } = [];
 }
 
-
+public class IndividualCustomerSaleFashionItem : IndividualFashionItem
+{
+    
+}
 
 public class IndividualConsignedForSaleFashionItem : IndividualFashionItem
 {

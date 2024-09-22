@@ -284,7 +284,7 @@ public class GiveAwayDbContext : DbContext
             .HasValue<IndividualFashionItem>(FashionItemType.ItemBase)
             .HasValue<IndividualAuctionFashionItem>(FashionItemType.ConsignedForAuction)
             .HasValue<IndividualConsignedForSaleFashionItem>(FashionItemType.ConsignedForSale)
-            .HasValue<IndividualConsignedForSaleFashionItem>(FashionItemType.CustomerSale);
+            .HasValue<IndividualCustomerSaleFashionItem>(FashionItemType.CustomerSale);
 
         modelBuilder.Entity<IndividualFashionItem>()
             .HasIndex(x => x.ItemCode)
