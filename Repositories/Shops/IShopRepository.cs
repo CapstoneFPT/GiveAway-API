@@ -18,5 +18,6 @@ namespace Repositories.Shops
         Task<Shop?> GetSingleShop(Expression<Func<Shop, bool>> predicate);
         Task<string> GenerateShopCode();
         Task<List<Shop>> GetShopEntities(Expression<Func<Shop,bool>>? predicate);
+        IQueryable<Shop> GetQueryable();
     }
 }

@@ -85,10 +85,7 @@ public class AccountController : ControllerBase
         {
             result.Data.ShopId = Guid.Parse(shop);
         }
-        if (result.ResultStatus != ResultStatus.Success)
-            return StatusCode((int)HttpStatusCode.InternalServerError, result);
-
-        return Ok(result);
+        return result.ResultStatus != ResultStatus.Success ? StatusCode((int)HttpStatusCode.InternalServerError, result) : Ok(result);
     }
     [Authorize(Roles = "Admin")]
     [HttpPut("{id}/ban")]

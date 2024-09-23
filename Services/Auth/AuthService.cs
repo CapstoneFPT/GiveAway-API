@@ -8,6 +8,7 @@ using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -237,7 +238,13 @@ public class AuthService : IAuthService
                 new(ClaimTypes.Name, account.Email),
                 new(ClaimTypes.Role, account.Role.ToString())
             };
-            var shop = await _shopRepository.GetSingleShop(c => c.StaffId == account.AccountId);
+            var shop = await _shopRepository.GetQueryable()
+                .Select(x=> new
+                {
+                    StaffId = x.StaffId,
+                    ShopId = x.ShopId
+                })
+                .FirstOrDefaultAsync(x=>x.StaffId == account.AccountId);
             if (account.Role.Equals(Roles.Staff))
             {
                 

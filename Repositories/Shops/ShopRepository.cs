@@ -86,5 +86,10 @@ namespace Repositories.Shops
             }
             return query.ToListAsync();
         }
+
+        public IQueryable<Shop> GetQueryable()
+        {
+            return GenericDao<Shop>.Instance.GetQueryable();
+        }
     }
 }
