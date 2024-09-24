@@ -157,17 +157,24 @@ namespace Services.Transactions
                     TransactionType = transaction.Type,
                     TransactionCode = transaction.TransactionCode,
                     OrderId = transaction.OrderId,
-                    OrderCode = transaction.Order != null ? transaction.Order.OrderCode : null,
+                    ProductCode = transaction.Order != null ? transaction.Order.OrderCode 
+                        : (transaction.ConsignSale!.ConsignSaleCode ??
+                           transaction.Refund!.RefundCode ?? transaction.Recharge!.RechargeCode ??
+                           transaction.AuctionDeposit!.DepositCode) ?? transaction.Withdraw!.WithdrawCode,
                     ConsignSaleId = transaction.ConsignSaleId,
-                    ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null,
+                    // ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null,
                     Amount = transaction.Amount,
                     CreatedDate = transaction.CreatedDate,
-                    CustomerName = transaction.Order!.RecipientName != null
-                        ? transaction.Order!.RecipientName
-                        : transaction.ConsignSale!.ConsignorName,
+                    CustomerName = transaction.Order!.RecipientName != null 
+                        ? transaction.Order.RecipientName
+                        : (transaction.ConsignSale!.ConsignorName ?? 
+                           transaction.Withdraw!.Member.Fullname ?? transaction.Recharge!.Member.Fullname ?? 
+                           transaction.AuctionDeposit!.Member.Fullname) ?? transaction.Refund!.OrderLineItem.Order.Member!.Fullname,
                     CustomerPhone = transaction.Order!.Phone != null
-                        ? transaction.Order!.Phone
-                        : transaction.ConsignSale!.Phone,
+                        ? transaction.Order.Phone
+                        : (transaction.ConsignSale!.Phone ?? 
+                           transaction.Withdraw!.Member.Phone ?? transaction.Recharge!.Member.Phone ?? 
+                           transaction.AuctionDeposit!.Member.Phone) ?? transaction.Refund!.OrderLineItem.Order.Member!.Phone,
                     ShopId = transaction.ShopId
                 };
                 Expression<Func<Transaction, DateTime>> orderBy = transaction => transaction.CreatedDate;

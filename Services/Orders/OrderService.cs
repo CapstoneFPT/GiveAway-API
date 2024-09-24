@@ -230,7 +230,7 @@ public class OrderService : IOrderService
         return response;
     }
 
-    public async Task<Result<ExcelResponse, ErrorCode>> ExportOrdersToExcel(DateTime startDate, DateTime endDate)
+    public async Task<Result<ExcelResponse, ErrorCode>>     ExportOrdersToExcel(DateTime startDate, DateTime endDate)
     {
         try
         {
@@ -797,7 +797,7 @@ public class OrderService : IOrderService
             if (fashionItem is { Status: FashionItemStatus.OnDelivery })
             {
                 fashionItem.Status = FashionItemStatus.Refundable;
-                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(2);
+                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(15);
                 if (order.PaymentMethod.Equals(PaymentMethod.COD))
                     orderDetail.PaymentDate = DateTime.UtcNow;
                 await ScheduleRefundableItemEnding(fashionItem.ItemId, orderDetail.RefundExpirationDate.Value);
