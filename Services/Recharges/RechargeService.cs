@@ -12,6 +12,7 @@ using Quartz;
 using Repositories.Accounts;
 using Repositories.Recharges;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Services.VnPayService;
 using Services.Transactions;
 
@@ -25,9 +26,10 @@ public class RechargeService : IRechargeService
     private readonly IAccountRepository _accountRepository;
     private readonly IVnPayService _vnPayService;
     private readonly ITransactionService _transactionService;
+    private readonly IConfiguration _configuration;
 
     public RechargeService(IRechargeRepository rechargeRepository, ILogger<RechargeService> logger,
-        ISchedulerFactory schedulerFactory, IAccountRepository accountRepository, IVnPayService vnPayService, ITransactionService transactionService)
+        ISchedulerFactory schedulerFactory, IAccountRepository accountRepository, IVnPayService vnPayService, ITransactionService transactionService, IConfiguration configuration)
 
     {
         _rechargeRepository = rechargeRepository;
@@ -36,6 +38,7 @@ public class RechargeService : IRechargeService
         _accountRepository = accountRepository;
         _vnPayService = vnPayService;
         _transactionService = transactionService;
+        _configuration = configuration;
     }
 
     private Expression<Func<Recharge, bool>> GetPredicate(GetRechargesRequest request)
@@ -268,7 +271,7 @@ public class RechargeService : IRechargeService
     public async Task<Result<string, ErrorCode>> ProcessPaymentReturn(IQueryCollection requestParams)
     {
         var response = _vnPayService.ProcessPayment(requestParams);
-        var redirectUrl = "https://giveawayproject.jettonetto.org/process-payment";
+        var redirectUrl = _configuration.GetSection("RedirectUrl").Value + "process-payment";
 
         if (response.Success)
         {

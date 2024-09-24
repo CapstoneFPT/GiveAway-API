@@ -1389,6 +1389,7 @@ public class OrderService : IOrderService
     {
         var response = _vnPayService.ProcessPayment(requestParams);
         var order = await GetOrderById(new Guid(response.OrderId));
+        var returnUrl = _configuration.GetSection("RedirectUrl").Value + "process-payment";
 
         if (order.Status != OrderStatus.AwaitingPayment)
         {
@@ -1426,13 +1427,13 @@ public class OrderService : IOrderService
                     await UpdateFashionItemStatus(order.OrderId);
                     await _emailService.SendEmailOrder(order);
 
-                    return new Result<string, ErrorCode>("https://giveawayproject.jettonetto.org");
+                    return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=success&message={Uri.EscapeDataString("Payment success")}");
                 }
             }
             catch (Exception e)
             {
                 _logger.LogError(e, e.Message);
-                return new Result<string, ErrorCode>(ErrorCode.ServerError);
+                return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString(e.Message)}");
             }
         }
 
@@ -1440,7 +1441,7 @@ public class OrderService : IOrderService
             "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
             response.VnPayResponseCode);
 
-        return new Result<string, ErrorCode>(ErrorCode.PaymentFailed);
+        return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString("Payment failed")}");
     }
 
     public async Task<DotNext.Result<PayWithPointsResponse, ErrorCode>> PurchaseOrderWithPoints(Guid orderId,
