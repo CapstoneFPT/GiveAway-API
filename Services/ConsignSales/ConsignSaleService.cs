@@ -91,8 +91,12 @@ namespace Services.ConsignSales
             }
 
             response.Data = await _consignSaleRepository.ApprovalConsignSale(consignId, request);
-            await _emailService.SendEmailConsignSale(consignId);
+            var mailResult = await _emailService.SendEmailConsignSale(consignId);
             response.Messages = ["Approval successfully"];
+            if (mailResult is false)
+            {
+                response.Messages = new[] { "Approve successfully but mail fail" };
+            }
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
@@ -114,7 +118,7 @@ namespace Services.ConsignSales
 
             var result = await _consignSaleRepository.ConfirmReceivedFromShop(consignId);
             // await ScheduleConsignEnding(result);
-            // await _emailService.SendEmailConsignSaleReceived(consignId);
+            await _emailService.SendEmailConsignSaleReceived(consign);
             response.Data = result;
             response.Messages = ["Confirm received successfully"];
             response.ResultStatus = ResultStatus.Success;
@@ -888,11 +892,11 @@ namespace Services.ConsignSales
             var listItemInConsign = consignSale.ConsignSaleLineItems
                 .Where(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale &&
                             c.IndividualFashionItem != null)
-                .Select(c => c.IndividualFashionItem).ToList();
+                .ToList();
             if (listItemInConsign.Count ==
                 consignSale.ConsignSaleLineItems.Count(c => c.Status == ConsignSaleLineItemStatus.ReadyForConsignSale))
             {
-                foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
+                foreach (var consignSaleLineItem in listItemInConsign)
                 {
                     consignSaleLineItem.Status = ConsignSaleLineItemStatus.OnSale;
                     consignSaleLineItem.IndividualFashionItem.Status = FashionItemStatus.Available;
@@ -901,11 +905,11 @@ namespace Services.ConsignSales
                 consignSale.Status = ConsignSaleStatus.OnSale;
                 consignSale.StartDate = DateTime.UtcNow;
                 consignSale.EndDate = DateTime.UtcNow.AddDays(60);
-                await _emailService.SendEmailConsignSaleReceived(consignSale);
+                
             }
 
             await _consignSaleRepository.UpdateConsignSale(consignSale);
-
+            // await _emailService.SendEmailConsignSaleReceived(consignSale);
             return new BusinessObjects.Dtos.Commons.Result<ConsignSaleLineItemResponse>()
             {
                 Data = new ConsignSaleLineItemResponse()

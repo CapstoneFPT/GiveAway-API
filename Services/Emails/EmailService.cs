@@ -317,10 +317,12 @@ namespace Services.Emails
 
         public async Task<bool> SendEmailConsignSale(Guid consignSaleId)
         {
-            Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
-            var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
-            List<ConsignSaleLineItem> listConsignSaleLine = consignSale!.ConsignSaleLineItems.ToList();
-            string consignTemplate = @"
+            try
+            {
+                Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
+                var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
+                List<ConsignSaleLineItem> listConsignSaleLine = consignSale!.ConsignSaleLineItems.ToList();
+                string consignTemplate = @"
             <table align='center' border='0' cellpadding='0' cellspacing='0' class='row row-5' role='presentation'
 						   style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;' width='100%'>
 						<tbody>
@@ -427,59 +429,65 @@ namespace Services.Emails
 						</tr>
 						</tbody>
 					</table>";
-            SendEmailRequest content = new SendEmailRequest();
-            StringBuilder htmlBuilder = new StringBuilder();
+                SendEmailRequest content = new SendEmailRequest();
+                StringBuilder htmlBuilder = new StringBuilder();
 
-            foreach (var item in listConsignSaleLine)
-            {
-                string filledTemplate = consignTemplate
-                    .Replace("{PRODUCT_NAME}", item.ProductName)
-                    .Replace("{GENDER}", item.Gender.ToString())
-                    .Replace("{SIZE}", item.Size.ToString())
-                    .Replace("{COLOR}", item.Color)
-                    .Replace("{NOTE}", item.Note)
-                    .Replace("{Condition}", item.Condition)
-                    .Replace("{PRODUCT_IMAGE_URL}", item.IndividualFashionItem.Images.Select(c => c.Url).FirstOrDefault())
-                    .Replace("{EXPECTED_PRICE}", item.ExpectedPrice.ToString("N0"));
+                foreach (var item in listConsignSaleLine)
+                {
+                    string filledTemplate = consignTemplate
+                        .Replace("{PRODUCT_NAME}", item.ProductName)
+                        .Replace("{GENDER}", item.Gender.ToString())
+                        .Replace("{SIZE}", item.Size.ToString())
+                        .Replace("{COLOR}", item.Color)
+                        .Replace("{NOTE}", item.Note)
+                        .Replace("{Condition}", item.Condition)
+                        .Replace("{PRODUCT_IMAGE_URL}", item.IndividualFashionItem.Images.Select(c => c.Url).FirstOrDefault())
+                        .Replace("{EXPECTED_PRICE}", item.ExpectedPrice.ToString("N0"));
 
-                htmlBuilder.Append(filledTemplate);
+                    htmlBuilder.Append(filledTemplate);
+                }
+
+                string finalHtml = htmlBuilder.ToString();
+                if (consignSale.MemberId != null)
+                {
+                    var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
+                    content.To = member!.Email;
+
+                    var template = GetEmailTemplate("ConsignSaleMail");
+                    template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
+                    template = template.Replace("[Type]", consignSale.Type.ToString());
+                    template = template.Replace("[Created Date]", consignSale.CreatedDate.AddHours(7).ToString("G"));
+                    template = template.Replace("[Customer Name]", consignSale.ConsignorName);
+                    template = template.Replace("[Phone Number]", consignSale.Phone);
+                    template = template.Replace("[ConsignTemplate]", finalHtml);
+                    template = template.Replace("[Email]", consignSale.Email);
+                    template = template.Replace("[Address]", consignSale.Address);
+                    if (consignSale.Status.Equals(ConsignSaleStatus.AwaitDelivery))
+                    {
+                        template = template.Replace("[Status]", "Approved");
+                        template = template.Replace("[Response]",
+                            "Please deliver your products to our shop as soon as possible");
+                        template = template.Replace("[ConsignSale Duration]", "60 Days");
+                    }
+                    else
+                    {
+                        template = template.Replace("[Status]", "Rejected");
+                        template = template.Replace("[Response]",
+                            "Your products is kindly not suitable to our shop. We are so apologize");
+                        template = template.Replace("[ConsignSale Duration]", "0 Day");
+                    }
+
+                    content.Subject = $"[GIVEAWAY] CONSIGN ANNOUNCEMENT FROM GIVEAWAY";
+                    content.Body = template;
+
+                    await SendEmail(content);
+                    return true;
+                }
             }
-
-            string finalHtml = htmlBuilder.ToString();
-            if (consignSale.MemberId != null)
+            catch (Exception e)
             {
-                var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
-                content.To = member!.Email;
-
-                var template = GetEmailTemplate("ConsignSaleMail");
-                template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
-                template = template.Replace("[Type]", consignSale.Type.ToString());
-                template = template.Replace("[Created Date]", consignSale.CreatedDate.AddHours(7).ToString("G"));
-                template = template.Replace("[Customer Name]", consignSale.ConsignorName);
-                template = template.Replace("[Phone Number]", consignSale.Phone);
-                template = template.Replace("[ConsignTemplate]", finalHtml);
-                template = template.Replace("[Email]", consignSale.Email);
-                template = template.Replace("[Address]", consignSale.Address);
-                if (consignSale.Status.Equals(ConsignSaleStatus.AwaitDelivery))
-                {
-                    template = template.Replace("[Status]", "Approved");
-                    template = template.Replace("[Response]",
-                        "Please deliver your products to our shop as soon as possible");
-                    template = template.Replace("[ConsignSale Duration]", "60 Days");
-                }
-                else
-                {
-                    template = template.Replace("[Status]", "Rejected");
-                    template = template.Replace("[Response]",
-                        "Your products is kindly not suitable to our shop. We are so apologize");
-                    template = template.Replace("[ConsignSale Duration]", "0 Day");
-                }
-
-                content.Subject = $"[GIVEAWAY] CONSIGN ANNOUNCEMENT FROM GIVEAWAY";
-                content.Body = template;
-
-                await SendEmail(content);
-                return true;
+                Console.WriteLine(e);
+                return false;
             }
 
             return false;
@@ -518,14 +526,14 @@ namespace Services.Emails
                 var template = GetEmailTemplate("ConsignSaleReceivedMail");
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
                 template = template.Replace("[Type]", consignSale.Type.ToString());
-                template = template.Replace("[Start Date]", consignSale.StartDate!.Value.AddHours(7).ToString("G"));
+                template = template.Replace("[CreatedDate]", consignSale.CreatedDate.AddHours(7).ToString("G"));
                 template = template.Replace("[Customer Name]", consignSale.ConsignorName);
                 template = template.Replace("[Phone Number]", consignSale.Phone);
                 template = template.Replace("[Email]", consignSale.Email);
                 template = template.Replace("[Address]", consignSale.Address);
                 template = template.Replace("[Response]",
                     "Thank you for trusting and using the consignment service at Give Away store.");
-                template = template.Replace("[End Date]", consignSale.EndDate!.Value.AddHours(7).ToString("G"));
+                template = template.Replace("[ShopAddress]", consignSale.Shop.Address);
 
                 content.Subject = $"[GIVEAWAY] RECEIVED CONSIGN FROM GIVEAWAY";
                 content.Body = template;
