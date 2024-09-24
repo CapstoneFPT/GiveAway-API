@@ -1299,13 +1299,13 @@ public class OrderService : IOrderService
             PaymentMethod = order.PaymentMethod,
             PurchaseType = order.PurchaseType,
             Address = order.Address ?? "N/A",
-            CompletedDate = order.CompletedDate ?? DateTime.MinValue,
+            CompletedDate = order.CompletedDate, 
             Discount = order.Discount,
             Status = order.Status,
             Email = order.Email ?? "N/A",
             CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
             ShippingFee = order.ShippingFee,
-            PaymentDate = order.OrderLineItems.Select(x => x.PaymentDate).Max() ?? DateTime.MinValue,
+            PaymentDate = order.OrderLineItems.Select(x => x.PaymentDate).Max(),
             TotalPrice = order.TotalPrice,
             MemberId = order.MemberId ?? Guid.Empty,
             Phone = order.Phone ?? "N/A",
@@ -1316,7 +1316,7 @@ public class OrderService : IOrderService
             AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
             Quantity = order.OrderLineItems.Sum(x => x.Quantity),
             ReciepientName = order.RecipientName ?? "N/A",
-            BidCreatedDate = order.Bid != null ? order.Bid.CreatedDate : DateTime.MinValue,
+            BidCreatedDate = order.Bid != null ? order.Bid.CreatedDate : null,
             CreatedDate = order.CreatedDate
         };
         try

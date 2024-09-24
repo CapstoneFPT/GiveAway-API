@@ -46,9 +46,9 @@ public class OrderDetailedResponse
     public decimal Discount { get; set; }
     public decimal TotalPrice { get; set; }
     public PaymentMethod PaymentMethod { get; set; }
-    public DateTime PaymentDate { get; set; }
+    public DateTime? PaymentDate { get; set; }
     public PurchaseType PurchaseType { get; set; }
-    public DateTime CompletedDate { get; set; }
+    public DateTime? CompletedDate { get; set; }
     public Guid MemberId { get; set; }
     public string? AuctionTitle { get; set; }
     public int Quantity { get; set; }
@@ -56,13 +56,13 @@ public class OrderDetailedResponse
     public string CustomerName { get; set; }  = "N/A";
     public Guid BidId { get; set; }
     public decimal BidAmount { get; set; }
-    public DateTime BidCreatedDate { get; set; }
+    public DateTime? BidCreatedDate { get; set; }
     public string Phone { get; set; } = "N/A";
     public string Address { get; set; } = "N/A";
     public AddressType AddressType { get; set; }
     public string Email { get; set; } = "N/A";
     public OrderStatus Status { get; set; } 
-    public DateTime CreatedDate { get; set; }
+    public DateTime? CreatedDate { get; set; }
 }
 
 public class DeliveryDetailResponse
