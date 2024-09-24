@@ -230,7 +230,7 @@ public class OrderService : IOrderService
         return response;
     }
 
-    public async Task<Result<ExcelResponse, ErrorCode>>     ExportOrdersToExcel(DateTime startDate, DateTime endDate)
+    public async Task<Result<ExcelResponse, ErrorCode>> ExportOrdersToExcel(DateTime startDate, DateTime endDate)
     {
         try
         {
@@ -242,7 +242,6 @@ public class OrderService : IOrderService
                 .Where(o => o.CreatedDate >= startDate && o.CreatedDate <= endDate)
                 .Select(o => new
                 {
-                    o.OrderId,
                     o.OrderCode,
                     CustomerName = o.Member.Fullname ?? "N/A",
                     o.CreatedDate,
@@ -273,28 +272,26 @@ public class OrderService : IOrderService
                 }
 
                 // Headers
-                worksheet.Cells[1, 1].Value = "Order ID";
-                worksheet.Cells[1, 2].Value = "Order Code";
-                worksheet.Cells[1, 3].Value = "Customer Name";
-                worksheet.Cells[1, 4].Value = "Order Date";
-                worksheet.Cells[1, 5].Value = "Total Price";
-                worksheet.Cells[1, 6].Value = "Status";
-                worksheet.Cells[1, 7].Value = "Items";
-                worksheet.Cells[1, 8].Value = "Shipping Fee";
-                worksheet.Cells[1, 9].Value = "Discount";
+                worksheet.Cells[1, 1].Value = "Order Code";
+                worksheet.Cells[1, 2].Value = "Customer Name";
+                worksheet.Cells[1, 3].Value = "Order Date";
+                worksheet.Cells[1, 4].Value = "Total Price";
+                worksheet.Cells[1, 5].Value = "Status";
+                worksheet.Cells[1, 6].Value = "Items";
+                worksheet.Cells[1, 7].Value = "Shipping Fee";
+                worksheet.Cells[1, 8].Value = "Discount";
 
                 int row = 2;
                 foreach (var order in orders)
                 {
-                    worksheet.Cells[row, 1].Value = order.OrderId;
-                    worksheet.Cells[row, 2].Value = order.OrderCode;
-                    worksheet.Cells[row, 3].Value = order.CustomerName ?? "N/A";
-                    worksheet.Cells[row, 4].Value = order.CreatedDate;
-                    worksheet.Cells[row, 5].Value = order.TotalPrice;
-                    worksheet.Cells[row, 6].Value = order.Status.ToString();
-                    worksheet.Cells[row, 7].Value = string.Join(", ", order.Items);
-                    worksheet.Cells[row, 8].Value = order.ShippingFee;
-                    worksheet.Cells[row, 9].Value = order.Discount;
+                    worksheet.Cells[row, 1].Value = order.OrderCode;
+                    worksheet.Cells[row, 2].Value = order.CustomerName ?? "N/A";
+                    worksheet.Cells[row, 3].Value = order.CreatedDate;
+                    worksheet.Cells[row, 4].Value = order.TotalPrice + " VND";
+                    worksheet.Cells[row, 5].Value = order.Status.ToString();
+                    worksheet.Cells[row, 6].Value = string.Join(", ", order.Items);
+                    worksheet.Cells[row, 7].Value = order.ShippingFee;
+                    worksheet.Cells[row, 8].Value = order.Discount;
 
                     // Alternate row colors
                     if (row % 2 == 0)
@@ -326,16 +323,6 @@ public class OrderService : IOrderService
                 worksheet.Cells["A1"].Style.Font.Size = 16;
                 worksheet.Cells["A1"].Style.Font.Bold = true;
                 worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                // Add summary
-                var summaryRow = row + 2;
-                worksheet.Cells[summaryRow, 1].Value = "Total Orders:";
-                worksheet.Cells[summaryRow, 2].Value = orders.Count;
-                worksheet.Cells[summaryRow + 1, 1].Value = "Total Revenue:";
-                worksheet.Cells[summaryRow + 1, 2].Formula = $"SUM(E2:E{row - 1})";
-                worksheet.Cells[summaryRow + 1, 2].Style.Numberformat.Format = "#,##0.00";
-
-                worksheet.Cells[summaryRow, 1, summaryRow + 1, 1].Style.Font.Bold = true;
 
                 var content = await package.GetAsByteArrayAsync();
 
