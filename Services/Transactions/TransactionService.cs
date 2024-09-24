@@ -7,12 +7,15 @@ using System.Threading.Tasks;
 using System.Transactions;
 using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.Commons;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Transactions;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using Repositories.Accounts;
 using Repositories.Orders;
 using Repositories.Recharges;
@@ -29,7 +32,7 @@ namespace Services.Transactions
         private readonly ILogger<TransactionService> _logger;
         private readonly IAccountRepository _accountRepository;
         public TransactionService(ITransactionRepository transactionRepository, IOrderRepository orderRepository,
-            IRechargeRepository rechargeRepository , ILogger<TransactionService> logger, IAccountRepository accountRepository)
+            IRechargeRepository rechargeRepository, ILogger<TransactionService> logger, IAccountRepository accountRepository)
         {
             _transactionRepository = transactionRepository;
             _orderRepository = orderRepository;
@@ -37,7 +40,130 @@ namespace Services.Transactions
             _logger = logger;
             _accountRepository = accountRepository;
         }
+        public async Task<DotNext.Result<ExcelResponse, ErrorCode>> ExportTransactionsToExcel(ExportTransactionsRequest request)
+        {
+            try
+            {
+                Expression<Func<Transaction, bool>> predicate = t => true;
+                if (request.StartDate != null)
+                {
+                    predicate = predicate.And(t => t.CreatedDate >= request.StartDate);
+                }
 
+                if (request.EndDate != null)
+                {
+                    predicate = predicate.And(t => t.CreatedDate <= request.EndDate);
+                }
+
+                if (request.MinAmount != null)
+                {
+                    predicate = predicate.And(t => t.Amount >= request.MinAmount);
+                }
+
+                if (request.MaxAmount != null)
+                {
+                    predicate = predicate.And(t => t.Amount <= request.MaxAmount);
+                }
+
+                if(request.ReceiverName != null)
+                {
+                    predicate = predicate.And(t => EF.Functions.ILike(t.Receiver.Fullname, $"%{request.ReceiverName}%"));
+                }
+
+                if(request.SenderName != null)
+                {
+                    predicate = predicate.And(t => EF.Functions.ILike(t.Sender.Fullname, $"%{request.SenderName}%"));
+                }
+                
+                if(request.PaymentMethods.Length > 0)
+                {
+                    predicate = predicate.And(t => request.PaymentMethods.Contains(t.PaymentMethod));
+                }
+
+                if(request.Types.Length > 0)
+                {
+                    predicate = predicate.And(t => request.Types.Contains(t.Type));
+                }
+
+                if(request.TransactionCode != null)
+                {
+                    predicate = predicate.And(t => EF.Functions.ILike(t.TransactionCode, $"%{request.TransactionCode}%"));
+                }
+
+                var transactions = await _transactionRepository.GetQueryable()
+                    .Where(predicate)
+                    .Select(t => new
+                    {
+                        TransactionCode = t.TransactionCode,
+                        t.CreatedDate,
+                        t.Type,
+                        t.Amount,
+                        t.PaymentMethod,
+                        SenderName = t.Sender.Fullname,
+                        ReceiverName = t.Receiver.Fullname,
+                    })
+                    .ToListAsync();
+                
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Transactions");
+
+                worksheet.Cells["A1:G1"].Merge = true;
+                worksheet.Cells["A1"].Value = "Transactions Report";
+                worksheet.Cells["A1"].Style.Font.Size = 16;
+                worksheet.Cells["A1"].Style.Font.Bold = true;
+                worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                var headerStyle = worksheet.Cells["A3:G3"].Style;
+                headerStyle.Font.Bold = true;
+                headerStyle.Fill.PatternType = ExcelFillStyle.Solid;
+                headerStyle.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+                headerStyle.Font.Color.SetColor(System.Drawing.Color.White);
+
+                var headers = new[] { 
+                    "Transaction Code", 
+                    "Date", 
+                    "Type", 
+                    "Amount", 
+                    "Payment Method", 
+                    "Sender", 
+                    "Receiver"
+                };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    worksheet.Cells[3, i + 1].Value = headers[i];
+                    worksheet.Cells[3, i + 1].Style.Font.Bold = true;
+                }
+
+                int row = 4;
+                foreach (var transaction in transactions)
+                {
+                    worksheet.Cells[row, 1].Value = transaction.TransactionCode;
+                    worksheet.Cells[row, 2].Value = transaction.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss");
+                    worksheet.Cells[row, 3].Value = transaction.Type.ToString();
+                    worksheet.Cells[row, 4].Value = transaction.Amount + " VND";
+                    worksheet.Cells[row, 5].Value = transaction.PaymentMethod.ToString();
+                    worksheet.Cells[row, 6].Value = transaction.SenderName;
+                    worksheet.Cells[row, 7].Value = transaction.ReceiverName;
+
+                    row++;
+                }
+
+                worksheet.Cells.AutoFitColumns();
+
+                var content = await package.GetAsByteArrayAsync();
+
+                return new DotNext.Result<ExcelResponse, ErrorCode>(new ExcelResponse
+                {
+                    Content = content,
+                    FileName = $"Transactions_{DateTime.Now:yyyyMMdd}.xlsx"
+                });
+            }
+            catch (Exception ex)
+            {
+                return new DotNext.Result<ExcelResponse, ErrorCode>(ErrorCode.ServerError);
+            }
+        }
         public async Task<Result<TransactionDetailResponse>> CreateTransactionFromVnPay(VnPaymentResponse vnPayResponse,
             TransactionType transactionType)
         {
@@ -51,10 +177,10 @@ namespace Services.Transactions
 
                         var order = await _orderRepository.GetSingleOrder(x =>
                             x.OrderId == new Guid(vnPayResponse.OrderId));
-                        
+
                         var memberAcc = await _accountRepository.FindOne(x => x.AccountId == order.MemberId);
                         if (order == null) throw new OrderNotFoundException();
-                        
+
                         transaction = new Transaction()
                         {
                             OrderId = new Guid(vnPayResponse.OrderId),
@@ -72,7 +198,7 @@ namespace Services.Transactions
                     case TransactionType.AddFund:
                         var recharge = await _rechargeRepository.GetQueryable()
                             .FirstOrDefaultAsync(x => x.RechargeId == new Guid(vnPayResponse.OrderId));
-                        
+
                         if (recharge == null) throw new RechargeNotFoundException();
 
                         var member = await _accountRepository.FindOne(x => x.AccountId == recharge.MemberId);
@@ -131,7 +257,7 @@ namespace Services.Transactions
                 ReceiverBalance = admin.Balance,
                 Type = transactionType,
                 PaymentMethod = PaymentMethod.Point
-            }; 
+            };
             await _transactionRepository.CreateTransaction(transaction);
         }
 
@@ -143,7 +269,7 @@ namespace Services.Transactions
                 Expression<Func<Transaction, bool>> predicate = transaction => true;
                 if (transactionRequest.ShopId.HasValue)
                 {
-                    predicate = predicate.And(transaction =>  transaction.ShopId == transactionRequest.ShopId);
+                    predicate = predicate.And(transaction => transaction.ShopId == transactionRequest.ShopId);
                 }
 
                 if (transactionRequest.TransactionType.HasValue)
@@ -157,7 +283,7 @@ namespace Services.Transactions
                     TransactionType = transaction.Type,
                     TransactionCode = transaction.TransactionCode,
                     OrderId = transaction.OrderId,
-                    ProductCode = transaction.Order != null ? transaction.Order.OrderCode 
+                    ProductCode = transaction.Order != null ? transaction.Order.OrderCode
                         : (transaction.ConsignSale!.ConsignSaleCode ??
                            transaction.Refund!.RefundCode ?? transaction.Recharge!.RechargeCode ??
                            transaction.AuctionDeposit!.DepositCode) ?? transaction.Withdraw!.WithdrawCode,
@@ -165,15 +291,15 @@ namespace Services.Transactions
                     // ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null,
                     Amount = transaction.Amount,
                     CreatedDate = transaction.CreatedDate,
-                    CustomerName = transaction.Order!.RecipientName != null 
+                    CustomerName = transaction.Order!.RecipientName != null
                         ? transaction.Order.RecipientName
-                        : (transaction.ConsignSale!.ConsignorName ?? 
-                           transaction.Withdraw!.Member.Fullname ?? transaction.Recharge!.Member.Fullname ?? 
+                        : (transaction.ConsignSale!.ConsignorName ??
+                           transaction.Withdraw!.Member.Fullname ?? transaction.Recharge!.Member.Fullname ??
                            transaction.AuctionDeposit!.Member.Fullname) ?? transaction.Refund!.OrderLineItem.Order.Member!.Fullname,
                     CustomerPhone = transaction.Order!.Phone != null
                         ? transaction.Order.Phone
-                        : (transaction.ConsignSale!.Phone ?? 
-                           transaction.Withdraw!.Member.Phone ?? transaction.Recharge!.Member.Phone ?? 
+                        : (transaction.ConsignSale!.Phone ??
+                           transaction.Withdraw!.Member.Phone ?? transaction.Recharge!.Member.Phone ??
                            transaction.AuctionDeposit!.Member.Phone) ?? transaction.Refund!.OrderLineItem.Order.Member!.Phone,
                     ShopId = transaction.ShopId
                 };
