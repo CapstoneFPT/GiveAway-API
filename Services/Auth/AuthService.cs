@@ -155,6 +155,7 @@ public class AuthService : IAuthService
             account.Phone = request.Phone;
             account.Role = Roles.Staff;
             account.Status = AccountStatus.Active;
+            account.CreatedDate = DateTime.UtcNow;
             account.VerifiedAt = DateTime.UtcNow;
 
             var user = await _accountRepository.Register(account);

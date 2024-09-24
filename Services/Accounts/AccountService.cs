@@ -24,6 +24,7 @@ using DotNext.Threading;
 using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Quartz.Util;
 using Repositories.AuctionDeposits;
 using Repositories.Auctions;
 using Repositories.BankAccounts;
@@ -217,6 +218,10 @@ namespace Services.Accounts
 
         public async Task<CreateInquiryResponse> CreateInquiry(Guid accountId, CreateInquiryRequest request)
         {
+            if (request.Message.IsNullOrWhiteSpace())
+            {
+                throw new MissingFeatureException("Can not send inquiry with empty string or white space");
+            }
             var inquiry = new Inquiry()
             {
                 Message = request.Message,
