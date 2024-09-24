@@ -138,7 +138,7 @@ namespace Repositories.Bids
                 MemberId = result.MemberId,
                 Id = result.BidId,
                 IsWinning = true,
-                Phone = phoneNumber != null ? phoneNumber.Phone : "N/A",
+                Phone = phoneNumber.Phone,
                 CreatedDate = result.CreatedDate,
                 NextAmount = result.Amount + auction.StepIncrement
             };
