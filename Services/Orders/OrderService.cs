@@ -799,6 +799,16 @@ public class OrderService : IOrderService
         {
             order.Status = OrderStatus.Completed;
             order.CompletedDate = DateTime.UtcNow;
+            var transaction = new Transaction()
+            {
+                OrderId = order.OrderId,
+                CreatedDate = DateTime.UtcNow,
+                PaymentMethod = PaymentMethod.COD,
+                SenderId = order.MemberId,
+                Amount = order.TotalPrice,
+                Type = TransactionType.Purchase,
+            };
+            await _transactionRepository.CreateTransaction(transaction);
         }
 
         await _orderRepository.UpdateOrder(order);
