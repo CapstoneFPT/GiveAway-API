@@ -9,6 +9,7 @@ using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using Dao;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Repositories.Bids
 {
@@ -16,11 +17,13 @@ namespace Repositories.Bids
     {
         private const string Prefix = "BID";
         private static Random _random = new();
+        private readonly ILogger<BidRepository> _logger;
         private readonly GiveAwayDbContext _giveAwayDbContext;
 
-        public BidRepository(GiveAwayDbContext giveAwayDbContext)
+        public BidRepository(GiveAwayDbContext giveAwayDbContext, ILogger<BidRepository> logger)
         {
             _giveAwayDbContext = giveAwayDbContext;
+            _logger = logger;
         }
 
         public async Task<string> GenerateUniqueString()
@@ -53,6 +56,22 @@ namespace Repositories.Bids
             var auction = await GenericDao<Auction>.Instance.GetQueryable().Include(x => x.IndividualAuctionFashionItem)
                 .FirstOrDefaultAsync(x => x.AuctionId == id);
 
+            var phoneNumber = await _giveAwayDbContext.Accounts
+                .Select(x => new
+                {
+                    Phone = x.Phone,
+                    AccountId = x.AccountId
+                })
+                .FirstOrDefaultAsync(x => x.AccountId == request.MemberId);
+            
+            _logger.LogInformation(
+                "CreateBid: {AuctionId}, {MemberId}, {Amount}, {PhoneNumber}",
+                id,
+                request.MemberId,
+                request.Amount,
+                phoneNumber.Phone
+                );
+            
             if (auction == null)
             {
                 throw new AuctionNotFoundException();
@@ -119,6 +138,7 @@ namespace Repositories.Bids
                 MemberId = result.MemberId,
                 Id = result.BidId,
                 IsWinning = true,
+                Phone = phoneNumber.Phone,
                 CreatedDate = result.CreatedDate,
                 NextAmount = result.Amount + auction.StepIncrement
             };

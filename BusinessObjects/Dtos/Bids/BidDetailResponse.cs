@@ -9,6 +9,7 @@ public class BidDetailResponse
     public Guid AuctionId { get; set; }
     public Guid MemberId { get; set; }
     public decimal Amount { get; set; }
+    public string Phone { get; set; }
     public DateTime CreatedDate { get; set; }
     public bool IsWinning { get; set; }
     public decimal NextAmount { get; set; }
