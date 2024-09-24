@@ -3,6 +3,7 @@ using BusinessObjects.Dtos.AuctionDeposits;
 using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -65,6 +66,22 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+
+        [Authorize(Roles = "Staff,Admin")]
+        [HttpGet("export-csv")]
+        [ProducesResponseType<ExcelResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> ExportCsv([FromQuery] ExportFashionItemsRequest request)
+        {
+            var result = await _fashionItemService.ExportFashionItemsToExcel(request);
+
+            if (!result.IsSuccessful)
+                return StatusCode((int)HttpStatusCode.InternalServerError, new ErrorResponse(
+                    "Something went wrong", ErrorType.ApiError, HttpStatusCode.InternalServerError, result.Error));
+
+            return File(result.Value.Content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{result.Value.FileName}");
+        }
+
         [Authorize(Roles = "Staff,Admin")]
         [HttpPut("{itemid}/check-availability")]
         public async Task<ActionResult<Result<FashionItemDetailResponse>>> CheckFashionItemAvailability(
@@ -114,4 +131,6 @@ namespace WebApi.Controllers
             return Ok(result);
         }
     }
+
+
 }
