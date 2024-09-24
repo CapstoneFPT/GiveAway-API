@@ -230,16 +230,74 @@ public class OrderService : IOrderService
         return response;
     }
 
-    public async Task<Result<ExcelResponse, ErrorCode>> ExportOrdersToExcel(DateTime startDate, DateTime endDate)
+    public async Task<Result<ExcelResponse, ErrorCode>> ExportOrdersToExcel(ExportOrdersToExcelRequest request)
     {
         try
         {
+            Expression<Func<Order, bool>> predicate = o => true;
+
+            if (request.OrderCode != null)
+            {
+                predicate = predicate.And(x => EF.Functions.ILike(x.OrderCode, $"%{request.OrderCode}%"));
+            }
+
+            if (request.RecipientName != null)
+            {
+                predicate = predicate.And(x => EF.Functions.ILike(x.RecipientName, $"%{request.RecipientName}%"));
+            }
+
+            if (request.Phone != null)
+            {
+                predicate = predicate.And(x => x.Phone == request.Phone);
+            }
+
+            if (request.AddressTypes.Length > 0)
+            {
+                predicate = predicate.And(x => request.AddressTypes.Contains(x.AddressType.Value));
+            }
+
+            if (request.Statuses.Length > 0)
+            {
+                predicate = predicate.And(x => request.Statuses.Contains(x.Status));
+            }
+
+            if (request.PaymentMethods.Length > 0)
+            {
+                predicate = predicate.And(x => request.PaymentMethods.Contains(x.PaymentMethod));
+            }
+
+            if (request.StartDate != null)
+            {
+                predicate = predicate.And(x => x.CreatedDate >= request.StartDate);
+            }
+
+            if (request.EndDate != null)
+            {
+                predicate = predicate.And(x => x.CreatedDate <= request.EndDate);
+            }
+
+            if (request.PurchaseTypes.Length > 0)
+            {
+                predicate = predicate.And(x => request.PurchaseTypes.Contains(x.PurchaseType));
+            }
+
+            if (request.MinTotalPrice != null)
+            {
+                predicate = predicate.And(x => x.TotalPrice >= request.MinTotalPrice.Value);
+            }
+
+            if (request.MaxTotalPrice != null)
+            {
+                predicate = predicate.And(x => x.TotalPrice <= request.MaxTotalPrice.Value);
+            }
+
             var orders = await _orderRepository.GetQueryable()
                 .Include(o => o.Member)
                 .Include(o => o.OrderLineItems)
                 .ThenInclude(oli => oli.IndividualFashionItem)
                 .ThenInclude(ifi => ifi.MasterItem)
-                .Where(o => o.CreatedDate >= startDate && o.CreatedDate <= endDate)
+                .AsSplitQuery()
+                .Where(predicate)
                 .Select(o => new
                 {
                     o.OrderCode,
@@ -319,7 +377,7 @@ public class OrderService : IOrderService
                 // Add title
                 worksheet.InsertRow(1, 2);
                 worksheet.Cells["A1:I1"].Merge = true;
-                worksheet.Cells["A1"].Value = $"Order Report ({startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd})";
+                worksheet.Cells["A1"].Value = $"Order Report";
                 worksheet.Cells["A1"].Style.Font.Size = 16;
                 worksheet.Cells["A1"].Style.Font.Bold = true;
                 worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -329,7 +387,7 @@ public class OrderService : IOrderService
                 return new Result<ExcelResponse, ErrorCode>(new ExcelResponse
                 {
                     Content = content,
-                    FileName = $"Orders_{startDate:yyyyMMdd}_{endDate:yyyyMMdd}.xlsx"
+                    FileName = $"Orders_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
                 });
             }
         }
@@ -1251,13 +1309,13 @@ public class OrderService : IOrderService
             PaymentMethod = order.PaymentMethod,
             PurchaseType = order.PurchaseType,
             Address = order.Address ?? "N/A",
-            CompletedDate = order.CompletedDate ?? DateTime.MinValue,
+            CompletedDate = order.CompletedDate, 
             Discount = order.Discount,
             Status = order.Status,
             Email = order.Email ?? "N/A",
             CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
             ShippingFee = order.ShippingFee,
-            PaymentDate = order.OrderLineItems.Select(x => x.PaymentDate).Max() ?? DateTime.MinValue,
+            PaymentDate = order.OrderLineItems.Select(x => x.PaymentDate).Max(),
             TotalPrice = order.TotalPrice,
             MemberId = order.MemberId ?? Guid.Empty,
             Phone = order.Phone ?? "N/A",
@@ -1268,7 +1326,7 @@ public class OrderService : IOrderService
             AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
             Quantity = order.OrderLineItems.Sum(x => x.Quantity),
             ReciepientName = order.RecipientName ?? "N/A",
-            BidCreatedDate = order.Bid != null ? order.Bid.CreatedDate : DateTime.MinValue,
+            BidCreatedDate = order.Bid != null ? order.Bid.CreatedDate : null,
             CreatedDate = order.CreatedDate
         };
         try
@@ -1431,7 +1489,7 @@ public class OrderService : IOrderService
         await _emailService.SendEmailOrder(order);
 
         return new PayWithPointsResponse()
-            { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
+        { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
     }
 
 
@@ -1490,6 +1548,6 @@ public class OrderService : IOrderService
         await _emailService.SendEmailOrder(order);
 
         return new PayWithPointsResponse()
-            { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
+        { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
     }
 }

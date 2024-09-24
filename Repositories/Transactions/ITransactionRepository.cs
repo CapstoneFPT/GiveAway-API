@@ -19,5 +19,6 @@ namespace Repositories.Transactions
             Expression<Func<Transaction, T>>? selector);
 
         Task<string> GenerateUniqueString();
+        IQueryable<Transaction> GetQueryable();
     }
 }

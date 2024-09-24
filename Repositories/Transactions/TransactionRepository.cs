@@ -25,6 +25,10 @@ namespace Repositories.Transactions
             _mapper = mapper;
         }
 
+        public IQueryable<Transaction> GetQueryable()
+        {
+            return _giveAwayDbContext.Transactions.AsQueryable();
+        }
         public async Task<string> GenerateUniqueString()
         {
             for (int attempt = 0; attempt < 5; attempt++)

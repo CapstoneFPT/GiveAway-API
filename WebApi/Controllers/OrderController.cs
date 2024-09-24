@@ -173,10 +173,11 @@ namespace WebApi.Controllers
             return File(result.Value.Content, "application/pdf", $"Invoice_{orderId}.pdf");
         }
         [Authorize(Roles = "Staff,Admin")]
-        [HttpGet("export-csv")]
-        public async Task<IActionResult> ExportCsv([FromQuery] ExportOrdersRequest request)
+        [HttpGet("export-excel")]
+        [ProducesResponseType<ExcelResponse>((int)HttpStatusCode.OK)]
+        public async Task<IActionResult> ExportCsv([FromQuery] ExportOrdersToExcelRequest request)
         {
-            var result = await _orderService.ExportOrdersToExcel(request.StartDate, request.EndDate);
+            var result = await _orderService.ExportOrdersToExcel(request);
 
             if (!result.IsSuccessful)
             {
