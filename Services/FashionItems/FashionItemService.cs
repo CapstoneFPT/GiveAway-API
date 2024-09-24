@@ -6,6 +6,7 @@ using BusinessObjects.Dtos.AuctionItems;
 using BusinessObjects.Dtos.Auctions;
 using BusinessObjects.Dtos.Commons;
 using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
 using DotNext;
@@ -13,11 +14,14 @@ using DotNext.Collections.Generic;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using Repositories.Categories;
 using Repositories.ConsignSales;
 using Repositories.FashionItems;
 using Repositories.Images;
 using Repositories.Shops;
+using Image = BusinessObjects.Entities.Image;
 
 namespace Services.FashionItems
 {
@@ -73,32 +77,158 @@ namespace Services.FashionItems
             response.ResultStatus = ResultStatus.Success;
             return response;
         }
+      public async Task<Result<ExcelResponse, ErrorCode>> ExportFashionItemsToExcel(ExportFashionItemsRequest request)
+{
+    try
+    {
+        Expression<Func<IndividualFashionItem, bool>> predicate = item => true;
 
+        var query = _fashionitemRepository.GetIndividualQueryable()
+            .Include(i => i.MasterItem)
+            .Include(i => i.Images);
+
+        if (!string.IsNullOrEmpty(request.ItemCode))
+            predicate = predicate.And(i => EF.Functions.ILike(i.ItemCode, $"%{request.ItemCode}%"));
+
+        if (request.Status is { Length: > 0 })
+            predicate = predicate.And(i => request.Status.Contains(i.Status));
+
+        if (request.Type is { Length: > 0 })
+            predicate = predicate.And(i => request.Type.Contains(i.Type));
+
+        if (request.MinPrice.HasValue)
+            predicate = predicate.And(i => i.SellingPrice >= request.MinPrice);
+
+        if (request.MaxPrice.HasValue)
+            predicate = predicate.And(i => i.SellingPrice <= request.MaxPrice);
+        
+        if(request.ShopId.HasValue)
+            predicate = predicate.And(i => i.MasterItem.ShopId == request.ShopId);
+
+        var fashionItems = await query
+            .Where(predicate)
+            .Select(i => new
+            {
+                ItemCode = i.ItemCode,
+                ItemName = i.MasterItem.Name,
+                CreatedDate = i.CreatedDate,
+                SellingPrice = i.SellingPrice,
+                Status = i.Status,
+                Address = i.MasterItem.Shop.Address,
+                Type = i.Type,
+                Color = i.Color,
+                Size = i.Size,
+                Condition = i.Condition,
+                Brand = i.MasterItem.Brand,
+                Gender = i.MasterItem.Gender,
+                CategoryName = i.MasterItem.Category.Name,
+                ImageUrl = i.Images.FirstOrDefault() != null ? i.Images.FirstOrDefault().Url : "N/A",
+                ShopAddress = i.MasterItem.Shop.Address
+            })
+            .ToListAsync();
+
+        if (fashionItems.Count == 0)
+        {
+            return new Result<ExcelResponse, ErrorCode>(ErrorCode.NotFound);
+        }
+
+        using var package = new ExcelPackage();
+        var worksheet = package.Workbook.Worksheets.Add("Fashion Items");
+
+        worksheet.Cells["A1:N1"].Merge = true;
+        worksheet.Cells["A1"].Value = "Fashion Items Report";
+        worksheet.Cells["A1"].Style.Font.Size = 16;
+        worksheet.Cells["A1"].Style.Font.Bold = true;
+        worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+        var headers = new[] { "Item Code", "Item Name", "Created Date", "Selling Price", "Status", "Shop Address", "Type", "Color", "Size", "Condition", "Brand", "Gender", "Category", "Image URL", "Shop Address" };
+        for (int i = 0; i < headers.Length; i++)
+        {
+            worksheet.Cells[3, i + 1].Value = headers[i];
+            worksheet.Cells[3, i + 1].Style.Font.Bold = true;
+        }
+
+        using (var range = worksheet.Cells[3, 1, 3, headers.Length])
+        {
+            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+            range.Style.Font.Color.SetColor(System.Drawing.Color.White);
+        }
+
+        int row = 4;
+        foreach (var item in fashionItems)
+        {
+            worksheet.Cells[row, 1].Value = item.ItemCode;
+            worksheet.Cells[row, 2].Value = item.ItemName;
+            worksheet.Cells[row, 3].Value = item.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss");
+            worksheet.Cells[row, 4].Value = item.SellingPrice + " VND";
+            worksheet.Cells[row, 5].Value = item.Status.ToString();
+            worksheet.Cells[row, 6].Value = item.Address;
+            worksheet.Cells[row, 7].Value = item.Type.ToString();
+            worksheet.Cells[row, 8].Value = item.Color;
+            worksheet.Cells[row, 9].Value = item.Size.ToString();
+            worksheet.Cells[row, 10].Value = item.Condition;
+            worksheet.Cells[row, 11].Value = item.Brand;
+            worksheet.Cells[row, 12].Value = item.Gender.ToString();
+            worksheet.Cells[row, 13].Value = item.CategoryName;
+            worksheet.Cells[row, 14].Value = item.ImageUrl;
+            worksheet.Cells[row, 15].Value = item.ShopAddress;
+
+            if (row % 2 == 0)
+            {
+                worksheet.Cells[row, 1, row, headers.Length].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                worksheet.Cells[row, 1, row, headers.Length].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+            }
+
+            row++;
+        }
+
+        worksheet.Cells[1, 1, row - 1, headers.Length].AutoFitColumns();
+
+        var borderStyle = worksheet.Cells[3, 1, row - 1, headers.Length].Style.Border;
+        borderStyle.Top.Style = borderStyle.Left.Style = borderStyle.Right.Style = borderStyle.Bottom.Style = ExcelBorderStyle.Thin;
+
+        worksheet.Cells[4, 3, row - 1, 3].Style.Numberformat.Format = "dd/MM/yyyy HH:mm:ss";
+        worksheet.Cells[4, 4, row - 1, 4].Style.Numberformat.Format = "#,##0.00";
+
+        var content = await package.GetAsByteArrayAsync();
+
+        return new Result<ExcelResponse, ErrorCode>(new ExcelResponse
+        {
+            Content = content,
+            FileName = $"FashionItems_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
+        });
+    }
+    catch (Exception ex)
+    {
+        return new Result<ExcelResponse, ErrorCode>(ErrorCode.ServerError);
+    }
+}
         public async Task<PaginationResponse<FashionItemList>> GetAllFashionItemPagination(
             FashionItemListRequest request)
         {
             Expression<Func<IndividualFashionItem, bool>> predicate = x => true;
             Expression<Func<IndividualFashionItem, FashionItemList>> selector = item => new
                 FashionItemList()
-                {
-                    ItemId = item.ItemId,
-                    Name = item.MasterItem.Name,
-                    Note = item.Note ?? string.Empty,
-                    CategoryId = item.MasterItem.CategoryId,
-                    Condition = item.Condition,
-                    Brand = item.MasterItem.Brand,
-                    Gender = item.MasterItem.Gender,
-                    Size = item.Size,
-                    Type = item.Type,
-                    Status = item.Status,
-                    Color = item.Color,
-                    SellingPrice = item.SellingPrice ?? 0,
-                    Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
-                    MasterItemId = item.MasterItemId,
-                    ShopId = item.MasterItem.ShopId,
-                    ItemCode = item.ItemCode,
-                    InitialPrice = (item as IndividualAuctionFashionItem).InitialPrice ?? 0
-                };
+            {
+                ItemId = item.ItemId,
+                Name = item.MasterItem.Name,
+                Note = item.Note ?? string.Empty,
+                CategoryId = item.MasterItem.CategoryId,
+                Condition = item.Condition,
+                Brand = item.MasterItem.Brand,
+                Gender = item.MasterItem.Gender,
+                Size = item.Size,
+                Type = item.Type,
+                Status = item.Status,
+                Color = item.Color,
+                SellingPrice = item.SellingPrice ?? 0,
+                Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
+                MasterItemId = item.MasterItemId,
+                ShopId = item.MasterItem.ShopId,
+                ItemCode = item.ItemCode,
+                InitialPrice = (item as IndividualAuctionFashionItem).InitialPrice ?? 0
+            };
 
             if (!string.IsNullOrEmpty(request.Name))
             {
@@ -327,7 +457,7 @@ namespace Services.FashionItems
                         CreatedDate = DateTime.UtcNow,
                     }).ToList();
             }
-            
+
             item.SellingPrice = request.SellingPrice ?? item.SellingPrice;
             item.Note = request.Note ?? item.Note;
             item.Color = request.Color ?? item.Color;
@@ -461,7 +591,9 @@ namespace Services.FashionItems
                 var imgForMaster = masterItemRequest.Images.Select(
                     image => new Image()
                     {
-                        Url = image, CreatedDate = DateTime.UtcNow, MasterFashionItemId = masterItem.MasterItemId,
+                        Url = image,
+                        CreatedDate = DateTime.UtcNow,
+                        MasterFashionItemId = masterItem.MasterItemId,
                     }).ToList();
 
                 await _imageRepository.AddRangeImage(imgForMaster);
@@ -629,7 +761,7 @@ namespace Services.FashionItems
                 CreatedDate = DateTime.UtcNow,
                 Name = request.Name,
                 Gender = request.Gender,
-                
+
             };
             masterItem.Images = request.Images.Select(url => new Image()
             {
@@ -661,24 +793,24 @@ namespace Services.FashionItems
             Expression<Func<MasterFashionItem, bool>> predicate = x => true;
             Expression<Func<MasterFashionItem, MasterItemListResponse>> selector = item => new
                 MasterItemListResponse()
-                {
-                    MasterItemId = item.MasterItemId,
-                    Name = item.Name,
-                    Description = item.Description ?? string.Empty,
-                    ItemCode = item.MasterItemCode,
-                    CreatedDate = item.CreatedDate,
-                    Brand = item.Brand,
-                    Gender = item.Gender,
-                    CategoryId = item.CategoryId,
-                    IsConsignment = item.IsConsignment,
-                    ItemInStock = request.IsForSale == true ? item.IndividualFashionItems.Count(c => c.Status == FashionItemStatus.Available && c.Type != FashionItemType.ConsignedForAuction)
-                        :  item.IndividualFashionItems.Count(c => c.Status == FashionItemStatus.Available),
-                    ShopId = item.ShopId,
-                    ShopAddress = item.Shop.Address,
-                    StockCount = item.IndividualFashionItems.Count,
-                    CategoryName = item.Category.Name,
-                    Images = item.Images.Select(x => x.Url).ToList()
-                };
+            {
+                MasterItemId = item.MasterItemId,
+                Name = item.Name,
+                Description = item.Description ?? string.Empty,
+                ItemCode = item.MasterItemCode,
+                CreatedDate = item.CreatedDate,
+                Brand = item.Brand,
+                Gender = item.Gender,
+                CategoryId = item.CategoryId,
+                IsConsignment = item.IsConsignment,
+                ItemInStock = request.IsForSale == true ? item.IndividualFashionItems.Count(c => c.Status == FashionItemStatus.Available && c.Type != FashionItemType.ConsignedForAuction)
+                        : item.IndividualFashionItems.Count(c => c.Status == FashionItemStatus.Available),
+                ShopId = item.ShopId,
+                ShopAddress = item.Shop.Address,
+                StockCount = item.IndividualFashionItems.Count,
+                CategoryName = item.Category.Name,
+                Images = item.Images.Select(x => x.Url).ToList()
+            };
             (List<MasterItemListResponse> Items, int Page, int PageSize, int TotalCount) result;
             if (request.IsLeftInStock is true)
             {
@@ -695,7 +827,7 @@ namespace Services.FashionItems
                 predicate = predicate.And(item =>
                     item.IndividualFashionItems.Any(x => x.Type != FashionItemType.ConsignedForAuction && x.Status == FashionItemStatus.Available));
             }
-            
+
             if (!string.IsNullOrEmpty(request.SearchTerm))
             {
                 predicate = predicate.And(item => EF.Functions.ILike(item.Name, $"%{request.SearchTerm}%"));
@@ -968,19 +1100,19 @@ namespace Services.FashionItems
             Expression<Func<IndividualFashionItem, bool>> predicate = x => x.MasterItemId == masterItemId;
             Expression<Func<IndividualFashionItem, IndividualItemListResponse>> selector = item => new
                 IndividualItemListResponse()
-                {
-                    MasterItemId = item.MasterItemId,
-                    CreatedDate = item.CreatedDate,
-                    ItemId = item.ItemId,
-                    Type = item.Type,
-                    Status = item.Status,
-                    ItemCode = item.ItemCode,
-                    SellingPrice = item.SellingPrice!.Value,
-                    Color = item.Color,
-                    Condition = item.Condition,
-                    Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
-                    Size = item.Size,
-                };
+            {
+                MasterItemId = item.MasterItemId,
+                CreatedDate = item.CreatedDate,
+                ItemId = item.ItemId,
+                Type = item.Type,
+                Status = item.Status,
+                ItemCode = item.ItemCode,
+                SellingPrice = item.SellingPrice!.Value,
+                Color = item.Color,
+                Condition = item.Condition,
+                Image = item.Images.FirstOrDefault() != null ? item.Images.First().Url : string.Empty,
+                Size = item.Size,
+            };
 
             if (!string.IsNullOrEmpty(request.SearchItemCode))
             {
