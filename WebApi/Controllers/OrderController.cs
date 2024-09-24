@@ -174,7 +174,7 @@ namespace WebApi.Controllers
         }
         [Authorize(Roles = "Staff,Admin")]
         [HttpGet("export-excel")]
-        [ProducesResponseType<ExcelResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<FileContentResult>((int)HttpStatusCode.OK)]
         public async Task<IActionResult> ExportCsv([FromQuery] ExportOrdersToExcelRequest request)
         {
             var result = await _orderService.ExportOrdersToExcel(request);
