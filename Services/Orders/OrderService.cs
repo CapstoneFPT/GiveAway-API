@@ -259,11 +259,6 @@ public class OrderService : IOrderService
                 predicate = predicate.And(x => x.Phone == request.Phone);
             }
 
-            if (request.AddressTypes.Length > 0)
-            {
-                predicate = predicate.And(x => request.AddressTypes.Contains(x.AddressType.Value));
-            }
-
             if (request.Statuses.Length > 0)
             {
                 predicate = predicate.And(x => request.Statuses.Contains(x.Status));
@@ -299,6 +294,12 @@ public class OrderService : IOrderService
                 predicate = predicate.And(x => x.TotalPrice <= request.MaxTotalPrice.Value);
             }
 
+            if (request.ShopId.HasValue)
+            {
+                predicate = predicate.And(x =>
+                    x.OrderLineItems.Any(c => c.IndividualFashionItem.MasterItem.ShopId == request.ShopId));
+            }
+
             var orders = await _orderRepository.GetQueryable()
                 .Include(o => o.Member)
                 .Include(o => o.OrderLineItems)
@@ -313,9 +314,11 @@ public class OrderService : IOrderService
                     o.CreatedDate,
                     o.TotalPrice,
                     o.Status,
-                    Items = o.OrderLineItems.Select(oli => oli.IndividualFashionItem.MasterItem.Name).ToList(),
+                    ItemsCount = o.OrderLineItems.Count,
                     o.ShippingFee,
-                    o.Discount
+                    o.Discount,
+                    o.PaymentMethod,
+                    o.PurchaseType,
                 })
                 .ToListAsync();
 
@@ -329,7 +332,7 @@ public class OrderService : IOrderService
                 var worksheet = package.Workbook.Worksheets.Add("Orders");
 
                 // Styling
-                using (var range = worksheet.Cells["A1:I1"])
+                using (var range = worksheet.Cells["A1:J1"])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -343,27 +346,31 @@ public class OrderService : IOrderService
                 worksheet.Cells[1, 3].Value = "Order Date";
                 worksheet.Cells[1, 4].Value = "Total Price";
                 worksheet.Cells[1, 5].Value = "Status";
-                worksheet.Cells[1, 6].Value = "Items";
-                worksheet.Cells[1, 7].Value = "Shipping Fee";
-                worksheet.Cells[1, 8].Value = "Discount";
+                worksheet.Cells[1, 6].Value = "Payment Method";
+                worksheet.Cells[1, 7].Value = "Purchase Type";
+                worksheet.Cells[1, 8].Value = "Items Count";
+                worksheet.Cells[1, 9].Value = "Shipping Fee";
+                worksheet.Cells[1, 10].Value = "Discount";
 
                 int row = 2;
                 foreach (var order in orders)
                 {
                     worksheet.Cells[row, 1].Value = order.OrderCode;
                     worksheet.Cells[row, 2].Value = order.CustomerName ?? "N/A";
-                    worksheet.Cells[row, 3].Value = order.CreatedDate;
+                    worksheet.Cells[row, 3].Value = order.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss");
                     worksheet.Cells[row, 4].Value = order.TotalPrice + " VND";
                     worksheet.Cells[row, 5].Value = order.Status.ToString();
-                    worksheet.Cells[row, 6].Value = string.Join(", ", order.Items);
-                    worksheet.Cells[row, 7].Value = order.ShippingFee;
-                    worksheet.Cells[row, 8].Value = order.Discount;
+                    worksheet.Cells[row, 6].Value = order.PaymentMethod.ToString();
+                    worksheet.Cells[row, 7].Value = order.PurchaseType.ToString();
+                    worksheet.Cells[row, 8].Value = order.ItemsCount;
+                    worksheet.Cells[row, 9].Value = order.ShippingFee + " VND";
+                    worksheet.Cells[row, 10].Value = order.Discount + " VND";
 
                     // Alternate row colors
                     if (row % 2 == 0)
                     {
-                        worksheet.Cells[row, 1, row, 9].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        worksheet.Cells[row, 1, row, 9].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                        worksheet.Cells[row, 1, row, 10].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[row, 1, row, 10].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     }
 
                     row++;
@@ -372,19 +379,19 @@ public class OrderService : IOrderService
                 // Formatting
                 worksheet.Cells[2, 4, row - 1, 4].Style.Numberformat.Format = "yyyy-mm-dd hh:mm:ss";
                 worksheet.Cells[2, 5, row - 1, 5].Style.Numberformat.Format = "#,##0.00";
-                worksheet.Cells[2, 8, row - 1, 9].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells[2, 8, row - 1, 10].Style.Numberformat.Format = "#,##0.00";
 
                 // Auto-fit columns
-                worksheet.Cells[1, 1, row - 1, 9].AutoFitColumns();
+                worksheet.Cells[1, 1, row - 1, 10].AutoFitColumns();
 
                 // Add borders
-                var borderStyle = worksheet.Cells[1, 1, row - 1, 9].Style.Border;
+                var borderStyle = worksheet.Cells[1, 1, row - 1, 10].Style.Border;
                 borderStyle.Top.Style = borderStyle.Left.Style =
                     borderStyle.Right.Style = borderStyle.Bottom.Style = ExcelBorderStyle.Thin;
 
                 // Add title
                 worksheet.InsertRow(1, 2);
-                worksheet.Cells["A1:I1"].Merge = true;
+                worksheet.Cells["A1:J1"].Merge = true;
                 worksheet.Cells["A1"].Value = $"Order Report";
                 worksheet.Cells["A1"].Style.Font.Size = 16;
                 worksheet.Cells["A1"].Style.Font.Bold = true;
@@ -559,6 +566,7 @@ public class OrderService : IOrderService
             PaymentMethod = order.PaymentMethod,
             CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
             Email = order.Email,
+            Subtotal = order.OrderLineItems.Sum(x => x.UnitPrice * x.Quantity),
             Quantity = order.OrderLineItems.Count,
             AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
             ShippingFee = order.ShippingFee,
@@ -798,6 +806,7 @@ public class OrderService : IOrderService
             ContactNumber = order.Phone,
             RecipientName = order.RecipientName,
             PurchaseType = order.PurchaseType,
+            Subtotal = order.OrderLineItems.Sum(x => x.UnitPrice * x.Quantity),
             ShippingFee = order.ShippingFee,
             Discount = order.Discount,
             Address = order.Address,
@@ -1317,7 +1326,7 @@ public class OrderService : IOrderService
             PaymentMethod = order.PaymentMethod,
             PurchaseType = order.PurchaseType,
             Address = order.Address ?? "N/A",
-            CompletedDate = order.CompletedDate, 
+            CompletedDate = order.CompletedDate,
             Discount = order.Discount,
             Status = order.Status,
             Email = order.Email ?? "N/A",
@@ -1435,13 +1444,15 @@ public class OrderService : IOrderService
                     await UpdateFashionItemStatus(order.OrderId);
                     await _emailService.SendEmailOrder(order);
 
-                    return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=success&message={Uri.EscapeDataString("Payment success")}");
+                    return new Result<string, ErrorCode>(
+                        $"{returnUrl}?paymentstatus=success&message={Uri.EscapeDataString("Payment success")}");
                 }
             }
             catch (Exception e)
             {
                 _logger.LogError(e, e.Message);
-                return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString(e.Message)}");
+                return new Result<string, ErrorCode>(
+                    $"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString(e.Message)}");
             }
         }
 
@@ -1449,7 +1460,8 @@ public class OrderService : IOrderService
             "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
             response.VnPayResponseCode);
 
-        return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString("Payment failed")}");
+        return new Result<string, ErrorCode>(
+            $"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString("Payment failed")}");
     }
 
     public async Task<DotNext.Result<PayWithPointsResponse, ErrorCode>> PurchaseOrderWithPoints(Guid orderId,
@@ -1498,7 +1510,7 @@ public class OrderService : IOrderService
         await _emailService.SendEmailOrder(order);
 
         return new PayWithPointsResponse()
-        { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
+            { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
     }
 
 
@@ -1557,6 +1569,6 @@ public class OrderService : IOrderService
         await _emailService.SendEmailOrder(order);
 
         return new PayWithPointsResponse()
-        { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
+            { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
     }
 }

@@ -19,12 +19,16 @@ public class AuctionEndingJob : IJob
     private readonly IHubContext<AuctionHub> _hubContext;
     private readonly ITransactionRepository _transactionRepository;
     private readonly IEmailService _emailService;
-    public AuctionEndingJob(IServiceProvider serviceProvider, IHubContext<AuctionHub> hubContext, ITransactionRepository transactionRepository, IEmailService emailService)
+    private readonly ILogger<AuctionEndingJob> _logger;
+
+    public AuctionEndingJob(IServiceProvider serviceProvider, IHubContext<AuctionHub> hubContext,
+        ITransactionRepository transactionRepository, IEmailService emailService, ILogger<AuctionEndingJob> logger)
     {
         _serviceProvider = serviceProvider;
         _hubContext = hubContext;
         _transactionRepository = transactionRepository;
         _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -85,7 +89,8 @@ public class AuctionEndingJob : IJob
                         await dbContext.Addresses.FirstOrDefaultAsync(x =>
                             x.MemberId == orderRequest.MemberId && x.IsDefault);
 
-                    var memberWinning = await dbContext.Members.FirstOrDefaultAsync(x => x.AccountId == orderRequest.MemberId);
+                    var memberWinning =
+                        await dbContext.Members.FirstOrDefaultAsync(x => x.AccountId == orderRequest.MemberId);
 
 
                     var newOrder = new Order()
@@ -96,7 +101,7 @@ public class AuctionEndingJob : IJob
                         Discount = auctionToEnd.DepositFee,
                         MemberId = orderRequest.MemberId,
                         TotalPrice = orderRequest.TotalPrice,
-                       
+
                         Email = memberWinning!.Email,
                         Phone = address?.Phone,
                         CreatedDate = DateTime.UtcNow,
@@ -121,13 +126,29 @@ public class AuctionEndingJob : IJob
                         if (await dbContext.Bids.AnyAsync(c => c.MemberId == auctionDeposit.MemberId))
                         {
                             if (winningBid.MemberId == auctionDeposit.MemberId) continue;
-                            var member = await dbContext.Members.FirstOrDefaultAsync(c => c.AccountId == auctionDeposit.MemberId);
+                            var member =
+                                await dbContext.Members.FirstOrDefaultAsync(c =>
+                                    c.AccountId == auctionDeposit.MemberId);
                             if (member is not { Status: AccountStatus.Active }) continue;
                             var admin = await dbContext.Admins.FirstOrDefaultAsync();
                             if (admin is not { Status: AccountStatus.Active }) continue;
-                            var deposit = await dbContext.AuctionDeposits.FirstOrDefaultAsync(x=>x.AuctionId == auctionId && x.MemberId == auctionDeposit.MemberId);
+                            var deposit = await dbContext.AuctionDeposits.FirstOrDefaultAsync(x =>
+                                x.AuctionId == auctionId && x.MemberId == auctionDeposit.MemberId);
+                            _logger.LogInformation("Member {MemberId} balance before refund: {Balance}",
+                                member.AccountId, member.Balance);
+                            _logger.LogInformation("Admin balance before refund: {Balance}", admin.Balance);
+
                             member.Balance += auctionToEnd.DepositFee;
                             admin.Balance += auctionToEnd.DepositFee;
+                            _logger.LogInformation("Member {MemberId} has received {Amount} from auction deposit",
+                                member.AccountId, auctionToEnd.DepositFee);
+                            _logger.LogInformation("Admin has received {Amount} from auction deposit",
+                                auctionToEnd.DepositFee);
+                            
+                            _logger.LogInformation("Member {MemberId} balance after refund: {Balance}",
+                                member.AccountId, member.Balance);
+                            _logger.LogInformation("Admin balance after refund: {Balance}", admin.Balance);
+
                             dbContext.Members.Update(member);
                             dbContext.Admins.Update(admin);
                             var refundDepositTransaction = new Transaction()
@@ -144,7 +165,6 @@ public class AuctionEndingJob : IJob
                                 TransactionCode = await _transactionRepository.GenerateUniqueString()
                             };
                             dbContext.Transactions.Add(refundDepositTransaction);
-
                         }
                     }
                 }
