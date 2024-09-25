@@ -43,6 +43,7 @@ namespace BusinessObjects.Dtos.Orders
         public Guid OrderId { get; set; }
         public int Quantity { get; set; }
         public decimal TotalPrice { get; set; }
+        public decimal Subtotal { get; set; }
         public string OrderCode { get; set; }
         public DateTime CreatedDate { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
