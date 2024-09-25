@@ -286,6 +286,12 @@ public class OrderService : IOrderService
                 predicate = predicate.And(x => x.TotalPrice <= request.MaxTotalPrice.Value);
             }
 
+            if (request.ShopId.HasValue)
+            {
+                predicate = predicate.And(x =>
+                    x.OrderLineItems.Any(c => c.IndividualFashionItem.MasterItem.ShopId == request.ShopId));
+            }
+
             var orders = await _orderRepository.GetQueryable()
                 .Include(o => o.Member)
                 .Include(o => o.OrderLineItems)
@@ -1310,7 +1316,7 @@ public class OrderService : IOrderService
             PaymentMethod = order.PaymentMethod,
             PurchaseType = order.PurchaseType,
             Address = order.Address ?? "N/A",
-            CompletedDate = order.CompletedDate, 
+            CompletedDate = order.CompletedDate,
             Discount = order.Discount,
             Status = order.Status,
             Email = order.Email ?? "N/A",
@@ -1428,13 +1434,15 @@ public class OrderService : IOrderService
                     await UpdateFashionItemStatus(order.OrderId);
                     await _emailService.SendEmailOrder(order);
 
-                    return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=success&message={Uri.EscapeDataString("Payment success")}");
+                    return new Result<string, ErrorCode>(
+                        $"{returnUrl}?paymentstatus=success&message={Uri.EscapeDataString("Payment success")}");
                 }
             }
             catch (Exception e)
             {
                 _logger.LogError(e, e.Message);
-                return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString(e.Message)}");
+                return new Result<string, ErrorCode>(
+                    $"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString(e.Message)}");
             }
         }
 
@@ -1442,7 +1450,8 @@ public class OrderService : IOrderService
             "Payment failed. OrderCode: {OrderId}, ResponseCode: {VnPayResponseCode}", response.OrderId,
             response.VnPayResponseCode);
 
-        return new Result<string, ErrorCode>($"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString("Payment failed")}");
+        return new Result<string, ErrorCode>(
+            $"{returnUrl}?paymentstatus=error&message={Uri.EscapeDataString("Payment failed")}");
     }
 
     public async Task<DotNext.Result<PayWithPointsResponse, ErrorCode>> PurchaseOrderWithPoints(Guid orderId,
@@ -1491,7 +1500,7 @@ public class OrderService : IOrderService
         await _emailService.SendEmailOrder(order);
 
         return new PayWithPointsResponse()
-        { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
+            { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
     }
 
 
@@ -1550,6 +1559,6 @@ public class OrderService : IOrderService
         await _emailService.SendEmailOrder(order);
 
         return new PayWithPointsResponse()
-        { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
+            { Sucess = true, Message = "Payment success", OrderId = order.OrderId };
     }
 }
