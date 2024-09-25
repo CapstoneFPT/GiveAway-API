@@ -176,8 +176,16 @@ public class OrderService : IOrderService
         // Replace totals
         template = template.Replace("{{Subtotal}}", $"{orderLineItems.Sum(x => x.UnitPrice):N0}")
             .Replace("{{ShippingFee}}", $"{order.ShippingFee:N0}")
-            .Replace("{{Discount}}", $"{order.Discount:N0}")
+            
             .Replace("{{Total}}", $"{order.TotalPrice:N0}");
+        if (order.Discount == 0)
+        {
+            template = template.Replace("{{Discount}}", $"0");
+        }
+        else
+        {
+            template = template.Replace("{{Discount}}", $"-{order.Discount:N0}");
+        }
 
         return template;
     }
@@ -794,7 +802,7 @@ public class OrderService : IOrderService
             Discount = order.Discount,
             Address = order.Address,
             PaymentMethod = order.PaymentMethod,
-            CustomerName = order.Member != null ? order.Member.Fullname : "N/A",
+            CustomerName = order.Member != null ? order.Member.Fullname : order.RecipientName ?? "N/A",
             Email = order.Email,
             Quantity = order.OrderLineItems.Count,
             AuctionTitle = order.Bid != null ? order.Bid.Auction.Title : "N/A",
