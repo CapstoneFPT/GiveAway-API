@@ -318,9 +318,14 @@ namespace Services.Accounts
         {
             Expression<Func<Transaction, bool>> predicate = transaction => true;
 
-            if (request.Types.Length != 0)
+            if (request.Types.Length > 0)
             {
                 predicate = predicate.And(x => request.Types.Contains(x.Type));
+            }
+
+            if (request.PaymentMethods.Length > 0)
+            {
+               predicate = predicate.And(x => request.PaymentMethods.Contains(x.PaymentMethod)); 
             }
 
             if (!string.IsNullOrWhiteSpace(request.OrderCode))

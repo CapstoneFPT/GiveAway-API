@@ -69,7 +69,7 @@ namespace WebApi.Controllers
 
         [Authorize(Roles = "Staff,Admin")]
         [HttpGet("export-excel")]
-        [ProducesResponseType<ExcelResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<FileContentResult>((int)HttpStatusCode.OK)]
         [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> ExportCsv([FromQuery] ExportFashionItemsRequest request)
         {

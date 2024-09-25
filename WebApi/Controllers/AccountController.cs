@@ -488,6 +488,7 @@ public class AccountController : ControllerBase
 
 
     [HttpGet("{accountId}/transactions")]
+    [Authorize]
     [ProducesResponseType<PaginationResponse<AccountTransactionsListResponse>>((int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetTransactions([FromRoute] Guid accountId,
         [FromQuery] GetTransactionsRequest request)

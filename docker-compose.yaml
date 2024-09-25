@@ -37,6 +37,7 @@ services:
       - ASPNETCORE_AdminAccount__Password=admin
       - ASPNETCORE_EmailTemplateDirectory=Services/MailTemplate/
       - ASPNETCORE_RedirectDirectory=https://giveawayproject.jettonetto.org/
+      - ASPNET_RedirectUrl=https://giveawayproject.jettonetto.org/
     ports:
       - "8443:443"
       - "8080:8080"

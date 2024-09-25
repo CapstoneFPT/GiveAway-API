@@ -59,7 +59,7 @@ namespace Services.Emails
             string path = Path.Combine(_configuration.GetSection("EmailTemplateDirectory").Value!,
                 $"{templateName}.html");
             var template = File.ReadAllText(path, Encoding.UTF8);
-            template = template.Replace("[path]", _configuration.GetSection("RedirectDirectory").Value);
+            template = template.Replace("[path]", _configuration.GetSection("RedirectUrl").Value);
             return template;
         }
 
