@@ -110,7 +110,7 @@ namespace Services.Auctions
                 IndividualAuctionFashionItemId = request.AuctionItemId,
                 ShopId = request.ShopId,
                 CreatedDate = DateTime.UtcNow,
-                StepIncrement = auctionItem.InitialPrice.Value * (request.StepIncrementPercentage / 100)
+                StepIncrement = request.StepIncrementPercentage
             };
 
             var result = await _auctionRepository.CreateAuction(auction);
