@@ -251,7 +251,7 @@ namespace Services.ConsignSales
                     CreatedDate = DateTime.UtcNow,
                     MasterItemId = consignDetailRequest.MasterItemId,
                     ItemCode = await _fashionItemRepository.GenerateIndividualItemCode(masterItem.MasterItemCode),
-                    Status = FashionItemStatus.Unavailable,
+                    Status = FashionItemStatus.Available,
                     ConsignSaleLineItemId = consignLineItem.ConsignSaleLineItemId,
                     Condition = consignLineItem.Condition,
                     Color = consignLineItem.Color,
@@ -269,7 +269,7 @@ namespace Services.ConsignSales
                             MasterItemId = consignDetailRequest.MasterItemId,
                             ItemCode =
                                 await _fashionItemRepository.GenerateIndividualItemCode(masterItem.MasterItemCode!),
-                            Status = FashionItemStatus.Unavailable,
+                            Status = FashionItemStatus.Available,
                             ConsignSaleLineItemId = consignLineItem.ConsignSaleLineItemId,
                             Type = FashionItemType.ConsignedForAuction,
                             Condition = consignLineItem.Condition,

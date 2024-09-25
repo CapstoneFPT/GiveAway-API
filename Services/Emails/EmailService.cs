@@ -664,7 +664,7 @@ namespace Services.Emails
                 {
                     Subject = $"[GIVEAWAY] CONGRATULATION AUCTION WINNER"
                 };
-                var template = GetEmailTemplate("AuctionComingMail");
+                var template = GetEmailTemplate("AuctionWonMail");
                 template = template.Replace("{PRODUCT_NAME}", auction.IndividualAuctionFashionItem.MasterItem.Name);
                 template = template.Replace("{INITIAL_PRICE}", auction.IndividualAuctionFashionItem.InitialPrice!.Value.ToString("N0"));
                 template = template.Replace("{PRODUCT_IMAGE_URL}", auction.IndividualAuctionFashionItem.Images.Select(c => c.Url).FirstOrDefault());

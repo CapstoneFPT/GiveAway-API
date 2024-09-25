@@ -95,9 +95,8 @@ public class AuctionEndingJob : IJob
                         PaymentMethod = orderRequest.PaymentMethod,
                         Discount = auctionToEnd.DepositFee,
                         MemberId = orderRequest.MemberId,
-                        TotalPrice = orderRequest.TotalPrice - auctionToEnd.DepositFee,
-                        Address = address?.Residence,
-                        RecipientName = address?.RecipientName,
+                        TotalPrice = orderRequest.TotalPrice,
+                       
                         Email = memberWinning!.Email,
                         Phone = address?.Phone,
                         CreatedDate = DateTime.UtcNow,

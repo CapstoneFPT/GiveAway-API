@@ -842,7 +842,7 @@ public class OrderService : IOrderService
             if (fashionItem is { Status: FashionItemStatus.OnDelivery })
             {
                 fashionItem.Status = FashionItemStatus.Refundable;
-                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(15);
+                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddDays(7);
                 if (order.PaymentMethod.Equals(PaymentMethod.COD))
                     orderDetail.PaymentDate = DateTime.UtcNow;
                 await ScheduleRefundableItemEnding(fashionItem.ItemId, orderDetail.RefundExpirationDate.Value);
@@ -1146,7 +1146,7 @@ public class OrderService : IOrderService
                          c.IndividualFashionItem.Status == FashionItemStatus.ReadyForDelivery))
             {
                 detail.IndividualFashionItem.Status = FashionItemStatus.Reserved;
-                detail.ReservedExpirationDate = DateTime.UtcNow.AddMinutes(15);
+                detail.ReservedExpirationDate = DateTime.UtcNow.AddDays(3);
                 await ScheduleReservedItemEnding(detail.IndividualFashionItem.ItemId,
                     detail.ReservedExpirationDate.Value);
                 // gui mail thong bao 
@@ -1535,10 +1535,10 @@ public class OrderService : IOrderService
         order.RecipientName = request.RecipientName;
         order.Phone = request.Phone;
         order.ShippingFee = request.ShippingFee;
-        order.Discount = request.Discount;
+        // order.Discount = request.Discount;
         order.Status = OrderStatus.Pending;
-        order.TotalPrice = order.TotalPrice + request.ShippingFee;
-        order.Member!.Balance -= order.TotalPrice + request.ShippingFee;
+        order.TotalPrice = order.TotalPrice + request.ShippingFee - order.Discount;
+        order.Member!.Balance -= order.TotalPrice;
 
         await UpdateOrder(order);
         await UpdateFashionItemStatus(order.OrderId);
