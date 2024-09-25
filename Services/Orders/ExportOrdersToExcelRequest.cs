@@ -15,5 +15,4 @@ public class ExportOrdersToExcelRequest
     public PurchaseType[] PurchaseTypes { get; set; } = [];
     public OrderStatus[] Statuses { get; set; } = [];
 
-    public AddressType[] AddressTypes { get; set; } = [];
 }
