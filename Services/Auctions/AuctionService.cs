@@ -410,6 +410,11 @@ namespace Services.Auctions
                 }
 
                 var member = await _accountRepository.FindOne(account => account.AccountId == request.MemberId);
+
+                if (member.Balance < auction.DepositFee)
+                {
+                    throw new BalanceIsNotEnoughException(ErrorCode.PaymentFailed);
+                }
                 if (member is null)
                 {
                     throw new AccountNotFoundException();
@@ -431,9 +436,10 @@ namespace Services.Auctions
                 var createDepositResult = await _auctionDepositRepository.CreateAuctionDeposit(deposit);
 
 
-                await _accountService.DeductPoints(request.MemberId, auction.DepositFee);
+                member.Balance -= auction.DepositFee;
                 admin.Balance -= auction.DepositFee;
                 await _accountRepository.UpdateAccount(admin);
+                await _accountRepository.UpdateAccount(member);
 
 
                 var transaction = new Transaction()
