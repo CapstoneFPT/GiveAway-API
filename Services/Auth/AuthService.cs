@@ -224,7 +224,7 @@ public class AuthService : IAuthService
                 };
             }
 
-            if (account.VerifiedAt == null)
+            if (account.Status is AccountStatus.NotVerified)
             {
                 return new Result<LoginResponse>()
                 {
@@ -232,7 +232,14 @@ public class AuthService : IAuthService
                     Messages = ["Account is Not Verified! Please verify your account"]
                 };
             }
-
+            if (account.Status is AccountStatus.Inactive)
+            {
+                return new Result<LoginResponse>()
+                {
+                    ResultStatus = ResultStatus.Error,
+                    Messages = ["Your account is banned"]
+                };
+            }
             var claims = new List<Claim>()
             {
                 new Claim("AccountId", account.AccountId.ToString()),

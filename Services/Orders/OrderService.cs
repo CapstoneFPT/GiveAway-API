@@ -151,7 +151,7 @@ public class OrderService : IOrderService
         template = template.Replace("{{InvoiceNumber}}", order.OrderCode)
             .Replace("{{IssueDate}}", order.CreatedDate.AddHours(7).ToString("dd/MM/yyyy HH:mm:ss"))
             .Replace("{{PaymentMethod}}", order.PaymentMethod.ToString())
-            .Replace("{{CustomerName}}", order.Member?.Fullname ?? "N/A")
+            .Replace("{{CustomerName}}", order.RecipientName ?? (order.Member != null ? order.Member.Fullname : "N/A"))
             .Replace("{{CustomerAddress}}", order.Address ?? "N/A")
             .Replace("{{CustomerPhone}}", order.Phone ?? "N/A")
             .Replace("{{CustomerEmail}}", order.Email ?? "N/A")

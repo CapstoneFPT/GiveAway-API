@@ -1300,7 +1300,7 @@ namespace Services.ConsignSales
             template = template.Replace("{{InvoiceNumber}}", consignSale.ConsignSaleCode)
                 .Replace("{{IssueDate}}", consignSale.CreatedDate.AddHours(7).ToString("dd/MM/yyyy HH:mm:ss"))
                 .Replace("{{PaymentMethod}}", PaymentMethod.Cash.ToString())
-                .Replace("{{CustomerName}}", consignSale.Member?.Fullname ?? "N/A")
+                .Replace("{{CustomerName}}", consignSale.ConsignorName ?? (consignSale.Member != null ? consignSale.Member.Fullname : "N?A"))
                 .Replace("{{CustomerAddress}}", consignSale.Address ?? "N/A")
                 .Replace("{{CustomerPhone}}", consignSale.Phone ?? "N/A")
                 .Replace("{{CustomerEmail}}", consignSale.Email ?? "N/A")
