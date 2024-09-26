@@ -67,12 +67,12 @@ namespace Services.Transactions
 
                 if(request.ReceiverName != null)
                 {
-                    predicate = predicate.And(t => EF.Functions.ILike(t.Receiver.Fullname, $"%{request.ReceiverName}%"));
+                    predicate = predicate.And(t => t.Receiver != null && EF.Functions.ILike(t.Receiver.Fullname, $"%{request.ReceiverName}%"));
                 }
 
                 if(request.SenderName != null)
                 {
-                    predicate = predicate.And(t => EF.Functions.ILike(t.Sender.Fullname, $"%{request.SenderName}%"));
+                    predicate = predicate.And(t => t.Sender != null && EF.Functions.ILike(t.Sender.Fullname, $"%{request.SenderName}%"));
                 }
                 
                 if(request.PaymentMethods.Length > 0)
@@ -90,6 +90,11 @@ namespace Services.Transactions
                     predicate = predicate.And(t => EF.Functions.ILike(t.TransactionCode, $"%{request.TransactionCode}%"));
                 }
 
+                if (request.ShopId.HasValue)
+                {
+                    predicate = predicate.And(t => t.ShopId == request.ShopId);
+                }
+
                 var transactions = await _transactionRepository.GetQueryable()
                     .Where(predicate)
                     .Select(t => new
@@ -99,8 +104,7 @@ namespace Services.Transactions
                         t.Type,
                         t.Amount,
                         t.PaymentMethod,
-                        SenderName = t.Sender.Fullname,
-                        ReceiverName = t.Receiver.Fullname,
+                        ShopAddress = t.Shop != null ? t.Shop.Address : null
                     })
                     .ToListAsync();
                 
@@ -108,13 +112,13 @@ namespace Services.Transactions
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("Transactions");
 
-                worksheet.Cells["A1:G1"].Merge = true;
-                worksheet.Cells["A1"].Value = "Transactions Report";
+                worksheet.Cells["A1:F1"].Merge = true;
+                worksheet.Cells["A1"].Value = transactions.FirstOrDefault()?.ShopAddress != null ? $"Transactions Report for {transactions.FirstOrDefault()?.ShopAddress}" : "Transactions Report";
                 worksheet.Cells["A1"].Style.Font.Size = 16;
                 worksheet.Cells["A1"].Style.Font.Bold = true;
                 worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                var headerStyle = worksheet.Cells["A3:G3"].Style;
+                var headerStyle = worksheet.Cells["A3:F3"].Style;
                 headerStyle.Font.Bold = true;
                 headerStyle.Fill.PatternType = ExcelFillStyle.Solid;
                 headerStyle.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
@@ -126,8 +130,7 @@ namespace Services.Transactions
                     "Type", 
                     "Amount", 
                     "Payment Method", 
-                    "Sender", 
-                    "Receiver"
+                    "Shop Address"
                 };
                 for (int i = 0; i < headers.Length; i++)
                 {
@@ -143,9 +146,7 @@ namespace Services.Transactions
                     worksheet.Cells[row, 3].Value = transaction.Type.ToString();
                     worksheet.Cells[row, 4].Value = transaction.Amount + " VND";
                     worksheet.Cells[row, 5].Value = transaction.PaymentMethod.ToString();
-                    worksheet.Cells[row, 6].Value = transaction.SenderName;
-                    worksheet.Cells[row, 7].Value = transaction.ReceiverName;
-
+                    worksheet.Cells[row, 6].Value = transaction.ShopAddress ?? "N/A";
                     row++;
                 }
 

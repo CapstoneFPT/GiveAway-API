@@ -9,6 +9,7 @@ public class ExportTransactionsRequest
     public DateTime? EndDate { get; set; }
     public TransactionType[] Types { get; set; } = [];
     public PaymentMethod[] PaymentMethods { get; set; } = [];
+    public Guid? ShopId { get; set; }
     public decimal? MinAmount { get; set; }
     public decimal? MaxAmount { get; set; }
     public string? SenderName { get; set; }
