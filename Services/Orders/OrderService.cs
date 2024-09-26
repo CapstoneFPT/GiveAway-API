@@ -357,7 +357,7 @@ public class OrderService : IOrderService
                 {
                     worksheet.Cells[row, 1].Value = order.OrderCode;
                     worksheet.Cells[row, 2].Value = order.CustomerName ?? "N/A";
-                    worksheet.Cells[row, 3].Value = order.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss");
+                    worksheet.Cells[row, 3].Value = order.CreatedDate.AddHours(7).ToString("dd/MM/yyyy HH:mm:ss");
                     worksheet.Cells[row, 4].Value = order.TotalPrice + " VND";
                     worksheet.Cells[row, 5].Value = order.Status.ToString();
                     worksheet.Cells[row, 6].Value = order.PaymentMethod.ToString();
