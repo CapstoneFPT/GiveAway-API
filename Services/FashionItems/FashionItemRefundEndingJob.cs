@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Repositories.Accounts;
 using Repositories.ConsignSales;
+using Repositories.FashionItems;
 using Repositories.Transactions;
 using Services.Emails;
 
@@ -19,14 +20,16 @@ public class FashionItemRefundEndingJob : IJob
     private readonly ITransactionRepository _transactionRepository;
     private readonly IEmailService _emailService;
     private readonly IConsignSaleRepository _consignSaleRepository;
+    private readonly IFashionItemRepository _fashionItemRepository;
     public FashionItemRefundEndingJob(IServiceProvider serviceProvider, IAccountRepository accountRepository, 
-        ITransactionRepository transactionRepository, IEmailService emailService, IConsignSaleRepository consignSaleRepository)
+        ITransactionRepository transactionRepository, IEmailService emailService, IConsignSaleRepository consignSaleRepository, IFashionItemRepository fashionItemRepository)
     {
         _serviceProvider = serviceProvider;
         _accountRepository = accountRepository;
         _transactionRepository = transactionRepository;
         _emailService = emailService;
         _consignSaleRepository = consignSaleRepository;
+        _fashionItemRepository = fashionItemRepository;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -80,7 +83,7 @@ public class FashionItemRefundEndingJob : IJob
                 
             }
             
-            dbContext.IndividualFashionItems.Update(refundItemToEnd);
+            await _fashionItemRepository.UpdateFashionItem(refundItemToEnd);
             var consign = await _consignSaleRepository.GetQueryable()
                 .Include(c => c.ConsignSaleLineItems)
                 .Where(c => c.ConsignSaleId == refundItemToEnd.ConsignSaleLineItem!.ConsignSaleId).FirstOrDefaultAsync();
