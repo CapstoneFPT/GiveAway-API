@@ -198,7 +198,8 @@ namespace Services.Accounts
                 Status = account.Status,
                 Role = account.Role,
                 Balance = account.Balance,
-                ShopCode = account is Staff ? ((Staff)account).Shop.ShopCode : null
+                ShopCode = account is Staff ? ((Staff)account).Shop.ShopCode : null,
+                ShopId = account is Staff ? ((Staff)account).Shop.ShopId : null
             };
             (List<AccountResponse> Items, int Page, int PageSize, int TotalCount) data =
                 await _account.GetAccounts<AccountResponse>(
