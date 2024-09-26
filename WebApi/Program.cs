@@ -27,7 +27,9 @@ using WebApi.Utils.WebServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 IronPdf.License.LicenseKey = builder.Configuration["IronPDF"];
+IronPdf.Installation.Initialize();
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     
 // Add services to the container.
