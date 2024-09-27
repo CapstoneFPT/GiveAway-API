@@ -322,7 +322,7 @@ namespace Services.Emails
             {
                 Expression<Func<ConsignSale, bool>> predicate = consignSale => consignSale.ConsignSaleId == consignSaleId;
                 var consignSale = await _consignSaleRepository.GetSingleConsignSale(predicate);
-                List<ConsignSaleLineItem> listConsignSaleLine = consignSale!.ConsignSaleLineItems.ToList();
+                // List<ConsignSaleLineItem> listConsignSaleLine = consignSale!.ConsignSaleLineItems.ToList();
                 string consignTemplate = @"
             <table align='center' border='0' cellpadding='0' cellspacing='0' class='row row-5' role='presentation'
 						   style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;' width='100%'>
@@ -432,8 +432,12 @@ namespace Services.Emails
 					</table>";
                 SendEmailRequest content = new SendEmailRequest();
                 StringBuilder htmlBuilder = new StringBuilder();
-
-                foreach (var item in listConsignSaleLine)
+                if (consignSale is null)
+                {
+                    Console.WriteLine("Consign is not found");
+                    return false;
+                }
+                foreach (var item in consignSale.ConsignSaleLineItems)
                 {
                     string filledTemplate = consignTemplate
                         .Replace("{PRODUCT_NAME}", item.ProductName)
@@ -442,7 +446,7 @@ namespace Services.Emails
                         .Replace("{COLOR}", item.Color)
                         .Replace("{NOTE}", item.Note)
                         .Replace("{Condition}", item.Condition)
-                        .Replace("{PRODUCT_IMAGE_URL}", item.IndividualFashionItem.Images.Select(c => c.Url).FirstOrDefault())
+                        .Replace("{PRODUCT_IMAGE_URL}", item.Images.Select(c => c.Url).FirstOrDefault())
                         .Replace("{EXPECTED_PRICE}", item.ExpectedPrice.ToString("N0"));
 
                     htmlBuilder.Append(filledTemplate);
@@ -462,7 +466,7 @@ namespace Services.Emails
                     template = template.Replace("[Phone Number]", consignSale.Phone);
                     template = template.Replace("[ConsignTemplate]", finalHtml);
                     template = template.Replace("[Email]", consignSale.Email);
-                    template = template.Replace("[Address]", consignSale.Address);
+                    template = template.Replace("[ShopAddress]", consignSale.Shop.Address);
                     if (consignSale.Status.Equals(ConsignSaleStatus.AwaitDelivery))
                     {
                         template = template.Replace("[Status]", "Approved");
@@ -531,7 +535,7 @@ namespace Services.Emails
                 template = template.Replace("[Customer Name]", consignSale.ConsignorName);
                 template = template.Replace("[Phone Number]", consignSale.Phone);
                 template = template.Replace("[Email]", consignSale.Email);
-                template = template.Replace("[Address]", consignSale.Address);
+                template = template.Replace("[ReceivedAt]", DateTime.UtcNow.AddHours(7).ToString("G"));
                 template = template.Replace("[Response]",
                     "Thank you for trusting and using the consignment service at Give Away store.");
                 template = template.Replace("[ShopAddress]", consignSale.Shop.Address);
@@ -848,7 +852,7 @@ namespace Services.Emails
                 {
                     string filledTemplate = ListReservedItems
                         .Replace("{PRODUCT_NAME}", item.MasterItem.Name)
-                        .Replace("{QUANTITY}", item.ToString())
+                        .Replace("{QUANTITY}", "1")
                         .Replace("{COLOR}", item.Color)
                         .Replace("{Condition}", item.Condition)
                         .Replace("{PRODUCT_IMAGE_URL}", item.Images.Select(c => c.Url).FirstOrDefault())
@@ -858,7 +862,7 @@ namespace Services.Emails
                 }
                 string finalReservedHtml = htmlBuilderReserved.ToString();
                 
-                List<IndividualFashionItem> listIndividualUnavailable = order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.Reserved)
+                List<IndividualFashionItem> listIndividualUnavailable = order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.Unavailable)
                     .Select(c => c.IndividualFashionItem).ToList();
                 string ListUnavailableItems = @"
 <table align='center' border='0' cellpadding='0' cellspacing='0' class='row row-5' role='presentation'
@@ -952,7 +956,7 @@ namespace Services.Emails
                 {
                     string filledTemplate = ListUnavailableItems
                         .Replace("{PRODUCT_NAME_UN}", item.MasterItem.Name)
-                        .Replace("{QUANTITY_UN}", item.ToString())
+                        .Replace("{QUANTITY_UN}", "1")
                         .Replace("{COLOR_UN}", item.Color)
                         .Replace("{Condition_UN}", item.Condition)
                         .Replace("{PRODUCT_IMAGE_URL_UN}", item.Images.Select(c => c.Url).FirstOrDefault())
