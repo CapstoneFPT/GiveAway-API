@@ -198,6 +198,10 @@ namespace Repositories.Categories
                     lisCategoryLv4.AddRange(lv4);
                 }
 
+                if (categoryRequest.Status != null)
+                {
+                    lisCategoryLv4 = lisCategoryLv4.Where(c => c.Status == categoryRequest.Status).ToList();
+                }
                 return lisCategoryLv4;
             }
 
