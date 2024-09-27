@@ -76,7 +76,7 @@ namespace Services.Emails
             using var smtp = new SmtpClient();
             
             await smtp.ConnectAsync(_configuration.GetSection("MailSettings:Host").Value, 587,
-                SecureSocketOptions.None);
+                SecureSocketOptions.Auto);
             await smtp.AuthenticateAsync(_configuration.GetSection("MailSettings:Mail").Value,
                 _configuration.GetSection("MailSettings:Password").Value);
             await smtp.SendAsync(email);
