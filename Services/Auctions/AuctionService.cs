@@ -89,10 +89,10 @@ namespace Services.Auctions
                 throw new AuctionItemNotAvailableForAuctioningException();
             }
 
-            if (await AuctionRepository.IsDateTimeOverlapped(request.StartTime, request.EndTime))
-            {
-                throw new ScheduledTimeOverlappedException("There is an auction on time");
-            }
+            // if (await AuctionRepository.IsDateTimeOverlapped(request.StartTime, request.EndTime))
+            // {
+            //     throw new ScheduledTimeOverlappedException("There is an auction on time");
+            // }
 
             if (auctionItem.InitialPrice == null)
             {
