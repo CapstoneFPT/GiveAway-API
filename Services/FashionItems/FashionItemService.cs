@@ -136,7 +136,7 @@ namespace Services.FashionItems
         var worksheet = package.Workbook.Worksheets.Add("Fashion Items");
 
         worksheet.Cells["A1:N1"].Merge = true;
-        worksheet.Cells["A1"].Value = "Fashion Items Report";
+        worksheet.Cells["A1"].Value = request.ShopId.HasValue ? $"Fashion Item Report for {fashionItems.FirstOrDefault()?.ShopAddress}" : "Fashion Item Report";
         worksheet.Cells["A1"].Style.Font.Size = 16;
         worksheet.Cells["A1"].Style.Font.Bold = true;
         worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;

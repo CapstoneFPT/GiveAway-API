@@ -1450,7 +1450,7 @@ public class OrderService : IOrderService
 
                     await UpdateOrder(order);
                     await UpdateFashionItemStatus(order.OrderId);
-                    await _emailService.SendEmailOrder(order);
+                    // await _emailService.SendEmailOrder(order);
 
                     return new Result<string, ErrorCode>(
                         $"{returnUrl}?paymentstatus=success&message={Uri.EscapeDataString("Payment success")}");
