@@ -752,14 +752,16 @@ namespace Services.Emails
 
         public async Task<bool> SendEmailCancelOrderAndReservedItems(Order order)
         {
-            var content = new SendEmailRequest();
-            if (order.MemberId != null)
+            try
             {
-                var member = await _accountRepository.GetAccountById(order.MemberId.Value);
-                content.To = member!.Email;
-                List<IndividualFashionItem> listIndividualReserved = order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.Reserved)
-                    .Select(c => c.IndividualFashionItem).ToList();
-                string ListReservedItems = @"
+                var content = new SendEmailRequest();
+                if (order.MemberId != null)
+                {
+                    var member = await _accountRepository.GetAccountById(order.MemberId.Value);
+                    content.To = member!.Email;
+                    List<IndividualFashionItem> listIndividualReserved = order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.Reserved)
+                        .Select(c => c.IndividualFashionItem).ToList();
+                    string ListReservedItems = @"
 <table align='center' border='0' cellpadding='0' cellspacing='0' class='row row-5' role='presentation'
     style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;' width='100%'>
     <tbody>
@@ -845,26 +847,26 @@ namespace Services.Emails
     </tbody>
 </table>";
 
-                var template = GetEmailTemplate("CancelOrderAndReservedItemMail");
-                StringBuilder htmlBuilderReserved = new StringBuilder();
+                    var template = GetEmailTemplate("CancelOrderAndReservedItemMail");
+                    StringBuilder htmlBuilderReserved = new StringBuilder();
 
-                foreach (var item in listIndividualReserved)
-                {
-                    string filledTemplate = ListReservedItems
-                        .Replace("{PRODUCT_NAME}", item.MasterItem.Name)
-                        .Replace("{QUANTITY}", "1")
-                        .Replace("{COLOR}", item.Color)
-                        .Replace("{Condition}", item.Condition)
-                        .Replace("{PRODUCT_IMAGE_URL}", item.Images.Select(c => c.Url).FirstOrDefault())
-                        .Replace("{SELLING_PRICE}", item.SellingPrice!.Value.ToString("N0"));
+                    foreach (var item in listIndividualReserved)
+                    {
+                        string filledTemplate = ListReservedItems
+                            .Replace("{PRODUCT_NAME}", item.MasterItem.Name)
+                            .Replace("{QUANTITY}", "1")
+                            .Replace("{COLOR}", item.Color)
+                            .Replace("{Condition}", item.Condition)
+                            .Replace("{PRODUCT_IMAGE_URL}", item.Images.Select(c => c.Url).FirstOrDefault())
+                            .Replace("{SELLING_PRICE}", item.SellingPrice!.Value.ToString("N0"));
 
-                    htmlBuilderReserved.Append(filledTemplate);
-                }
-                string finalReservedHtml = htmlBuilderReserved.ToString();
+                        htmlBuilderReserved.Append(filledTemplate);
+                    }
+                    string finalReservedHtml = htmlBuilderReserved.ToString();
                 
-                List<IndividualFashionItem> listIndividualUnavailable = order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.Unavailable)
-                    .Select(c => c.IndividualFashionItem).ToList();
-                string ListUnavailableItems = @"
+                    List<IndividualFashionItem> listIndividualUnavailable = order.OrderLineItems.Where(c => c.IndividualFashionItem.Status == FashionItemStatus.Unavailable)
+                        .Select(c => c.IndividualFashionItem).ToList();
+                    string ListUnavailableItems = @"
 <table align='center' border='0' cellpadding='0' cellspacing='0' class='row row-5' role='presentation'
     style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff;' width='100%'>
     <tbody>
@@ -950,42 +952,48 @@ namespace Services.Emails
     </tbody>
 </table>";
 
-                StringBuilder htmlBuilderUnavailable = new StringBuilder();
+                    StringBuilder htmlBuilderUnavailable = new StringBuilder();
 
-                foreach (var item in listIndividualUnavailable)
-                {
-                    string filledTemplate = ListUnavailableItems
-                        .Replace("{PRODUCT_NAME_UN}", item.MasterItem.Name)
-                        .Replace("{QUANTITY_UN}", "1")
-                        .Replace("{COLOR_UN}", item.Color)
-                        .Replace("{Condition_UN}", item.Condition)
-                        .Replace("{PRODUCT_IMAGE_URL_UN}", item.Images.Select(c => c.Url).FirstOrDefault())
-                        .Replace("{SELLING_PRICE_UN}", item.SellingPrice!.Value.ToString("N0"));
+                    foreach (var item in listIndividualUnavailable)
+                    {
+                        string filledTemplate = ListUnavailableItems
+                            .Replace("{PRODUCT_NAME_UN}", item.MasterItem.Name)
+                            .Replace("{QUANTITY_UN}", "1")
+                            .Replace("{COLOR_UN}", item.Color)
+                            .Replace("{Condition_UN}", item.Condition)
+                            .Replace("{PRODUCT_IMAGE_URL_UN}", item.Images.Select(c => c.Url).FirstOrDefault())
+                            .Replace("{SELLING_PRICE_UN}", item.SellingPrice!.Value.ToString("N0"));
 
-                    htmlBuilderUnavailable.Append(filledTemplate);
-                }
-                string finalUnavailableHtml = htmlBuilderUnavailable.ToString();
+                        htmlBuilderUnavailable.Append(filledTemplate);
+                    }
+                    string finalUnavailableHtml = htmlBuilderUnavailable.ToString();
                 
-                template = template.Replace($"[Order Code]", order.OrderCode);
-                template = template.Replace($"[Quantity]", order.OrderLineItems.Count().ToString());
-                template = template.Replace($"[Payment Method]", order.PaymentMethod.ToString());
-                template = template.Replace($"[ListReservedItems]", finalReservedHtml);
-                template = template.Replace($"[ListUnavailableItems]", finalUnavailableHtml);
-                template = template.Replace($"[Total Price]", order.TotalPrice.ToString("N0"));
-                template = template.Replace($"[Recipient Name]", order.RecipientName);
-                template = template.Replace($"[Phone Number]", order.Phone);
-                template = template.Replace($"[Email]", order.Email);
-                template = template.Replace($"[Address]", order.Address);
-                template = template.Replace($"[Shipping Fee]", order.ShippingFee.ToString("N0")) ?? "N/A";
-                template = template.Replace($"[Discount]", order.Discount.ToString("N0"));
-                template = template.Replace($"[Payment Date]",
-                    order.OrderLineItems.Select(c => c.PaymentDate).FirstOrDefault()!.Value.AddHours(7).ToString("G")) ?? "N/A";
-                content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY";
-                content.Body = template;
-                await SendEmail(content);
-                return true;
+                    template = template.Replace($"[Order Code]", order.OrderCode);
+                    template = template.Replace($"[Quantity]", order.OrderLineItems.Count().ToString());
+                    template = template.Replace($"[Payment Method]", order.PaymentMethod.ToString());
+                    template = template.Replace($"[ListReservedItems]", finalReservedHtml);
+                    template = template.Replace($"[ListUnavailableItems]", finalUnavailableHtml);
+                    template = template.Replace($"[Total Price]", order.TotalPrice.ToString("N0"));
+                    template = template.Replace($"[Recipient Name]", order.RecipientName);
+                    template = template.Replace($"[Phone Number]", order.Phone);
+                    template = template.Replace($"[Email]", order.Email);
+                    template = template.Replace($"[Address]", order.Address);
+                    template = template.Replace($"[Shipping Fee]", order.ShippingFee.ToString("N0")) ?? "N/A";
+                    template = template.Replace($"[Discount]", order.Discount.ToString("N0"));
+                    template = template.Replace($"[Payment Date]",
+                        order.OrderLineItems.Select(c => c.PaymentDate).FirstOrDefault()!.Value.AddHours(7).ToString("G")) ?? "N/A";
+                    content.Subject = $"[GIVEAWAY] ORDER INVOICE FROM GIVEAWAY";
+                    content.Body = template;
+                    await SendEmail(content);
+                    return true;
+                }
+                return false;
             }
-            return false;
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return false;
+            }
         }
 
         public async Task<bool> SendEmailConsignNegotiatePrice(ConsignSale consignSale)

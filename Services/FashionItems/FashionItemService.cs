@@ -647,14 +647,16 @@ namespace Services.FashionItems
             itemMaster.Gender = masterItemRequest.Gender ?? itemMaster.Gender;
 
 
-            itemMaster.Images.Clear();
-
-            itemMaster.Images = masterItemRequest.ImageRequests
-                .Select(x => new Image()
-                {
-                    Url = x,
-                    CreatedDate = DateTime.UtcNow,
-                }).ToList();
+            if (masterItemRequest.ImageRequests.Any())
+            {
+                itemMaster.Images.Clear();
+                itemMaster.Images = masterItemRequest.ImageRequests
+                    .Select(x => new Image()
+                    {
+                        Url = x,
+                        CreatedDate = DateTime.UtcNow,
+                    }).ToList();
+            }
 
             await _fashionitemRepository.UpdateMasterItem(itemMaster);
             return new BusinessObjects.Dtos.Commons.Result<MasterItemResponse>()
