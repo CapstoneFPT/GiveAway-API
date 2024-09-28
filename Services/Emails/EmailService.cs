@@ -1107,6 +1107,17 @@ namespace Services.Emails
                                             </td>
                                         </tr>
                                     </table>
+                                    <table border='0' cellpadding='0' cellspacing='0' class='paragraph_block block-6' role='presentation' style='mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;' width='100%'>
+                                        <tr>
+                                            <td class='pad' style='padding-bottom: 10px; padding-left: 10px; padding-right: 10px;'>
+                                                <div style='color: #393d47; font-family: Oswald, Arial, Helvetica Neue, Helvetica, sans-serif; font-size: 17px; letter-spacing: 0px; line-height: 150%; text-align: left; mso-line-height-alt: 25.5px;'>
+                                                    <p style='margin: 0; word-break: break-word'>
+                                                        <span style='word-break: break-word; color: #b23ab6;'>Response: </span> {RESPONSEFROMSHOP}<br/>
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </td>
                             </tr>
                             </tbody>
@@ -1126,9 +1137,10 @@ namespace Services.Emails
                     .Replace("{SIZE}", item.Size.ToString())
                     .Replace("{COLOR}", item.Color)
                     .Replace("{NOTE}", item.Note)
+                    .Replace("{RESPONSEFROMSHOP}", item.ResponseFromShop ?? "N/A")
                     .Replace("{Condition}", item.Condition)
                     .Replace("{PRODUCT_IMAGE_URL}",
-                        item.IndividualFashionItem.Images.Select(c => c.Url).FirstOrDefault())
+                        item.Images.Select(c => c.Url).FirstOrDefault())
                     .Replace("{EXPECTED_PRICE}", item.ExpectedPrice.ToString("N0"))
                     .Replace("{DEAL_PRICE}", item.DealPrice!.Value.ToString("N0"));
 
@@ -1141,12 +1153,13 @@ namespace Services.Emails
                 var member = await _accountRepository.GetAccountById(consignSale.MemberId.Value);
                 content.To = member!.Email;
 
-                var template = GetEmailTemplate("ConsignSaleMail");
+                var template = GetEmailTemplate("ConsignNegotiatePriceMail");
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
                 template = template.Replace("[Type]", consignSale.Type.ToString());
                 template = template.Replace("[Created Date]", consignSale.CreatedDate.AddHours(7).ToString("G"));
                 template = template.Replace("[Customer Name]", consignSale.ConsignorName);
                 template = template.Replace("[Phone Number]", consignSale.Phone);
+                template = template.Replace("[NumberOfNegotiateProduct]", listConsignSaleLine.Count.ToString());
                 template = template.Replace("[ConsignTemplate]", finalHtml);
                 template = template.Replace("[Email]", consignSale.Email);
                 template = template.Replace("[Address]", consignSale.Address);
@@ -1154,7 +1167,7 @@ namespace Services.Emails
                 template = template.Replace("[Response]",
                     "Please view your consignment on the website to decide our deal price.");
 
-                content.Subject = $"[GIVEAWAY] CONSIGN ANNOUNCEMENT FROM GIVEAWAY";
+                content.Subject = $"[GIVEAWAY] CONSIGN NEGOTIATION FROM GIVEAWAY";
                 content.Body = template;
 
                 await SendEmail(content);
