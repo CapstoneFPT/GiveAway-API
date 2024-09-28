@@ -866,7 +866,7 @@ public class OrderService : IOrderService
             if (fashionItem is { Status: FashionItemStatus.OnDelivery })
             {
                 fashionItem.Status = FashionItemStatus.Refundable;
-                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(20);
+                orderDetail.RefundExpirationDate = DateTime.UtcNow.AddMinutes(15);
                 if (order.PaymentMethod.Equals(PaymentMethod.COD))
                     orderDetail.PaymentDate = DateTime.UtcNow;
                 await ScheduleRefundableItemEnding(fashionItem.ItemId, orderDetail.RefundExpirationDate.Value);
@@ -890,6 +890,7 @@ public class OrderService : IOrderService
                     PaymentMethod = PaymentMethod.COD,
                     SenderId = order.MemberId,
                     Amount = order.TotalPrice,
+                    SenderBalance = order.Member?.Balance ?? 0,
                     Type = TransactionType.Purchase,
                 };
                 await _transactionRepository.CreateTransaction(transaction);
@@ -1016,6 +1017,7 @@ public class OrderService : IOrderService
             Amount = order.TotalPrice,
             ShopId = shopId,
             SenderId = isMember?.AccountId,
+            SenderBalance = isMember?.Balance ?? 0,
             PaymentMethod = PaymentMethod.Cash,
         };
         await _transactionRepository.CreateTransaction(orderTransaction);

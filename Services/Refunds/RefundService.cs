@@ -359,7 +359,12 @@ namespace Services.Refunds
                 OrderLineItemId = request.OrderLineItemId,
                 RefundStatus = RefundStatus.Completed,
                 RefundPercentage = request.RefundPercentage,
-                ResponseFromShop = "We accepted refund request at shop"
+                ResponseFromShop = "We accepted refund request at shop",
+                Images = request.Images.Select(url => new Image()
+                {
+                    CreatedDate = DateTime.UtcNow,
+                   Url = url
+                }).ToList()
             };
             await _refundRepository.CreateRefund(refund);
             var orderLineItem = await _orderLineItemRepository.GetOrderLineItemById(request.OrderLineItemId);

@@ -717,13 +717,13 @@ namespace Services.Emails
                 }
                 SendEmailRequest content = new SendEmailRequest
                 {
-                    Subject = $"[GIVEAWAY] CONGRATULATION AUCTION WINNER",
+                    Subject = $"[GIVEAWAY] CONSIGN PRODUCT SOLD ANNOUNCEMENT",
                     To = member.Email
                 };
                 var template = GetEmailTemplate("SoldItemConsignMail");
                 template = template.Replace("[ConsignSale Code]", consignSale.ConsignSaleCode);
                 template = template.Replace("[Type]", consignSale.Type.ToString());
-                template = template.Replace("[SoldPrice]", consignSaleLineItem.IndividualFashionItem.SellingPrice!.Value.ToString("N0"));
+                template = template.Replace("[SoldPrice]", consignSaleLineItem.ConfirmedPrice!.Value.ToString("N0"));
                 template = template.Replace("[ConsignorReceive]", amountConsignorReceive.ToString("N0"));
                 template = template.Replace("[ConsignmentFee]", "20%");
                 template = template.Replace("[Phone Number]", consignSale.Phone);
@@ -733,7 +733,7 @@ namespace Services.Emails
                 
                 template = template.Replace("{PRODUCT_NAME}", consignSaleLineItem.ProductName);
                 template = template.Replace("{COLOR}", consignSaleLineItem.Color);
-                template = template.Replace("{EXPECTED_PRICE}", consignSaleLineItem.ExpectedPrice.ToString("N0"));
+                template = template.Replace("{EXPECTED_PRICE}", consignSaleLineItem.ConfirmedPrice!.Value.ToString("N0"));
                 template = template.Replace("{SIZE}", consignSaleLineItem.Size.ToString());
                 template = template.Replace("{Condition}", consignSaleLineItem.Condition);
                 template = template.Replace("{GENDER}", consignSaleLineItem.Gender.ToString());
