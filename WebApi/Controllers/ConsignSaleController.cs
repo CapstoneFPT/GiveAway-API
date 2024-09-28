@@ -43,8 +43,8 @@ namespace WebApi.Controllers
         }
         [Authorize]
         [HttpGet("{consignSaleId}")]
-        [ProducesResponseType<ConsignSaleDetailedResponse>((int) HttpStatusCode.OK)]
-        [ProducesResponseType<ErrorResponse>((int) HttpStatusCode.InternalServerError)]
+        [ProducesResponseType<ConsignSaleDetailedResponse>((int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetConsignSaleById([FromRoute] Guid consignSaleId)
         {
             var result = await _consignSaleService.GetConsignSaleById(consignSaleId);
@@ -56,7 +56,7 @@ namespace WebApi.Controllers
                     _ => StatusCode(500, new ErrorResponse("Error fetching consign sale details", ErrorType.ApiError,
                         HttpStatusCode.InternalServerError, result.Error))
                 };
-            } 
+            }
 
             return Ok(result.Value);
         }
@@ -154,6 +154,31 @@ namespace WebApi.Controllers
 
             return Ok(result.Value);
         }
+
+        [Authorize(Roles = "Staff,Admin")]
+        [HttpGet("export-excel")]
+        [ProducesResponseType(typeof(FileContentResult), (int)HttpStatusCode.OK)]
+        [ProducesResponseType<ErrorResponse>((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> ExportConsignSaleToExcel([FromQuery] ExportConsignSaleToExcelRequest request)
+        {
+            var result = await _consignSaleService.ExportConsignSaleToExcel(request);
+
+            if (!result.IsSuccessful)
+            {
+                return result.Error switch
+                {
+                    ErrorCode.ServerError => StatusCode(500,
+                        new ErrorResponse("Error exporting consign sale to Excel", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.ServerError)),
+                    _ => StatusCode(500,
+                        new ErrorResponse("Error exporting consign sale to Excel", ErrorType.ApiError,
+                            HttpStatusCode.InternalServerError, ErrorCode.UnknownError))
+                };
+            }
+
+            return File(result.Value.Content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ConsignSale_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+        }
+
         [Authorize]
         [HttpGet("{consignsaleId}/consignlineitems")]
         [ProducesResponseType<List<ConsignSaleLineItemsListResponse>>((int)HttpStatusCode.OK)]
@@ -252,4 +277,5 @@ namespace WebApi.Controllers
             return File(result.Value.Content, "application/pdf", $"Invoice_{result.Value.ConsignSaleCode}.pdf");
         }
     }
+
 }

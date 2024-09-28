@@ -2,6 +2,7 @@
 using BusinessObjects.Dtos.ConsignSaleLineItems;
 using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.FashionItems;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Entities;
 using DotNext;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,12 @@ namespace Services.ConsignSales
     {
         Task<Result<PaginationResponse<ConsignSaleListResponse>, ErrorCode>> GetAllConsignSales(Guid accountId,
             ConsignSaleRequest request);
-        Task<DotNext.Result<ConsignSaleDetailedResponse,ErrorCode>> GetConsignSaleById(Guid consignId);
+        Task<DotNext.Result<ConsignSaleDetailedResponse, ErrorCode>> GetConsignSaleById(Guid consignId);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> CreateConsignSale(Guid accountId, CreateConsignSaleRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ApprovalConsignSale(Guid consignId, ApproveConsignSaleRequest request);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> ConfirmReceivedFromShop(Guid consignId);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> CreateConsignSaleByShop(Guid shopId, CreateConsignSaleByShopRequest request);
-        
+
         Task<Result<List<ConsignSaleLineItemsListResponse>, ErrorCode>> GetConsignSaleLineItems(Guid consignsaleId);
         Task<BusinessObjects.Dtos.Commons.Result<MasterItemResponse>> CreateMasterItemFromConsignSaleLineItem(Guid consignLineItemId, CreateMasterItemForConsignRequest detailRequest);
 
@@ -39,9 +40,9 @@ namespace Services.ConsignSales
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> NotifyDelivery(Guid consignsaleId);
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> CancelAllConsignSaleLineItems(Guid consignsaleId);
         Task<BusinessObjects.Dtos.Commons.Result<ConsignSaleDetailedResponse>> NegotiatingConsignSale(Guid consignSaleId);
-
+        Task<DotNext.Result<ExcelResponse, ErrorCode>> ExportConsignSaleToExcel(ExportConsignSaleToExcelRequest request);
         Task<Result<ConsignSaleDetailedResponse, ErrorCode>> ContinueConsignSale(Guid consignsaleId);
-        
+
         Task<Result<InvoiceConsignResponse, ErrorCode>> GenerateConsignOfflineInvoice(Guid consignsaleId, Guid shopId);
     }
 }

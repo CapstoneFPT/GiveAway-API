@@ -7,6 +7,7 @@ using BusinessObjects.Dtos.ConsignSales;
 using BusinessObjects.Dtos.Email;
 using BusinessObjects.Dtos.FashionItems;
 using BusinessObjects.Dtos.OrderLineItems;
+using BusinessObjects.Dtos.Orders;
 using BusinessObjects.Dtos.Shops;
 using BusinessObjects.Entities;
 using BusinessObjects.Utils;
@@ -17,6 +18,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Quartz;
 using Repositories.Accounts;
@@ -210,7 +213,7 @@ namespace Services.ConsignSales
                 Phone = request.Phone,
                 MemberId = member?.AccountId,
             };
-            
+
             var newConsignLineItem = new List<ConsignSaleLineItem>();
 
             foreach (var consignDetailRequest in request.ConsignDetailRequests)
@@ -244,7 +247,7 @@ namespace Services.ConsignSales
                     Url = url,
                     CreatedDate = DateTime.UtcNow
                 }).ToList();
-                
+
                 var individualItem = new IndividualFashionItem()
                 {
                     Note = consignLineItem.Note,
@@ -260,7 +263,7 @@ namespace Services.ConsignSales
 
                 switch (newConsign.Type)
                 {
-                   
+
                     case ConsignSaleType.ConsignedForAuction:
                         individualItem = new IndividualAuctionFashionItem()
                         {
@@ -288,7 +291,7 @@ namespace Services.ConsignSales
                         individualItem.SellingPrice = consignDetailRequest.ExpectedPrice;
                         consignLineItem.Status = ConsignSaleLineItemStatus.Sold;
                         newConsign.Status = ConsignSaleStatus.Completed;
-                        newConsign.ConsignorReceivedAmount = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice); 
+                        newConsign.ConsignorReceivedAmount = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice);
                         newConsign.EndDate = DateTime.UtcNow;
                         newConsign.SoldPrice = request.ConsignDetailRequests.Sum(c => c.ExpectedPrice);
                         break;
@@ -309,7 +312,7 @@ namespace Services.ConsignSales
             await _consignSaleRepository.CreateConsignSaleByShop(newConsign);
             if (request.Type == ConsignSaleType.CustomerSale)
             {
-                
+
                 var admin = await _accountRepository.FindOne(c => c.Role == Roles.Admin);
                 if (admin is null)
                 {
@@ -905,7 +908,7 @@ namespace Services.ConsignSales
                 consignSale.Status = ConsignSaleStatus.OnSale;
                 consignSale.StartDate = DateTime.UtcNow;
                 consignSale.EndDate = DateTime.UtcNow.AddDays(60);
-                
+
             }
 
             await _consignSaleRepository.UpdateConsignSale(consignSale);
@@ -1030,7 +1033,7 @@ namespace Services.ConsignSales
             foreach (var consignSaleLineItem in consignSale.ConsignSaleLineItems)
             {
 
-                
+
                 consignSaleLineItem.Status = ConsignSaleLineItemStatus.Returned;
             }
 
@@ -1237,7 +1240,7 @@ namespace Services.ConsignSales
             }
         }
 
-        
+
 
         public async Task<Result<InvoiceConsignResponse, ErrorCode>> GenerateConsignOfflineInvoice(Guid consignsaleId, Guid shopId)
         {
@@ -1412,5 +1415,178 @@ namespace Services.ConsignSales
                 //     await _consignSaleRepository.UpdateConsignSale(consign);
             }
         }
+
+        public async Task<Result<ExcelResponse, ErrorCode>> ExportConsignSaleToExcel(ExportConsignSaleToExcelRequest request)
+        {
+            Expression<Func<ConsignSale, bool>> predicate = consignSale => true;
+
+            if (request.ConsignSaleCode != null)
+            {
+                predicate = predicate.And(x => EF.Functions.ILike(x.ConsignSaleCode, $"%{request.ConsignSaleCode}%"));
+            }
+
+            if (request.MemberName != null)
+            {
+                predicate = predicate.And(x => x.ConsignorName != null && EF.Functions.ILike(x.ConsignorName, $"%{request.MemberName}%"));
+            }
+
+            if (request.Phone != null)
+            {
+                predicate = predicate.And(x => x.Phone != null && EF.Functions.ILike(x.Phone, $"%{request.Phone}%"));
+            }
+
+            if (request.ShopId != null)
+            {
+                predicate = predicate.And(x => x.ShopId == request.ShopId);
+            }
+
+
+            if (request.Email != null)
+            {
+                predicate = predicate.And(x => x.Email != null && EF.Functions.ILike(x.Email, $"%{request.Email}%"));
+            }
+
+            if (request.Statuses != null && request.Statuses.Any())
+            {
+                predicate = predicate.And(x => request.Statuses.Contains(x.Status));
+            }
+
+            if (request.Types != null && request.Types.Any())
+            {
+                predicate = predicate.And(x => request.Types.Contains(x.Type));
+            }
+
+            if (request.ConsignSaleMethods != null && request.ConsignSaleMethods.Any())
+            {
+                predicate = predicate.And(x => request.ConsignSaleMethods.Contains(x.ConsignSaleMethod));
+            }
+
+            if (request.StartDate != null)
+            {
+                predicate = predicate.And(x => x.CreatedDate >= request.StartDate);
+            }
+
+            if (request.EndDate != null)
+            {
+                predicate = predicate.And(x => x.CreatedDate <= request.EndDate);
+            }
+
+            var consignSales = await _consignSaleRepository.GetQueryable()
+            .Where(predicate)
+            .Select(x => new
+            {
+                ConsignSaleCode = x.ConsignSaleCode,
+                ConsignorName = x.ConsignorName,
+                Member = x.Member != null ? x.Member.Fullname : null,
+                Phone = x.Phone,
+                Email = x.Email,
+                Address = x.Address,
+                ShopId = x.ShopId,
+                ShopAddress = x.Shop.Address,
+                Status = x.Status,
+                Type = x.Type,
+                ConsignSaleMethod = x.ConsignSaleMethod,
+                CreatedDate = x.CreatedDate,
+                StartDate = x.StartDate,
+                EndDate = x.EndDate,
+                ConsignorReceivedAmount = x.ConsignorReceivedAmount,
+                TotalPrice = x.TotalPrice,
+                SoldPrice = x.SoldPrice,
+                ResponseFromShop = x.ResponseFromShop,
+            })
+            .ToListAsync();
+
+            if (!consignSales.Any())
+            {
+                return new Result<ExcelResponse, ErrorCode>(ErrorCode.NotFound);
+            }
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Consign Sales");
+
+
+                using (var range = worksheet.Cells["A1:K1"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightBlue);
+                    range.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                }
+
+                worksheet.Cells[1, 1].Value = "Consign Sale Code";
+                worksheet.Cells[1, 2].Value = "Consignor Name";
+                worksheet.Cells[1, 3].Value = "Member";
+                worksheet.Cells[1, 4].Value = "Phone";
+                worksheet.Cells[1, 5].Value = "Email";
+                worksheet.Cells[1, 6].Value = "Address";
+                worksheet.Cells[1, 7].Value = "Shop Address";
+                worksheet.Cells[1, 8].Value = "Status";
+                worksheet.Cells[1, 9].Value = "Type";
+                worksheet.Cells[1, 10].Value = "Consign Sale Method";
+                worksheet.Cells[1, 11].Value = "Created Date";
+                worksheet.Cells[1, 12].Value = "Start Date";
+                worksheet.Cells[1, 13].Value = "End Date";
+                worksheet.Cells[1, 14].Value = "Consignor Received Amount";
+                worksheet.Cells[1, 15].Value = "Total Price";
+                worksheet.Cells[1, 16].Value = "Sold Price";
+                worksheet.Cells[1, 17].Value = "Response From Shop";
+
+                int row = 2;
+                foreach (var consignSale in consignSales)
+                {
+                    worksheet.Cells[row, 1].Value = consignSale.ConsignSaleCode;
+                    worksheet.Cells[row, 2].Value = consignSale.ConsignorName;
+                    worksheet.Cells[row, 3].Value = consignSale.Member;
+                    worksheet.Cells[row, 4].Value = consignSale.Phone;
+                    worksheet.Cells[row, 5].Value = consignSale.Email;
+                    worksheet.Cells[row, 6].Value = consignSale.Address;
+                    worksheet.Cells[row, 7].Value = consignSale.ShopAddress;
+                    worksheet.Cells[row, 8].Value = consignSale.Status.ToString();
+                    worksheet.Cells[row, 9].Value = consignSale.Type.ToString();
+                    worksheet.Cells[row, 10].Value = consignSale.ConsignSaleMethod.ToString();
+                    worksheet.Cells[row, 11].Value = consignSale.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss");
+                    worksheet.Cells[row, 12].Value = consignSale.StartDate?.ToString("dd/MM/yyyy HH:mm:ss");
+                    worksheet.Cells[row, 13].Value = consignSale.EndDate?.ToString("dd/MM/yyyy HH:mm:ss");
+                    worksheet.Cells[row, 14].Value = consignSale.ConsignorReceivedAmount;
+                    worksheet.Cells[row, 15].Value = consignSale.TotalPrice;
+                    worksheet.Cells[row, 16].Value = consignSale.SoldPrice;
+                    worksheet.Cells[row, 17].Value = consignSale.ResponseFromShop;
+
+                    // Alternate row colors
+                    if (row % 2 == 0)
+                    {
+                        worksheet.Cells[row, 1, row, 17].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[row, 1, row, 17].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    }
+
+                    row++;
+                }
+
+                //Auto fit columns
+                worksheet.Cells[1, 1, row - 1, 17].AutoFitColumns();
+
+                //Add borders
+                var borderStyle = worksheet.Cells[1, 1, row - 1, 17].Style.Border;
+                borderStyle.Top.Style = borderStyle.Left.Style =
+                    borderStyle.Right.Style = borderStyle.Bottom.Style = ExcelBorderStyle.Thin;
+
+                //Add title
+                worksheet.InsertRow(1, 2);
+                worksheet.Cells["A1:K1"].Merge = true;
+                worksheet.Cells["A1"].Value = request.ShopId.HasValue ? $"Consign Sale Report for {consignSales.FirstOrDefault()?.ShopAddress}" : "Consign Sale Report";
+                worksheet.Cells["A1"].Style.Font.Size = 16;
+                worksheet.Cells["A1"].Style.Font.Bold = true;
+                worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                var excelBytes = package.GetAsByteArray();
+                return new Result<ExcelResponse, ErrorCode>(new ExcelResponse()
+                {
+                    Content = excelBytes,
+                    FileName = $"ConsignSales_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
+                });
+            }
+        }
+
     }
 }
