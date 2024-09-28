@@ -649,7 +649,7 @@ namespace Services.FashionItems
 
             if (masterItemRequest.ImageRequests.Any())
             {
-                itemMaster.Images.Clear();
+                _imageRepository.ClearImages(itemMaster.Images);
                 itemMaster.Images = masterItemRequest.ImageRequests
                     .Select(x => new Image()
                     {
