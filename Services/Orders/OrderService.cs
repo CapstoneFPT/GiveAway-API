@@ -311,6 +311,7 @@ public class OrderService : IOrderService
                 {
                     o.OrderCode,
                     CustomerName = o.Member.Fullname ?? "N/A",
+                    o.RecipientName,
                     o.CreatedDate,
                     o.TotalPrice,
                     o.Status,
@@ -361,7 +362,8 @@ public class OrderService : IOrderService
                 foreach (var order in orders)
                 {
                     worksheet.Cells[row, 1].Value = order.OrderCode;
-                    worksheet.Cells[row, 2].Value = order.CustomerName ?? "N/A";
+                    worksheet.Cells[row, 2].Value = order.RecipientName ?? (order.CustomerName != null ?
+                        order.CustomerName : "N/A");
                     worksheet.Cells[row, 3].Value = order.CreatedDate.AddHours(7).ToString("dd/MM/yyyy HH:mm:ss");
                     worksheet.Cells[row, 4].Value = order.TotalPrice + " VND";
                     worksheet.Cells[row, 5].Value = order.Status.ToString();

@@ -735,7 +735,7 @@ namespace Services.FashionItems
                 return new Result<FashionItemDetailResponse, ErrorCode>(ErrorCode.InvalidOperation);
             }
 
-            returnedItem.Status = FashionItemStatus.Available;
+            returnedItem.Status = FashionItemStatus.Unavailable;
             await _fashionitemRepository.UpdateFashionItem(returnedItem);
             return new FashionItemDetailResponse
             {
