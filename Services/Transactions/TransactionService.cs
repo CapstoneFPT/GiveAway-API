@@ -289,7 +289,7 @@ namespace Services.Transactions
                            transaction.Refund!.RefundCode ?? transaction.Recharge!.RechargeCode ??
                            transaction.AuctionDeposit!.DepositCode) ?? transaction.Withdraw!.WithdrawCode,
                     ConsignSaleId = transaction.ConsignSaleId,
-                    // ConsignSaleCode = transaction.ConsignSale != null ? transaction.ConsignSale.ConsignSaleCode : null,
+                    PaymentMethod = transaction.PaymentMethod,
                     Amount = transaction.Amount,
                     CreatedDate = transaction.CreatedDate,
                     CustomerName = transaction.Order!.RecipientName != null
