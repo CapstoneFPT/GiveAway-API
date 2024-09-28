@@ -105,6 +105,16 @@ namespace Services.FashionItems
         if(request.ShopId.HasValue)
             predicate = predicate.And(i => i.MasterItem.ShopId == request.ShopId);
 
+        if (request.StartDate != null)
+        {
+            predicate = predicate.And(i => i.CreatedDate >= request.StartDate);
+        }
+        
+        if (request.EndDate != null)
+        {
+            predicate = predicate.And(i => i.CreatedDate <= request.EndDate);
+        }
+
         var fashionItems = await query
             .Where(predicate)
             .Select(i => new

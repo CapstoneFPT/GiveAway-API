@@ -5,6 +5,8 @@ namespace BusinessObjects.Dtos.FashionItems;
 
 public class ExportFashionItemsRequest
 {
+  public DateTime? StartDate { get; set; }
+  public DateTime? EndDate { get; set; }
   public string? ItemCode { get; set; }
   public Guid? ShopId { get; set; }
   public FashionItemStatus[]? Status { get; set; }
