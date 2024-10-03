@@ -809,3 +809,4 @@ fabric.properties
 WebApi/appsettings.Development.json
 .vscode
 script.sql
+WebApi2.0/appsettings.Development.json
