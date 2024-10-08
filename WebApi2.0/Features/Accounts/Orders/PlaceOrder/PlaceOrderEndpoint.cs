@@ -3,12 +3,12 @@ using FastEndpoints;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Http.HttpResults;
 using WebApi2._0.Common;
+using WebApi2._0.Domain.Entities;
 using WebApi2._0.Domain.Enums;
 using WebApi2._0.Infrastructure.Persistence;
-using WebApi2._0.Domain.Entities;
 using Order = WebApi2._0.Domain.Entities.Order;
 
-namespace WebApi2._0.Features.Accounts.PlaceOrder;
+namespace WebApi2._0.Features.Accounts.Orders.PlaceOrder;
 
 public sealed class PlaceOrderEndpoint : Endpoint<PlaceOrderRequest,
     Results<CreatedAtRoute<PlaceOrderResponse>, BadRequest<ErrorResponse>>>

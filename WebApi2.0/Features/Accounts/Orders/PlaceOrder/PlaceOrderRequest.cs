@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using WebApi2._0.Domain.Enums;
 
-namespace WebApi2._0.Features.Accounts.PlaceOrder;
+namespace WebApi2._0.Features.Accounts.Orders.PlaceOrder;
 
 public record PlaceOrderRequest
 {

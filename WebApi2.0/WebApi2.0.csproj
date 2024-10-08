@@ -49,12 +49,19 @@
 
     <ItemGroup>
       <Folder Include="Features\Accounts\Addresses\" />
-      <Folder Include="Features\Accounts\PlaceOrder\" />
       <Folder Include="Features\Accounts\Recharges\" />
-      <Folder Include="Features\Auctions\" />
+      <Folder Include="Features\Accounts\Withdraws\" />
+      <Folder Include="Features\Admin\ApproveAuction\" />
+      <Folder Include="Features\Admin\Withdraws\" />
+      <Folder Include="Features\Auctions\Bids\PlaceBids\" />
+      <Folder Include="Features\Auctions\CreateAuction\" />
+      <Folder Include="Features\Auctions\Deposits\PlaceDeposits\" />
+      <Folder Include="Features\Auth\EmailVerification\" />
+      <Folder Include="Features\Auth\ForgotPassword\" />
       <Folder Include="Features\Auth\Register\" />
+      <Folder Include="Features\Auth\ResetPassword\" />
+      <Folder Include="Features\ConsignSales\" />
       <Folder Include="Features\Products\Categories\" />
-      <Folder Include="Features\Products\MasterItems\" />
       <Folder Include="Features\Shops\CreateOrder\" />
       <Folder Include="Infrastructure\ExternalServices\" />
     </ItemGroup>
