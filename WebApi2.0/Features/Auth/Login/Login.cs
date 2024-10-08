@@ -1,17 +1,12 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
 using FastEndpoints;
 using FastEndpoints.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.VisualBasic.CompilerServices;
 using WebApi2._0.Domain.Entities;
 using WebApi2._0.Domain.Enums;
 using WebApi2._0.Infrastructure.Persistence;
-
 namespace WebApi2._0.Features.Auth.Login;
 
 [HttpPost("api/auth/login")]
@@ -27,10 +22,10 @@ public class Login : Endpoint<LoginRequest, LoginResponse>
         _configuration = configuration;
     }
 
-
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
-        var account = await _dbContext.Accounts.FirstOrDefaultAsync(x => x.Email == req.Email, cancellationToken: ct);
+        var account = await _dbContext.Accounts.Include(staff => ((Staff)staff).Shop)
+            .FirstOrDefaultAsync(x => x.Email == req.Email, cancellationToken: ct);
 
         if (account == null)
         {
@@ -38,7 +33,12 @@ public class Login : Endpoint<LoginRequest, LoginResponse>
             return;
         }
 
-        var isPasswordVerified = VerifyPasswordHash(req.Password, account.PasswordHash, account.PasswordSalt);
+        var isPasswordVerified = VerifyPasswordHash(new VerifyPasswordHashParams()
+        {
+            Password = req.Password,
+            PasswordHash = account.PasswordHash,
+            PasswordSalt = account.PasswordSalt
+        });
 
         if (!isPasswordVerified)
         {
@@ -62,7 +62,6 @@ public class Login : Endpoint<LoginRequest, LoginResponse>
         {
             new Claim("AccountId", account.AccountId.ToString()),
             new(ClaimTypes.Name, account.Email),
-            new(ClaimTypes.Role, account.Role.ToString())
         };
 
         if (account.Role == Domain.Enums.Roles.Staff && (account as Staff).Shop != null)
@@ -79,6 +78,7 @@ public class Login : Endpoint<LoginRequest, LoginResponse>
                 o.Issuer = _configuration.GetSection(JwtConstants.JwtIssuer).Value!;
                 o.Audience = _configuration.GetSection(JwtConstants.JwtAudience).Value!;
                 o.User.Claims.AddRange(claims);
+                o.User.Roles.Add(account.Role.ToString());
             }
         );
 
@@ -93,30 +93,19 @@ public class Login : Endpoint<LoginRequest, LoginResponse>
         await SendOkAsync(response, ct);
     }
 
-    private static bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+    private static bool VerifyPasswordHash(VerifyPasswordHashParams verifyPasswordHashParams)
     {
-        using var hmac = new HMACSHA512(passwordSalt);
-        var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-        return computedHash.SequenceEqual(passwordHash);
+        using var hmac = new HMACSHA512(verifyPasswordHashParams.PasswordSalt);
+        var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(verifyPasswordHashParams.Password));
+        return computedHash.SequenceEqual(verifyPasswordHashParams.PasswordHash);
     }
+}
 
-    private string GenerateAccessToken(List<Claim> claims)
-    {
-        var securityKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuration[JwtConstants.JwtKey]!)
-        );
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            _configuration[JwtConstants.JwtIssuer],
-            _configuration[JwtConstants.JwtAudience],
-            claims,
-            expires: DateTime.Now.AddDays(1),
-            signingCredentials: credentials
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
+public record VerifyPasswordHashParams
+{
+    public string Password { get; set; }
+    public byte[] PasswordHash { get; set; }
+    public byte[] PasswordSalt { get; set; }
 }
 
 public static class JwtConstants
