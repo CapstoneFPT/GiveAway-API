@@ -2,7 +2,7 @@
 
 namespace WebApi2._0.Features.Orders.GetOrders;
 
-public class OrderMapper : Mapper<GetOrdersRequest, OrdersListResponse, Domain.Entities.Order>
+public sealed class OrderMapper : Mapper<GetOrdersRequest, OrdersListResponse, Domain.Entities.Order>
 {
     public override OrdersListResponse FromEntity(Domain.Entities.Order entity)
     {
