@@ -222,8 +222,10 @@ public class GiveAwayDbContext : DbContext
 
         modelBuilder.Entity<MasterFashionItem>().HasKey(x => x.MasterItemId);
 
-        
 
+        modelBuilder.Entity<MasterFashionItem>().HasMany(x => x.IndividualFashionItems)
+            .WithOne(x => x.MasterItem)
+            .HasForeignKey(x => x.MasterItemId);
         
 
         modelBuilder.Entity<MasterFashionItem>()

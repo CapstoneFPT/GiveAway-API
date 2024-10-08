@@ -2,5 +2,8 @@
 
 public enum PaymentMethod
 {
-    
+    COD,
+    Point,
+    Banking,
+    Cash
 }
