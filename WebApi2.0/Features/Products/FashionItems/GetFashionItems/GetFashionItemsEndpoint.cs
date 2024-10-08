@@ -1,6 +1,5 @@
 ﻿using FastEndpoints;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi2._0.Common;
 using WebApi2._0.Domain.Entities;
@@ -9,14 +8,14 @@ using WebApi2._0.Infrastructure.Persistence;
 
 namespace WebApi2._0.Features.Products.FashionItems.GetFashionItems;
 
-[FastEndpoints.HttpGet("api/fashionitems")]
+[HttpGet("api/fashionitems")]
 [AllowAnonymous]
-public class GetFashionItems : Endpoint<GetFashionItemsRequest, PaginationResponse<FashionItemsListResponse>,
+public class GetFashionItemsEndpoint : Endpoint<GetFashionItemsRequest, PaginationResponse<FashionItemsListResponse>,
     GetFashionItemsMapper>
 {
     private readonly GiveAwayDbContext _dbContext;
 
-    public GetFashionItems(GiveAwayDbContext dbContext)
+    public GetFashionItemsEndpoint(GiveAwayDbContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -30,11 +29,10 @@ public class GetFashionItems : Endpoint<GetFashionItemsRequest, PaginationRespon
         query = query.Where(predicate);
         var count = await query.CountAsync(ct);
 
-        query = query
-            .Skip(PaginationUtils.GetSkip(req.PageNumber, req.PageSize))
-            .Take(PaginationUtils.GetTake(req.PageSize));
-
         var data = await query
+            .OrderBy(x => x.ItemCode)
+            .Skip(PaginationUtils.GetSkip(req.PageNumber, req.PageSize))
+            .Take(PaginationUtils.GetTake(req.PageSize))
             .Select(x => new FashionItemsListResponse
             {
                 ItemId = x.ItemId,

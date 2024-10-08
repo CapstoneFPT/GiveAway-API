@@ -4,7 +4,7 @@ using WebApi2._0.Domain.Enums;
 
 namespace WebApi2._0.Features.Products.FashionItems.GetFashionItems;
 
-public class GetFashionItemsMapper : Mapper<GetFashionItemsRequest, FashionItemsListResponse, IndividualFashionItem>
+public sealed class GetFashionItemsMapper : Mapper<GetFashionItemsRequest, FashionItemsListResponse, IndividualFashionItem>
 {
     public override FashionItemsListResponse FromEntity(IndividualFashionItem e)
     {
