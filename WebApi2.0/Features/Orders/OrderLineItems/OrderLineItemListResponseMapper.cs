@@ -3,7 +3,7 @@ using WebApi2._0.Domain.Entities;
 
 namespace WebApi2._0.Features.Orders.OrderLineItems;
 
-public class
+public sealed class
     OrderLineItemListResponseMapper : Mapper<GetOrderLineItemsRequest, OrderLineItemsListResponse, OrderLineItem>
 {
     public override OrderLineItemsListResponse FromEntity(OrderLineItem e)
