@@ -174,7 +174,7 @@ public sealed class PlaceOrderEndpoint : Endpoint<PlaceOrderRequest,
     {
         var orderedItems = await _dbContext.OrderLineItems.Where(x =>
                 x.Order.MemberId == memberId && x.Order.Status == OrderStatus.AwaitingPayment)
-            .Where(x => listItemId.Contains(x.IndividualFashionItemId.Value))
+            .Where(x => listItemId.Contains(x.IndividualFashionItemId ?? Guid.Empty))
             .Select(x => x.IndividualFashionItemId)
             .ToListAsync();
         return orderedItems;
