@@ -2,5 +2,6 @@
 
 public enum TransactionType
 {
-    
+    Purchase,
+    AddFund
 }

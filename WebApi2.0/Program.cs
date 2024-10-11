@@ -7,6 +7,7 @@ using OfficeOpenXml;
 using Serilog;
 using WebApi2._0.Domain.Enums;
 using WebApi2._0.Features.Auth.Login;
+using WebApi2._0.Infrastructure.ExternalServices.VNPay;
 using WebApi2._0.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,7 @@ builder.Host.UseSerilog();
 builder.Services.AddDbContext<GiveAwayDbContext>(option => option.UseNpgsql(
     builder.Configuration.GetConnectionString("DefaultDB")
     ));
+builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddEndpointsApiExplorer();
 
 
@@ -36,6 +38,7 @@ builder
     .AddAuthorization()
     .AddFastEndpoints()
     .SwaggerDocument();
+builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("VNPay"));
 
 var app = builder.Build();
 
