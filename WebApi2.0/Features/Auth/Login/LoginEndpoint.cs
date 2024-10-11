@@ -11,12 +11,12 @@ namespace WebApi2._0.Features.Auth.Login;
 
 [HttpPost("api/auth/login")]
 [AllowAnonymous]
-public class Login : Endpoint<LoginRequest, LoginResponse>
+public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 {
     private readonly GiveAwayDbContext _dbContext;
     private readonly IConfiguration _configuration;
 
-    public Login(GiveAwayDbContext dbContext, IConfiguration configuration)
+    public LoginEndpoint(GiveAwayDbContext dbContext, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _configuration = configuration;
