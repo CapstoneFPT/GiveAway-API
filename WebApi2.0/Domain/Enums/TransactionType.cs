@@ -3,5 +3,6 @@
 public enum TransactionType
 {
     Purchase,
-    AddFund
+    AddFund,
+    RefundProduct
 }
