@@ -1,7 +1,7 @@
-﻿using System.Data.Entity;
-using FastEndpoints;
+﻿using FastEndpoints;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using WebApi2._0.Common;
 using WebApi2._0.Domain.Entities;
 using WebApi2._0.Domain.Enums;
@@ -84,6 +84,10 @@ public sealed class PlaceOrderEndpoint : Endpoint<PlaceOrderRequest,
         var memberAccount = await _dbContext.Accounts
             .FirstOrDefaultAsync(c => c.AccountId == accountId);
 
+        if (memberAccount is null)
+        {
+            throw new MemberAccountNotFoundException();
+        }
 
         var order = new Order
         {
@@ -191,4 +195,8 @@ public sealed class PlaceOrderEndpoint : Endpoint<PlaceOrderRequest,
         var unavailableItems = listItemId.Except(availableItems).ToList();
         return unavailableItems;
     }
+}
+
+public class MemberAccountNotFoundException : Exception
+{
 }
