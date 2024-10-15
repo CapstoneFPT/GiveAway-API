@@ -8,7 +8,7 @@ using WebApi2._0.Infrastructure.Persistence;
 
 namespace WebApi2._0.Features.Orders.OrderLineItems;
 
-[HttpGet("orders/{orderId}/orderlineitems")]
+[HttpGet("{orderId}/orderlineitems")]
 [Group<Orders>]
 public sealed class GetOrderLineItemsEndpoint : Endpoint<GetOrderLineItemsRequest,
     PaginationResponse<OrderLineItemsListResponse>,

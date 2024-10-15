@@ -5,6 +5,7 @@ using FastEndpoints.Swagger;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using Quartz;
+using Scalar.AspNetCore;
 using Serilog;
 using WebApi2._0.Domain.Enums;
 using WebApi2._0.Features.Auth.Login;
@@ -51,9 +52,10 @@ app.UseFastEndpoints(option =>
     {
         option.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
         option.Endpoints.RoutePrefix = "api";
-    })
-    .UseSwaggerGen();
+    });
 
+app.UseOpenApi(x=> x.Path="openapi/{documentName}.json");
+app.MapScalarApiReference();
 
 app.UseHttpsRedirection();
 

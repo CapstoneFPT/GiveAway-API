@@ -20,7 +20,6 @@ public sealed class GetMasterItemsEndpoint : Endpoint<GetMasterItemsRequest, Pag
     public override void Configure()
     {
         Get("master-items");
-        Group<MasterItems>();
         AllowAnonymous();
     }
 

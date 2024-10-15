@@ -9,7 +9,6 @@ using WebApi2._0.Infrastructure.Persistence;
 namespace WebApi2._0.Features.Products.FashionItems.GetFashionItems;
 
 [HttpGet("fashion-items")]
-[Group<FashionItems>]
 [AllowAnonymous]
 public class GetFashionItemsEndpoint : Endpoint<GetFashionItemsRequest, PaginationResponse<FashionItemsListResponse>,
     GetFashionItemsMapper>
