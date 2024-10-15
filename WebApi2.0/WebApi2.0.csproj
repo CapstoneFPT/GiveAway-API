@@ -49,7 +49,6 @@
 
     <ItemGroup>
       <Folder Include="Features\Accounts\Addresses\" />
-      <Folder Include="Features\Accounts\Orders\PurchaseOrder\Point\" />
       <Folder Include="Features\Accounts\Recharges\" />
       <Folder Include="Features\Accounts\Withdraws\" />
       <Folder Include="Features\Admin\ApproveAuction\" />
@@ -63,9 +62,10 @@
       <Folder Include="Features\Auth\ResetPassword\" />
       <Folder Include="Features\ConsignSales\" />
       <Folder Include="Features\Products\Categories\" />
-      <Folder Include="Features\Shops\ConfirmOrder\" />
       <Folder Include="Features\Shops\CreateOrder\" />
     </ItemGroup>
+
+  
 
 
 </Project>

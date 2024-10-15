@@ -4,5 +4,6 @@ public enum TransactionType
 {
     Purchase,
     AddFund,
-    RefundProduct
+    RefundProduct,
+    ConsignPayout
 }
