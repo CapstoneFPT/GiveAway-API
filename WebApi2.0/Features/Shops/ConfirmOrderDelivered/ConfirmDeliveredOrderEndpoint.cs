@@ -21,7 +21,8 @@ public class ConfirmDeliveredOrderEndpoint : EndpointWithoutRequest
 
     public override void Configure()
     {
-        Put("api/shops/{shopId}/orders/{orderId}/confirm-deliveried");
+        Put("{shopId}/orders/{orderId}/confirm-deliveried");
+        Group<Shops>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

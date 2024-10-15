@@ -31,8 +31,9 @@ public class PurchaseOrderBankingEndpoint : Endpoint<PurchaseOrderRequest,
 
     public override void Configure()
     {
-        Get("api/orders/{orderId}/pay/vnpay");
+        Get("{orderId}/pay/vnpay");
         Claims("AccountId");
+        Group<Features.Orders.Orders>();
     }
 
     public override async

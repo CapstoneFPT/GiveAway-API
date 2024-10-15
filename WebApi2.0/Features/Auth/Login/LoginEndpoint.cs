@@ -9,7 +9,8 @@ using WebApi2._0.Domain.Enums;
 using WebApi2._0.Infrastructure.Persistence;
 namespace WebApi2._0.Features.Auth.Login;
 
-[HttpPost("api/auth/login")]
+[HttpPost("auth/login")]
+[Group<Auth>]
 [AllowAnonymous]
 public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 {
@@ -21,7 +22,7 @@ public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
         _dbContext = dbContext;
         _configuration = configuration;
     }
-
+    
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
         var account = await _dbContext.Accounts.Include(staff => ((Staff)staff).Shop)

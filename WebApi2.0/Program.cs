@@ -4,6 +4,7 @@ using FastEndpoints.Security;
 using FastEndpoints.Swagger;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using Quartz;
 using Serilog;
 using WebApi2._0.Domain.Enums;
 using WebApi2._0.Features.Auth.Login;
@@ -26,6 +27,8 @@ builder.Host.UseSerilog();
 builder.Services.AddDbContext<GiveAwayDbContext>(option => option.UseNpgsql(
     builder.Configuration.GetConnectionString("DefaultDB")
     ));
+builder.Services.AddQuartz();
+builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -47,6 +50,7 @@ app.UseAuthorization();
 app.UseFastEndpoints(option =>
     {
         option.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
+        option.Endpoints.RoutePrefix = "api";
     })
     .UseSwaggerGen();
 

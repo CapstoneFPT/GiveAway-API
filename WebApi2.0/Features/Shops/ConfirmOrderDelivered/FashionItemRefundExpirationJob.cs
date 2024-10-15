@@ -136,7 +136,7 @@ public sealed class FashionItemRefundExpirationJob : IJob
         consignSaleLineItem.ConsignSale.ConsignorReceivedAmount += amountConsignorReceive;
     }
 
-    private async Task CreateConsignmentTransaction(
+    private Task CreateConsignmentTransaction(
         CreateConsignmentTransactionParams @params)
     {
         var refundItemConsignSaleLineItem = @params.RefundItem.ConsignSaleLineItem;
@@ -163,6 +163,7 @@ public sealed class FashionItemRefundExpirationJob : IJob
             PaymentMethod = PaymentMethod.Point
         };
          _dbContext.Transactions.Add(transaction);
+         return Task.CompletedTask;
     }
 
     private static Task UpdateConsignmentStatus(IndividualFashionItem refundItem)

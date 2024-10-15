@@ -23,8 +23,9 @@ public class PurchaseOrderPointEndpoint : Endpoint<PurchaseOrderRequest,
 
     public override void Configure()
     {
-        Put("api/orders/{orderId}/pay/points");
+        Put("{orderId}/pay/points");
         Claims("AccountId");
+        Group<Features.Orders.Orders>();
     }
 
     public override async Task<Results<Ok, BadRequest<ErrorResponse>, UnauthorizedHttpResult, NotFound, ProblemHttpResult>>

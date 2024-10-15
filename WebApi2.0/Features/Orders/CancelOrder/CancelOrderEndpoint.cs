@@ -20,7 +20,8 @@ public class CancelOrderEndpoint : EndpointWithoutRequest
 
     public override void Configure()
     {
-        Patch("api/orders/{orderId}/cancel");
+        Patch("orders/{orderId}/cancel");
+        Group<Orders>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

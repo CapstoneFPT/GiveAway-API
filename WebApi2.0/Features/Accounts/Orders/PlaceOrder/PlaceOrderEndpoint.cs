@@ -22,8 +22,9 @@ public sealed class PlaceOrderEndpoint : Endpoint<PlaceOrderRequest,
 
     public override void Configure()
     {
-        Post("api/accounts/{accountId}/orders");
+        Post("{accountId}/orders");
         Roles(Domain.Enums.Roles.Member.ToString());
+        Group<Accounts>();
     }
 
     public override async Task<Results<

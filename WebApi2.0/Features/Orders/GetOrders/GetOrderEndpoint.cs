@@ -17,7 +17,8 @@ public sealed class GetOrderEndpoint : Endpoint<GetOrdersRequest, PaginationResp
 
     public override void Configure()
     {
-        Get("/api/orders");
+        Get("orders");
+        Group<Orders>();
         AllowAnonymous();
     }
 

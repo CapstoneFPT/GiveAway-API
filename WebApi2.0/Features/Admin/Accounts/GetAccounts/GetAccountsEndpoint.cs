@@ -21,8 +21,9 @@ public sealed class GetAccountsEndpoint : Endpoint<GetAccountsRequest, Paginatio
 
     public override void Configure()
     {
-        Get("api/accounts");
+        Get("accounts");
         Roles("Admin");
+        Group<Features.Accounts.Accounts>();
     }
 
     public override async Task<PaginationResponse<AccountsListResponse>> ExecuteAsync(GetAccountsRequest req,

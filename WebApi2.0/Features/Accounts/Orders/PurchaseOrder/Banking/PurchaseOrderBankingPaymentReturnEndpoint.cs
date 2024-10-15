@@ -29,7 +29,8 @@ public class PurchaseOrderBankingPaymentReturnEndpoint : EndpointWithoutRequest
 
     public override void Configure()
     {
-        Get("api/orders/payment-return");
+        Get("payment-return");
+        Group<Features.Orders.Orders>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

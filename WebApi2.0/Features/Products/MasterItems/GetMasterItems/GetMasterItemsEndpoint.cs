@@ -8,8 +8,6 @@ using WebApi2._0.Infrastructure.Persistence;
 
 namespace WebApi2._0.Features.Products.MasterItems.GetMasterItems;
 
-[HttpGet("api/master-items")]
-[AllowAnonymous]
 public sealed class GetMasterItemsEndpoint : Endpoint<GetMasterItemsRequest, PaginationResponse<MasterItemsListResponse>>
 {
     private readonly GiveAwayDbContext _dbContext;
@@ -17,6 +15,13 @@ public sealed class GetMasterItemsEndpoint : Endpoint<GetMasterItemsRequest, Pag
     public GetMasterItemsEndpoint(GiveAwayDbContext dbContext)
     {
         _dbContext = dbContext;
+    }
+    
+    public override void Configure()
+    {
+        Get("master-items");
+        Group<MasterItems>();
+        AllowAnonymous();
     }
 
     public override async Task<PaginationResponse<MasterItemsListResponse>> ExecuteAsync(GetMasterItemsRequest req,

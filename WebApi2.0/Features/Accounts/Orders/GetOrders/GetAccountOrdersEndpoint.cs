@@ -17,7 +17,8 @@ public class GetAccountOrdersEndpoint : Endpoint<GetAccountOrdersRequest, Pagina
 
     public override void Configure()
     {
-        Get("api/accounts/{accountId}/orders");
+        Get("{accountId}/orders");
+        Group<Accounts>();
     }
 
     public override async Task<PaginationResponse<AccountOrdersListResponse>> ExecuteAsync(GetAccountOrdersRequest req,
