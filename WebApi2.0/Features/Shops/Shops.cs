@@ -6,10 +6,6 @@ public sealed class Shops : Group
 {
     public Shops()
     {
-        Configure("shops", ep =>
-        {
-            ep.Description(x=>x.WithTags("Shops"));
-        });
-            
+        Configure("shops", ep => { });
     }
 }
