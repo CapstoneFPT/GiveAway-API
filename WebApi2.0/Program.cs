@@ -2,20 +2,20 @@ using System.Text.Json.Serialization;
 using FastEndpoints;
 using FastEndpoints.Security;
 using FastEndpoints.Swagger;
+using IronPdf.Engines.Chrome;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using Quartz;
 using Scalar.AspNetCore;
 using Serilog;
-using WebApi2._0.Domain.Enums;
 using WebApi2._0.Features.Auth.Login;
 using WebApi2._0.Infrastructure.ExternalServices.VNPay;
 using WebApi2._0.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
-IronPdf.License.LicenseKey = builder.Configuration["IronPDF"];
-IronPdf.Installation.ChromeGpuMode=IronPdf.Engines.Chrome.ChromeGpuModes.Disabled;
-IronPdf.Installation.LinuxAndDockerDependenciesAutoConfig = false;
+License.LicenseKey = builder.Configuration["IronPDF"];
+Installation.ChromeGpuMode=ChromeGpuModes.Disabled;
+Installation.LinuxAndDockerDependenciesAutoConfig = false;
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
  
 Log.Logger = new LoggerConfiguration()

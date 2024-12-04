@@ -51,11 +51,11 @@ public sealed class FashionItemRefundExpirationJob : IJob
     {
         var refundItem = await _dbContext.IndividualFashionItems
             .Include(x => x.ConsignSaleLineItem)
-            .ThenInclude(x => x.ConsignSale)
-            .ThenInclude(x => x.Member)
+                .ThenInclude(x => x.ConsignSale)
+                    .ThenInclude(x => x.Member)
             .Include(x => x.ConsignSaleLineItem)
-            .ThenInclude(x => x.ConsignSale)
-            .ThenInclude(x => x.ConsignSaleLineItems)
+                .ThenInclude(x => x.ConsignSale)
+                    .ThenInclude(x => x.ConsignSaleLineItems)
             .FirstOrDefaultAsync(x => x.ItemId == itemId && x.Status == FashionItemStatus.Refundable);
 
 
